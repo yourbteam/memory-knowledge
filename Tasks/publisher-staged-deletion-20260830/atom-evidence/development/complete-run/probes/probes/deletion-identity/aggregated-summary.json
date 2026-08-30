@@ -1,0 +1,43 @@
+{
+  "case_ids": [
+    "staged-tracked-deletion",
+    "never-tracked-missing-path"
+  ],
+  "champion": "diff-deletion-membership",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "deletion-specificity"
+      }
+    ]
+  },
+  "probe_id": "deletion-identity",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "boundary-correctness": 2.0,
+        "deletion-specificity": 0.0
+      },
+      "approach_id": "diff-deletion-membership",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "boundary-correctness": 2.0,
+        "deletion-specificity": 0.0
+      },
+      "approach_id": "head-tree-membership",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

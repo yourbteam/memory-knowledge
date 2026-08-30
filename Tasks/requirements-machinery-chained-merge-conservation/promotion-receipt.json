@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "requirements-chained-merge-conservation",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "e7782b88468e5735a2a4248b69c64daf75f428fbe36eab6ad98d000a85f8e62d",
+  "experiment_assembly_sha256": "227c9db0579700d05dcf48ab43ec06015daf693e18fde8da38b957d0a0de8c5f",
+  "changed_paths": [
+    "skills/requirements-machinery/scripts/cover.py",
+    "skills/requirements-machinery/scripts/rule_conservation.py",
+    "skills/requirements-machinery/scripts/rule_lineage.py",
+    "tests/test_requirements_machinery_rule_lineage.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-chained-merge-conservation/change-surface.json",
+    "sha256": "4c60bdbf2f65740b33f7376846faccb768426188e3017d73d55b3f5371253345"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-chained-merge-conservation/promotion-review.json",
+    "sha256": "f1b821a96d53954131f2cafcc3e55857ff41611fb1eb918244b39ba6d1c07d9b"
+  },
+  "evidence": [
+    {
+      "case_id": "step7-chain-preserved",
+      "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-chained-merge-conservation/development-probe-run-v2-2/validation/assessments/step7-chain-preserved/response.json",
+      "sha256": "eb9dd204b816c7042361ffb4f7edfe7f28e057dfe269178e0c5c826a02a45592"
+    },
+    {
+      "case_id": "step7-current-loss-refused",
+      "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-chained-merge-conservation/development-probe-run-v2-2/validation/assessments/step7-current-loss-refused/response.json",
+      "sha256": "dab314e339551c33e9631398aad4c29037cea138fdc2d64446bf309ac3e297f8"
+    }
+  ]
+}

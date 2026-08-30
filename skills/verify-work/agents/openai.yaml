@@ -1,4 +1,0 @@
-interface:
-  display_name: "Verify Work"
-  short_description: "Review every in-scope change surface to convergence"
-  default_prompt: "Use $verify-work to independently review committed, staged, unstaged, untracked, and managed-path work from the supplied baseline. Return assessment-only findings; let the parent apply fixes; make no commit without explicit commit-scoped approval."

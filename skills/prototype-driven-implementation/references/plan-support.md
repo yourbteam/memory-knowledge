@@ -2,8 +2,8 @@
 
 # Plan Support Projection
 
-Source: `skills/plan-playbook/SKILL.md`
-Pinned SHA-256: `4591ca3acca0d703b5004a23ad0ae90be4ffd5bb0ca12a044adf98168f1b537b`
+Source: `skills/prototype-driven-implementation/contracts/plan-support.md`
+Pinned SHA-256: `27d6c039a93cb7217c8c4f0bd52e5a1624b2f2d9936835a8f14ed38a0ca5240a`
 
 ## Purpose
 

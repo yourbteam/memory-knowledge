@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "publisher-preserves-already-staged-paths",
+  "baseline_sha256": "cbc4c1539970dce1d7f4b95fbac018f266f537df6fbcacad5bf75d422caba394",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "9fb7c1c83db0dd8d7ad31cb06448f6a2113e74410de1c7e1dfd78e2e178b4990",
+      "before_mode": 420,
+      "before_sha256": "6a1bad8ba4bdc916ae3f0a47e049a7c6f60507954272483b695bcd30a1a2def3",
+      "kind": "changed",
+      "path": "scripts/minimal_git_publish.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "1474f495a66ad2539f590a85d2b6c941e499d03c785fecf02b69df29d900b3f9",
+      "before_mode": 420,
+      "before_sha256": "74f4ca509caa11501049a581f4c18e3c67cd307b085c27b27242a0d7726c6f05",
+      "kind": "changed",
+      "path": "tests/test_minimal_git_publish.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4",
+  "schema_version": 1
+}

@@ -1,0 +1,1 @@
+{"error": null, "metrics": {"boundary-correctness": 1}, "outcome": {"accepted": false, "case_id": "never-tracked-missing-path", "correct": true, "error": "manifest entry is neither present nor tracked: missing.py", "expected_accepted": false, "paths": null}, "schema_version": 1, "status": "completed", "variant_id": "assembly"}

@@ -1,0 +1,26 @@
+{
+  "assembly_sha256": "227c9db0579700d05dcf48ab43ec06015daf693e18fde8da38b957d0a0de8c5f",
+  "atomic_step_id": "requirements-chained-merge-conservation",
+  "cases": [
+    {
+      "case_id": "step7-chain-preserved",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "all 35 source identities survive exactly once and both six-type wordings reach the terminal lineage",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "step7-current-loss-refused",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "the historical silently lossy output is refused and identifies both missing six-type sources",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

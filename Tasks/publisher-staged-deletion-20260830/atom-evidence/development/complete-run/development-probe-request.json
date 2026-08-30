@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/private/tmp/publisher-staged-deletion-atom/development/assessment.py",
+      "sha256": "29320b81f14ce4d9f19ce462558fed059104d8f955e446d68d163f96b5e36803"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "baseline": {
+    "path": "/private/tmp/publisher-staged-deletion-atom/development/baseline",
+    "sha256": "c4111c58cb795477a11cfcd35323067a81d960dad9e91fa6f9d050c83fb3d061"
+  },
+  "development_manifest": {
+    "path": "/private/tmp/publisher-staged-deletion-atom/development/manifest.json",
+    "sha256": "209b85af1f96576ba32b4f0e5b96f31340e291a40c8513293fadbf26d0d1132f"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "deletion-identity",
+      "request": "/private/tmp/publisher-staged-deletion-atom/development/cross-deletion-identity.json",
+      "request_sha256": "f643e04b3112c2812b5b68173608824ad64068672e2ae315e54d9266594d4fda"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

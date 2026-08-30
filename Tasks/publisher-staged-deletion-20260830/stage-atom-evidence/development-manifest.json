@@ -1,0 +1,100 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "Stage remaining paths while preserving the already-staged deletion.",
+        "id": "merge-has-staged-deletion",
+        "kind": "failure",
+        "sha256": "3253ee370d2ffeeadc2a085b6bc2d49b0944c37d0fb12ec199e1781d029e1ae7",
+        "source": "/private/tmp/publisher-stage-selection-atom/cases/merge-has-staged-deletion.json"
+      },
+      {
+        "expected_outcome": "Reject verification-time mutation of a selected path.",
+        "id": "verification-mutation-still-refused",
+        "kind": "success",
+        "sha256": "c1b8746dbdff0756fd9767fdfd5bd253cee760f2bbf07a253a8ef286f5fcddb8",
+        "source": "/private/tmp/publisher-stage-selection-atom/cases/verification-mutation-still-refused.json"
+      }
+    ],
+    "id": "publisher-preserves-already-staged-paths",
+    "outcome": "The publisher preserves already-staged exact paths and stages only remaining manifest paths.",
+    "practical_value": "A pending merge containing staged retirements can reach commit without weakening exact-scope or mutation checks.",
+    "stopping_condition": "Mixed staged and unstaged manifest paths pass, while verification mutation remains blocked."
+  },
+  "composition": {
+    "assembly_contract": "Use the selected staging boundary unchanged.",
+    "consumes": [
+      {
+        "artifact": "staging-selection-boundary",
+        "probe_id": "staging-selection"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "merge-has-staged-deletion",
+        "verification-mutation-still-refused"
+      ],
+      "failure_criterion": "Either case differs.",
+      "operator_path": "invoke _stage_and_verify in disposable Git repositories matching both cases",
+      "success_criterion": "Both captured cases match their outcomes."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "scripts/minimal_git_publish.py",
+        "tests/test_minimal_git_publish.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Git can safely re-add every selected path.",
+          "id": "readd-entire-manifest",
+          "implementation": "Run git add over the complete manifest.",
+          "predicted_tradeoff": "Simple but rejects a deletion already absent from the index."
+        },
+        {
+          "hypothesis": "Already-staged exact paths should be preserved while only missing index changes are added.",
+          "id": "stage-only-unstaged",
+          "implementation": "Subtract staged paths from the manifest before git add, then validate the complete staged set.",
+          "predicted_tradeoff": "One deterministic staged-set read before adding remaining paths."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "staging-correctness"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "staging-correctness"
+          }
+        ]
+      },
+      "goal": "Stage a mixed manifest without re-adding paths already staged as deletions.",
+      "id": "staging-selection",
+      "inputs": [
+        {
+          "case_id": "merge-has-staged-deletion"
+        },
+        {
+          "case_id": "verification-mutation-still-refused"
+        }
+      ],
+      "practical_value": "A pending merge containing staged retirements can reach commit without weakening exact-scope or mutation checks.",
+      "proof": {
+        "failure_criterion": "The merge deletion is re-added or the mutation guard is weakened.",
+        "success_criterion": "Mixed staged and unstaged paths pass and the mutation guard remains active."
+      },
+      "winner_output": {
+        "artifact": "staging-selection-boundary",
+        "description": "The exact mixed-index staging behavior."
+      },
+      "work_type": "code",
+      "work_type_reason": "Index membership and selected path staging are deterministic Git facts."
+    }
+  ],
+  "schema_version": 1
+}

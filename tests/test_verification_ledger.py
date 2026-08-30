@@ -3,13 +3,11 @@ import json
 import subprocess
 import tempfile
 import unittest
-from datetime import datetime
 from pathlib import Path
 
 
 REPO = Path(__file__).parents[1]
 SHARED = REPO / "skills/_shared/verification_ledger.py"
-WRAPPER = REPO / "skills/verify-plan/scripts/verification_ledger.py"
 
 
 def canonical_bytes(value):
@@ -634,27 +632,6 @@ class VerificationLedgerTests(unittest.TestCase):
             result = self.run_cli(SHARED, *args)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("plan-obligation-contract-required", result.stderr)
-
-    def test_real_wrapper_matches_shared_plan_init_and_check(self):
-        shared_path = self.root / "shared.json"
-        wrapper_path = self.root / "wrapper.json"
-        common = (
-            "init", "--kind", "plan", "--plan-sha256", "a" * 64,
-            "--evidence-revision-sha256", "b" * 64,
-        )
-        self.assertEqual(
-            self.run_cli(SHARED, *common, "-o", shared_path).returncode, 0
-        )
-        self.assertEqual(
-            self.run_cli(WRAPPER, *common, "-o", wrapper_path).returncode, 0
-        )
-        shared = json.loads(shared_path.read_text())
-        wrapped = json.loads(wrapper_path.read_text())
-        datetime.fromisoformat(shared.pop("created_at"))
-        datetime.fromisoformat(wrapped.pop("created_at"))
-        self.assertEqual(shared, wrapped)
-        self.assertEqual(self.run_cli(WRAPPER, "check", wrapper_path).returncode, 0)
-
 
 if __name__ == "__main__":
     unittest.main()

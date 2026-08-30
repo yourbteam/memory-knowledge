@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "case_id": "never-tracked-missing-path",
+  "operator_path": "tests/test_minimal_git_publish.py::test_manifest_rejects_a_missing_path_that_never_existed",
+  "verification": "focused publisher suite passed through the registered launcher",
+  "verdict": "satisfied"
+}

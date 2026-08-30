@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "resolved",
+  "blocker_type": "deliverable-blocker",
+  "subject": "install-current-prototype-driven-implementation",
+  "step": "managed-skill-installation",
+  "symptom": "The managed installer refuses every selected skill after Experiment Machinery creates Python bytecode inside its canonical source tree.",
+  "evidence": "The exact Prototype-Driven Implementation installation command rejected five paths under skills/experiment-machinery/scripts/__pycache__. Disabling bytecode in development_probe_run.py kept a fresh complete run cache-free, but Atom Building Machinery status then recreated development_probe_manifest.cpython-314.pyc and development_probe_candidate.cpython-314.pyc through its direct development_probe_compose.py verifier call.",
+  "impact": "The proven Prototype-Driven Implementation projection cannot be installed into Codex or Claude.",
+  "stable_boundary": "Every public Experiment Machinery entrypoint must establish the same no-bytecode process boundary for its own imports and descendants, because Atom Building Machinery legitimately invokes phase verifiers directly as well as the complete runner.",
+  "catalog_note": "The canonical blocker helper refused this fast-path atom because it has no work-memory run identity; this durable task record preserves the blocker before correction.",
+  "solution": "Every documented Experiment Machinery Python entrypoint now disables bytecode for its own interpreter and exports PYTHONDONTWRITEBYTECODE=1 for descendants before importing local machinery modules.",
+  "changed_artifacts": [
+    "skills/experiment-machinery/scripts/development_probe_all_probes.py",
+    "skills/experiment-machinery/scripts/development_probe_candidate.py",
+    "skills/experiment-machinery/scripts/development_probe_compose.py",
+    "skills/experiment-machinery/scripts/development_probe_cross_case.py",
+    "skills/experiment-machinery/scripts/development_probe_experiment.py",
+    "skills/experiment-machinery/scripts/development_probe_final_validation.py",
+    "skills/experiment-machinery/scripts/development_probe_manifest.py",
+    "skills/experiment-machinery/scripts/development_probe_repair.py",
+    "skills/experiment-machinery/scripts/development_probe_run.py",
+    "skills/experiment-machinery/scripts/intake_projection_terminal_probe.py",
+    "skills/experiment-machinery/scripts/intake_purpose_probe.py",
+    "skills/experiment-machinery/scripts/run_experiment.py",
+    "tests/test_experiment_machinery.py"
+  ],
+  "verification": "All 12 canonical entrypoints returned zero with bytecode otherwise enabled; Atom Building Machinery status invoked the direct composition verifier without creating cache files; the exact managed installer then installed PDI tree b42c8d7c39f980b27885b6fab7aed9c5167789aa98e3e56a6c031c9410546e9f into Codex and Claude. Corrective proof event: 9c6b219ef37d26f80b16ebb70ec87d19ccad937fc324afc9c96ca667acd8a2b0.",
+  "remaining_work": "none"
+}

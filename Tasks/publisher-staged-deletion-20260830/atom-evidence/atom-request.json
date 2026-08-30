@@ -1,0 +1,27 @@
+{
+  "allowed_paths": [
+    "scripts/minimal_git_publish.py",
+    "tests/test_minimal_git_publish.py"
+  ],
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "captured_cases": [
+    {
+      "case_id": "staged-tracked-deletion",
+      "expected_outcome": "Accept the staged tracked deletion.",
+      "kind": "failure",
+      "sha256": "bb5a19c56582907f6d550665aa88f8a253670329537db8148ffe567724242489",
+      "source_ref": "/private/tmp/publisher-staged-deletion-atom/cases/staged-tracked-deletion.json"
+    },
+    {
+      "case_id": "never-tracked-missing-path",
+      "expected_outcome": "Reject a path that never existed.",
+      "kind": "success",
+      "sha256": "73e73f2417c721ce3a943b99876342162fc7c134c6ab251df764c21a9f3cf150",
+      "source_ref": "/private/tmp/publisher-staged-deletion-atom/cases/never-tracked-missing-path.json"
+    }
+  ],
+  "outcome": "The registered publisher accepts exact manifest paths already staged as deletions while still rejecting nonexistent paths.",
+  "practical_value": "Approved retirements can be committed and pushed through the normal publisher without weakening manifest scope.",
+  "schema_version": 1,
+  "stopping_condition": "A staged tracked deletion publishes through the boundary and a never-tracked missing path remains rejected."
+}

@@ -12,12 +12,13 @@ At the start of a task, name its mode and follow the matching playbook:
 
 | Mode | When | Playbook |
 | --- | --- | --- |
-| **Research** | gather/verify info, no code shipped | `research-playbook` |
-| **Plan** | turn a goal into a buildable plan | `plan-playbook` |
+| **Research** | gather/verify info, no code shipped | direct inspection of declared real evidence; no selectable controller |
+| **Plan** | turn a goal into a buildable plan | direct inspection of declared real evidence; no selectable controller |
 | **Write code** | implement a change in the codebase | `prototype-driven-implementation` |
-| **Review** | audit code / a diff / a doc | `review-playbook` |
+| **Review** | audit code / a diff / a doc | direct evidence inspection; no selectable controller |
 
-Modes chain: Research → Plan → Write code → Review (each rests on the one before).
+Modes chain: Research → Plan → Write code. Standalone Plan and Review inspect the declared evidence
+directly; implementation planning and review remain inside Prototype-Driven Implementation.
 
 Before Write code takes an issue that is **not the first of its kind**, run `direction-check`
 (G31): it weighs the issue against the approach on recorded evidence and hands the chosen path
@@ -195,11 +196,8 @@ to `prototype-driven-implementation`.
 ---
 
 ## G11 · Make code changes granular and approval-gated
-**Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; the `write-code-playbook` is the mechanism this standing rule relies on.)
+**Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; Prototype-Driven Implementation is the mechanism this standing rule relies on.)
 - ✅ Present code changes as a granular, change-by-change plan — each change with the reason for it — and wait for Kamen's approval before applying.
-- ✅ An explicit invocation of `playbook-convergence-loop` authorizes the approved plan's edits
-  inside its recorded objective, requirements, repositories, and allowed paths. The loop may
-  research, plan, implement, verify, and fix validated findings without asking again for each edit.
 - ✅ An explicit invocation of `prototype-driven-implementation`, followed by approval of its
   recorded autonomy envelope, authorizes adaptive prototype edits and verification inside its
   approved outcome, repositories, paths, and time or attempt limits without asking again for each
@@ -299,14 +297,14 @@ to `prototype-driven-implementation`.
   repository-local formatting or generation limited to approved files, diffs, linters, type checks,
   bounded unit tests, and local installation of an approved managed artifact. The fast path requires
   G26 preflight, the approved action, and direct verification only.
-- ✅ Do not invoke task intake, sequence selection, activation, work-memory run lifecycle, or
+- ✅ Do not invoke operational classification, sequence selection, activation, work-memory run lifecycle, or
   blocker bookkeeping for fast-path work merely because it uses a shell command or has three or
   more local steps.
 - ✅ Enter the governed operational path when work touches deployments, remote systems, databases
   or migrations, containers or images, authentication or secrets, package/environment mutation,
   destructive cleanup, workflow drives, long live tests, a proven recurrent command sequence, or
-  the same execution failure fingerprint twice. When the boundary is genuinely unclear, task
-  intake decides it.
+  the same execution failure fingerprint twice. When the boundary is genuinely unclear, run the
+  canonical code classifier.
 - ✅ Before starting any repeatable multi-step operational sequence, invoke `sequence-runner`.
 - ✅ Treat ANY turn that builds/runs an image, recreates a container, seeds auth, deploys, or drives a workflow as sequence-triggered by DEFAULT — grep `SEQUENCES.md` for a match FIRST, even when it feels like a one-off. (Amended 2026-07-10: the miss that motivated this was hand-running the greenfield build→container→auth→drive chain from memory instead of checking the catalog — where `local-workflow-orch-image` existed and the `greenfield-full-drive` sequence now does.)
 - ✅ On a governed operational-sequence turn, the G0 compliance anchor must STATE the sequence checked (its `sequence-id`, or "no match → discovery log") BEFORE the first operational command, so a skip is visible to Kamen instead of buried mid-flow.
@@ -351,12 +349,12 @@ to `prototype-driven-implementation`.
     once immediately, cataloguing it and entering the governed operational path only when the same
     failure fingerprint occurs twice;
   - **deliverable blocker:** the requested outcome cannot be produced or verified without a fix;
-    create or update its durable blocker-catalog entry before fixing it;
+    create or update its durable blocker-ledger entry through `scripts/blocker_catalog.py` before fixing it;
   - **incidental system defect:** a real issue outside the current deliverable; record it once,
     assign it downstream, and continue without launching remediation in the current task.
 - ✅ A required catalog entry must include the practical symptom, confirmed evidence, practical impact, blocker type, task/run ids when available, and the suspected or confirmed stable boundary.
 - ✅ When a blocker fix is implemented, update the same catalog entry with the solution summary, changed files or artifacts, verification evidence, remaining work, and whether it was verified through the same path Kamen uses.
-- ✅ When `playbook-convergence-loop` or a remediation lane is launched for a blocker, record the blocker id in the catalog first and carry that id through research, plan, implementation, review, and final reporting.
+- ✅ When a remediation lane is launched for a blocker, record the blocker id in the catalog first and carry that id through correction and final reporting.
 - ✅ Before resuming goal pursuit after a deliverable blocker, check the catalog entry and state whether the blocker is `open`, `fixed-awaiting-verification`, `verified`, `closed`, `superseded`, or `non-gap`. An incidental system defect may remain open in its downstream assignment without blocking the current deliverable.
 - ✅ If no catalog helper exists for the repo, create a minimal catalog document or helper before continuing; do not rely on chat, terminal history, or scattered run notes as the control surface.
 - 🚫 No fixing a deliverable blocker, or a repeated execution error, without a catalog entry.
@@ -371,8 +369,7 @@ to `prototype-driven-implementation`.
   **grounded root fix** and do not present the shortcut as an option.
 - ✅ When the grounded fix is large, divide it into bounded user-visible deliverables that preserve
   the root-fix boundary and can each be completed and verified independently. Use only the phases
-  required by unresolved evidence. `playbook-convergence-loop` runs only when Kamen explicitly
-  invokes it; task size alone never triggers it.
+  required by unresolved evidence.
 - ✅ A bounded deliverable is complete when every approved in-scope behavior works end-to-end
   without a known workaround. Related capabilities outside that explicit deliverable must be
   identified, but they do not automatically expand or block it.
@@ -408,7 +405,7 @@ to `prototype-driven-implementation`.
 
 ## G24 · Reproduce-first before paying for the slow live loop
 **Why:** on large projects a fix's live-verification point can be an hour+ into a run, so gating every fix attempt on the full run costs ~an hour per iteration (we lived this: the lease + observability fixes needed a rebuild + ~1hr re-drive just to reach feature-0). A fast reproduction that runs the real code on real-captured inputs predicts live in seconds — proven when the GF-N3-LEASE-ORPHAN in-process test produced byte-identical `released: True` to the later ~75-min drive. (Set live 2026-07-11.)
-- ✅ When a fix's live verification point is far into a long/expensive run, the defect is a recurring class, AND it blocks the current deliverable, build a fast reproduction at the tightest boundary that runs the REAL code with REAL-captured failing inputs (per the `reproduce-first-verify` skill), verify red-before/green-after there, then insert + ONE live confirmation via the project's fast re-entry primitives.
+- ✅ When a fix's live verification point is far into a long/expensive run, the defect is a recurring class, AND it blocks the current deliverable, use PDI's internal reproduce-first support contract to build a fast reproduction at the tightest boundary that runs the REAL code with REAL-captured failing inputs, verify red-before/green-after there, then insert + ONE live confirmation via the project's fast re-entry primitives.
 - ✅ Trustworthiness gate (hard): the reproduction MUST (i) run the same code path (no reimplementation; mocks only at true external edges), (ii) use real captured inputs (never guessed), (iii) be red-before/green-after. If it cannot satisfy all three, it is not a valid proxy — say so; do not claim the fix verified from it.
 - 🚫 No claiming a fix verified from a reproduction that reimplements the logic or feeds invented state (the false-confidence trap, G4).
 - 🚫 No skipping the single live confirmation — a passing reproduction proves the fix, not that the whole run now succeeds (each fix can unmask the next layer).
@@ -506,12 +503,14 @@ the existing playbooks remain available as bounded sources of rigor.
   proof, and final review.
 - ✅ Start with Prototype 0 on the real code path to reproduce, characterize, or directly prove
   the current behavior before broad implementation research or planning.
-- ✅ Pull Research, Plan, Write-code, and Review support only when an observed gap requires it.
-  Use the generated support projection for that role, not the full standalone playbook as a
-  competing controller.
-- ✅ Keep `research-playbook`, `plan-playbook`, `write-code-playbook`, and `review-playbook`
-  unchanged for their standalone task modes. Generate their bounded implementation-support
-  projections from a pinned manifest and fail drift checks when a source playbook changes.
+- ✅ Pull Plan and Write-code support only when an observed gap requires it. Use the generated
+  support projection for that role, not the full standalone playbook as a competing controller.
+  PDI's blocking-evidence and accumulated-surface checks come from its own non-selectable internal contracts.
+- ✅ Do not install or select standalone research, Plan, Write-code, or review controllers.
+  Standalone research, planning, and review inspect declared evidence directly, while PDI owns
+  implementation, its internal plan and write-code support, implementation evidence, and real-path
+  validation. Generate bounded implementation-support projections from pinned internal sources and
+  fail drift checks when a source changes.
 - ✅ A support projection must receive the approved outcome and envelope, current prototype and
   observed gap, concrete evidence, exact support question, and allowed scope or budget. It must
   return evidence, conclusion, unresolved uncertainty, and the recommended next delta.

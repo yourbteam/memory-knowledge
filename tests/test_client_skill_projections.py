@@ -56,12 +56,12 @@ class ProjectionManifestTests(unittest.TestCase):
     def test_generated_machinery_projection_binds_each_client_and_fails_closed(self):
         with TemporaryDirectory() as td:
             base = Path(td)
-            skills, manifest = make_repo(base, ["implementation-machine"])
+            skills, manifest = make_repo(base, ["atom-building-machinery"])
             projections = base / "client-skill-projections.json"
             projections.write_text(json.dumps({
                 "schema_version": 1,
                 "entries": {
-                    "implementation-machine": {
+                    "atom-building-machinery": {
                         "disposition": "GENERATED_CLIENT_PROJECTION",
                         "targets": ["codex", "claude"],
                         "scenario_groups": ["CAP-SHARED"],
@@ -80,7 +80,7 @@ class ProjectionManifestTests(unittest.TestCase):
             self.assertEqual(generated.returncode, 0, generated.stderr)
 
             data = json.loads(projections.read_text())
-            row = data["entries"]["implementation-machine"]
+            row = data["entries"]["atom-building-machinery"]
             self.assertEqual(set(row["projected_tree_sha256_by_client"]), {"codex", "claude"})
             self.assertNotEqual(row["projected_tree_sha256_by_client"]["codex"],
                                 row["projected_tree_sha256_by_client"]["claude"])
@@ -94,13 +94,13 @@ class ProjectionManifestTests(unittest.TestCase):
                                   "--projections", str(projections),
                                   "--staging-root", str(staging))
                 self.assertEqual(result.returncode, 0, result.stderr)
-                policy = json.loads((staging / "implementation-machine" /
+                policy = json.loads((staging / "atom-building-machinery" /
                                      "client-model-policy.json").read_text())
                 self.assertEqual(policy["client"], client)
                 self.assertEqual(policy["required_runtime"], required)
                 self.assertEqual(policy["forbidden_runtime"], forbidden)
                 self.assertTrue(policy["fail_closed"])
-                instructions = (staging / "implementation-machine" / "SKILL.md").read_text()
+                instructions = (staging / "atom-building-machinery" / "SKILL.md").read_text()
                 self.assertIn(f"must resolve to `{required}`", instructions)
                 self.assertIn(f"reject `{forbidden}`", instructions)
 
@@ -194,6 +194,24 @@ class ProjectionManifestTests(unittest.TestCase):
             self.assertEqual(drifted.returncode, 1)
             self.assertIn("canonical tree changed after projection", drifted.stderr)
 
+    def test_python_cache_artifacts_do_not_create_projection_drift(self):
+        with TemporaryDirectory() as td:
+            base = Path(td)
+            skills, manifest = make_repo(base, ["alpha"])
+            projections = seed_projections(base, skills, ["alpha"])
+            generated = run_tool("generate", "--skills-root", str(skills),
+                                 "--projections", str(projections))
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            cache = skills / "alpha" / "scripts" / "__pycache__" / "probe.cpython-314.pyc"
+            cache.parent.mkdir(parents=True)
+            cache.write_bytes(b"transient interpreter cache")
+            staging = base / "staging"
+            built = run_tool("build", "--client", "codex", "--skills-root", str(skills),
+                             "--projections", str(projections),
+                             "--staging-root", str(staging))
+            self.assertEqual(built.returncode, 0, built.stderr)
+            self.assertTrue((staging / "alpha" / "SKILL.md").is_file())
+
     def test_blocked_disposition_prevents_build(self):
         with TemporaryDirectory() as td:
             base = Path(td)
@@ -212,6 +230,84 @@ class ProjectionManifestTests(unittest.TestCase):
         result = run_tool("check", "--client", "claude")
         payload_errors = [line for line in result.stdout.splitlines() if line.startswith("ERROR")]
         self.assertEqual(payload_errors, [], result.stdout)
+
+
+    def test_versioned_requirements_projection_adds_reader_command_without_changing_v1(self):
+        with TemporaryDirectory() as td:
+            base = Path(td)
+            skills, manifest = make_repo(base, ["requirements-machinery"])
+            policy_source = skills / "requirements-machinery" / "client-model-policy.json"
+            policy_source.write_text("{}\n")
+            policy_source.chmod(0o444)
+            (skills / "requirements-machinery" / "SKILL.md").chmod(0o444)
+            projections = base / "client-skill-projections.json"
+            projections.write_text(json.dumps({
+                "schema_version": 1,
+                "entries": {
+                    "requirements-machinery": {
+                        "disposition": "GENERATED_CLIENT_PROJECTION",
+                        "targets": ["codex", "claude"],
+                        "scenario_groups": ["CAP-SHARED"],
+                        "canonical_tree_sha256": None,
+                        "projected_tree_sha256": None,
+                        "projected_tree_sha256_by_client": None,
+                        "generator": "machinery-client-model-v2",
+                        "generator_sha256": None,
+                        "divergence_reason": "Reader runtime is client-owned.",
+                    }
+                },
+            }) + "\n")
+            generated = run_tool("generate", "--skills-root", str(skills),
+                                 "--projections", str(projections))
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            exact_codex = (
+                "codex exec --ephemeral --sandbox read-only --ignore-user-config "
+                "--skip-git-repo-check --color never -"
+            )
+            for client, required in (("codex", exact_codex), ("claude", "claude -p")):
+                staging = base / f"staging-{client}"
+                built = run_tool("build", "--client", client, "--skills-root", str(skills),
+                                 "--projections", str(projections),
+                                 "--staging-root", str(staging))
+                self.assertEqual(built.returncode, 0, built.stderr)
+                policy = json.loads((staging / "requirements-machinery" /
+                                     "client-model-policy.json").read_text())
+                self.assertEqual(policy["recommended_reader_command"], required)
+                if client == "codex":
+                    self.assertEqual(policy["required_outer_execution"], "require_escalated")
+                    self.assertEqual(policy["inner_sandbox"], "read-only")
+                    skill_text = (staging / "requirements-machinery" / "SKILL.md").read_text()
+                    self.assertIn("outer execution `require_escalated`", skill_text)
+                    self.assertIn("nested reader remains `read-only`", skill_text)
+                else:
+                    self.assertNotIn("required_outer_execution", policy)
+                    self.assertNotIn("inner_sandbox", policy)
+
+    def test_versioned_requirements_projection_refuses_partial_execution_boundary(self):
+        with TemporaryDirectory() as td:
+            base = Path(td)
+            skills, _manifest = make_repo(base, ["requirements-machinery"])
+            model = json.loads((REPO / "working-agreement" /
+                                "machinery-client-model-v2.json").read_text())
+            model["clients"]["codex"].pop("inner_sandbox")
+            model_path = base / "machinery-client-model-v2.json"
+            model_path.write_text(json.dumps(model) + "\n")
+            original = pcs.GENERATOR_FILES["machinery-client-model-v2"]
+            pcs.GENERATOR_FILES["machinery-client-model-v2"] = model_path
+            try:
+                with self.assertRaisesRegex(RuntimeError, "together or omit both"):
+                    pcs.project_skill(
+                        skills / "requirements-machinery",
+                        base / "projected-requirements-machinery",
+                        "codex",
+                        {
+                            "disposition": "GENERATED_CLIENT_PROJECTION",
+                            "generator": "machinery-client-model-v2",
+                            "generator_sha256": pcs.file_hash(model_path),
+                        },
+                    )
+            finally:
+                pcs.GENERATOR_FILES["machinery-client-model-v2"] = original
 
 
 if __name__ == "__main__":

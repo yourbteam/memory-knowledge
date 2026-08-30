@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scores": [
+    {
+      "metrics": {
+        "ambiguous-automerge": 11,
+        "ancestry-complete": 0,
+        "silent-losses": 6
+      },
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "ambiguous-automerge": 0,
+        "ancestry-complete": 1,
+        "silent-losses": 0
+      },
+      "variant_id": "variation-2"
+    }
+  ]
+}

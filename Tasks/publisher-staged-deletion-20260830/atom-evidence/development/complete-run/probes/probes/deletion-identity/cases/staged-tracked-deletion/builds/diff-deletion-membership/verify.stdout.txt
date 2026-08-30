@@ -1,0 +1,1 @@
+{"approach_id": "diff-deletion-membership", "atomic_step_id": "publisher-accepts-staged-deletions", "bundle_sha256": "abfdf05e52adba1637ef3a6e81a5113b8138ac001037a7804e87d16f8bf9498c", "probe_id": "deletion-identity", "status": "verified"}

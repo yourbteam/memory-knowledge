@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "case_id": "verification-mutation-still-refused",
+  "operator_path": "focused publisher verification through registered launcher",
+  "verification": "post-staging mutation guard test passed",
+  "verdict": "satisfied"
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "1a16f87d3cdea0585354bb612089acb5ef5b067ec04cea8895851640bad26e01",
+  "experiment_assembly_sha256": "6eb7d6ebc1f5a41e67c4e31709258267d9130bf5cc95872e9bcc95cbe1395930",
+  "changed_paths": [
+    "scripts/minimal_git_publish.py",
+    "tests/test_minimal_git_publish.py"
+  ],
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "84fb4cefd8e7d551f0ffccf417f076bb3683c22f1a8f9e514b8aaed4633014e8"
+  },
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "727325e77df732165fef412ec209103093172f35426a07fe12f348f4d7fe4050"
+  },
+  "evidence": [
+    {
+      "case_id": "staged-tracked-deletion",
+      "path": "atom-evidence/development/complete-run/validation/assessments/staged-tracked-deletion/response.json",
+      "sha256": "9b18883497b7831069b508dabc41908bfc44d6e09c509823b707e095feeba569"
+    },
+    {
+      "case_id": "never-tracked-missing-path",
+      "path": "atom-evidence/development/complete-run/validation/assessments/never-tracked-missing-path/response.json",
+      "sha256": "5d46744ba3014db3bb7d45226ce4a50d542279a2fcbe07846384659e6c171033"
+    }
+  ]
+}

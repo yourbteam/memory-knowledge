@@ -266,7 +266,7 @@
       },
       "contract_version": 1,
       "entrypoint": "memory-knowledge:scripts/commit_push_main_launch.py",
-      "entrypoint_source_sha256": "1933910cd5ca11522948aa7cdfe76ca600567717111e5f3f494fc80b94cbc429",
+      "entrypoint_source_sha256": "d5570e82fe32bb7155d8eaf3aa05ec1b4c4eafed748d5646aad28a4c0167e16e",
       "optional_inputs": [
         "approved_paths",
         "branch",

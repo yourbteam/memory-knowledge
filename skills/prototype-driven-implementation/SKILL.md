@@ -1,6 +1,6 @@
 ---
 name: prototype-driven-implementation
-description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling generated Research, Plan, Write-code, and Review support projections only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
+description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling PDI-owned bounded planning, coding, blocking-evidence, and retained-surface support only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
 ---
 
 # Prototype-Driven Implementation
@@ -56,15 +56,33 @@ existing task artifact or plan mechanism when one exists. This skill is the cont
 create a second task-specific controller, installer, or supporting documentation merely to run the
 loop.
 
-## Pull bounded playbook support
+## Own implementation blockers through code
 
-The standalone playbooks remain authoritative for standalone Research, Plan, Write-code, and
-Review tasks. During implementation, use only their generated support projections:
+When a deliverable blocker prevents the approved outcome, classify it under the Working
+Agreement and invoke `python3 scripts/blocker_catalog.py open` before changing the confirmed
+failing boundary. Retain the returned blocker and occurrence identities through correction and
+same-path verification. Correct a first execution error once immediately without opening a
+blocker; assign an incidental system defect downstream. Do not select a separate blocker skill or
+let blocker recording widen the approved envelope.
 
-- `references/research-support.md` for one blocking evidence question;
+## Use the atomic capability protocol when required
+
+When an approved implementation is one atom built through Development-Probe experiments, invoke
+`$atom-building-machinery` as PDI's bounded protocol. PDI retains the approved envelope, adaptive
+prototype loop, promotion decision, and completion responsibility throughout. Read the protocol's
+`required_capability` and perform only that capability: Experiment Machinery comparison,
+promotion, or real-path validation. Do not interpret `required_capability` as a lifecycle handoff;
+every incomplete atom state returns `next_skill: prototype-driven-implementation`.
+
+## Pull bounded internal support
+
+Standalone planning directly inspects the declared real evidence and has no selectable controller.
+During implementation, use only PDI's generated internal support projections:
+
+- `references/research-support.md` for PDI-owned investigation of one blocking evidence question;
 - `references/plan-support.md` for one observed delta that needs implementation-ready decisions;
 - `references/write-code-support.md` for one approved product-code delta;
-- `references/review-support.md` for one retained delta or the final accumulated surface.
+- `references/review-support.md` for PDI-owned inspection of one retained delta or the final accumulated surface.
 
 Read a projection only when the current observed gap needs that capability. Supply the approved
 outcome and envelope, prototype identity and observed gap, concrete evidence, exact support
@@ -75,6 +93,14 @@ Never let a projection widen scope, launch a successor phase or package, take li
 or declare the implementation complete. A projection's recommendation is evidence for the
 controller; it is not an automatic next milestone.
 
+## Use internal reproduce-first support when live proof is expensive
+
+When a recurring defect has captured live failing state and its live verification point is far
+into an expensive run, read `contracts/reproduce-first-support.md` and apply that bounded
+verification technique inside the current prototype. PDI retains lifecycle control and the
+approved envelope throughout. Do not invoke it for a cheap one-off or without captured failing
+state; keep those cases on the normal direct prototype proof.
+
 ## Preserve the stable boundary
 
 - Prototype through production seams rather than reimplementing product logic in a test harness.
@@ -83,7 +109,7 @@ controller; it is not an automatic next milestone.
 - Retain only code that belongs in the final implementation. Temporary instrumentation is allowed
   when needed for proof, but remove it unless it remains useful operational telemetry.
 - Use focused checks during discovery. After promotion, run the relevant regression surface.
-- Before completion, use the Review support projection on the accumulated retained surface and run
+- Before completion, use PDI's retained-surface support projection on the accumulated surface and run
   one end-to-end confirmation through the path the user will use.
 
 ## Stop and report

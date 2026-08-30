@@ -1,0 +1,36 @@
+{
+  "case_ids": [
+    "merge-has-staged-deletion",
+    "verification-mutation-still-refused"
+  ],
+  "champion": "stage-only-unstaged",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "staging-correctness"
+      }
+    ]
+  },
+  "probe_id": "staging-selection",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "staging-correctness": 2.0
+      },
+      "approach_id": "stage-only-unstaged",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "staging-correctness": 1.0
+      },
+      "approach_id": "readd-entire-manifest",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "publisher-preserves-already-staged-paths",
+  "promotion_event_sha256": "7b2d5a22e5382c3aaa34d0a6ed447b6842e2b5dbbbceb03fd81b733c1a27c397",
+  "cases": [
+    {
+      "case_id": "merge-has-staged-deletion",
+      "verdict": "satisfied",
+      "reason": "The registered dry-run launcher staged the actual mixed-index pending merge and passed all focused checks.",
+      "evidence": [{
+        "case_id": "merge-has-staged-deletion",
+        "path": "stage-real-path-success.json",
+        "sha256": "4e940b0e27d4fb2e83c520fa3148b0166b5eef5383d099920a7288a8a4b7420e"
+      }]
+    },
+    {
+      "case_id": "verification-mutation-still-refused",
+      "verdict": "satisfied",
+      "reason": "The focused suite retained the post-staging selected-content mutation guard.",
+      "evidence": [{
+        "case_id": "verification-mutation-still-refused",
+        "path": "stage-real-path-guard.json",
+        "sha256": "e30be7371b5ee40f9bf36990beea03d69fdb4f5c564843659198f0da49d8bd63"
+      }]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "case_id": "step7-chain-remains-complete",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "the reconciled controller resumes through a pinned runtime and all 35 rule identities survive",
+  "verdict": "satisfied"
+}

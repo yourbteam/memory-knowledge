@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed",
+  "change_surface_sha256": "84fb4cefd8e7d551f0ffccf417f076bb3683c22f1a8f9e514b8aaed4633014e8",
+  "blocking_findings": []
+}

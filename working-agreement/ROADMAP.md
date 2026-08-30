@@ -39,14 +39,11 @@ from "proposed" to live.
 - [x] Author the first playbook skill → **Research** (`~/.claude/skills/research-playbook/SKILL.md`).
       Shape settled: when-it-triggers + skills to reach for + task-scoped directives. Research uses
       Option C — default to findings, flag when build-bound, then run the 3 gap-loop gates on Kamen's go.
-- [x] **Plan** playbook (`~/.claude/skills/plan-playbook/SKILL.md`). Default to hardening (plans are
-      build-bound): `verify-plan` for small plans; flag-and-wait → coverage + satisfaction gates for
-      build-critical ones. Directives P1 (one-shot test) and P2 (lock decisions, don't list options).
-      Upstream link locked (Option 1): a plan rests on *sufficient understanding*, not a mandatory
-      research step — research only when understanding is missing; loop back when planning hits an unknown.
-- [x] **Write code** playbook (`~/.claude/skills/write-code-playbook/SKILL.md`). Rests on sufficient
-      plan/understanding; reach for `verify` / `code-review` / `simplify` / `review-fix-loop`.
-      Directive WC1 (verify before "done"). Deliberately no "smallest change" rule — that's G3 for code.
+- [x] **Plan** now uses direct inspection of declared real evidence with no selectable controller.
+      During implementation, PDI retains only a bounded internal plan-support contract for one
+      observed gap; the former document-hardening controller is retired.
+- [x] **Write code** is now owned by `prototype-driven-implementation`; its bounded coding guidance
+      is retained as an internal support contract rather than a selectable competing playbook.
 - [x] **Review** playbook (`~/.claude/skills/review-playbook/SKILL.md`). Rests on knowing intent
       (the plan, when one exists); reach for `code-review` / `security-review` / `review` /
       `review-fix-loop`. Directives RV1 (real over many) and RV2 (cover the plan).

@@ -1,0 +1,19 @@
+{
+  "aggregated_metrics": {
+    "boundary-correctness": 2.0,
+    "deletion-specificity": 0.0
+  },
+  "approach_id": "diff-deletion-membership",
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "bundle_sha256": "abfdf05e52adba1637ef3a6e81a5113b8138ac001037a7804e87d16f8bf9498c",
+  "case_count": 2,
+  "case_ids": [
+    "staged-tracked-deletion",
+    "never-tracked-missing-path"
+  ],
+  "probe_id": "deletion-identity",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended"
+}

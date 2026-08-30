@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "6eb7d6ebc1f5a41e67c4e31709258267d9130bf5cc95872e9bcc95cbe1395930",
+  "assessment_adapter_sha256": "29320b81f14ce4d9f19ce462558fed059104d8f955e446d68d163f96b5e36803",
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

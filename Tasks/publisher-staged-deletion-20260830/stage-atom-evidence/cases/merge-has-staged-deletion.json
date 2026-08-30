@@ -1,0 +1,5 @@
+{
+  "case_id": "merge-has-staged-deletion",
+  "expected_accepted": true,
+  "setup": "normal"
+}

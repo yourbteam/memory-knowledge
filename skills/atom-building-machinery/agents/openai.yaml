@@ -1,0 +1,4 @@
+interface:
+  display_name: "Atom Building Machinery"
+  short_description: "Build one atom through proven probe stages"
+  default_prompt: "Use $atom-building-machinery to build one approved atom through experiments, promotion, and real-path validation."

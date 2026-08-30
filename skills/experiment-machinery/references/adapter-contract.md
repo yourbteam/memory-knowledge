@@ -10,7 +10,7 @@ The runner accepts one JSON object:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 4,
   "experiment_id": "one-stable-id",
   "hypothesis": "One falsifiable sentence.",
   "target": {
@@ -20,15 +20,21 @@ The runner accepts one JSON object:
     "entrypoint": "scripts/phase_entry.py"
   },
   "frozen_input": {"path": "input.json", "sha256": "64 lowercase hex characters"},
+  "execution_limits": {
+    "variant_timeout_ms": 1800000,
+    "evaluator_timeout_ms": 600000
+  },
   "variants": [
     {
       "id": "control",
       "command": ["/absolute/python", "/absolute/adapter.py"],
+      "adapter": {"path": "/absolute/adapter.py", "sha256": "64 lowercase hex characters"},
       "configuration": {}
     },
     {
       "id": "variation-a",
       "command": ["/absolute/python", "/absolute/adapter.py"],
+      "adapter": {"path": "/absolute/adapter.py", "sha256": "64 lowercase hex characters"},
       "configuration": {}
     }
   ],
@@ -36,7 +42,11 @@ The runner accepts one JSON object:
     "metrics": [
       {"name": "quality-score", "direction": "maximize"},
       {"name": "refusal-count", "direction": "minimize"}
-    ]
+    ],
+    "evaluator": {
+      "adapter": {"path": "/absolute/evaluator.py", "sha256": "64 lowercase hex characters"},
+      "command": ["{python}", "{evaluation-adapter}", "{evaluation-request}", "{evaluation-response}"]
+    }
   }
 }
 ```
@@ -86,9 +96,14 @@ Write `EXPERIMENT_RESULT_PATH` exactly once with:
 ```
 
 A completed result exits zero. A failed result exits non-zero, uses `status: "failed"`, preserves
-the practical error text, and remains in the experiment record. Each declared ranking metric must
-be a finite number. The runner rejects changed inputs/configurations and excludes invalid or failed
-variants from champion selection.
+the practical error text, and remains in the experiment record. Candidate metrics are preserved as
+`reported_metrics` for audit and ignored for ranking.
+
+After all eligible variants finish, the runner gives their outcomes and evidence to the frozen
+evaluator in one code-controlled request. The evaluator returns exactly one ordered score object
+per eligible variant and one finite value per declared metric. Code rejects changed inputs,
+configurations, adapters, evaluator bytes, incomplete scores, unknown identities, and reordered
+answers. The evaluator does not receive permission to edit candidates or the parent ledger.
 
 ## Telemetry minimum
 

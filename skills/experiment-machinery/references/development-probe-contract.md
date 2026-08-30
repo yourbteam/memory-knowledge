@@ -44,6 +44,7 @@ Every mini-probe records:
 
 - its goal and practical contribution to the atomic outcome;
 - whether code, a model, or both own its decision and why;
+- the complete repository-relative paths its candidate is allowed to add, change, or delete;
 - captured-case inputs only;
 - at least two distinct approaches with hypothesis, implementation mechanism, and tradeoff;
 - observable success and failure criteria;
@@ -53,8 +54,9 @@ Every mini-probe records:
 - one uniquely named winner artifact and its meaning.
 
 Composition records every mini-probe id and exact winner artifact once, states how the winners form
-the atomic behavior, and names the operator path plus captured success and failure cases that prove
-the assembled result.
+the atomic behavior, and names the operator path plus every captured case exactly once in its
+declared order. Final validation cannot select only representative success and failure cases; its
+case list is the complete atomic evidence boundary.
 
 ## Validate
 
@@ -67,8 +69,8 @@ python3 scripts/development_probe_manifest.py validate <manifest.json>
 The validator returns a small JSON confirmation for a complete parallel manifest. It refuses
 malformed fields, duplicate identities, fewer than two approaches, duplicate mechanisms, missing
 or duplicate winner-selection metrics, missing or reordered cross-case methods, unknown captured
-inputs, inter-probe inputs, missing winner artifacts, and incomplete final validation with an
-actionable explanation. Cross-case `sum` adds observations, `mean` takes their arithmetic mean,
+inputs, inter-probe inputs, missing winner artifacts, and any final-validation case list that
+differs from the exact declared captured-case sequence. Cross-case `sum` adds observations, `mean` takes their arithmetic mean,
 and `worst` takes the minimum for a maximized metric or maximum for a minimized metric.
 
 This first contract atom validates the plan for the whole process. Parallel experiment launch,
@@ -90,8 +92,10 @@ exact whole arguments; `{candidate-entrypoint}` is mandatory.
 
 The bundle is write-once and contains exactly the canonical development manifest, a deterministic
 read-only source snapshot, and `bundle.json`. The latter binds the atomic step, probe, approach,
-manifest digest, baseline digest, exact per-file candidate hashes and sizes, candidate tree digest,
-entrypoint, command, declared captured cases, and ordered evaluation metrics.
+manifest digest, baseline digest, exact per-file baseline and candidate hashes and sizes, the
+derived changed paths, candidate tree digest, entrypoint, command, declared captured cases, and
+ordered evaluation metrics. Build refuses before writing a bundle when any added, changed, or
+deleted path falls outside the mini-probe's declared boundary, and names every offending path.
 
 Run `verify` before use. It rejects changed, missing, extra, writable, linked, or relocated source
 evidence; undeclared identities or cases; mismatched metrics; and unsafe command shapes. Run
@@ -108,7 +112,10 @@ Use one launcher request containing exactly:
 - `development_manifest`;
 - one declared `probe_id` and one captured `case_id` used by that probe;
 - `approach_build_requests`, with one approach id and candidate-build request path for every
-  approach declared by the selected probe.
+  approach declared by the selected probe;
+- one independent evaluator adapter, its SHA-256, and the code-controlled command containing
+  `{python}`, `{evaluation-adapter}`, `{evaluation-request}`, and `{evaluation-response}` exactly
+  once. Cross-case, all-probe, complete-run, and repair controllers preserve this exact evaluator.
 
 Run:
 
@@ -117,15 +124,23 @@ python3 scripts/development_probe_experiment.py run <request.json> <new-output-d
 ```
 
 The launcher reconciles the complete approach set in manifest order, prepares bundles concurrently
-with a fixed worker bound, and preserves every build's output and error evidence. It generates
+with a fixed worker bound, and preserves every build's output and error evidence. Before any
+variant is created, code compares the already verified candidate source-tree digests and refuses
+different approach identities backed by byte-identical implementations. It generates
 collision-free runner variant ids (`control`, then numbered variations) while recording their exact
 approach mapping. One real Experiment Machinery run compares every bundle against byte-identical
-captured input and the probe's ordered metrics.
+captured input. Candidates cannot choose their scores: the frozen evaluator scores all completed
+outcomes in one pass against the probe's ordered metrics.
 
 A recommendation is written only when every declared variant completed and remained integrity
 valid. The rank-one champion must map to exactly one bundle whose probe, case membership, and fresh
 digest still match. Failure at any boundary writes `launch-summary.json`, retains existing build or
 experiment evidence, and writes no recommendation. `promotion_applied` is always false.
+
+The launcher freezes separate generic-runner limits for its generated experiment: 30 minutes per
+variant and 10 minutes for the independent evaluator. These controller-owned limits are copied into
+the immutable experiment specification, so a Development-Probe run cannot wait forever while its
+existing request shape remains stable.
 
 ## Run one mini-probe across all declared cases
 
@@ -266,7 +281,13 @@ order, baseline, adapter, and assessment-command shape. It preserves that normal
 top-level run request. The fixed stage order is all probes, composition, then final validation.
 Each stage receives an isolated directory and a receipt containing its exit status, stdout and
 stderr, evidence path and digest, and result path and digest. A failed stage prevents every later
-stage from launching while retaining prior receipts and artifacts.
+stage from launching while retaining prior receipts and artifacts. Controller-owned deadlines use
+a 45-minute budget per concurrent wave of up to four probes and four cases, 10 minutes for
+composition, and 45 minutes per final-validation wave of up to four cases. Each stage runs in a new
+process group. When a deadline expires, code terminates the complete group,
+escalates to a kill after the fixed grace interval, preserves partial stdout and stderr, writes a
+hash-bound timeout artifact and timed-out stage receipt, and makes the complete run terminally fail
+at that exact stage.
 
 After final validation, code ignores stdout as verdict authority. It freshly hashes and validates
 the final artifact, binds its atomic-step identity and assembly digest to a freshly verified

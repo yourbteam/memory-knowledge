@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "development_manifest": {
+    "path": "development-manifest.json",
+    "sha256": "e7618f36a0e8812507561b6c110082c886394bc10ca1cf7bf875cb282d396d68"
+  },
+  "baseline": {
+    "path": "baseline",
+    "sha256": "4e5fc73e0e29d6af75e4a325f5be2029011a0e0666fa4ab6d2f9d22c0937ce6c"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "lineage-transfer",
+      "request": "requests/lineage-cross-case.json",
+      "request_sha256": "1467762442ca4694234ee0ed0987c56589ba8f5b5bd440ada841ed19258c34d1"
+    },
+    {
+      "probe_id": "conservation-check",
+      "request": "requests/conservation-cross-case.json",
+      "request_sha256": "9842b4a0df520394e11a36ad94115b6e5bd1a82896d3be5ef0b3649013893702"
+    }
+  ],
+  "assessment": {
+    "adapter": {
+      "path": "assessment_adapter.py",
+      "sha256": "0ac1c7e8e2b569585f5c6ea16d025c1f53611471972f119fa912e477433f1d4a"
+    },
+    "command": ["{python}", "{assessment-adapter}", "{assessment-request}", "{assessment-response}"]
+  }
+}

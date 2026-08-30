@@ -1,0 +1,28 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "head-tree-membership",
+      "request": "/private/tmp/publisher-staged-deletion-atom/development/build-head-tree-membership.json"
+    },
+    {
+      "approach_id": "diff-deletion-membership",
+      "request": "/private/tmp/publisher-staged-deletion-atom/development/build-diff-deletion-membership.json"
+    }
+  ],
+  "case_id": "staged-tracked-deletion",
+  "development_manifest": "/private/tmp/publisher-staged-deletion-atom/development/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/private/tmp/publisher-staged-deletion-atom/development/evaluator.py",
+      "sha256": "0268bea4b4f2899f91ef4fe4a389efb04964f913ec0af3ddd7201bfca1f38f1f"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "deletion-identity",
+  "schema_version": 1
+}

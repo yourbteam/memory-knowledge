@@ -24,8 +24,8 @@
   "projections": [
     {
       "role": "research",
-      "source": "skills/research-playbook/SKILL.md",
-      "source_sha256": "33f1f6e1928cc08bfe1b925fd02f2b2986a467047547da54278f4fc56b916ba9",
+      "source": "skills/prototype-driven-implementation/contracts/blocking-evidence-research.md",
+      "source_sha256": "e852319eaaec12fc5b256b8cd287630710cdf10a5bfc8b578f7d0c213470db0d",
       "output": "research-support.md",
       "purpose": "Answer one blocking evidence question exposed by the current prototype.",
       "instructions": [
@@ -37,8 +37,8 @@
     },
     {
       "role": "plan",
-      "source": "skills/plan-playbook/SKILL.md",
-      "source_sha256": "4591ca3acca0d703b5004a23ad0ae90be4ffd5bb0ca12a044adf98168f1b537b",
+      "source": "skills/prototype-driven-implementation/contracts/plan-support.md",
+      "source_sha256": "27d6c039a93cb7217c8c4f0bd52e5a1624b2f2d9936835a8f14ed38a0ca5240a",
       "output": "plan-support.md",
       "purpose": "Make one observed implementation delta decision-complete.",
       "instructions": [
@@ -50,8 +50,8 @@
     },
     {
       "role": "write-code",
-      "source": "skills/write-code-playbook/SKILL.md",
-      "source_sha256": "03b095f40bc979140146bb5d10329b69f4a252c4ead184be51220871080dc6d4",
+      "source": "skills/prototype-driven-implementation/contracts/write-code-support.md",
+      "source_sha256": "9bf38bba4692ff176df9bdab9c9375ba7da658f353d16acc01667d0aa9ac5815",
       "output": "write-code-support.md",
       "purpose": "Implement one controller-approved product-code delta safely.",
       "instructions": [
@@ -63,14 +63,15 @@
     },
     {
       "role": "review",
-      "source": "skills/review-playbook/SKILL.md",
-      "source_sha256": "7af04e52186cd9ed983866f736b1d4faebcf718112a73b531c82c0a026106656",
+      "source": "skills/prototype-driven-implementation/contracts/retained-surface-review.md",
+      "source_sha256": "b148b3d8e5928f2ade2d78526d092ba29e4e884c9c0c25b1e93cba40b1a1431a",
       "output": "review-support.md",
       "purpose": "Audit one retained delta or the final accumulated implementation surface.",
       "instructions": [
         "Review the supplied surface against the approved outcome, observed gap, and governing evidence.",
         "Lead with actionable correctness, security, regression, and requirement-coverage findings.",
         "Distinguish a blocking defect from optional improvement and cite exact evidence.",
+        "Require confirmation through the real operator path before completion.",
         "Return findings to the controller; only the controller combines review with end-to-end proof and decides completion."
       ]
     }

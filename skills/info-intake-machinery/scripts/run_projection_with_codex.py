@@ -771,7 +771,7 @@ def _model_request(
             "Inspect the attached frozen source. "
         )
         + "The command is a self-contained local controller that owns its ordering, journaling, "
-        + "validation, and stopping. Run it immediately; do not invoke task intake, sequence "
+        + "validation, and stopping. Run it immediately; do not invoke operational classification, sequence "
         + "selection, discovery, repository workflows, or repository instruction reads. "
         + "Run this exact interactive command in a PTY: "
         + f"{command_text}. Answer every displayed question one at a time using {evidence_instruction}. "

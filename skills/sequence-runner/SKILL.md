@@ -9,7 +9,7 @@ Use this skill as the entry point for repeatable operational sequences.
 
 ## Entry Gate
 
-Invoke this skill only after `task-intake` returns an operational receipt. Do not invoke it for the
+Invoke this skill only after the Working Agreement's canonical code classifier returns an `operational` receipt. Do not invoke it for the
 local-development fast path merely because work uses a shell command or has three or more local
 steps. Fast-path work consists of G26 preflight, the approved action, and direct verification.
 
@@ -27,8 +27,8 @@ resulting `index.lock` denial as a repository defect. Host permission does not r
 controller's exact-scope display and numbered authorization gate.
 
 Do not wrap a self-contained local controller skill that already owns launch, ordering,
-monitoring, retries, verification, and stopping. In particular, invoke `requirements-machine`,
-`implementation-machine`, and `description-machinery` directly; their internal worker/reader loop
+monitoring, retries, verification, and stopping. In particular, invoke `requirements-machinery`
+and `description-machinery` directly; their internal worker/reader loop
 does not require sequence selection or discovery. This skill applies only if that controller's
 concrete operation independently crosses the governed operational boundary.
 
@@ -49,7 +49,7 @@ under G20 and preserve approval boundaries.
 ## Workflow
 
 1. Locate the sequences root: `${MK_SEQUENCES_ROOT:-$HOME/memory-knowledge}` (the `memory-knowledge` repo). Run the guard/discovery scripts from there.
-2. Require the fresh operational classification receipt created by `task-intake`.
+2. Require the fresh `operational` classification receipt created by the Working Agreement's canonical classifier.
 3. Run `work_memory.py select --task-id <task-id>`. Supply exact `--sequence-id` only to resolve an ambiguity, or `--discovery-log` when no registry row matches.
 4. Read the selected document and its dependency manifest from the selection receipt.
 5. Activate with `sequence_guard.py activate --task-id <task-id>` and exactly the selected `--sequence-doc` or `--discovery-log`. Activation by `--sequence-id` is retired.
@@ -73,9 +73,11 @@ under G20 and preserve approval boundaries.
      re-enter its semantic inputs unless it reports that the active selection changed.
 10. Treat argument-bearing commands in runbooks, help, generated retry text, and the registry
     automation column as machine compatibility evidence, not operator instructions.
-11. If a command fails, classify it under G20. Invoke `blocker-catalog` before changing a
-    deliverable blocker or a repeated execution error; assign an incidental system defect
-    downstream without blocking the current deliverable.
+11. If a command fails, classify it under G20. For a deliverable blocker or a repeated
+    execution error, this controller invokes `python3 scripts/blocker_catalog.py open` before
+    changing the failing boundary and retains the returned identities for correction and same-path
+    verification. A first execution error is corrected once without cataloguing; assign an
+    incidental system defect downstream without blocking the current deliverable.
 12. Record corrections with `work_memory.py correct`; when the bundle changes, close the original run failed and select a fresh B-bound successor with paired `--verification-successor-of/--verifies-correction-id`.
 13. Record verification with explicit quality `same-path` when it exercised the real
     corrected route, then close the run. Only discovery-mode runs call discovery `check`

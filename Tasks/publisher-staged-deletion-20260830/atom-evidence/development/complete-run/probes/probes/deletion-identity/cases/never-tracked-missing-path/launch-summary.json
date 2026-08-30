@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "case_id": "never-tracked-missing-path",
+  "experiment_id": "development-probe-9b5f6d566b9eb523bac3",
+  "probe_id": "deletion-identity",
+  "promotion_applied": false,
+  "recommendation_sha256": "b114e21496e7f1f3f69c9fd47e2c11d7885066abd1fc3d4d93f5835af8264af7",
+  "schema_version": 1,
+  "status": "completed"
+}

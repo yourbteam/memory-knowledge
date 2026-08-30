@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "publisher-preserves-already-staged-paths",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "88231a27d2738130c482afa0a86be1fa9af2867a976d5ea20d70bb5d084f4ec5",
+  "experiment_assembly_sha256": "1c86945ee8a15605ca4044ca1682e5144942a52207aaa1bd968f18fd3032ef9e",
+  "changed_paths": [
+    "scripts/minimal_git_publish.py",
+    "tests/test_minimal_git_publish.py"
+  ],
+  "change_surface": {
+    "path": "stage-change-surface.json",
+    "sha256": "176070bb5d18ea07579d4b113ce8b414358aabceeabc641dd8174b5e3b147a7d"
+  },
+  "review": {
+    "path": "stage-promotion-review.json",
+    "sha256": "4d21d0167b5d8f5025774d381e01ca835987bec3fa1c7d901eec93502121e62e"
+  },
+  "evidence": [
+    {
+      "case_id": "merge-has-staged-deletion",
+      "path": "stage-atom-evidence/development/complete-run/validation/assessments/merge-has-staged-deletion/response.json",
+      "sha256": "4ecbe8d8be4c8a868ff0ab65560d74e959d354982ee2026e2b13e7dfeaf04c9e"
+    },
+    {
+      "case_id": "verification-mutation-still-refused",
+      "path": "stage-atom-evidence/development/complete-run/validation/assessments/verification-mutation-still-refused/response.json",
+      "sha256": "e59936b99999a267b28a0202ab9e3c0b902ba1880015b6038b573743e909b2cb"
+    }
+  ]
+}

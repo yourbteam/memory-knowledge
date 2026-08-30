@@ -1,0 +1,10 @@
+{
+  "development_manifest": "/private/tmp/publisher-staged-deletion-atom/development/manifest.json",
+  "probe_requests": [
+    {
+      "probe_id": "deletion-identity",
+      "request": "/private/tmp/publisher-staged-deletion-atom/development/cross-deletion-identity.json"
+    }
+  ],
+  "schema_version": 1
+}

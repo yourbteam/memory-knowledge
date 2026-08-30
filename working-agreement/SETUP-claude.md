@@ -62,8 +62,8 @@ internal error lets the call or turn through, so a defect in a gate can never we
 | `require-directive-anchor.sh` | `Stop` | The reply does not open with a well-formed G0 anchor, names a controller never invoked, declares `envelope=none` on a turn that edited files, or declares a word count below the real one. |
 
 Register them alongside the injectors, in this order (absolute paths, merged into the existing
-`hooks` block — `PreToolUse` runs the read gate then the delivery gate; `Stop` runs
-`auto-capture-stop.sh` then the anchor gate).
+`hooks` block — `PreToolUse` runs the read gate then the delivery gate; `Stop` runs the anchor
+gate).
 
 `trigger-rules.json` is the delivery table: each entry names the tools it watches, a regex over
 the tool input, the G-ids to deliver, and why that moment needs them. Setting `"on": "repeat"`
@@ -110,7 +110,7 @@ hand-edit or hand-copy them.
    post-install tree hashes, and recovers from its journal if interrupted.
 3. **Fresh-session verification.** Open a new Claude session and confirm: the G0 anchor cites
    the current directives revision; a write-code request routes to `prototype-driven-implementation`;
-   an operational request routes through `task-intake`/`sequence-runner` with zero-argument
+   an operational request is code-classified by Working Agreement and routes through `sequence-runner` with zero-argument
    `scripts/sequence_intake_launch.py` intake.
 4. **Rollback.** A failed or interrupted install restores from the transaction journal in
    `${XDG_STATE_HOME:-~/.local/state}/kamen-managed-skills`; rerunning the installer completes

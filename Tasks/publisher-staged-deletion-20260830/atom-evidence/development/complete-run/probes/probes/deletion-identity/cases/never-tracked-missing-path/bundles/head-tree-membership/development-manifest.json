@@ -1,0 +1,108 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "Accept the staged tracked deletion.",
+        "id": "staged-tracked-deletion",
+        "kind": "failure",
+        "sha256": "bb5a19c56582907f6d550665aa88f8a253670329537db8148ffe567724242489",
+        "source": "/private/tmp/publisher-staged-deletion-atom/cases/staged-tracked-deletion.json"
+      },
+      {
+        "expected_outcome": "Reject a path that never existed.",
+        "id": "never-tracked-missing-path",
+        "kind": "success",
+        "sha256": "73e73f2417c721ce3a943b99876342162fc7c134c6ab251df764c21a9f3cf150",
+        "source": "/private/tmp/publisher-staged-deletion-atom/cases/never-tracked-missing-path.json"
+      }
+    ],
+    "id": "publisher-accepts-staged-deletions",
+    "outcome": "The registered publisher accepts exact manifest paths already staged as deletions while still rejecting nonexistent paths.",
+    "practical_value": "Approved retirements can be committed and pushed through the normal publisher without weakening manifest scope.",
+    "stopping_condition": "A staged tracked deletion publishes through the boundary and a never-tracked missing path remains rejected."
+  },
+  "composition": {
+    "assembly_contract": "Use the selected deletion identity boundary unchanged.",
+    "consumes": [
+      {
+        "artifact": "deletion-identity-boundary",
+        "probe_id": "deletion-identity"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "staged-tracked-deletion",
+        "never-tracked-missing-path"
+      ],
+      "failure_criterion": "Either captured path is misclassified.",
+      "operator_path": "invoke manifest_paths on disposable Git repositories matching the captured cases",
+      "success_criterion": "Both path classifications match their declared outcomes."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "scripts/minimal_git_publish.py",
+        "tests/test_minimal_git_publish.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "HEAD tree membership proves a staged deletion was previously tracked.",
+          "id": "head-tree-membership",
+          "implementation": "Accept a missing index path when its exact blob exists in HEAD.",
+          "predicted_tradeoff": "Simple, but recognizes history rather than the current deletion state."
+        },
+        {
+          "hypothesis": "The HEAD diff can prove the exact path is currently deleted.",
+          "id": "diff-deletion-membership",
+          "implementation": "Accept only an exact path reported by Git with deletion status.",
+          "predicted_tradeoff": "One bounded Git diff per missing manifest entry, with semantics local to this boundary."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "boundary-correctness"
+          },
+          {
+            "method": "sum",
+            "name": "deletion-specificity"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "boundary-correctness"
+          },
+          {
+            "direction": "maximize",
+            "name": "deletion-specificity"
+          }
+        ]
+      },
+      "goal": "Recognize a missing manifest path as an exact tracked deletion without admitting an invented path.",
+      "id": "deletion-identity",
+      "inputs": [
+        {
+          "case_id": "staged-tracked-deletion"
+        },
+        {
+          "case_id": "never-tracked-missing-path"
+        }
+      ],
+      "practical_value": "Approved retirements can be committed and pushed through the normal publisher without weakening manifest scope.",
+      "proof": {
+        "failure_criterion": "Either case is misclassified.",
+        "success_criterion": "The staged deletion is accepted and the invented path is rejected."
+      },
+      "winner_output": {
+        "artifact": "deletion-identity-boundary",
+        "description": "The exact missing-path deletion classifier."
+      },
+      "work_type": "code",
+      "work_type_reason": "Git path identity and deletion status are deterministic repository facts."
+    }
+  ],
+  "schema_version": 1
+}

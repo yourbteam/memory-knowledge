@@ -92,7 +92,21 @@ def manifest_paths(repo: Path, manifest: Path) -> list[str]:
         tracked = _git(
             repo, "ls-files", "--error-unmatch", "--", normalized, check=False
         ).returncode == 0
-        if not resolved.is_file() and not tracked:
+        deleted = normalized in {
+            item
+            for item in _git(
+                repo,
+                "diff",
+                "--name-only",
+                "--diff-filter=D",
+                "-z",
+                "HEAD",
+                "--",
+                normalized,
+            ).stdout.split("\0")
+            if item
+        }
+        if not resolved.is_file() and not tracked and not deleted:
             raise PublishError(
                 f"manifest entry is neither present nor tracked: {normalized}"
             )
@@ -182,7 +196,10 @@ def _stage_and_verify(
     *,
     env: Mapping[str, str] | None = None,
 ) -> dict[str, object]:
-    _git(repo, "add", "--", *paths, env=env)
+    already_staged = set(_staged_paths(repo, env=env))
+    paths_to_stage = [path for path in paths if path not in already_staged]
+    if paths_to_stage:
+        _git(repo, "add", "--", *paths_to_stage, env=env)
     staged = _staged_paths(repo, env=env)
     if staged != sorted(paths):
         raise PublishError(f"staged paths differ from manifest: {staged}")

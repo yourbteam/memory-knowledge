@@ -1,0 +1,1 @@
+{"approach_id": "head-tree-membership", "atomic_step_id": "publisher-accepts-staged-deletions", "bundle_sha256": "5cd43ec77b23d7db7f83c370c662afedf65f2c937456f14370f54cb975a42ce1", "probe_id": "deletion-identity", "status": "verified"}

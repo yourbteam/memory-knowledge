@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "case_id": "staged-tracked-deletion",
+  "experiment_id": "development-probe-1e5c00d8b0eae4253e75",
+  "probe_id": "deletion-identity",
+  "promotion_applied": false,
+  "recommendation_sha256": "b9c6d9ad826e8736b3502e8cb3b7253fae42bcc158eee7d1bb47c92dedcd21b0",
+  "schema_version": 1,
+  "status": "completed"
+}

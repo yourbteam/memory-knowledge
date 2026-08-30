@@ -1,0 +1,67 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "deletion-specificity"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "head-tree-membership",
+    "atomic_step_id": "publisher-accepts-staged-deletions",
+    "development_manifest_sha256": "8fa6278656a1a0e19004f8eee0ec19cff0d9c0ccfd2d14ee5f6d3764799f45f5",
+    "probe_id": "deletion-identity"
+  },
+  "inputs": {
+    "case_ids": [
+      "staged-tracked-deletion",
+      "never-tracked-missing-path"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "operator.py",
+        "sha256": "6a34f102bafe17623fc1959310cc1526a3c6830124ed98f3575aca0d320befc3",
+        "size": 2125
+      },
+      {
+        "path": "scripts/minimal_git_publish.py",
+        "sha256": "0afb8a78bca1f8674c44f657ad0410a29a37f7af0f29e71520f1845adc0071a9",
+        "size": 15091
+      }
+    ],
+    "baseline_sha256": "c4111c58cb795477a11cfcd35323067a81d960dad9e91fa6f9d050c83fb3d061",
+    "candidate_sha256": "6f3299fc9ab34b2769a247296589169562a86f0a49ad283c402c42f3b9953c8f",
+    "changed_paths": [
+      "scripts/minimal_git_publish.py"
+    ],
+    "entrypoint": "operator.py",
+    "files": [
+      {
+        "path": "operator.py",
+        "sha256": "6a34f102bafe17623fc1959310cc1526a3c6830124ed98f3575aca0d320befc3",
+        "size": 2125
+      },
+      {
+        "path": "scripts/minimal_git_publish.py",
+        "sha256": "de7b532a7e760391bba69302bb917f74aa2c82702499119343b7a731d6db73a5",
+        "size": 15243
+      }
+    ],
+    "root": "source"
+  }
+}

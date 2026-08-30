@@ -1,0 +1,34 @@
+{
+  "assembly_sha256": "1b8fd54a91bf62697af69182d4435df0fa77b8d3df9f0772a05f0a80e9c0727b",
+  "atomic_step_id": "requirements-projection-reconciliation",
+  "cases": [
+    {
+      "case_id": "step7-chain-remains-complete",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "the reconciled controller resumes through a pinned runtime and all 35 rule identities survive",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "codex-installed-behavior-is-not-erased",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "the generated Codex projection retains the exact read-only nested command and required outer launch",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-receives-corrected-machinery",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "the generated Claude projection receives shared conservation code and remains Claude-owned",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

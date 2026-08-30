@@ -1,0 +1,8 @@
+{
+  "case_id": "never-tracked-missing-path",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "The assembled publisher classified the captured manifest path correctly.",
+  "verdict": "satisfied"
+}

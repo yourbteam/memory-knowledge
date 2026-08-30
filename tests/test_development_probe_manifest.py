@@ -34,6 +34,7 @@ def _probe(probe_id: str, artifact: str) -> dict:
         "practical_value": f"The atomic implementation gains {probe_id} behavior.",
         "work_type": "code",
         "work_type_reason": "The boundary is deterministic.",
+        "allowed_paths": [f"skills/{probe_id}"],
         "inputs": [{"case_id": "works"}, {"case_id": "refuses"}],
         "approaches": [
             {
@@ -97,6 +98,13 @@ def manifest() -> dict:
                     "kind": "failure",
                     "expected_outcome": "The unreadable unit remains an explicit gap.",
                 },
+                {
+                    "id": "also-works",
+                    "source": "captured/also-works.json",
+                    "sha256": "3" * 64,
+                    "kind": "success",
+                    "expected_outcome": "The second readable source is also preserved.",
+                },
             ],
         },
         "mini_probes": probes,
@@ -108,7 +116,7 @@ def manifest() -> dict:
             "assembly_contract": "Link both promotion candidates behind one operator entrypoint.",
             "final_validation": {
                 "operator_path": "development-probe validate manifest.json",
-                "case_ids": ["works", "refuses"],
+                "case_ids": ["works", "refuses", "also-works"],
                 "success_criterion": "The composed path produces the approved atomic outcome.",
                 "failure_criterion": "The composed path preserves the explicit failure outcome.",
             },
@@ -173,6 +181,22 @@ def test_complete_parallel_manifest_is_accepted_without_mutating_input() -> None
             "different implementation",
         ),
         (
+            lambda value: value["mini_probes"][0].update({"allowed_paths": []}),
+            "declare what this mini-probe may change",
+        ),
+        (
+            lambda value: value["mini_probes"][0].update(
+                {"allowed_paths": ["../outside"]}
+            ),
+            "repository-relative",
+        ),
+        (
+            lambda value: value["mini_probes"][0].update(
+                {"allowed_paths": ["skills/source-reader", "skills/source-reader"]}
+            ),
+            "duplicates",
+        ),
+        (
             lambda value: value["mini_probes"][0]["inputs"].append(
                 {"from_probe": "ledger-writer", "artifact": "ledger-writer-candidate"}
             ),
@@ -192,7 +216,31 @@ def test_complete_parallel_manifest_is_accepted_without_mutating_input() -> None
             lambda value: value["composition"]["final_validation"].update(
                 {"case_ids": ["works"]}
             ),
-            "success and failure",
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "refuses"]}
+            ),
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "also-works", "refuses"]}
+            ),
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "refuses", "refuses"]}
+            ),
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "refuses", "unknown"]}
+            ),
+            "exact captured case order",
         ),
     ],
 )

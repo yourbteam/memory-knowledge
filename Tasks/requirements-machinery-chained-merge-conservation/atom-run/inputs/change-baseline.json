@@ -1,0 +1,26 @@
+{
+  "allowed_paths": [
+    "skills/requirements-machinery/scripts/cover.py",
+    "skills/requirements-machinery/scripts/rule_lineage.py",
+    "skills/requirements-machinery/scripts/rule_conservation.py",
+    "tests/test_requirements_machinery_rule_lineage.py",
+    "tests/test_requirements_machinery_cover.py"
+  ],
+  "atomic_step_id": "requirements-chained-merge-conservation",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/cover.py",
+      "sha256": "8622173b6e3d64ce0a82d202f4b06fbd0e9be2831f84d6627cf04416dec98e4e",
+      "size": 91541
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_requirements_machinery_cover.py",
+      "sha256": "2819d71f2e78e8108a89b89b41c58afa662fcbdfb65cd57febedd3613796bf33",
+      "size": 35676
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge",
+  "schema_version": 1
+}

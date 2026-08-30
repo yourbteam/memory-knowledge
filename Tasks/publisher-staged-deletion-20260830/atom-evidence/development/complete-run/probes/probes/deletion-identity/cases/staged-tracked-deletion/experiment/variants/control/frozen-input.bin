@@ -1,0 +1,6 @@
+{
+  "case_id": "staged-tracked-deletion",
+  "expected_accepted": true,
+  "selected_path": "retired.py",
+  "setup": "staged-deletion"
+}

@@ -1,0 +1,28 @@
+{
+  "experiment_id": "development-probe-1e5c00d8b0eae4253e75",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "head-tree-membership",
+      "bundle": "bundles/head-tree-membership",
+      "bundle_sha256": "5cd43ec77b23d7db7f83c370c662afedf65f2c937456f14370f54cb975a42ce1",
+      "case_ids": [
+        "staged-tracked-deletion",
+        "never-tracked-missing-path"
+      ],
+      "probe_id": "deletion-identity",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "diff-deletion-membership",
+      "bundle": "bundles/diff-deletion-membership",
+      "bundle_sha256": "abfdf05e52adba1637ef3a6e81a5113b8138ac001037a7804e87d16f8bf9498c",
+      "case_ids": [
+        "staged-tracked-deletion",
+        "never-tracked-missing-path"
+      ],
+      "probe_id": "deletion-identity",
+      "variant_id": "variation-2"
+    }
+  ]
+}

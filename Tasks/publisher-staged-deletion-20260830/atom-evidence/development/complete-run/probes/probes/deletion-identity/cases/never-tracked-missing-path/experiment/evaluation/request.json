@@ -1,0 +1,74 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/never-tracked-missing-path/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/never-tracked-missing-path/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/never-tracked-missing-path/experiment/variants/control/telemetry.jsonl",
+          "sha256": "589958e0b6fd8a9cd00b166179c342349c213a7515d0897146cd6dac36c3a2da"
+        }
+      ],
+      "outcome": {
+        "accepted": false,
+        "case_id": "never-tracked-missing-path",
+        "correct": true,
+        "error": "manifest entry is neither present nor tracked: missing.py",
+        "expected_accepted": false,
+        "paths": null
+      },
+      "result_sha256": "b59e0131d73c779922bc4449baaa33ff1c893346d8c669bf5d035c580b3a8a94",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/never-tracked-missing-path/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/never-tracked-missing-path/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/never-tracked-missing-path/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "5ce79cfc17ef397116a50fb0a6c20e18f98c81f35aced85f92e1630aa01d6497"
+        }
+      ],
+      "outcome": {
+        "accepted": false,
+        "case_id": "never-tracked-missing-path",
+        "correct": true,
+        "error": "manifest entry is neither present nor tracked: missing.py",
+        "expected_accepted": false,
+        "paths": null
+      },
+      "result_sha256": "d10450ee1b9afb8a8938d7cbb8cf9e8e72ec237daa413baa004306c6a91066f4",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-9b5f6d566b9eb523bac3",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "boundary-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "deletion-specificity"
+    }
+  ],
+  "schema_version": 1
+}

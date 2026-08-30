@@ -1,0 +1,1 @@
+{"error": null, "metrics": {"boundary-correctness": 1}, "outcome": {"accepted": true, "case_id": "staged-tracked-deletion", "correct": true, "error": null, "expected_accepted": true, "paths": ["retired.py"]}, "schema_version": 1, "status": "completed", "variant_id": "variation-2"}

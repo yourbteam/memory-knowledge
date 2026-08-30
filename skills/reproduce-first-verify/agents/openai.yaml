@@ -1,4 +1,0 @@
-interface:
-  display_name: "Reproduce-First Verify"
-  short_description: "Prove recurring fixes quickly against captured live failures"
-  default_prompt: "Use $reproduce-first-verify to capture the exact live failure, build the tightest real-code reproduction, prove red-before and green-after, then perform one authorized live confirmation."

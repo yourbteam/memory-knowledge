@@ -1,0 +1,132 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/private/tmp/publisher-staged-deletion-atom/development/evaluator.py",
+        "sha256": "0268bea4b4f2899f91ef4fe4a389efb04964f913ec0af3ddd7201bfca1f38f1f"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "deletion-specificity"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-1e5c00d8b0eae4253e75",
+  "frozen_input_sha256": "bb5a19c56582907f6d550665aa88f8a253670329537db8148ffe567724242489",
+  "hypothesis": "Every approach declared by mini-probe 'deletion-identity' can run against captured case 'staged-tracked-deletion', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts",
+      "sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9"
+    }
+  },
+  "target_source_sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9",
+  "variants": [
+    {
+      "duration_ms": 197,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "outcome": {
+        "accepted": true,
+        "case_id": "staged-tracked-deletion",
+        "correct": true,
+        "error": null,
+        "expected_accepted": true,
+        "paths": [
+          "retired.py"
+        ]
+      },
+      "reported_metrics": {
+        "boundary-correctness": 1
+      },
+      "result_sha256": "078f0385b9ea05f30a10610b2b94d2bf6d86867afe369dbb518814072d36cbd5",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "29523a7f8d3b9e4cb4a169950a5f41b4ca6ad95fea5e44d6bc4f0ed2c70dea51",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 191,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "outcome": {
+        "accepted": true,
+        "case_id": "staged-tracked-deletion",
+        "correct": true,
+        "error": null,
+        "expected_accepted": true,
+        "paths": [
+          "retired.py"
+        ]
+      },
+      "reported_metrics": {
+        "boundary-correctness": 1
+      },
+      "result_sha256": "22fc49ff152485ad1d748772fa8e3f0272551eef024ed5bca82743546582d810",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "862339095b34bc9e18e9e22ba9bf74631fb510f42ca7a990f42cf1f823facaf6",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "case_id": "step7-chain-preserved",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "all 35 source identities survive exactly once and both six-type wordings reach the terminal lineage",
+  "verdict": "satisfied"
+}

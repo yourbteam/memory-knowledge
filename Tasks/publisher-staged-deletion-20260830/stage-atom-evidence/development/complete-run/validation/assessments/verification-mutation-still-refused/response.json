@@ -1,0 +1,8 @@
+{
+  "case_id": "verification-mutation-still-refused",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "The assembled staging boundary produced the declared outcome.",
+  "verdict": "satisfied"
+}

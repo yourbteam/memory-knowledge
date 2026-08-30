@@ -1,0 +1,6 @@
+{
+  "baseline": "/private/tmp/publisher-staged-deletion-atom/development/baseline",
+  "development_manifest": "/private/tmp/publisher-staged-deletion-atom/development/manifest.json",
+  "promotion_candidates": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/promotion-candidates.json",
+  "schema_version": 1
+}

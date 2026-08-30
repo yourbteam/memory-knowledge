@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "promotion_event_sha256": "4ae490d34a6350dc28f0d8eec10e3019334e4d55c611d35ab3381a479dea5d6d",
+  "cases": [
+    {
+      "case_id": "staged-tracked-deletion",
+      "verdict": "satisfied",
+      "reason": "The registered dry-run launcher accepted the actual pending merge manifest containing staged retirements and completed its focused verification.",
+      "evidence": [
+        {
+          "case_id": "staged-tracked-deletion",
+          "path": "real-path-staged-deletion.json",
+          "sha256": "e2b2dee2b1913419bc4a910bcdd92ca22360ea0f7944017dc55b83ac84d15dec"
+        }
+      ]
+    },
+    {
+      "case_id": "never-tracked-missing-path",
+      "verdict": "satisfied",
+      "reason": "The focused launcher verification proved an invented missing path is still rejected by the same manifest boundary.",
+      "evidence": [
+        {
+          "case_id": "never-tracked-missing-path",
+          "path": "real-path-missing-guard.json",
+          "sha256": "b837084afc5533474f2fffc82b8f313364905fd271127a4e486985db8ff44315"
+        }
+      ]
+    }
+  ]
+}

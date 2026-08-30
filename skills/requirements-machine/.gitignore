@@ -1,3 +1,0 @@
-# Running a tool here writes bytecode beside it, and the skill validator refuses any generated
-# artifact in a managed skill — so the install broke every time the machinery had been used.
-__pycache__/

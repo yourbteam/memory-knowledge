@@ -1,0 +1,26 @@
+{
+  "assembly_sha256": "1c86945ee8a15605ca4044ca1682e5144942a52207aaa1bd968f18fd3032ef9e",
+  "atomic_step_id": "publisher-preserves-already-staged-paths",
+  "cases": [
+    {
+      "case_id": "merge-has-staged-deletion",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "The assembled staging boundary produced the declared outcome.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "verification-mutation-still-refused",
+      "evidence_pointers": [
+        "execution-result"
+      ],
+      "reason": "The assembled staging boundary produced the declared outcome.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

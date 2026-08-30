@@ -1,4 +1,0 @@
-interface:
-  display_name: "Plan Playbook"
-  short_description: "Controller-backed implementation planning"
-  default_prompt: "Use $plan-playbook to produce and harden a decision-complete implementation plan package."

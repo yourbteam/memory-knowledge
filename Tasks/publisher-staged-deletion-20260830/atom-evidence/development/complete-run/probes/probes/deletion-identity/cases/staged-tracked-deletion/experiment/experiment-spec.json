@@ -1,0 +1,80 @@
+{
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/private/tmp/publisher-staged-deletion-atom/development/evaluator.py",
+        "sha256": "0268bea4b4f2899f91ef4fe4a389efb04964f913ec0af3ddd7201bfca1f38f1f"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "deletion-specificity"
+      }
+    ]
+  },
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-1e5c00d8b0eae4253e75",
+  "frozen_input": {
+    "path": "/private/tmp/publisher-staged-deletion-atom/cases/staged-tracked-deletion.json",
+    "sha256": "bb5a19c56582907f6d550665aa88f8a253670329537db8148ffe567724242489"
+  },
+  "hypothesis": "Every approach declared by mini-probe 'deletion-identity' can run against captured case 'staged-tracked-deletion', and the declared metrics recommend one bundle.",
+  "schema_version": 4,
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts",
+      "sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9"
+    }
+  },
+  "variants": [
+    {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "1b7bbef4373d828ffee5d6a7357d0e0a50b29691c9fa103742ffac83d82c7e43"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/bundles/head-tree-membership"
+      ],
+      "configuration": {
+        "case_id": "staged-tracked-deletion"
+      },
+      "id": "control"
+    },
+    {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "1b7bbef4373d828ffee5d6a7357d0e0a50b29691c9fa103742ffac83d82c7e43"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/bundles/diff-deletion-membership"
+      ],
+      "configuration": {
+        "case_id": "staged-tracked-deletion"
+      },
+      "id": "variation-2"
+    }
+  ]
+}

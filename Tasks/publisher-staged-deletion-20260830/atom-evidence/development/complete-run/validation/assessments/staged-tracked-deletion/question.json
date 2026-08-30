@@ -1,0 +1,67 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "6eb7d6ebc1f5a41e67c4e31709258267d9130bf5cc95872e9bcc95cbe1395930",
+  "atomic_outcome": "The registered publisher accepts exact manifest paths already staged as deletions while still rejecting nonexistent paths.",
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "case_id": "staged-tracked-deletion",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "execution-result",
+      "value": {
+        "error": null,
+        "metrics": {
+          "boundary-correctness": 1
+        },
+        "outcome": {
+          "accepted": true,
+          "case_id": "staged-tracked-deletion",
+          "correct": true,
+          "error": null,
+          "expected_accepted": true,
+          "paths": [
+            "retired.py"
+          ]
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      }
+    }
+  ],
+  "execution_result": {
+    "error": null,
+    "metrics": {
+      "boundary-correctness": 1
+    },
+    "outcome": {
+      "accepted": true,
+      "case_id": "staged-tracked-deletion",
+      "correct": true,
+      "error": null,
+      "expected_accepted": true,
+      "paths": [
+        "retired.py"
+      ]
+    },
+    "schema_version": 1,
+    "status": "completed",
+    "variant_id": "assembly"
+  },
+  "expected_outcome": "Accept the staged tracked deletion.",
+  "operator_path": "invoke manifest_paths on disposable Git repositories matching the captured cases",
+  "overall_criterion": "Either captured path is misclassified.",
+  "schema_version": 1
+}

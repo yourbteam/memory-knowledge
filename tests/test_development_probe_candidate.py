@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from copy import deepcopy
 from pathlib import Path
 
@@ -64,7 +65,7 @@ result = {{
     "schema_version": 1,
     "variant_id": variant_id,
     "status": "completed",
-    "outcome": {{"value": payload["value"]}},
+    "outcome": {{"value": payload["value"], "observed_quality": {quality}}},
     "metrics": {{"quality": {quality}}},
     "error": None,
 }}
@@ -73,9 +74,16 @@ result_path.write_text(json.dumps(result, sort_keys=True) + "\\n", encoding="utf
 
 
 def _case_scored_adapter(scores: dict[str, int]) -> str:
-    return _adapter(0).replace(
-        '"metrics": {"quality": 0}',
-        f'"metrics": {{"quality": {scores!r}[payload["value"]]}}',
+    return (
+        _adapter(0)
+        .replace(
+            '"observed_quality": 0',
+            f'"observed_quality": {scores!r}[payload["value"]]',
+        )
+        .replace(
+            '"metrics": {"quality": 0}',
+            f'"metrics": {{"quality": {scores!r}[payload["value"]]}}',
+        )
     )
 
 
@@ -117,6 +125,7 @@ def _fixture(root: Path) -> tuple[Path, Path, Path, Path]:
                 "practical_value": "The approach can enter Experiment Machinery.",
                 "work_type": "code",
                 "work_type_reason": "Identity and execution are deterministic.",
+                "allowed_paths": ["adapter.py"],
                 "inputs": [{"case_id": "works"}, {"case_id": "refuses"}],
                 "approaches": [
                     {
@@ -209,6 +218,39 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _evaluator(root: Path) -> dict:
+    path = root / "independent-evaluator.py"
+    if not path.exists():
+        path.write_text(
+            """from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+
+request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+scores = []
+for candidate in request["candidates"]:
+    outcome = candidate["outcome"]
+    if "observed_quality" in outcome:
+        quality = outcome["observed_quality"]
+    else:
+        quality = sum(value not in {"base-a", "base-b"} for value in outcome.get("features", []))
+    scores.append({"variant_id": candidate["variant_id"], "metrics": {"quality": quality}})
+Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores}, sort_keys=True) + "\\n", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
+    return {
+        "adapter": {"path": str(path), "sha256": _digest(path)},
+        "command": [
+            "{python}",
+            "{evaluation-adapter}",
+            "{evaluation-request}",
+            "{evaluation-response}",
+        ],
+    }
+
+
 def _launcher_request(
     root: Path,
     manifest: Path,
@@ -226,6 +268,7 @@ def _launcher_request(
         "probe_id": "runner",
         "case_id": "works",
         "approach_build_requests": requests,
+        "evaluator": _evaluator(root),
     }
     launch_path = root / "launch.json"
     _write_json(launch_path, launch)
@@ -303,6 +346,7 @@ def _all_probe_request(
             "development_manifest": str(manifest_path),
             "probe_id": probe_id,
             "approach_build_requests": build_requests,
+            "evaluator": _evaluator(root),
         }
         cross_path = root / f"cross-{probe_id}.json"
         _write_json(cross_path, cross)
@@ -436,6 +480,9 @@ def _composition_fixture(
                 "practical_value": f"The {probe_id} contribution is independently proven.",
                 "work_type": "code",
                 "work_type_reason": "The result is deterministic source code.",
+                "allowed_paths": [
+                    "feature_a.py" if probe_id == "runner" else "feature_b.py"
+                ],
                 "inputs": [{"case_id": "works"}, {"case_id": "refuses"}],
                 "approaches": [
                     {
@@ -489,6 +536,7 @@ def _composition_fixture(
                 "development_manifest": str(manifest_path),
                 "probe_id": probe_id,
                 "approach_build_requests": approaches,
+                "evaluator": _evaluator(root),
             },
         )
         cross_requests[probe_id] = cross_path
@@ -826,6 +874,9 @@ def test_build_is_write_once_and_verify_refuses_changed_candidate_source(tmp_pat
         "source",
     }
     assert all((path.stat().st_mode & 0o222) == 0 for path in bundle.rglob("*"))
+    bundle_record = json.loads((bundle / "bundle.json").read_text())
+    assert bundle_record["source"]["changed_paths"] == ["adapter.py"]
+    assert bundle_record["source"]["baseline_files"]
 
     verified = subprocess.run(
         [sys.executable, str(CANDIDATE), "verify", str(bundle)],
@@ -857,6 +908,56 @@ def test_build_is_write_once_and_verify_refuses_changed_candidate_source(tmp_pat
     )
     assert changed.returncode == 2
     assert "changed" in changed.stderr
+
+
+def test_build_refuses_every_changed_path_outside_probe_scope(tmp_path: Path) -> None:
+    manifest, baseline, control, _ = _fixture(tmp_path)
+    (control / "outside.txt").write_text("first unrelated change\n", encoding="utf-8")
+    (control / "second.txt").write_text("second unrelated change\n", encoding="utf-8")
+
+    completed = _build(
+        _request(manifest, baseline, control, "control"),
+        tmp_path / "outside-request.json",
+        tmp_path / "outside-bundle",
+    )
+
+    assert completed.returncode == 2
+    assert "outside.txt" in completed.stderr
+    assert "second.txt" in completed.stderr
+    assert "allowed_paths ['adapter.py']" in completed.stderr
+    assert not (tmp_path / "outside-bundle").exists()
+
+
+def test_verify_refuses_baseline_records_that_do_not_match_tree_digest(
+    tmp_path: Path,
+) -> None:
+    manifest, baseline, control, _ = _fixture(tmp_path)
+    bundle = tmp_path / "bundle"
+    built = _build(
+        _request(manifest, baseline, control, "control"),
+        tmp_path / "request.json",
+        bundle,
+    )
+    assert built.returncode == 0, built.stderr
+    record_path = bundle / "bundle.json"
+    record_path.chmod(0o644)
+    record = json.loads(record_path.read_text())
+    record["source"]["baseline_files"][0]["sha256"] = "0" * 64
+    record_path.write_text(
+        json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    record_path.chmod(0o444)
+
+    verified = subprocess.run(
+        [sys.executable, str(CANDIDATE), "verify", str(bundle)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert verified.returncode == 2
+    assert "baseline_files differ" in verified.stderr
 
 
 def test_build_and_verify_refuse_symbolic_link_roots(tmp_path: Path) -> None:
@@ -937,7 +1038,7 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
         bundles[approach_id] = bundle
 
     spec = {
-        "schema_version": 1,
+        "schema_version": 4,
         "experiment_id": "candidate-bundle-real-comparison",
         "hypothesis": "Both immutable candidates run and the declared quality metric selects variation.",
         "target": {
@@ -953,15 +1054,23 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
             "path": json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["source"],
             "sha256": json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["sha256"],
         },
+        "execution_limits": {
+            "variant_timeout_ms": 5000,
+            "evaluator_timeout_ms": 5000,
+        },
         "variants": [
             {
                 "id": approach_id,
                 "command": [sys.executable, str(CANDIDATE), "execute", str(bundle)],
+                "adapter": {"path": str(CANDIDATE), "sha256": _digest(CANDIDATE)},
                 "configuration": {"case_id": "works"},
             }
             for approach_id, bundle in bundles.items()
         ],
-        "evaluation": {"metrics": [{"name": "quality", "direction": "maximize"}]},
+        "evaluation": {
+            "metrics": [{"name": "quality", "direction": "maximize"}],
+            "evaluator": _evaluator(tmp_path),
+        },
     }
     spec_path = tmp_path / "experiment.json"
     spec_path.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1045,9 +1154,16 @@ def test_launcher_runs_every_approach_and_preserves_exact_recommendation(
     assert (output / "bundles" / "variation" / "bundle.json").is_file()
     build_results = json.loads((output / "build-results.json").read_text())
     assert [item["status"] for item in build_results["results"]] == ["built", "built"]
+    assert len({item["candidate_sha256"] for item in build_results["results"]}) == 2
     summary = json.loads((output / "experiment" / "summary.json").read_text())
     assert summary["champion"] == "variation-2"
     assert all(row["eligible"] for row in summary["variants"])
+    experiment_spec = json.loads((output / "experiment.json").read_text())
+    assert experiment_spec["schema_version"] == 4
+    assert experiment_spec["execution_limits"] == {
+        "variant_timeout_ms": 1_800_000,
+        "evaluator_timeout_ms": 600_000,
+    }
     assert json.loads((output / "launch-summary.json").read_text())["status"] == "completed"
 
     repeated = _launch(request_path, output)
@@ -1084,6 +1200,30 @@ def test_launcher_refuses_incomplete_approaches_or_undeclared_case_with_evidence
     assert message in failure["error"]
     assert not (output / "recommendation.json").exists()
     assert not (output / "experiment").exists()
+
+
+def test_launcher_refuses_byte_identical_candidates_before_experiment(
+    tmp_path: Path,
+) -> None:
+    manifest, baseline, control, variation = _fixture(tmp_path)
+    (variation / "adapter.py").write_bytes((control / "adapter.py").read_bytes())
+    request_path, _ = _launcher_request(
+        tmp_path, manifest, baseline, {"control": control, "variation": variation}
+    )
+    output = tmp_path / "launch-output"
+
+    completed = _launch(request_path, output)
+
+    assert completed.returncode == 2
+    assert "byte-identical" in completed.stderr
+    failure = json.loads((output / "launch-summary.json").read_text())
+    assert failure["status"] == "failed"
+    assert failure["stage"] == "validate-distinct-candidates"
+    build_results = json.loads((output / "build-results.json").read_text())
+    assert [item["status"] for item in build_results["results"]] == ["built", "built"]
+    assert len({item["candidate_sha256"] for item in build_results["results"]}) == 1
+    assert not (output / "experiment").exists()
+    assert not (output / "recommendation.json").exists()
 
 
 def test_launcher_preserves_all_build_results_and_does_not_run_incomplete_set(
@@ -1425,6 +1565,9 @@ def test_composer_refuses_incompatible_winner_changes(
     tmp_path: Path,
 ) -> None:
     manifest, baseline, all_request, sources, _ = _composition_fixture(tmp_path)
+    manifest_value = json.loads(manifest.read_text())
+    manifest_value["mini_probes"][1]["allowed_paths"].append("feature_a.py")
+    _write_json(manifest, manifest_value)
     (sources["selector-variation"] / "feature_a.py").write_text(
         "def value():\n    return 'selector-a'\n", encoding="utf-8"
     )
@@ -1720,6 +1863,91 @@ def test_whole_process_runs_from_probe_experiments_to_passed_verdict(
     assert (output / "validation" / "final-verdict.json").is_file()
 
 
+def test_whole_process_stage_controller_preserves_normal_completion(tmp_path: Path) -> None:
+    module = _whole_process_module()
+    stage = "run-probes"
+    _, evidence_path, result_path = module._stage_paths(tmp_path, stage)
+    payload = json.dumps({"schema_version": 1, "status": "completed", "promotion_applied": False})
+    command = [
+        sys.executable,
+        "-c",
+        (
+            "from pathlib import Path; "
+            f"Path({str(evidence_path)!r}).parent.mkdir(parents=True, exist_ok=True); "
+            f"Path({str(evidence_path)!r}).write_text({payload!r}); "
+            f"Path({str(result_path)!r}).write_text({payload!r}); "
+            "print('stage-completed', flush=True)"
+        ),
+    ]
+
+    receipt = module._run_stage(tmp_path, stage, command, timeout_ms=2_000)
+
+    assert receipt["status"] == "completed"
+    assert receipt["timed_out"] is False
+    assert receipt["timeout_ms"] == 2_000
+    assert receipt["timeout"] is None
+    assert "stage-completed" in (tmp_path / "stage-receipts" / stage / "stdout.txt").read_text()
+
+
+def test_whole_process_stage_deadlines_scale_with_declared_parallel_work() -> None:
+    module = _whole_process_module()
+    manifest = {
+        "mini_probes": [{"inputs": [{"case_id": str(index)} for index in range(5)]} for _ in range(5)],
+        "composition": {"final_validation": {"case_ids": [str(index) for index in range(5)]}},
+    }
+
+    timeouts = module._stage_timeouts(manifest)
+
+    assert timeouts == {
+        "run-probes": 10_800_000,
+        "compose-winners": 600_000,
+        "final-validation": 5_400_000,
+    }
+
+
+@pytest.mark.parametrize(
+    ("stage", "process_tree"),
+    [
+        ("run-probes", False),
+        ("compose-winners", True),
+        ("final-validation", False),
+    ],
+)
+def test_whole_process_stage_controller_terminates_overruns_with_evidence(
+    tmp_path: Path,
+    stage: str,
+    process_tree: bool,
+) -> None:
+    module = _whole_process_module()
+    marker = tmp_path / f"{stage}-descendant.txt"
+    if process_tree:
+        child = (
+            "import subprocess,sys,time; "
+            f"subprocess.Popen([sys.executable, '-c', \"import time; from pathlib import Path; "
+            f"time.sleep(0.5); Path({str(marker)!r}).write_text('alive')\"]); "
+            "print('stage-started', flush=True); time.sleep(60)"
+        )
+    else:
+        child = "import time; print('stage-started', flush=True); time.sleep(60)"
+
+    with pytest.raises(module.DevelopmentProbeRunError, match="controller-owned") as failure:
+        module._run_stage(tmp_path, stage, [sys.executable, "-c", child], timeout_ms=100)
+
+    receipt_root = tmp_path / "stage-receipts" / stage
+    receipt = json.loads((receipt_root / "receipt.json").read_text())
+    timeout = json.loads((receipt_root / "timeout.json").read_text())
+    assert failure.value.stage == stage
+    assert receipt["status"] == "timed-out"
+    assert receipt["timed_out"] is True
+    assert receipt["timeout_ms"] == 100
+    assert timeout["stage"] == stage
+    assert timeout["status"] == "timed-out"
+    assert "stage-started" in (receipt_root / "stdout.txt").read_text()
+    if process_tree:
+        time.sleep(0.6)
+        assert not marker.exists()
+
+
 def test_whole_process_returns_semantic_failed_verdict_without_treating_it_as_a_run_error(
     tmp_path: Path,
 ) -> None:
@@ -1813,7 +2041,10 @@ def test_whole_process_stops_after_probe_failure_and_preserves_probe_evidence(
 def test_whole_process_stops_after_composition_conflict_and_preserves_probe_evidence(
     tmp_path: Path,
 ) -> None:
-    _, baseline, all_request, sources, _ = _composition_fixture(tmp_path)
+    manifest, baseline, all_request, sources, _ = _composition_fixture(tmp_path)
+    manifest_value = json.loads(manifest.read_text())
+    manifest_value["mini_probes"][1]["allowed_paths"].append("feature_a.py")
+    _write_json(manifest, manifest_value)
     (sources["selector-variation"] / "feature_a.py").write_text(
         "def value():\n    return 'selector-a'\n", encoding="utf-8"
     )

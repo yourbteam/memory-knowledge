@@ -1,0 +1,13 @@
+{
+  "aggregated_summary_sha256": "9f694d2136b3d83d4fdecb83928928f5fb06daca7426456a144de713c2a7799f",
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "case_ids": [
+    "staged-tracked-deletion",
+    "never-tracked-missing-path"
+  ],
+  "probe_id": "deletion-identity",
+  "promotion_applied": false,
+  "recommendation_sha256": "150b02476a928b0bc148fe51ccfa34af0084a2a34a98c65f076c733228a1f0c6",
+  "schema_version": 1,
+  "status": "completed"
+}

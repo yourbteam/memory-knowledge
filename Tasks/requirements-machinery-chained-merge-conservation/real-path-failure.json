@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "case_id": "step7-current-loss-refused",
+  "command": "rule_conservation.check against the exact historical Step 7 requirements.items",
+  "source_sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+  "observed": {
+    "source_rule_count": 35,
+    "terminal_item_count": 37,
+    "represented_rule_count": 0,
+    "missing_rule_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+    "duplicates": [],
+    "unknown": [],
+    "valid": false
+  },
+  "verdict": "satisfied"
+}

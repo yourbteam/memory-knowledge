@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/experiment/variants/control/telemetry.jsonl",
+          "sha256": "29523a7f8d3b9e4cb4a169950a5f41b4ca6ad95fea5e44d6bc4f0ed2c70dea51"
+        }
+      ],
+      "outcome": {
+        "accepted": true,
+        "case_id": "staged-tracked-deletion",
+        "correct": true,
+        "error": null,
+        "expected_accepted": true,
+        "paths": [
+          "retired.py"
+        ]
+      },
+      "result_sha256": "078f0385b9ea05f30a10610b2b94d2bf6d86867afe369dbb518814072d36cbd5",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/probes/probes/deletion-identity/cases/staged-tracked-deletion/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "862339095b34bc9e18e9e22ba9bf74631fb510f42ca7a990f42cf1f823facaf6"
+        }
+      ],
+      "outcome": {
+        "accepted": true,
+        "case_id": "staged-tracked-deletion",
+        "correct": true,
+        "error": null,
+        "expected_accepted": true,
+        "paths": [
+          "retired.py"
+        ]
+      },
+      "result_sha256": "22fc49ff152485ad1d748772fa8e3f0272551eef024ed5bca82743546582d810",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-1e5c00d8b0eae4253e75",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "boundary-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "deletion-specificity"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "requirements-projection-reconciliation",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "2baa0c8c700ea2928debe97f63d42807a3ce4847108f9ea5bc69018514237a73",
+  "experiment_assembly_sha256": "1b8fd54a91bf62697af69182d4435df0fa77b8d3df9f0772a05f0a80e9c0727b",
+  "changed_paths": [
+    "skills/requirements-machinery/SKILL.md",
+    "skills/requirements-machinery/evidence/empirical-claims.json",
+    "skills/requirements-machinery/probes/self-sustained-controller/experiment_adapter.py",
+    "skills/requirements-machinery/scripts/__pycache__/checkability.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/cover.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/dedupe.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/interview.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/quotecheck.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/reflow.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/register.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/rule_conservation.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/rule_lineage.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/rules.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/__pycache__/splitter.cpython-314.pyc",
+    "skills/requirements-machinery/scripts/contract_surface.py",
+    "skills/requirements-machinery/scripts/cover.py",
+    "skills/requirements-machinery/scripts/empirical_claims.py",
+    "tests/test_client_skill_projections.py",
+    "tests/test_requirements_machinery_cover.py",
+    "working-agreement/client-skill-projections.json",
+    "working-agreement/machinery-client-model-v2.json",
+    "working-agreement/project_client_skills.py"
+  ],
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "0bbe9f0374a9d66124e3b2cfab56d8dbddffd6914ce0e9aea9fe92a8bad2bbb1"
+  },
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "868e259c4689c77e2fdcc1ce1dc396aa9eaacc0ac7c2abbca77b3f584f0c2426"
+  },
+  "evidence": [
+    {
+      "case_id": "step7-chain-remains-complete",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+      "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc"
+    },
+    {
+      "case_id": "codex-installed-behavior-is-not-erased",
+      "path": "cases/codex-projection-drift.json",
+      "sha256": "ea414e985491227aa623dc6c9fa2461be59d7c116b5a17929e66835b4ac0944a"
+    },
+    {
+      "case_id": "claude-receives-corrected-machinery",
+      "path": "cases/claude-projection-stale.json",
+      "sha256": "6a7ea6509c8d07b9bb214700d3c3229bab92beb94bd8adc38602c625657825e6"
+    }
+  ]
+}

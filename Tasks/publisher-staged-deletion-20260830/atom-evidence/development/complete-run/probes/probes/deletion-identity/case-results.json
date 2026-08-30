@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "case_id": "staged-tracked-deletion",
+      "output": "cases/staged-tracked-deletion",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "never-tracked-missing-path",
+      "output": "cases/never-tracked-missing-path",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

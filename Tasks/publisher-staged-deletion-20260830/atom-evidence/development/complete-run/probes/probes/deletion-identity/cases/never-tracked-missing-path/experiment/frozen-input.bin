@@ -1,0 +1,6 @@
+{
+  "case_id": "never-tracked-missing-path",
+  "expected_accepted": false,
+  "selected_path": "missing.py",
+  "setup": "none"
+}

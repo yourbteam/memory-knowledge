@@ -1,0 +1,27 @@
+{
+  "allowed_paths": [
+    "scripts/minimal_git_publish.py",
+    "tests/test_minimal_git_publish.py"
+  ],
+  "atomic_step_id": "publisher-preserves-already-staged-paths",
+  "captured_cases": [
+    {
+      "case_id": "merge-has-staged-deletion",
+      "expected_outcome": "Stage remaining paths while preserving the already-staged deletion.",
+      "kind": "failure",
+      "sha256": "3253ee370d2ffeeadc2a085b6bc2d49b0944c37d0fb12ec199e1781d029e1ae7",
+      "source_ref": "/private/tmp/publisher-stage-selection-atom/cases/merge-has-staged-deletion.json"
+    },
+    {
+      "case_id": "verification-mutation-still-refused",
+      "expected_outcome": "Reject verification-time mutation of a selected path.",
+      "kind": "success",
+      "sha256": "c1b8746dbdff0756fd9767fdfd5bd253cee760f2bbf07a253a8ef286f5fcddb8",
+      "source_ref": "/private/tmp/publisher-stage-selection-atom/cases/verification-mutation-still-refused.json"
+    }
+  ],
+  "outcome": "The publisher preserves already-staged exact paths and stages only remaining manifest paths.",
+  "practical_value": "A pending merge containing staged retirements can reach commit without weakening exact-scope or mutation checks.",
+  "schema_version": 1,
+  "stopping_condition": "Mixed staged and unstaged manifest paths pass, while verification mutation remains blocked."
+}

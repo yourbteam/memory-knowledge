@@ -1,0 +1,5 @@
+{
+  "case_id": "verification-mutation-still-refused",
+  "expected_accepted": false,
+  "setup": "verification-mutates-selected"
+}

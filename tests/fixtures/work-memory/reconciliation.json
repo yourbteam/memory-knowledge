@@ -6,14 +6,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "auto-capture",
-      "status": "shared-identical"
-    },
-    {
-      "name": "blocker-catalog",
-      "status": "shared-identical"
-    },
-    {
       "name": "corpus-add",
       "status": "shared-identical"
     },
@@ -38,14 +30,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "plan-playbook",
-      "status": "shared-identical"
-    },
-    {
-      "name": "playbook-convergence-loop",
-      "status": "shared-identical"
-    },
-    {
       "name": "producer-foundry",
       "status": "shared-identical"
     },
@@ -66,15 +50,7 @@
       "status": "shared-identical"
     },
     {
-      "name": "research-playbook",
-      "status": "shared-identical"
-    },
-    {
       "name": "reproduce-first-verify",
-      "status": "shared-identical"
-    },
-    {
-      "name": "review-playbook",
       "status": "shared-identical"
     },
     {
@@ -90,14 +66,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "task-intake",
-      "status": "shared-identical"
-    },
-    {
-      "name": "task-workflow",
-      "status": "shared-identical"
-    },
-    {
       "name": "verifier-foundry",
       "status": "shared-identical"
     },
@@ -110,15 +78,7 @@
       "status": "shared-identical"
     },
     {
-      "name": "verify-work",
-      "status": "shared-identical"
-    },
-    {
       "name": "working-agreement",
-      "status": "shared-identical"
-    },
-    {
-      "name": "write-code-playbook",
       "status": "shared-identical"
     }
   ]

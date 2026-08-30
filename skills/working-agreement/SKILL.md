@@ -21,45 +21,56 @@ For brief in-progress updates, apply the directives without a compliance header.
 
 Classify the task and use the matching playbook when relevant:
 
-- Research: `research-playbook`
-- Plan: `plan-playbook`
+- Research: direct inspection of declared real evidence; no selectable research controller
+- Plan: direct inspection of declared real evidence; no selectable planning controller
 - Write code: `prototype-driven-implementation`
-- Review: `review-playbook`
+- Review: direct evidence inspection; no selectable review controller
 
 For Write-code tasks, `prototype-driven-implementation` owns the lifecycle and pulls bounded
-Research, Plan, Write-code, and Review support projections only when observed evidence requires
-them. For standalone non-implementation tasks, retain the matching playbook above.
+support only when observed evidence requires it. Its retained-surface check and live validation
+remain internal to PDI. For standalone Plan and Review tasks, inspect the declared evidence directly
+without invoking a selectable controller. Planning produces only the decision-complete plan Kamen
+requested; it does not launch an autonomous hardening lifecycle.
 
 ## Work-Memory Gate
 
-Use the local-development fast path without `task-intake` for repository reads/searches,
+Use the local-development fast path without operational classification for repository reads/searches,
 approved file edits, repository-local formatting or generation limited to approved files,
 diffs, linters, type checks, bounded unit tests, and local installation of an approved managed
 artifact. The fast path is G26 preflight, the approved action, and direct verification only.
 
 A self-contained local controller skill is also fast-path machinery when it owns its own launch,
-ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machine`,
-`implementation-machine`, and `description-machinery` directly. Their internal worker/reader loop
-is not a `workflow-drive`, so do not put `task-intake`, `sequence-runner`, registry selection, or
-sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
+ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machinery`
+and `description-machinery` directly. Their internal worker/reader loop
+is not a `workflow-drive`, so do not put operational classification, `sequence-runner`, registry
+selection, or sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
 the governed boundary only when the controller's concrete operation independently touches one of
 the external or stateful surfaces below.
 
-Invoke `task-intake` before crossing the governed operational boundary: deployments, remote
+Before crossing the governed operational boundary, the Working Agreement runs the canonical
+code classifier directly from the `memory-knowledge` root:
+
+```bash
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind "<kind>" --repeatable "<yes|no>" --meaningful-steps <N>
+```
+
+Operation kinds are `image|container|auth|deploy|workflow-drive|package|database|remote-operator|cleanup|publish|other|read-only|single-test|single-build`.
+Use the actual command flow and the classifier's declared kinds; prose classification is not a
+substitute. A receipt verdict of `operational` requires `sequence-runner`, receipt-backed
+selection, and `sequence_guard.py activate` before commands. A verdict of `non-operational`
+returns directly to the current Working Agreement mode route. Classify deployments, remote
 systems, databases or migrations, containers or images, authentication or secrets,
 package/environment mutation, destructive cleanup, workflow drives, long live tests, a proven
 recurrent command sequence, the same execution failure fingerprint twice, or a genuinely unclear
-boundary. It must run the canonical classifier in `memory-knowledge/scripts/work_memory.py`;
-prose classification is not a substitute. An operational receipt requires `sequence-runner`, a
-receipt-backed selection, and `sequence_guard.py activate` before commands.
+boundary.
 
-When a command fails, classify it under G20. Correct a first execution error immediately; invoke
-`blocker-catalog` before fixing a deliverable blocker or a repeated execution error. Record a
-qualifying correction, update the reusable sequence/script when behavior changed, and require a
-fresh same-path successor verification before the correction becomes reusable. At substantive
-closeout invoke `auto-capture`; only evidence-backed work lessons may enter candidate
-review. Never persist people, preferences, diary/activity, transcript, or conversation
-history as memory.
+When a command fails, classify it under G20. Correct a first execution error once immediately.
+For a deliverable blocker or a repeated execution error, the active controller invokes
+`python3 scripts/blocker_catalog.py open` before changing the failing boundary; no separate blocker
+skill is selected. Record a qualifying correction through the same code-owned ledger, update the
+reusable sequence or script when behavior changed, and require a fresh same-path successor
+verification before the correction becomes reusable. Never persist
+people, preferences, diary/activity, transcript, or conversation history as memory.
 
 ## Tier-2 Corpus
 

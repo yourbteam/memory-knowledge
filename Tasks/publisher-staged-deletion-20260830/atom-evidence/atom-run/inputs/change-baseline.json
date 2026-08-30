@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "scripts/minimal_git_publish.py",
+    "tests/test_minimal_git_publish.py"
+  ],
+  "atomic_step_id": "publisher-accepts-staged-deletions",
+  "files": [
+    {
+      "mode": 420,
+      "path": "scripts/minimal_git_publish.py",
+      "sha256": "0afb8a78bca1f8674c44f657ad0410a29a37f7af0f29e71520f1845adc0071a9",
+      "size": 15091
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_minimal_git_publish.py",
+      "sha256": "b833e174b2dfcc2d3067c6e050be29bd86825d5a4c0b67fed98fb88688698604",
+      "size": 12522
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4",
+  "schema_version": 1
+}

@@ -24,13 +24,17 @@ SCENARIO_GROUPS = {
 }
 GENERATOR_FILES = {
     "machinery-client-model-v1": Path(__file__).resolve().with_name("machinery-client-model-v1.json"),
+    "machinery-client-model-v2": Path(__file__).resolve().with_name("machinery-client-model-v2.json"),
 }
 
 
 def tree_hash(path: Path) -> str | None:
     if not path.exists(): return None
     h = hashlib.sha256()
-    for item in sorted(p for p in path.rglob("*") if p.is_file()):
+    for item in sorted(
+        p for p in path.rglob("*")
+        if p.is_file() and "__pycache__" not in p.parts and p.suffix not in {".pyc", ".pyo"}
+    ):
         h.update(item.relative_to(path).as_posix().encode() + b"\0"); h.update(item.read_bytes())
     return h.hexdigest()
 
@@ -57,6 +61,13 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     shutil.copytree(source, destination)
     if row.get("disposition") != "GENERATED_CLIENT_PROJECTION":
         return
+    destination.chmod(0o755)
+    for generated_path in (
+        destination / "client-model-policy.json",
+        destination / "SKILL.md",
+    ):
+        if generated_path.exists():
+            generated_path.chmod(0o644)
     generator = row.get("generator")
     spec_path = GENERATOR_FILES.get(generator)
     if spec_path is None or not spec_path.is_file():
@@ -71,6 +82,28 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     policy = spec["clients"].get(client)
     if policy is None:
         raise RuntimeError(f"generator {generator} has no {client} policy")
+    policy_fields = {"display_name", "required_runtime", "forbidden_runtime"}
+    optional_policy_fields = set()
+    if generator == "machinery-client-model-v2":
+        policy_fields.add("recommended_reader_command")
+        optional_policy_fields.update({"inner_sandbox", "required_outer_execution"})
+    if (not policy_fields <= set(policy)
+            or set(policy) - policy_fields - optional_policy_fields
+            or any(
+        not isinstance(policy[field], str) or not policy[field].strip()
+        for field in set(policy)
+    )):
+        raise RuntimeError(
+            f"generator {generator} {client} policy must contain required fields "
+            f"{sorted(policy_fields)}, optional fields {sorted(optional_policy_fields)}, "
+            "and only non-empty strings"
+        )
+    present_optional_fields = set(policy) & optional_policy_fields
+    if present_optional_fields not in (set(), optional_policy_fields):
+        raise RuntimeError(
+            f"generator {generator} {client} policy must declare optional boundary fields "
+            f"{sorted(optional_policy_fields)} together or omit both"
+        )
     installed_policy = {
         "schema_version": 1,
         "client": client,
@@ -78,6 +111,11 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
         "forbidden_runtime": policy["forbidden_runtime"],
         "fail_closed": True,
     }
+    if generator == "machinery-client-model-v2":
+        installed_policy["recommended_reader_command"] = policy["recommended_reader_command"]
+        for field in sorted(optional_policy_fields):
+            if field in policy:
+                installed_policy[field] = policy[field]
     (destination / "client-model-policy.json").write_text(
         json.dumps(installed_policy, indent=2, sort_keys=True) + "\n")
     instructions = destination / "SKILL.md"
@@ -87,11 +125,20 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
         f"This is the **{policy['display_name']}** projection. Every model-backed builder, "
         "reader, checker, and requirements-enumeration agent started or handed back by this "
         f"machinery must use this client. Reader commands must resolve to "
-        f"`{policy['required_runtime']}`; reject `{policy['forbidden_runtime']}` before launch. "
+        f"`{policy.get('recommended_reader_command', policy['required_runtime'])}`; "
+        f"reject `{policy['forbidden_runtime']}` before launch. "
         "If the invoking client or reader runtime cannot be verified, stop without starting the "
         "worker. This boundary controls model selection only; all machinery behavior and outputs "
         "remain governed by the shared skill.\n"
     )
+    if policy.get("required_outer_execution") or policy.get("inner_sandbox"):
+        body += (
+            "\nThe enclosing host must launch this reader with outer execution "
+            f"`{policy.get('required_outer_execution', 'default')}` while the nested reader "
+            f"remains `{policy.get('inner_sandbox', 'client-default')}`. This outer permission "
+            "allows the client to initialize its own application state; it does not authorize "
+            "a writable nested reader.\n"
+        )
     instructions.write_text(body)
 
 

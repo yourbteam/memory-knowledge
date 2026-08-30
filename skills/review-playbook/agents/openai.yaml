@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review Playbook"
-  short_description: "Review diffs, code, and plans for real issues"
-  default_prompt: "Use $review-playbook to review this change."

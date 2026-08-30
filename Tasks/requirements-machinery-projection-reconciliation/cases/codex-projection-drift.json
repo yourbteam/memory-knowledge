@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "client": "codex",
+  "observed": "installed requirements machinery differs from its generated projection",
+  "installed_tree_sha256": "b336cf67ce7f44eabc2b55128a1f9231f65165d269bd0c04da1e090997d7e7f2",
+  "projected_tree_sha256": "98684ffd2ffd9f91edb82897000fec3b0e580ee4e451ef7e68076e9e52b0f172",
+  "material_installed_only_behavior": [
+    "self-sustained continuation",
+    "immutable per-run projection snapshot",
+    "stale owner-ruling recovery",
+    "stable empirical-claim identity",
+    "exact read-only nested reader command"
+  ]
+}

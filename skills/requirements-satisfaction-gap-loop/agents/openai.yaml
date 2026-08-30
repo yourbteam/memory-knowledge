@@ -1,4 +1,0 @@
-interface:
-  display_name: "Satisfaction Gap Loop"
-  short_description: "Verify requirements hold end to end"
-  default_prompt: "Use $requirements-satisfaction-gap-loop to audit this plan for satisfaction gaps."

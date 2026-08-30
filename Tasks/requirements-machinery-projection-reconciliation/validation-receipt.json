@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "requirements-projection-reconciliation",
+  "promotion_event_sha256": "7b25b58ef116b1a47200e357913d3c24701e9d812d239fde09a822278dd00d25",
+  "cases": [
+    {
+      "case_id": "step7-chain-remains-complete",
+      "verdict": "satisfied",
+      "reason": "The installed conservation path represents all 35 source rules exactly once, with no missing, duplicate, or unknown identity, and preserves six-type sources 11 and 27.",
+      "evidence": [
+        {
+          "case_id": "step7-chain-remains-complete",
+          "path": "installed-lineage-probe.json",
+          "sha256": "327b07a41326ee3de852d821f66ff37cdfde77a02c9932c6ab2526ca1b8e3195"
+        }
+      ]
+    },
+    {
+      "case_id": "codex-installed-behavior-is-not-erased",
+      "verdict": "satisfied",
+      "reason": "The transactionally installed Codex projection matches the generated tree and its installed controller reaches the document terminal twice through one immutable runtime snapshot while surviving policy drift.",
+      "evidence": [
+        {
+          "case_id": "codex-installed-behavior-is-not-erased",
+          "path": "codex-installed-probe.json",
+          "sha256": "9cc385264bbbb22f658b9600b422e67e97948f8573416da18e8c8954eff9549e"
+        },
+        {
+          "case_id": "codex-installed-behavior-is-not-erased",
+          "path": "codex-parity-report.json",
+          "sha256": "8147c00f02ea73616b18821651e9cae4db4e47d5f28e147745d6664702ee8777"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-receives-corrected-machinery",
+      "verdict": "satisfied",
+      "reason": "The transactionally installed Claude projection matches the generated tree, includes the shared corrected controller, and reaches the same document terminal twice without crossing into the Codex reader policy.",
+      "evidence": [
+        {
+          "case_id": "claude-receives-corrected-machinery",
+          "path": "claude-installed-probe.json",
+          "sha256": "e2a77e6318fcb4d5dbbcc1ccaa3902fbe60898fd2057049f118f55478565254a"
+        },
+        {
+          "case_id": "claude-receives-corrected-machinery",
+          "path": "claude-parity-report.json",
+          "sha256": "78bb2200f5e4a577dcaa681dd6624465d9a11c00a3cfb26b5edd32812a2113a7"
+        }
+      ]
+    }
+  ]
+}

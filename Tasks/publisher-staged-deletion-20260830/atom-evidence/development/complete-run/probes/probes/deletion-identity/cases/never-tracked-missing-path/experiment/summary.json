@@ -1,0 +1,128 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/private/tmp/publisher-staged-deletion-atom/development/evaluator.py",
+        "sha256": "0268bea4b4f2899f91ef4fe4a389efb04964f913ec0af3ddd7201bfca1f38f1f"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "deletion-specificity"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-9b5f6d566b9eb523bac3",
+  "frozen_input_sha256": "73e73f2417c721ce3a943b99876342162fc7c134c6ab251df764c21a9f3cf150",
+  "hypothesis": "Every approach declared by mini-probe 'deletion-identity' can run against captured case 'never-tracked-missing-path', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge-integration-88e8b6add1e4/skills/experiment-machinery/scripts",
+      "sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9"
+    }
+  },
+  "target_source_sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9",
+  "variants": [
+    {
+      "duration_ms": 187,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "outcome": {
+        "accepted": false,
+        "case_id": "never-tracked-missing-path",
+        "correct": true,
+        "error": "manifest entry is neither present nor tracked: missing.py",
+        "expected_accepted": false,
+        "paths": null
+      },
+      "reported_metrics": {
+        "boundary-correctness": 1
+      },
+      "result_sha256": "b59e0131d73c779922bc4449baaa33ff1c893346d8c669bf5d035c580b3a8a94",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "589958e0b6fd8a9cd00b166179c342349c213a7515d0897146cd6dac36c3a2da",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 183,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "deletion-specificity": 0.0
+      },
+      "outcome": {
+        "accepted": false,
+        "case_id": "never-tracked-missing-path",
+        "correct": true,
+        "error": "manifest entry is neither present nor tracked: missing.py",
+        "expected_accepted": false,
+        "paths": null
+      },
+      "reported_metrics": {
+        "boundary-correctness": 1
+      },
+      "result_sha256": "d10450ee1b9afb8a8938d7cbb8cf9e8e72ec237daa413baa004306c6a91066f4",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "5ce79cfc17ef397116a50fb0a6c20e18f98c81f35aced85f92e1630aa01d6497",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

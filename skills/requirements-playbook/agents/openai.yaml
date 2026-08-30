@@ -1,4 +1,0 @@
-interface:
-  display_name: "Requirements Playbook"
-  short_description: "Round-based, evidence-filtered requirements documents"
-  default_prompt: "Use $requirements-playbook to build the requirements for a change in rounds, closing only when two consecutive rounds add nothing."

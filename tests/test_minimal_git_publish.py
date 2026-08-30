@@ -273,6 +273,44 @@ def test_tracked_deletion_is_a_valid_exact_manifest_change(
     ).stdout.strip() == "removed.txt"
 
 
+def test_manifest_accepts_a_tracked_deletion_already_staged_by_a_merge(
+    publish_repo: tuple[Path, Path, Path],
+) -> None:
+    repo, _remote, manifest = publish_repo
+    (repo / "removed.txt").unlink()
+    git(repo, "add", "--", "removed.txt")
+    manifest.write_text(json.dumps(["removed.txt"]), encoding="utf-8")
+
+    assert publish.manifest_paths(repo, manifest) == ["removed.txt"]
+
+
+def test_manifest_rejects_a_missing_path_that_never_existed(
+    publish_repo: tuple[Path, Path, Path],
+) -> None:
+    repo, _remote, manifest = publish_repo
+    manifest.write_text(json.dumps(["missing.py"]), encoding="utf-8")
+
+    with pytest.raises(publish.PublishError, match="neither present nor tracked"):
+        publish.manifest_paths(repo, manifest)
+
+
+def test_staging_preserves_an_already_staged_deletion_and_adds_remaining_paths(
+    publish_repo: tuple[Path, Path, Path],
+) -> None:
+    repo, _remote, _manifest = publish_repo
+    (repo / "removed.txt").unlink()
+    git(repo, "add", "--", "removed.txt")
+
+    result = publish._stage_and_verify(
+        repo,
+        ["approved.txt", "removed.txt"],
+        verification("approved.txt", "removed.txt"),
+    )
+
+    assert result["passed"] is True
+    assert publish._staged_paths(repo) == ["approved.txt", "removed.txt"]
+
+
 def test_manifest_escape_is_rejected_before_staging(
     publish_repo: tuple[Path, Path, Path],
 ) -> None:

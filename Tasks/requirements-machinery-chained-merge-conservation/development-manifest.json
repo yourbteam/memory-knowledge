@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "atomic_step": {
+    "id": "requirements-chained-merge-conservation",
+    "outcome": "Every extracted rule survives chained same-rule merging through exactly one final disposition before checkability.",
+    "practical_value": "The six-type rule and every future rule can no longer disappear when an intermediate merge carrier is later absorbed.",
+    "stopping_condition": "The real Step 7 chain preserves every source rule identity exactly once, the historical lossy output is refused with named missing identities, focused tests pass, and the real requirements path reaches checkability with both six-type wordings represented.",
+    "captured_cases": [
+      {
+        "id": "step7-chain-preserved",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+        "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+        "kind": "success",
+        "expected_outcome": "All 35 extracted rule identities occur exactly once after reduction and source rules 11 and 27 both remain represented in the lineage delivered to checkability."
+      },
+      {
+        "id": "step7-current-loss-refused",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+        "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+        "kind": "failure",
+        "expected_outcome": "The persisted lossy requirements output is refused before checkability and the refusal includes missing source rule identities 11 and 27."
+      }
+    ]
+  },
+  "mini_probes": [
+    {
+      "id": "lineage-transfer",
+      "goal": "Carry every source identity and wording through arbitrarily long eligible merge chains.",
+      "practical_value": "A keeper can be absorbed later without losing anything it already absorbed.",
+      "work_type": "code",
+      "work_type_reason": "Identity transfer and connected-component reduction are deterministic invariants.",
+      "allowed_paths": ["rule_lineage.py"],
+      "inputs": [{"case_id": "step7-chain-preserved"}, {"case_id": "step7-current-loss-refused"}],
+      "approaches": [
+        {
+          "id": "single-hop-transfer",
+          "hypothesis": "Copying the direct dropped identity into each keeper is sufficient.",
+          "implementation": "Replay pairs sequentially and transfer only the current dropped item's direct identity.",
+          "predicted_tradeoff": "Minimal change, but a later drop can strand identities in a discarded carrier."
+        },
+        {
+          "id": "unique-terminal-transfer",
+          "hypothesis": "Lineage can transfer safely only when every path has one final survivor; branched paths must remain explicit.",
+          "implementation": "Direct each shorter wording toward its longer keeper, transfer complete ancestry only to a unique reachable terminal, and retain any branched source as its own terminal disposition.",
+          "predicted_tradeoff": "Preserves complete lineage without transitive over-merging, at the cost of leaving ambiguous branches explicit for later owner assessment."
+        }
+      ],
+      "proof": {
+        "success_criterion": "Every source identity 1 through 35 is represented exactly once and both six-type sources survive.",
+        "failure_criterion": "Any source identity is absent or occurs more than once."
+      },
+      "evaluation": {
+        "metrics": [
+          {"name": "ancestry-complete", "direction": "maximize"},
+          {"name": "silent-losses", "direction": "minimize"},
+          {"name": "ambiguous-automerge", "direction": "minimize"}
+        ],
+        "across_cases": [
+          {"name": "ancestry-complete", "method": "worst"},
+          {"name": "silent-losses", "method": "worst"},
+          {"name": "ambiguous-automerge", "method": "worst"}
+        ]
+      },
+      "winner_output": {
+        "artifact": "lineage-transfer-module",
+        "description": "A deterministic reducer whose terminal items retain the complete source identity and wording lineage."
+      }
+    },
+    {
+      "id": "conservation-check",
+      "goal": "Refuse advancement unless every source rule identity has exactly one terminal destination.",
+      "practical_value": "Even a future reducer defect becomes a named refusal instead of a silent requirement loss.",
+      "work_type": "code",
+      "work_type_reason": "Exact identity-set equality and multiplicity are mechanically provable.",
+      "allowed_paths": ["rule_conservation.py"],
+      "inputs": [{"case_id": "step7-chain-preserved"}, {"case_id": "step7-current-loss-refused"}],
+      "approaches": [
+        {
+          "id": "nonempty-output-check",
+          "hypothesis": "A nonempty merged output is sufficient evidence of completion.",
+          "implementation": "Accept whenever at least one final rule item exists.",
+          "predicted_tradeoff": "Cheap, but cannot observe selective silent loss."
+        },
+        {
+          "id": "identity-counter",
+          "hypothesis": "Exact source-to-terminal identity accounting detects loss and duplication without model judgement.",
+          "implementation": "Count explicit source identities across terminal items and compare them with the complete expected identity set.",
+          "predicted_tradeoff": "Requires explicit lineage metadata, but produces precise missing, duplicate, and unknown identities."
+        }
+      ],
+      "proof": {
+        "success_criterion": "A complete terminal set passes and the exact historical lossy set is refused with missing identities 11 and 27.",
+        "failure_criterion": "Incomplete output advances or complete output is refused."
+      },
+      "evaluation": {
+        "metrics": [
+          {"name": "loss-detected", "direction": "maximize"},
+          {"name": "false-refusals", "direction": "minimize"}
+        ],
+        "across_cases": [
+          {"name": "loss-detected", "method": "worst"},
+          {"name": "false-refusals", "method": "worst"}
+        ]
+      },
+      "winner_output": {
+        "artifact": "conservation-check-module",
+        "description": "A fail-closed source identity conservation validator with named discrepancies."
+      }
+    }
+  ],
+  "composition": {
+    "consumes": [
+      {"probe_id": "lineage-transfer", "artifact": "lineage-transfer-module"},
+      {"probe_id": "conservation-check", "artifact": "conservation-check-module"}
+    ],
+    "assembly_contract": "Reduce eligible same-rule components with complete lineage, then require every original rule identity exactly once before exposing final items to checkability.",
+    "final_validation": {
+      "operator_path": "requirements machinery Step 7 rule merge immediately before checkability",
+      "case_ids": ["step7-chain-preserved", "step7-current-loss-refused"],
+      "success_criterion": "The real chain is complete and both six-type wordings are represented.",
+      "failure_criterion": "The persisted incomplete output is refused and names both missing six-type identities."
+    }
+  }
+}

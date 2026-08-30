@@ -1,18 +1,148 @@
 ---
 name: system-alignment-assessment-machinery
-description: Trace a declared system value from its visible subject through the current implementation to a reference implementation, then produce evidence-bound measures and verdicts. Use after Info Intake has made the relevant sources readable. Do not use for source ingestion or implementation fixes.
+description: Assess whether observable system behavior aligns with declared intent or a reference by executing actual and reference prototypes on identical frozen inputs, comparing controlled experiments, and producing evidence-bound measures and verdicts. Use standalone from a neutral evidence package or after Info Intake. Do not use for source ingestion or implementation fixes.
 ---
 
 # System Alignment Assessment Machinery
 
-Use this machinery to answer whether a visible or externally observable system value is assembled
-correctly. It owns the assessment after Info Intake has returned immutable, readable source
-packages. It does not ingest sources and it does not change the assessed implementation.
+Use this machinery to answer whether visible or externally observable system behavior is correct.
+It can start from a neutral evidence package supplied directly by an operator or from an adapter
+over an Info Intake handoff. It does not ingest sources and it does not change the assessed
+implementation.
 
 The assessment remains general: an alignment unit is a purpose-relevant subject plus one or more
 intent statements grounded in the upstream intake. Dashboard fields, spreadsheets, middleware,
 API envelopes, and Reporting V3 are inputs in the current real case, not hardcoded machinery
 roles.
+
+## Run the complete assessment path
+
+Use the controller for normal operation. Start from exactly one standalone neutral package:
+
+```text
+python3 scripts/run_assessment.py start --work <new-work> \
+    --package <evidence-package.json> \
+    --experiment-runner <experiment-machinery/run_experiment.py>
+```
+
+Or start from a verified Info Intake return plus alignment bindings:
+
+```text
+python3 scripts/run_assessment.py start --work <new-work> \
+    --handoff <info-intake-source-return.json> --bindings <alignment-bindings.json> \
+    --experiment-runner <experiment-machinery/run_experiment.py>
+```
+
+The controller runs every admitted actual/reference prototype through Experiment Machinery,
+prepares the full question catalog, and exposes exactly one code-bound question. Submit only that
+question's response and resume:
+
+```text
+python3 scripts/run_assessment.py resume --work <same-work> --response <one-response.json>
+```
+
+Repeat only while the returned status is `needs-model-answer`. The terminal return points to the
+complete assessment report. Projection-only intake stops at `needs-validation-bindings` before an
+experiment. Every controller transition is hash-chained; an existing work directory is never
+restarted or overwritten. The component commands below remain available for focused diagnosis.
+
+## Admit real validation evidence
+
+Before tracing or assessing, admit a source-neutral package that binds every subject to at least
+one runnable actual/reference case:
+
+```text
+python3 scripts/evidence_package.py create \
+    --spec <evidence-package-spec.json> --output <new-evidence-package.json>
+python3 scripts/evidence_package.py verify <evidence-package.json>
+```
+
+Each case supplies one immutable frozen input plus actual and reference adapters that accept the
+same controlled result-and-telemetry protocol. Code freshly verifies all source, input, and
+adapter hashes and refuses to emit `assessment-ready` when a subject has only static evidence.
+Static traces remain useful supporting evidence, but cannot substitute for executed validation.
+
+When the evidence came through Info Intake, adapt its verified source-return handoff through the
+same neutral contract:
+
+```text
+python3 scripts/intake_handoff_adapter.py create \
+    --handoff <info-intake-source-return.json> \
+    --bindings <alignment-bindings.json> --output <new-admission.json>
+```
+
+The binding names purpose-relevant subjects, selects exact Info Intake evidence item identities,
+and supplies their runnable cases. Code freshly verifies the source-return request, immutable
+sources, readable projections, and ledgers. Complete bindings produce the identical
+`system-alignment-evidence-package` used by standalone callers. Projection-only input produces
+`validation-bindings-required` with one precise request per subject; the adapter never invents an
+executable actual or reference from intake prose.
+
+## Execute one controlled validation case
+
+Run an admitted subject and case through Experiment Machinery:
+
+```text
+python3 scripts/validation_experiment.py run \
+    --package <evidence-package.json> \
+    --subject <subject-id> --case <case-id> \
+    --experiment-runner <experiment-machinery/run_experiment.py> \
+    --output <new-validation-run-directory>
+```
+
+The actual implementation is the experiment control and the reference is the comparison variant.
+Both receive the byte-identical frozen input in isolated work directories. The resulting
+`validation-execution.json` binds the experiment specification, hash-chained ledger, summary, and
+ordered lane outcomes. A failed lane remains evidence; this stage never converts failure or value
+difference into an alignment verdict.
+
+## Prepare runtime assessment questions
+
+After every admitted case has an execution artifact, partition the evidence before asking a model:
+
+```text
+python3 scripts/runtime_questions.py create \
+    --spec <runtime-question-spec.json> --output <new-runtime-question-catalog.json>
+```
+
+Code freshly verifies the admitted package, every execution artifact, experiment summary, frozen
+input identity, and hash-chained ledger. A case whose actual and reference lanes both completed
+becomes one evidence-bound question exposing their real outcomes. A failed or ineligible lane never
+reaches the model; it becomes an immutable `cannot-assess` disposition naming the exact lane that
+must be repaired or supplied and rerun.
+
+## Conduct the runtime assessment interview
+
+Prepare one immutable interview and expose only its current question:
+
+```text
+python3 scripts/runtime_interview.py prepare --catalog <catalog.json> --work <new-work>
+python3 scripts/runtime_interview.py next --work <same-work>
+python3 scripts/runtime_interview.py answer --work <same-work> --response <one-response.json>
+```
+
+The model chooses only `aligned`, `misaligned`, or `cannot-assess`, one presented measure kind,
+and evidence IDs shown with the current real experiment. Code rejects unknown choices, preserves
+each accepted answer as a separate immutable source, advances one question at a time, and emits
+`runtime-results.json` only after the full catalog is answered. A `cannot-assess` answer uses the
+explicit empty `none` measure; it cannot disguise a guessed comparison.
+
+## Produce the practical terminal assessment
+
+Reconcile the complete runtime catalog and its completed interview:
+
+```text
+python3 scripts/runtime_terminal.py create \
+    --spec <runtime-terminal-spec.json> --output <new-runtime-assessment.json>
+```
+
+Code freshly binds the catalog, evidence package, and runtime results; requires exact coverage of
+every admitted subject and case; and applies fixed verdict precedence. The terminal artifact gives
+each subject its measures, case evidence, and one `aligned`, `misaligned`, or `cannot-assess`
+verdict. Every missing lane becomes a precise evidence request. Every confirmed misalignment
+becomes an Atom Building candidate carrying the real captured case, desired outcome, practical
+value, and stopping condition. It remains `requires-owner-envelope` until the owner supplies the
+atomic-step identity, allowed paths, and approval; assessment never authorizes a fix.
 
 ## Admit alignment units
 

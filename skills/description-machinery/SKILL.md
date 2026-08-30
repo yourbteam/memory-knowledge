@@ -12,7 +12,7 @@ builder note.
 
 This skill is the complete local controller for its description loops. Invoke the applicable front
 door directly: do not
-put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it solely
+put operational classification, `sequence-runner`, registry selection, or sequence discovery around it solely
 because it launches readers or resumes. Its work/output directory is its state and telemetry.
 
 ## Front door 1 — intent and context
@@ -44,14 +44,15 @@ carries no reader paraphrase into the description.
 
 ## Front door 2 — what builders left alone
 
-Use this after Implementation Machinery has accumulated `left_alone` notes:
+Use this only with an already-recorded compatible build work directory containing `left_alone`
+notes. This imports preserved records; it does not invoke an implementation controller:
 
 ```text
 python3 collect_noticed.py --work <build-work-dir> --order <order.json> --out <fresh-dir> \
     --reader-command '<command>'
 ```
 
-- `work` is the Implementation Machinery work directory.
+- `work` is that existing compatible build work directory.
 - `order` is its build list, used to recognize observations already required.
 - `out` is a fresh resumable state directory.
 - `reader-command` receives an instruction on standard input. The machinery never chooses it.

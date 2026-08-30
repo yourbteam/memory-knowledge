@@ -2,8 +2,8 @@
 
 # Research Support Projection
 
-Source: `skills/research-playbook/SKILL.md`
-Pinned SHA-256: `33f1f6e1928cc08bfe1b925fd02f2b2986a467047547da54278f4fc56b916ba9`
+Source: `skills/prototype-driven-implementation/contracts/blocking-evidence-research.md`
+Pinned SHA-256: `e852319eaaec12fc5b256b8cd287630710cdf10a5bfc8b578f7d0c213470db0d`
 
 ## Purpose
 

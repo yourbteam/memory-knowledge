@@ -27,6 +27,11 @@ python3 scripts/development_probe_candidate.py build <request.json> <new-bundle-
 python3 scripts/development_probe_candidate.py verify <bundle-directory>
 ```
 
+Every mini-probe declares its complete repository-relative `allowed_paths`. Candidate packaging
+derives the full add/change/delete delta against the recorded baseline and refuses every path
+outside that boundary before an experiment launches. Accepted bundles preserve the baseline file
+records and exact changed paths so the scope decision can be verified again from immutable evidence.
+
 Use the bundle executor as the experiment variant command. Its configuration contains exactly the
 declared captured `case_id`; code verifies the bundle and frozen input before launching the copied
 candidate, then verifies the bundle again after execution. The canonical product source is never
@@ -40,8 +45,10 @@ python3 scripts/development_probe_experiment.py run <request.json> <new-output-d
 
 The request supplies the validated development manifest, selected probe and case, and exactly one
 candidate-build request per declared approach. Code builds every candidate concurrently, launches
-the real Experiment Machinery runner, requires every approach to complete and remain integrity
-valid, and binds the rank-one champion to its freshly verified bundle digest. It preserves every
+the real Experiment Machinery runner only after every approach completes, remains integrity valid,
+and has a distinct verified candidate source-tree digest. Byte-identical implementations under
+different approach names are refused with their build evidence preserved and no recommendation.
+The launcher binds the rank-one champion to its freshly verified bundle digest. It preserves every
 build and experiment result and never promotes the recommendation.
 
 Run that mini-probe across every case declared by its manifest with:
@@ -107,8 +114,13 @@ Bind the manifest, every per-probe request, baseline source tree, and assessment
 declared SHA-256 values in the request. Code validates and normalizes the complete input set before
 launching anything, then runs all probes, composition, and final validation in fixed order. Each
 stage has its own output and durable receipt. A failure stops before the next stage, preserves all
-earlier evidence, and identifies its exact boundary. The final verdict is read from, rehashed, and
-bound to the verified assembly rather than trusted from process output. The launcher never promotes.
+earlier evidence, and identifies its exact boundary. Code freezes a 45-minute budget per concurrent
+wave of up to four probes and four cases, 10 minutes for composition, and 45 minutes per concurrent
+final-validation wave of up to four cases. Every stage runs in its own process group; an overrun
+terminates that group, preserves partial stdout and stderr plus a timeout record, and writes a
+terminal failed run summary. The final verdict is read from,
+rehashed, and bound to the verified assembly rather than trusted from process output. The launcher
+never promotes.
 
 When that complete run returns a semantic failed verdict that maps to a probe, run the opt-in
 self-contained repair controller:
@@ -137,12 +149,16 @@ The manifest validator, candidate bundler, single-case launcher, cross-case laun
 launcher, composer, and final validator enforce these contract boundaries. None promotes winners
 or edits canonical product code. Only a `passed` final result proves the complete atomic outcome;
 failed or inconclusive results return the evidence to the affected probe or composition boundary.
+The manifest is refused before launch unless final validation names every captured case exactly
+once in the same declared order.
 
 ## Run one experiment
 
 1. Freeze one hypothesis, target machinery and phase, exact input file, constants, control,
-   variations, and ordered ranking metrics in one JSON specification. Do not edit the specification
-   after execution begins. Generate the target source-tree hash mechanically:
+   variations, ordered ranking metrics, every variant adapter, one independent evaluation
+   adapter, and separate positive millisecond deadlines for variants and the evaluator in one
+   version 4 JSON specification. Bind every adapter by path and SHA-256. Do not edit the
+   specification after execution begins. Generate the target source-tree hash mechanically:
 
    ```bash
    python3 scripts/run_experiment.py --hash-source <machinery-source-directory>
@@ -172,8 +188,18 @@ failed or inconclusive results return the evidence to the affected probe or comp
 - Variant commands are argument arrays, never shell strings.
 - The parent runner alone writes the experiment ledger. Variant processes write only inside their
   assigned directory.
-- Declare all ranking metrics before launch. Missing, non-numeric, or non-finite metrics make a
-  variant ineligible; do not invent replacement values after seeing results.
+- Every variant and evaluator process is started in its own process group and must finish within
+  the frozen `execution_limits`. An overrun is terminated, its partial stdout and stderr are
+  preserved, and the ledger plus terminal summary record the timeout. A timed-out variant is
+  ineligible; a timed-out evaluator produces no champion.
+- Candidate adapters report outcomes and may preserve claimed metrics for audit, but claimed
+  metrics never participate in ranking. The one frozen independent evaluator receives all
+  eligible outcomes in one code-owned request and must return one exact finite score set per
+  variant and declared metric. Missing, reordered, unknown, non-numeric, or non-finite scores
+  refuse evaluation.
+- Changed variant-adapter or evaluator bytes fail closed. When a variant adapter is inside the
+  target source tree, execute it from that complete read-only snapshot so its imports remain bound;
+  otherwise execute its frozen standalone copy.
 - Select a champion only from completed, integrity-valid variants. Break a true metric tie by the
   stable variant id so the same evidence yields the same recommendation.
 - Treat a recommendation as evidence for a later implementation decision, not as a machinery

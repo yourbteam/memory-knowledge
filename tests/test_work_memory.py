@@ -5256,7 +5256,7 @@ def test_no_retired_run_ledger_or_stale_activation_examples():
     assert not (work_memory.ROOT / "scripts/sequence_run_ledger.py").exists()
     tracked = [path for path in (work_memory.ROOT / "operations/sequences").rglob("*.md")]
     tracked.extend((work_memory.ROOT / "skills" / name / "SKILL.md") for name in (
-        "working-agreement", "task-intake", "sequence-runner", "blocker-catalog",
+        "working-agreement", "sequence-runner",
     ))
     assert not any("sequence_guard.py activate --sequence-id" in path.read_text() for path in tracked)
 

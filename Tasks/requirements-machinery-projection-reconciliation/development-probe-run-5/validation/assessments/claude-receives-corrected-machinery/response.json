@@ -1,0 +1,8 @@
+{
+  "case_id": "claude-receives-corrected-machinery",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "the generated Claude projection receives shared conservation code and remains Claude-owned",
+  "verdict": "satisfied"
+}

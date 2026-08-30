@@ -1,0 +1,1 @@
+{"schema_version": 1, "scores": [{"metrics": {"boundary-correctness": 1, "deletion-specificity": 0}, "variant_id": "control"}, {"metrics": {"boundary-correctness": 1, "deletion-specificity": 0}, "variant_id": "variation-2"}]}

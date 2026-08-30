@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/deletion-identity",
+      "probe_id": "deletion-identity",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

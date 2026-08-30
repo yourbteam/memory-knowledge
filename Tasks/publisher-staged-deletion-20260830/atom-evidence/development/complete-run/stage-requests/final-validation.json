@@ -1,0 +1,13 @@
+{
+  "assembly": "/private/tmp/publisher-staged-deletion-atom/development/complete-run/composition/assembly",
+  "assessment": {
+    "adapter": "/private/tmp/publisher-staged-deletion-atom/development/assessment.py",
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "schema_version": 1
+}
