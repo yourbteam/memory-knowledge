@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "installed_root": "/Users/kamenkamenov/.codex/skills/requirements-machinery",
+  "source_case_sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+  "valid": true,
+  "source_count": 35,
+  "represented_count": 35,
+  "missing": [],
+  "duplicates": [],
+  "unknown": [],
+  "six_type_ids": [11, 27]
+}

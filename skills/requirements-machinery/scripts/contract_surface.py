@@ -6,7 +6,11 @@ import argparse
 import importlib.util
 import json
 import re
+import sys
 from pathlib import Path
+
+
+sys.dont_write_bytecode = True
 
 
 BEGIN = "<!-- BEGIN PUBLIC COMMAND SURFACE -->"

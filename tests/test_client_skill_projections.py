@@ -260,7 +260,11 @@ class ProjectionManifestTests(unittest.TestCase):
             generated = run_tool("generate", "--skills-root", str(skills),
                                  "--projections", str(projections))
             self.assertEqual(generated.returncode, 0, generated.stderr)
-            for client, required in (("codex", "codex exec"), ("claude", "claude -p")):
+            exact_codex = (
+                "codex exec --ephemeral --sandbox read-only --ignore-user-config "
+                "--skip-git-repo-check --color never -"
+            )
+            for client, required in (("codex", exact_codex), ("claude", "claude -p")):
                 staging = base / f"staging-{client}"
                 built = run_tool("build", "--client", client, "--skills-root", str(skills),
                                  "--projections", str(projections),
@@ -269,6 +273,41 @@ class ProjectionManifestTests(unittest.TestCase):
                 policy = json.loads((staging / "requirements-machinery" /
                                      "client-model-policy.json").read_text())
                 self.assertEqual(policy["recommended_reader_command"], required)
+                if client == "codex":
+                    self.assertEqual(policy["required_outer_execution"], "require_escalated")
+                    self.assertEqual(policy["inner_sandbox"], "read-only")
+                    skill_text = (staging / "requirements-machinery" / "SKILL.md").read_text()
+                    self.assertIn("outer execution `require_escalated`", skill_text)
+                    self.assertIn("nested reader remains `read-only`", skill_text)
+                else:
+                    self.assertNotIn("required_outer_execution", policy)
+                    self.assertNotIn("inner_sandbox", policy)
+
+    def test_versioned_requirements_projection_refuses_partial_execution_boundary(self):
+        with TemporaryDirectory() as td:
+            base = Path(td)
+            skills, _manifest = make_repo(base, ["requirements-machinery"])
+            model = json.loads((REPO / "working-agreement" /
+                                "machinery-client-model-v2.json").read_text())
+            model["clients"]["codex"].pop("inner_sandbox")
+            model_path = base / "machinery-client-model-v2.json"
+            model_path.write_text(json.dumps(model) + "\n")
+            original = pcs.GENERATOR_FILES["machinery-client-model-v2"]
+            pcs.GENERATOR_FILES["machinery-client-model-v2"] = model_path
+            try:
+                with self.assertRaisesRegex(RuntimeError, "together or omit both"):
+                    pcs.project_skill(
+                        skills / "requirements-machinery",
+                        base / "projected-requirements-machinery",
+                        "codex",
+                        {
+                            "disposition": "GENERATED_CLIENT_PROJECTION",
+                            "generator": "machinery-client-model-v2",
+                            "generator_sha256": pcs.file_hash(model_path),
+                        },
+                    )
+            finally:
+                pcs.GENERATOR_FILES["machinery-client-model-v2"] = original
 
 
 if __name__ == "__main__":

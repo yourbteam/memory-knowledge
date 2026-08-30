@@ -83,15 +83,26 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     if policy is None:
         raise RuntimeError(f"generator {generator} has no {client} policy")
     policy_fields = {"display_name", "required_runtime", "forbidden_runtime"}
+    optional_policy_fields = set()
     if generator == "machinery-client-model-v2":
         policy_fields.add("recommended_reader_command")
-    if set(policy) != policy_fields or any(
+        optional_policy_fields.update({"inner_sandbox", "required_outer_execution"})
+    if (not policy_fields <= set(policy)
+            or set(policy) - policy_fields - optional_policy_fields
+            or any(
         not isinstance(policy[field], str) or not policy[field].strip()
-        for field in policy_fields
-    ):
+        for field in set(policy)
+    )):
         raise RuntimeError(
-            f"generator {generator} {client} policy must contain exactly "
-            f"{sorted(policy_fields)} as non-empty strings"
+            f"generator {generator} {client} policy must contain required fields "
+            f"{sorted(policy_fields)}, optional fields {sorted(optional_policy_fields)}, "
+            "and only non-empty strings"
+        )
+    present_optional_fields = set(policy) & optional_policy_fields
+    if present_optional_fields not in (set(), optional_policy_fields):
+        raise RuntimeError(
+            f"generator {generator} {client} policy must declare optional boundary fields "
+            f"{sorted(optional_policy_fields)} together or omit both"
         )
     installed_policy = {
         "schema_version": 1,
@@ -102,6 +113,9 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     }
     if generator == "machinery-client-model-v2":
         installed_policy["recommended_reader_command"] = policy["recommended_reader_command"]
+        for field in sorted(optional_policy_fields):
+            if field in policy:
+                installed_policy[field] = policy[field]
     (destination / "client-model-policy.json").write_text(
         json.dumps(installed_policy, indent=2, sort_keys=True) + "\n")
     instructions = destination / "SKILL.md"
@@ -117,6 +131,14 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
         "worker. This boundary controls model selection only; all machinery behavior and outputs "
         "remain governed by the shared skill.\n"
     )
+    if policy.get("required_outer_execution") or policy.get("inner_sandbox"):
+        body += (
+            "\nThe enclosing host must launch this reader with outer execution "
+            f"`{policy.get('required_outer_execution', 'default')}` while the nested reader "
+            f"remains `{policy.get('inner_sandbox', 'client-default')}`. This outer permission "
+            "allows the client to initialize its own application state; it does not authorize "
+            "a writable nested reader.\n"
+        )
     instructions.write_text(body)
 
 

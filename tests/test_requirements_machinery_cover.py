@@ -63,7 +63,7 @@ def test_published_command_surface_matches_real_cli() -> None:
 
     result = json.loads(completed.stdout)
     assert result["parity"] is True
-    assert result["documented"] == result["executable"] == 14
+    assert result["documented"] == result["executable"] == 15
     assert set(result["categories"].values()) == {
         "coverage", "extraction", "owner decision", "document assembly",
     }

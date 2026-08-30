@@ -1,0 +1,153 @@
+{
+  "client": "codex",
+  "installed_root": "/Users/kamenkamenov/.codex/skills",
+  "manifest_errors": [],
+  "parity": true,
+  "rows": [
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "61f612c7344b2944bddd882305b8209ff08e125de42abb9bac26edc7eca37ab3",
+      "name": "_shared",
+      "projected_tree_sha256": "61f612c7344b2944bddd882305b8209ff08e125de42abb9bac26edc7eca37ab3",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "installed_tree_sha256": "1a77543d4929ebeec049b14ace223a423000fdfdd3af9ec051a70ab2bd11a3bc",
+      "name": "atom-building-machinery",
+      "projected_tree_sha256": "1a77543d4929ebeec049b14ace223a423000fdfdd3af9ec051a70ab2bd11a3bc",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "159f0609a05a4e84b76a1f5d94e0f9eedb8cd92f2489b3b6e5a2c667c98240b0",
+      "name": "corpus-add",
+      "projected_tree_sha256": "159f0609a05a4e84b76a1f5d94e0f9eedb8cd92f2489b3b6e5a2c667c98240b0",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "73aeccec42579ddf49d4711ba0ea80aa60c530e8d864d542944b35777aed6393",
+      "name": "critic-foundry",
+      "projected_tree_sha256": "73aeccec42579ddf49d4711ba0ea80aa60c530e8d864d542944b35777aed6393",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "installed_tree_sha256": "28962fcf4a1903e3cee3015c7ac87e3bbf3f2f721ae38cb94f4400c1e8569975",
+      "name": "description-machinery",
+      "projected_tree_sha256": "28962fcf4a1903e3cee3015c7ac87e3bbf3f2f721ae38cb94f4400c1e8569975",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "39eb1921a94bcc005137fde0323d03cc3694f498734d3bb8a47a077f30f3a766",
+      "name": "experiment-machinery",
+      "projected_tree_sha256": "39eb1921a94bcc005137fde0323d03cc3694f498734d3bb8a47a077f30f3a766",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "installed_tree_sha256": "a40a07c4ab1768255821e32ffc7a5893e88d0152d04f14572b42fa7b70d6a718",
+      "name": "info-intake-machinery",
+      "projected_tree_sha256": "a40a07c4ab1768255821e32ffc7a5893e88d0152d04f14572b42fa7b70d6a718",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "d24aefa2719e3ac169e9544774139e09be3dab2fdcf4fe2ae45a84c50af0e3e9",
+      "name": "phase-ledger-category-contract-foundry",
+      "projected_tree_sha256": "d24aefa2719e3ac169e9544774139e09be3dab2fdcf4fe2ae45a84c50af0e3e9",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "322e9b3d8ae8414139010ba825d6ad737273c55a02606edf7d6c31dae21d065d",
+      "name": "phase-ledger-contract-hardener",
+      "projected_tree_sha256": "322e9b3d8ae8414139010ba825d6ad737273c55a02606edf7d6c31dae21d065d",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "ce6080ff7f8422d6f72bb1b15390ec3f498830214d79a1d3e169fd411c3de35e",
+      "name": "producer-foundry",
+      "projected_tree_sha256": "ce6080ff7f8422d6f72bb1b15390ec3f498830214d79a1d3e169fd411c3de35e",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "ea4fb85a9b8ae2c074412b67eb8d2108896f8e61697e59fd348f0e4285bc88de",
+      "name": "prototype-driven-implementation",
+      "projected_tree_sha256": "ea4fb85a9b8ae2c074412b67eb8d2108896f8e61697e59fd348f0e4285bc88de",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "5a943d4f437749e047a116cdf808bc51b53179c6d89d65f0d3dc1eb4b21c6cbf",
+      "name": "remote-mcp-operator",
+      "projected_tree_sha256": "5a943d4f437749e047a116cdf808bc51b53179c6d89d65f0d3dc1eb4b21c6cbf",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "b4e43e25d22d3c3de0baad516e9fabd815507feb68807d73c615ecf5c8d6bf84",
+      "name": "remote-mcp-user-admin",
+      "projected_tree_sha256": "b4e43e25d22d3c3de0baad516e9fabd815507feb68807d73c615ecf5c8d6bf84",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "installed_tree_sha256": "6d07a93f8ed7bb928d738054c1430ff92ec1c3fa30540ff26de5ecb7da42e2f4",
+      "name": "requirements-machinery",
+      "projected_tree_sha256": "6d07a93f8ed7bb928d738054c1430ff92ec1c3fa30540ff26de5ecb7da42e2f4",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "50b8d04fc4a03556ffaf8a15a8a5fc9668e3cf61ba83a0f8c4fb47c45f4121e6",
+      "name": "sequence-runner",
+      "projected_tree_sha256": "50b8d04fc4a03556ffaf8a15a8a5fc9668e3cf61ba83a0f8c4fb47c45f4121e6",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "20d0c0422f70c2cf17413f14dcabcf87c607e11d77e32489210bda88205ee1ec",
+      "name": "shell-canary-foundry",
+      "projected_tree_sha256": "20d0c0422f70c2cf17413f14dcabcf87c607e11d77e32489210bda88205ee1ec",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "1670340defadec7928dc4e851270f280459511fa29350d9859b580294cd3ac4f",
+      "name": "shell-canary-runner",
+      "projected_tree_sha256": "1670340defadec7928dc4e851270f280459511fa29350d9859b580294cd3ac4f",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "abe3258e7619a5b9b8dd148c867de9e1211b961b6188d72a255503fb57161835",
+      "name": "system-alignment-assessment-machinery",
+      "projected_tree_sha256": "abe3258e7619a5b9b8dd148c867de9e1211b961b6188d72a255503fb57161835",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
+      "name": "verifier-foundry",
+      "projected_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
+      "state": "MATCH"
+    },
+    {
+      "disposition": "SHARED_IDENTICAL",
+      "installed_tree_sha256": "081df40fe95c90f50efbcfcd85307d078fcbc613853a862083218ba4df12cb00",
+      "name": "working-agreement",
+      "projected_tree_sha256": "081df40fe95c90f50efbcfcd85307d078fcbc613853a862083218ba4df12cb00",
+      "state": "MATCH"
+    }
+  ],
+  "schema_version": 1,
+  "skills_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/skills",
+  "unmanaged_installed": [
+    ".system"
+  ]
+}

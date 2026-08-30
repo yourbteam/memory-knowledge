@@ -1,0 +1,959 @@
+{
+  "allowed_paths": [
+    "skills/requirements-machinery",
+    "working-agreement/project_client_skills.py",
+    "working-agreement/machinery-client-model-v2.json",
+    "working-agreement/client-skill-projections.json",
+    "tests/test_requirements_machinery_cover.py",
+    "tests/test_requirements_machinery_rule_lineage.py",
+    "tests/test_client_skill_projections.py",
+    "tests/test_install_skills.py"
+  ],
+  "atomic_step_id": "requirements-projection-reconciliation",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/SKILL.md",
+      "sha256": "e0ab45e48cc838d7770db9d35cc52b2eb4a1055cfa6f4c07ea6b6af0d1c1d63e",
+      "size": 17015
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/evidence/empirical-claims.json",
+      "sha256": "60a0fc3f6873dd0f059a2421c6e5a7eac1142f6a49913c659731341b9b0c8ddd",
+      "size": 19286
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/_run.py",
+      "sha256": "728e0ffac735b6b72e41580ad264b0e0e02896909b88bdd9843370d665fd395b",
+      "size": 4040
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/a_agree_across_asks.py",
+      "sha256": "0e86b9bf0e6efa4dbbdcafa7afec1505289add5cc445d232b5f693e48d3c8c20",
+      "size": 1139
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/agree-across-asks/approach.py",
+      "sha256": "0e86b9bf0e6efa4dbbdcafa7afec1505289add5cc445d232b5f693e48d3c8c20",
+      "size": 1139
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/agree-across-asks/interview.py",
+      "sha256": "6a4508fe411df04097d57cce4067be4e23a5c59bfec035d00b58f1919b02f85c",
+      "size": 6633
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/agree-across-asks/run.py",
+      "sha256": "728e0ffac735b6b72e41580ad264b0e0e02896909b88bdd9843370d665fd395b",
+      "size": 4040
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/ask-for-the-check/approach.py",
+      "sha256": "207f5df647823ea7f5d71096533981d88579bf22591f83550bf6d18721196049",
+      "size": 1335
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/ask-for-the-check/interview.py",
+      "sha256": "6a4508fe411df04097d57cce4067be4e23a5c59bfec035d00b58f1919b02f85c",
+      "size": 6633
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/ask-for-the-check/run.py",
+      "sha256": "728e0ffac735b6b72e41580ad264b0e0e02896909b88bdd9843370d665fd395b",
+      "size": 4040
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/b_one_line_at_a_time.py",
+      "sha256": "1a7446977c97f007e682b647b83544375b2d368f66d3e0e65c8fa32b60097cd4",
+      "size": 829
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/c_ask_for_the_check.py",
+      "sha256": "207f5df647823ea7f5d71096533981d88579bf22591f83550bf6d18721196049",
+      "size": 1335
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/material.json",
+      "sha256": "1bc7cb9ad7d675a20cca03e7cbc7b381b4c22dcb0e63dde2a5105499985a9a21",
+      "size": 2959
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/one-line-at-a-time/approach.py",
+      "sha256": "1a7446977c97f007e682b647b83544375b2d368f66d3e0e65c8fa32b60097cd4",
+      "size": 829
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/one-line-at-a-time/interview.py",
+      "sha256": "6a4508fe411df04097d57cce4067be4e23a5c59bfec035d00b58f1919b02f85c",
+      "size": 6633
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/checkable/one-line-at-a-time/run.py",
+      "sha256": "728e0ffac735b6b72e41580ad264b0e0e02896909b88bdd9843370d665fd395b",
+      "size": 4040
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/_run.py",
+      "sha256": "9da4f58b845265d0d5880089cc5348ff8a2b708c17689221fef989495c66ba1e",
+      "size": 4011
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/_shared.py",
+      "sha256": "3aaf175432a49dfbf77605894e69d82852be0903401df85477deb0bc8e35b5d8",
+      "size": 565
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/list-ask/approach.py",
+      "sha256": "1677ee4c84bf67adc57cfb5247be421bef9024a4fdbd3538ccb7dd886c80d2aa",
+      "size": 1612
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/list-ask/run.py",
+      "sha256": "9da4f58b845265d0d5880089cc5348ff8a2b708c17689221fef989495c66ba1e",
+      "size": 4011
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/list-ask/shared.py",
+      "sha256": "3aaf175432a49dfbf77605894e69d82852be0903401df85477deb0bc8e35b5d8",
+      "size": 565
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/material-apart.json",
+      "sha256": "6862ef393099df37ffa9583f442f2a16cc5e0c44962991ac6c9ed24fb5dce0b0",
+      "size": 3751
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/material.json",
+      "sha256": "0e9c61f86b602f17625408cb63db7ae89f3467a2078bd3e19b963490a91f4dcf",
+      "size": 9913
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/pair-ask/approach.py",
+      "sha256": "0f05ae8b04a62e7c8b6f291d1e41c6e73e83274eab2eb58913562844cfeec42a",
+      "size": 2456
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/pair-ask/run.py",
+      "sha256": "9da4f58b845265d0d5880089cc5348ff8a2b708c17689221fef989495c66ba1e",
+      "size": 4011
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/pair-ask/shared.py",
+      "sha256": "3aaf175432a49dfbf77605894e69d82852be0903401df85477deb0bc8e35b5d8",
+      "size": 565
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/shared-rule-ask/approach.py",
+      "sha256": "c9c794b2420cfa7d70c2e76684bc1c09f71b75c085c95be2945c322fbaeae0bc",
+      "size": 3184
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/shared-rule-ask/run.py",
+      "sha256": "9da4f58b845265d0d5880089cc5348ff8a2b708c17689221fef989495c66ba1e",
+      "size": 4011
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/shared-rule-ask/shared.py",
+      "sha256": "3aaf175432a49dfbf77605894e69d82852be0903401df85477deb0bc8e35b5d8",
+      "size": 565
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/shingle-match/approach.py",
+      "sha256": "563a4c99cad047affc20fb06741cbf14a0d66b39d8166723a4fad3bd2b10de1d",
+      "size": 1167
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/shingle-match/run.py",
+      "sha256": "9da4f58b845265d0d5880089cc5348ff8a2b708c17689221fef989495c66ba1e",
+      "size": 4011
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/dedupe/shingle-match/shared.py",
+      "sha256": "3aaf175432a49dfbf77605894e69d82852be0903401df85477deb0bc8e35b5d8",
+      "size": 565
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/_reflow_shared.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/_run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/at-most-double/approach.py",
+      "sha256": "2d0367a8bea6833fd4bff7cf6e30477254d71a1f149d314b115565ea8421b6dd",
+      "size": 720
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/at-most-double/reflow.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/at-most-double/run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/material-tables.json",
+      "sha256": "af76f37bef7cdebb06dd8a4582d72f371b96eeca30873198e8c0717d10fee6ba",
+      "size": 40876
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/material.json",
+      "sha256": "c046531660d2dcbe8f271d94b141e116e08cbebafdf07311a838c6275ce0141d",
+      "size": 51834
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/no-completion/approach.py",
+      "sha256": "d07cfb293837771d4ead501a5d4bb4bed8ef8d425665ab73b07b4f93738ad9d3",
+      "size": 545
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/no-completion/reflow.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/no-completion/run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/no-narrow-line/approach.py",
+      "sha256": "704bd2048d86f14bf2f520dcba415e7ba914f7998c7472da6d4b57cefde19744",
+      "size": 981
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/no-narrow-line/reflow.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/no-narrow-line/run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/offered-only/approach.py",
+      "sha256": "0a41af4e9fb3f4401087f12dda0ffbeb165017dd36c9f51069a4780202be67f3",
+      "size": 1297
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/offered-only/cuts.py",
+      "sha256": "1d1e0612c82f871f3e03ab6db26bca63ecf6154a037c90aba8455096ca3334d2",
+      "size": 8275
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/offered-only/reflow.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/offered-only/run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/sentence-run/approach.py",
+      "sha256": "7e363b278cf4d3c17724220ef5e38a13ec2cfb4693a50a2be2e7a5cba3cb8371",
+      "size": 661
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/sentence-run/reflow.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/sentence-run/run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/sentence-terminated/approach.py",
+      "sha256": "7a953203e5a8cc5a639512229e57b5bd0584cab369e9e3b79cbf3f03a696dc89",
+      "size": 742
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/sentence-terminated/reflow.py",
+      "sha256": "df96ecd4ecb0fbca9afb121d50295f392b661d97b6c7e8281d09ad53791b8df6",
+      "size": 1170
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/merge/sentence-terminated/run.py",
+      "sha256": "c6cc702dd4755bdf0779613869864051cc6a37ba40b18b043c508ac4c5cc1cc9",
+      "size": 6922
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/_common.py",
+      "sha256": "bd98d2644f5fabe671dcbd285a6122ebb0fa19c00915fad532b774351a99d461",
+      "size": 750
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/_run.py",
+      "sha256": "505eeff520c3931e84f0ac7c0b269d5507475493e1acb9692028e2d5c7acb45e",
+      "size": 5467
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/a_ask_twice_intersect.py",
+      "sha256": "fd96db3799f5d70b37c3a88c814c132ee31ec90ff177fd7a09978f452b308a44",
+      "size": 807
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/ask-twice-intersect/_common.py",
+      "sha256": "bd98d2644f5fabe671dcbd285a6122ebb0fa19c00915fad532b774351a99d461",
+      "size": 750
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/ask-twice-intersect/approach.py",
+      "sha256": "fd96db3799f5d70b37c3a88c814c132ee31ec90ff177fd7a09978f452b308a44",
+      "size": 807
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/ask-twice-intersect/interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/ask-twice-intersect/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/ask-twice-intersect/run.py",
+      "sha256": "505eeff520c3931e84f0ac7c0b269d5507475493e1acb9692028e2d5c7acb45e",
+      "size": 5467
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/b_rounds_until_dry.py",
+      "sha256": "f008f54b92c2f871073a83b244e3edb9574551d681f759a2fc00c2a7815aa3bb",
+      "size": 1665
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/c_code_cuts_then_judge.py",
+      "sha256": "0b9842b91c6ca810bad184c1a8a52d755050d733f1af25b68bc0c29e3b75be49",
+      "size": 1711
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/code-cuts-then-judge/_common.py",
+      "sha256": "bd98d2644f5fabe671dcbd285a6122ebb0fa19c00915fad532b774351a99d461",
+      "size": 750
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/code-cuts-then-judge/approach.py",
+      "sha256": "0b9842b91c6ca810bad184c1a8a52d755050d733f1af25b68bc0c29e3b75be49",
+      "size": 1711
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/code-cuts-then-judge/interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/code-cuts-then-judge/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/code-cuts-then-judge/run.py",
+      "sha256": "505eeff520c3931e84f0ac7c0b269d5507475493e1acb9692028e2d5c7acb45e",
+      "size": 5467
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/d_vote_on_fixed_units.py",
+      "sha256": "71d81a0fc03fef6ac2338444b7f78b5c0b39be1f6c899a210513edf4ecea5b73",
+      "size": 2377
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/rounds-until-dry/_common.py",
+      "sha256": "bd98d2644f5fabe671dcbd285a6122ebb0fa19c00915fad532b774351a99d461",
+      "size": 750
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/rounds-until-dry/approach.py",
+      "sha256": "f008f54b92c2f871073a83b244e3edb9574551d681f759a2fc00c2a7815aa3bb",
+      "size": 1665
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/rounds-until-dry/interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/rounds-until-dry/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/rounds-until-dry/run.py",
+      "sha256": "505eeff520c3931e84f0ac7c0b269d5507475493e1acb9692028e2d5c7acb45e",
+      "size": 5467
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/vote-on-fixed-units/_common.py",
+      "sha256": "bd98d2644f5fabe671dcbd285a6122ebb0fa19c00915fad532b774351a99d461",
+      "size": 750
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/vote-on-fixed-units/approach.py",
+      "sha256": "71d81a0fc03fef6ac2338444b7f78b5c0b39be1f6c899a210513edf4ecea5b73",
+      "size": 2377
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/vote-on-fixed-units/interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/vote-on-fixed-units/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/obligations/vote-on-fixed-units/run.py",
+      "sha256": "505eeff520c3931e84f0ac7c0b269d5507475493e1acb9692028e2d5c7acb45e",
+      "size": 5467
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/_cases.py",
+      "sha256": "eed03e277f32cd8da5aab57ecf7f85b89822c750a6d07be502c80882511fed01",
+      "size": 3867
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/_run.py",
+      "sha256": "07981f1f8e51d112a656e67ce7da64066571f5fc5809912f69275ae47e47797d",
+      "size": 3555
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/exact/_cases.py",
+      "sha256": "eed03e277f32cd8da5aab57ecf7f85b89822c750a6d07be502c80882511fed01",
+      "size": 3867
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/exact/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/exact/run.py",
+      "sha256": "07981f1f8e51d112a656e67ce7da64066571f5fc5809912f69275ae47e47797d",
+      "size": 3555
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/line-anchored/_cases.py",
+      "sha256": "eed03e277f32cd8da5aab57ecf7f85b89822c750a6d07be502c80882511fed01",
+      "size": 3867
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/line-anchored/quotecheck.py",
+      "sha256": "951e9d5cd95550f92fe0df797f1ac03998226b924c3c678c670e3b309cf3bb04",
+      "size": 532
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/line-anchored/run.py",
+      "sha256": "07981f1f8e51d112a656e67ce7da64066571f5fc5809912f69275ae47e47797d",
+      "size": 3555
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/token-window/_cases.py",
+      "sha256": "eed03e277f32cd8da5aab57ecf7f85b89822c750a6d07be502c80882511fed01",
+      "size": 3867
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/token-window/quotecheck.py",
+      "sha256": "e6dfeca67c08c702655d9f22bb5cd1a5856746b8788446a55d7a52e3c2d16bbc",
+      "size": 520
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/quotecheck/token-window/run.py",
+      "sha256": "07981f1f8e51d112a656e67ce7da64066571f5fc5809912f69275ae47e47797d",
+      "size": 3555
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/_common_head.py",
+      "sha256": "3563670a2d9a270bfe74e28c8368a878502e910608f78d2b4b2f21f288eb31fd",
+      "size": 1013
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/_common_tail.py",
+      "sha256": "593baf623208f86e435c2429bbfc3afd9acd5fdc5a71fee8a13362bc0e571daa",
+      "size": 2646
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/_gate_body.py",
+      "sha256": "e3ee1dd2ce6f93271a6942af017918d67aa570896e26aaadf646695e74a14a82",
+      "size": 1014
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/_refuse_body.py",
+      "sha256": "7e24337bc8c87f26cc37fe1351c24d6086ed253f431ec7c17a80fadb45a9a0d1",
+      "size": 1214
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/gate-at-report/register.py",
+      "sha256": "947eed94b5b29f2dfcec1802e88da9ec33137b9a39475a93ba173c13156a782c",
+      "size": 1803
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/gate-at-report/run.py",
+      "sha256": "d3b3d1c0361b0a235adcd93caed49d443f8803ace02cdfb24e56c2135004d59c",
+      "size": 7776
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/refuse-at-write/register.py",
+      "sha256": "574aa806117de25198e8d2ad5967a591603674a11e68fbe4b662187609faf7f7",
+      "size": 2004
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/register/refuse-at-write/run.py",
+      "sha256": "d3b3d1c0361b0a235adcd93caed49d443f8803ace02cdfb24e56c2135004d59c",
+      "size": 7776
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/_interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/_run.py",
+      "sha256": "efc17a2531212cb20d254e569854e7566db37d8a52de7741279759131a995f63",
+      "size": 10438
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/grounded/_interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/grounded/_run.py",
+      "sha256": "efc17a2531212cb20d254e569854e7566db37d8a52de7741279759131a995f63",
+      "size": 10438
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/grounded/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/grounded/relevance.py",
+      "sha256": "789144e4f1b6c1de421464a15befcf026dcbbba72b3357be9b21950e85d14d94",
+      "size": 659
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/grounded/run.py",
+      "sha256": "efc17a2531212cb20d254e569854e7566db37d8a52de7741279759131a995f63",
+      "size": 10438
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/plain-yesno/_interview.py",
+      "sha256": "1914d5e8a42f4902472d270de98101b75a9bbc11b8258cbcfac441a604e0e42d",
+      "size": 6024
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/plain-yesno/_run.py",
+      "sha256": "efc17a2531212cb20d254e569854e7566db37d8a52de7741279759131a995f63",
+      "size": 10438
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/plain-yesno/quotecheck.py",
+      "sha256": "f70f747a933785ec41312f895475485ddf5655a5fa9789eabe346deebeb6ab44",
+      "size": 298
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/plain-yesno/relevance.py",
+      "sha256": "0407521f536c3ea887a5798f66cd37c10b56a54e0f8e60a936c75fff796a46c3",
+      "size": 454
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/relevance/plain-yesno/run.py",
+      "sha256": "efc17a2531212cb20d254e569854e7566db37d8a52de7741279759131a995f63",
+      "size": 10438
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/_block_fn.py",
+      "sha256": "0691ffbb9d69a6b55d151c2a4140f488c20af3b795b1b3fa47f7b48170e84aa4",
+      "size": 407
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/_heading_fn.py",
+      "sha256": "192b7a12b877ab47bf4b7a2dba7777d54dfd036968fd2edf64e8e04fcda63c0a",
+      "size": 441
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/_page_fn.py",
+      "sha256": "f04546bf9648847574b15d3fd7e681fa8241904e1c8af61a2f69cc509197b23f",
+      "size": 58
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/_template_head.py",
+      "sha256": "a90267c4cca18e78a29613c363024c55389053a82079888f5a4b960ab2a5e4bc",
+      "size": 1835
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/_template_tail.py",
+      "sha256": "7fb276278885cd1017211b5e9c6a1de7e620f71b3d6366a6c92bfeb3f6583a69",
+      "size": 2368
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/block/run.py",
+      "sha256": "d3b3d1c0361b0a235adcd93caed49d443f8803ace02cdfb24e56c2135004d59c",
+      "size": 7776
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/block/splitter.py",
+      "sha256": "208443f1550b2a95d4f9e1f833cc771f0209a74ffb68c90fbbe2a84c30c8886f",
+      "size": 643
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/heading/run.py",
+      "sha256": "d3b3d1c0361b0a235adcd93caed49d443f8803ace02cdfb24e56c2135004d59c",
+      "size": 7776
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/heading/splitter.py",
+      "sha256": "6ad1671cf94618b4b203650ce90fb714351243fbb187111e595986a9d14b2a2c",
+      "size": 681
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/page/run.py",
+      "sha256": "d3b3d1c0361b0a235adcd93caed49d443f8803ace02cdfb24e56c2135004d59c",
+      "size": 7776
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/probes/splitter/page/splitter.py",
+      "sha256": "32b19ad39d4db0b2643c34826db487d603f54d10121f4b7480d8f955db905c80",
+      "size": 292
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/checkability.cpython-314.pyc",
+      "sha256": "59343cd19e91b0fe6670a56a1767f93c5c3095463f549628495d38166a8d0e8d",
+      "size": 15099
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/cover.cpython-314.pyc",
+      "sha256": "bb69c95bf7d2d04efb8ceff50c88a7fc180b7b0012349c0f4434967b83a32c76",
+      "size": 118022
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/dedupe.cpython-314.pyc",
+      "sha256": "3c4e601e3002146a9b91aede82b50892f2b4ec2b2a48655db9cac8afb780846c",
+      "size": 7675
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/interview.cpython-314.pyc",
+      "sha256": "4bdbd86ceade0c35077eddd68369b02bb313b1a7f48a326806d0f8ae376808f5",
+      "size": 21262
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/quotecheck.cpython-314.pyc",
+      "sha256": "1f6fb43a1b5aaffab8913e159c90286762d90ea3526750a8c32539d39b1280f7",
+      "size": 1570
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/reflow.cpython-314.pyc",
+      "sha256": "b7370dccf855cbf82a11f2c4fa93334c08ebfa3a9d9066f55c855e76382decb7",
+      "size": 12749
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/register.cpython-314.pyc",
+      "sha256": "6774fe738a56612c1073c565bc50c0a24d37088c3d3386a9b12bc65745d34605",
+      "size": 4475
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/rule_conservation.cpython-314.pyc",
+      "sha256": "17e671151efe9d82c3be359ab6ea8615fdfcd24acdf92d45b793941540668969",
+      "size": 1842
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/rule_lineage.cpython-314.pyc",
+      "sha256": "a15ccb14ad71809e1d25dcaa543fc5be6238fb14b38c4494121bb86e25976cbb",
+      "size": 6044
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/rules.cpython-314.pyc",
+      "sha256": "48455805fd510c34a517defcdd17bf626e0af44753814de815b9956a8fcbe3a0",
+      "size": 8040
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/__pycache__/splitter.cpython-314.pyc",
+      "sha256": "581cfff302bb1256da9e65064896eb53b7fb02002bb7659cd396a112aef6860a",
+      "size": 868
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/checkability.py",
+      "sha256": "dd24c7daf4b10aa949f1abc8a0a70796d6e8096598445e9f9dd86580129d6428",
+      "size": 11124
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/contract_surface.py",
+      "sha256": "f9f3238956644e064131c769c033ddbe1684e0fbd2277ce0ab6ece68b75eca79",
+      "size": 2927
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/cover.py",
+      "sha256": "5c30ca5d37f22b96ed2962c6783dfc88bdedb9a36b8e47c43d64c088b96b8ced",
+      "size": 92331
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/dedupe.py",
+      "sha256": "b7b6ccd67a20ae53c02aa38533ebb77eb752ec9bff55dc53e381db827c8a3cde",
+      "size": 4700
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/distill.py",
+      "sha256": "9b21ea88fc25f1b2690cdc9a7193de8244c7a5850ba4e85b8d6abec5ba21033a",
+      "size": 5708
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/empirical_claims.py",
+      "sha256": "216bc7c471c4b3f650341ba3625d8f33b3297c2660db9b850a527ac529b574fb",
+      "size": 10394
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/interview.py",
+      "sha256": "c135ee89e463cada3ca4fc1931134dca929d7c5ddd771d3d51564e8812e9b2ac",
+      "size": 15605
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/obligations.py",
+      "sha256": "cb2989c4673e55de51d296f8c23fdb420469607d68859c75652d2b425920cd6c",
+      "size": 7667
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/quotecheck.py",
+      "sha256": "744b0bee819e146818e6440596e751c28af7a316832c2fd4d78aae45cd43f5d7",
+      "size": 920
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/reflow.py",
+      "sha256": "c0500cb2a6cafbe9ef509c7f318191c751c743edc113e26903770c81f3ad4565",
+      "size": 8534
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/register.py",
+      "sha256": "faf057cd6c6268a8aec65c4c0002b4759da1679064faa650df912e73e01238d1",
+      "size": 2343
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/relevance.py",
+      "sha256": "9f00a24467e2f8881391ea49c5866ab3da42b0daab34a369474fef5bd875c02c",
+      "size": 6413
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/rule_conservation.py",
+      "sha256": "ea91098b64c5bff3a5712e4a2f57e303a3f6207a9d0187ca864ca1b5043ce98d",
+      "size": 938
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/rule_lineage.py",
+      "sha256": "7ddc3d539942d3bdbb73667fb935db82b16b147a8663e5ba5771b60d7087d22d",
+      "size": 3715
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/rules.py",
+      "sha256": "14f9318aedda0a9d4e10273bc2ea4a33ea7bc73069cd2d8e493d2d63bbff8332",
+      "size": 5553
+    },
+    {
+      "mode": 420,
+      "path": "skills/requirements-machinery/scripts/splitter.py",
+      "sha256": "32b19ad39d4db0b2643c34826db487d603f54d10121f4b7480d8f955db905c80",
+      "size": 292
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_client_skill_projections.py",
+      "sha256": "5c2712d3afd79dbca732b4276ecbbed56d219e3768fd4c21f18ea7fbaffca040",
+      "size": 14786
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_install_skills.py",
+      "sha256": "a12f33acbec783db8a0072f44dc732cf9130762f429ea13c2f0348d35a2971f5",
+      "size": 16088
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_requirements_machinery_cover.py",
+      "sha256": "2819d71f2e78e8108a89b89b41c58afa662fcbdfb65cd57febedd3613796bf33",
+      "size": 35676
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_requirements_machinery_rule_lineage.py",
+      "sha256": "88a8c56562f2d47fd0e9726c30ac34589bacf4c6ad39a3fe4e3fc45b92a7b3ae",
+      "size": 4437
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "1daca5f3dcb2bff3ef504a2bdcd972db635c00ba2c5ad0468384c40b2589c4d9",
+      "size": 11117
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/machinery-client-model-v2.json",
+      "sha256": "5bcbfc9adc51ffcd569923fbff75fca21ca174f5ebf3fa50cec2fb8d9d7f0961",
+      "size": 456
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/project_client_skills.py",
+      "sha256": "e639d4263c75b0d87dc03bdb10ba7a86a9106e3f0260eb7c32cc7cbf10cc2285",
+      "size": 16436
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge",
+  "schema_version": 1
+}

@@ -43,17 +43,24 @@ def discover(skill_root: Path) -> list[dict]:
                 or relative.parts[0] == "evidence"
                 or relative.as_posix() == "scripts/empirical_claims.py"):
             continue
+        occurrences: dict[str, int] = {}
         for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             text = raw.strip()
             if not text or not CLAIM_PATTERN.search(text):
                 continue
-            identity = f"{relative.as_posix()}:{line_number}:{digest_bytes(text.encode())}"
+            text_sha256 = digest_bytes(text.encode())
+            occurrences[text_sha256] = occurrences.get(text_sha256, 0) + 1
+            identity = f"{relative.as_posix()}:{text_sha256}:{occurrences[text_sha256]}"
             claims.append({
                 "id": f"EC-{digest_bytes(identity.encode())[:16]}",
                 "source": relative.as_posix(), "line": line_number, "text": text,
-                "text_sha256": digest_bytes(text.encode()),
+                "text_sha256": text_sha256,
             })
     return claims
+
+
+def stable_claims(claims: list[dict]) -> list[dict]:
+    return [{key: value for key, value in claim.items() if key != "line"} for claim in claims]
 
 
 def manifest_body(claims: list[dict]) -> dict:
@@ -61,7 +68,7 @@ def manifest_body(claims: list[dict]) -> dict:
                 "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed."}
                for claim in claims]
     return {"schema_version": 1, "claim_detection": CLAIM_PATTERN.pattern,
-            "claims_fingerprint": digest_bytes(canonical(claims)), "claims": entries}
+            "claims_fingerprint": digest_bytes(canonical(stable_claims(claims))), "claims": entries}
 
 
 def write_inventory(skill_root: Path, output: Path) -> dict:
@@ -174,12 +181,14 @@ def validate(skill_root: Path, manifest_path: Path) -> dict:
     stale = sorted(set(recorded_index) - set(current_index))
     if missing or stale:
         raise Invalid(f"claim inventory drift: missing={missing}, stale={stale}")
-    if manifest.get("claims_fingerprint") != digest_bytes(canonical(current)):
+    if manifest.get("claims_fingerprint") != digest_bytes(canonical(stable_claims(current))):
         raise Invalid("claim inventory fingerprint mismatch")
     skill_root = skill_root.resolve()
     verified, unverified = [], []
-    identity_fields = ("source", "line", "text", "text_sha256")
+    identity_fields = ("source", "text", "text_sha256")
     for claim_id, claim in recorded_index.items():
+        if type(claim.get("line")) is not int or claim["line"] < 1:
+            raise Invalid(f"claim source location is invalid: {claim_id}")
         if any(claim.get(field) != current_index[claim_id].get(field) for field in identity_fields):
             raise Invalid(f"claim source identity drift: {claim_id}")
         if claim.get("disposition") == "verified":

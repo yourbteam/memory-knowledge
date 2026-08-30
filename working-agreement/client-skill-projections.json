@@ -208,15 +208,15 @@
       ]
     },
     "requirements-machinery": {
-      "canonical_tree_sha256": "9143bc622a4f835066f5f55c3a4b1ae123a02f2bb5f80ec12a96e4e217481585",
+      "canonical_tree_sha256": "2b7c573abebca16eee70cd9f854d7be3531e90619503130b279075d602dbb821",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the exact reader runtime policy while the coverage and requirements behavior remains shared.",
       "generator": "machinery-client-model-v2",
-      "generator_sha256": "5bcbfc9adc51ffcd569923fbff75fca21ca174f5ebf3fa50cec2fb8d9d7f0961",
+      "generator_sha256": "70fbf3155f75718fe10efd078becf87eaf593b84f0e310e181e6f7ad5fb30ffa",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "ba9e8af57fcac8db9ea736d37ed298f818375bd211eb91d69eeb96be840cfbcc",
-        "codex": "98684ffd2ffd9f91edb82897000fec3b0e580ee4e451ef7e68076e9e52b0f172"
+        "claude": "6ce16f4182dfa3cf44170a385abcfe1c3d01df4c8f8853e7bd8fb4adbaff3323",
+        "codex": "6d07a93f8ed7bb928d738054c1430ff92ec1c3fa30540ff26de5ecb7da42e2f4"
       },
       "scenario_groups": [
         "CAP-SHARED"

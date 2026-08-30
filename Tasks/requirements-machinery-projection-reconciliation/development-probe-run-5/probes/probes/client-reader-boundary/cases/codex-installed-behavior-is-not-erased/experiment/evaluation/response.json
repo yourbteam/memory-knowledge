@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scores": [
+    {
+      "metrics": {
+        "client-policy-correct": 1,
+        "reader-boundary-complete": 0,
+        "shared-chain-present": 1
+      },
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "client-policy-correct": 1,
+        "reader-boundary-complete": 1,
+        "shared-chain-present": 1
+      },
+      "variant_id": "variation-2"
+    }
+  ]
+}

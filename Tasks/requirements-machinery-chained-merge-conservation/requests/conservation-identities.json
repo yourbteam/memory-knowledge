@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-chained-merge-conservation/development-manifest.json",
+  "probe_id": "conservation-check",
+  "approach_id": "identity-counter",
+  "source": {
+    "baseline": "../baseline",
+    "candidate": "../candidates/conservation-identities",
+    "entrypoint": "probe_entry.py"
+  },
+  "execution": {
+    "protocol": "experiment-result-v1",
+    "command": ["{python}", "{candidate-entrypoint}"]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "case_id": "codex-installed-behavior-is-not-erased",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "the generated Codex projection retains the exact read-only nested command and required outer launch",
+  "verdict": "satisfied"
+}

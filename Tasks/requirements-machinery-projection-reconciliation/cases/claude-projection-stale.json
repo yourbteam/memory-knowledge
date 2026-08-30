@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "client": "claude",
+  "observed": "installed requirements machinery matches the old projection but lacks the validated chained-rule conservation change",
+  "installed_tree_sha256": "ba9e8af57fcac8db9ea736d37ed298f818375bd211eb91d69eeb96be840cfbcc",
+  "missing_runtime_files": [
+    "rule_lineage.py",
+    "rule_conservation.py"
+  ],
+  "stale_cover": true
+}

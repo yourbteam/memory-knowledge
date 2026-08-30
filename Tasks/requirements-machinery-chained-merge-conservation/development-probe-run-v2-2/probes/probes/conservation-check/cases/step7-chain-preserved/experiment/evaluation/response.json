@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scores": [
+    {
+      "metrics": {
+        "false-refusals": 0,
+        "loss-detected": 1
+      },
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "false-refusals": 0,
+        "loss-detected": 1
+      },
+      "variant_id": "variation-2"
+    }
+  ]
+}

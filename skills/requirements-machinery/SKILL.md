@@ -47,9 +47,16 @@ python3 scripts/cover.py distill --work <dir> --reader-command '<command>'
 python3 scripts/cover.py ask-owner --work <dir>
 python3 scripts/cover.py answer-owner --work <dir> --id <decision-id> \
                                       --choice <offered-choice> --because "<owner's words>"
+python3 scripts/cover.py run --work <dir> --target "<the document being built>" \
+                             --out <requirements.md> --reader-command '<command>'
 python3 scripts/cover.py document --work <dir> --out <requirements.md>
 python3 scripts/cover.py report  --work <dir>
 ```
+
+Use `run` as the normal continuation entrypoint. It derives the next incomplete stage from the
+persisted coverage state, advances every automatic stage, and exits only after presenting one owner
+ruling or writing the finished document. Re-run the same command after each owner answer; completed
+reader work is reused and no separate stage command is required.
 
 `open` cuts the document and writes every piece to `<dir>/pieces/`. `report` refuses, naming what is
 still unanswered, until nothing is. State lives in `<dir>`, so stopping and coming back later is the
@@ -108,6 +115,7 @@ The entry point has fourteen public commands. The table is both the human contra
 | `distill` | extraction | Produces the checkable requirement candidates presented for final decisions. |
 | `ask-owner` | owner decision | Presents only decisions the machinery is not allowed to cast. |
 | `answer-owner` | owner decision | Persists one offered choice in the owner's own words. |
+| `run` | document assembly | Derives and advances every automatic stage, stopping only for one owner ruling or the completed document. |
 | `document` | document assembly | Applies completed owner rulings and writes the requirements document. |
 <!-- END PUBLIC COMMAND SURFACE -->
 

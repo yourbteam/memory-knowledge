@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "requirements-chained-merge-conservation",
+  "promotion_event_sha256": "3dd499aa9f2c8064256f740127553c8c0e5a40c146e884931beafcc4a1f3d38c",
+  "cases": [
+    {
+      "case_id": "step7-chain-preserved",
+      "verdict": "satisfied",
+      "reason": "The actual requirements command preserved all 35 source identities exactly once, carried rules 11 and 27 to one terminal checkability item, kept 11 branched sources explicit, and preserved the stale checkability record before three fresh reader calls.",
+      "evidence": [
+        {
+          "case_id": "step7-chain-preserved",
+          "path": "real-path-success.json",
+          "sha256": "74b6f6bf629a8606c0d87beaea4c891d09f79d89c980f0a0bbac4edfc1673069"
+        }
+      ]
+    },
+    {
+      "case_id": "step7-current-loss-refused",
+      "verdict": "satisfied",
+      "reason": "The conservation gate rejected the exact historical output before checkability because it contained no explicit source identities, naming every missing identity including 11 and 27.",
+      "evidence": [
+        {
+          "case_id": "step7-current-loss-refused",
+          "path": "real-path-failure.json",
+          "sha256": "429e2edb713bae168b6d53906750a974cd21effe4e5ca741ee947972a81d640c"
+        }
+      ]
+    }
+  ]
+}

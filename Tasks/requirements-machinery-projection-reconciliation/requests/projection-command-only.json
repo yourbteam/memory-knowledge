@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-projection-reconciliation/development-manifest.json",
+  "probe_id": "client-reader-boundary",
+  "approach_id": "command-only-policy",
+  "source": {
+    "baseline": "../development/baseline",
+    "candidate": "../development/candidates/projection-command-only",
+    "entrypoint": "probe_entry.py"
+  },
+  "execution": {
+    "protocol": "experiment-result-v1",
+    "command": ["{python}", "{candidate-entrypoint}"]
+  }
+}

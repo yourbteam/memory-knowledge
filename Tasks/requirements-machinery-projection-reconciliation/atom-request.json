@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "requirements-projection-reconciliation",
+  "outcome": "The repository-authoritative Requirements Machinery preserves the validated Codex-only behavior, composes it with chained-rule conservation, and generates matching installable Codex and Claude projections.",
+  "practical_value": "Installing the corrected machinery no longer erases useful Codex behavior, and both clients can run the same loss-proof requirements process with their own enforced reader boundary.",
+  "stopping_condition": "Canonical validation passes, both generated projection trees pass parity after transactional installation, Codex retains automatic continuation and immutable reader isolation, Claude retains its own reader policy, and the real Step 7 case still accounts for all 35 rule identities including 11 and 27.",
+  "allowed_paths": [
+    "skills/requirements-machinery",
+    "working-agreement/project_client_skills.py",
+    "working-agreement/machinery-client-model-v2.json",
+    "working-agreement/client-skill-projections.json",
+    "tests/test_requirements_machinery_cover.py",
+    "tests/test_requirements_machinery_rule_lineage.py",
+    "tests/test_client_skill_projections.py",
+    "tests/test_install_skills.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "step7-chain-remains-complete",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+      "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+      "kind": "success",
+      "expected_outcome": "All 35 source rule identities remain represented exactly once and six-type sources 11 and 27 reach one terminal lineage after reconciliation."
+    },
+    {
+      "case_id": "codex-installed-behavior-is-not-erased",
+      "source_ref": "Tasks/requirements-machinery-projection-reconciliation/cases/codex-projection-drift.json",
+      "sha256": "ea414e985491227aa623dc6c9fa2461be59d7c116b5a17929e66835b4ac0944a",
+      "kind": "failure",
+      "expected_outcome": "Canonical promotion retains the installed Codex continuation, immutable projection snapshot, stale-ruling recovery, stable evidence identity, and exact read-only reader command instead of overwriting them."
+    },
+    {
+      "case_id": "claude-receives-corrected-machinery",
+      "source_ref": "Tasks/requirements-machinery-projection-reconciliation/cases/claude-projection-stale.json",
+      "sha256": "6a7ea6509c8d07b9bb214700d3c3229bab92beb94bd8adc38602c625657825e6",
+      "kind": "failure",
+      "expected_outcome": "The Claude projection receives chained-rule conservation and the reconciled shared behavior while keeping the Claude reader command."
+    }
+  ]
+}

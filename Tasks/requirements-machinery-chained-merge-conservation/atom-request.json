@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "requirements-chained-merge-conservation",
+  "outcome": "Every extracted rule survives chained same-rule merging through exactly one final disposition before checkability.",
+  "practical_value": "The six-type rule and every future rule can no longer disappear when an intermediate merge carrier is later absorbed.",
+  "stopping_condition": "The real Step 7 chain preserves every source rule identity exactly once, the historical lossy output is refused with named missing identities, focused tests pass, and the real requirements path reaches checkability with both six-type wordings represented.",
+  "allowed_paths": [
+    "skills/requirements-machinery/scripts/cover.py",
+    "skills/requirements-machinery/scripts/rule_lineage.py",
+    "skills/requirements-machinery/scripts/rule_conservation.py",
+    "tests/test_requirements_machinery_rule_lineage.py",
+    "tests/test_requirements_machinery_cover.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "step7-chain-preserved",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+      "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+      "kind": "success",
+      "expected_outcome": "All 35 extracted rule identities occur exactly once after reduction and source rules 11 and 27 both remain represented in the lineage delivered to checkability."
+    },
+    {
+      "case_id": "step7-current-loss-refused",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+      "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+      "kind": "failure",
+      "expected_outcome": "The persisted lossy requirements output is refused before checkability and the refusal includes missing source rule identities 11 and 27."
+    }
+  ]
+}

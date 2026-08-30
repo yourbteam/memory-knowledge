@@ -9,7 +9,9 @@
     "codex": {
       "display_name": "Codex",
       "forbidden_runtime": "claude",
-      "recommended_reader_command": "codex exec",
+      "inner_sandbox": "read-only",
+      "recommended_reader_command": "codex exec --ephemeral --sandbox read-only --ignore-user-config --skip-git-repo-check --color never -",
+      "required_outer_execution": "require_escalated",
       "required_runtime": "codex exec"
     }
   },

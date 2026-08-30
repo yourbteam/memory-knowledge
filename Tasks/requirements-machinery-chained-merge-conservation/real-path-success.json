@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "case_id": "step7-chain-preserved",
+  "command": "cover.py requirements on a copied real Step 7 run with a deterministic checkability reader",
+  "source_sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+  "coverage_path": "Tasks/requirements-machinery-chained-merge-conservation/real-step7-resume-v2/coverage.json",
+  "observed": {
+    "source_rule_count": 35,
+    "terminal_rule_count": 30,
+    "represented_rule_count": 35,
+    "missing": [],
+    "duplicates": [],
+    "unknown": [],
+    "ambiguous_sources_preserved_for_owner": 11,
+    "six_type_source_ids_share_one_terminal": [11, 27],
+    "stale_checkability_records_preserved": 1,
+    "new_checkability_reader_calls": 3
+  },
+  "verdict": "satisfied"
+}

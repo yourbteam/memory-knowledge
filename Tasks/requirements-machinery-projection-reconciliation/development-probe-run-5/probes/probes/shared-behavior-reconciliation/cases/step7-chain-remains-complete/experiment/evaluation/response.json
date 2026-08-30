@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "scores": [
+    {
+      "metrics": {
+        "chain-complete": 1,
+        "controller-complete": 0,
+        "policy-drift-survived": 0,
+        "runtime-pinned": 0
+      },
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "chain-complete": 1,
+        "controller-complete": 1,
+        "policy-drift-survived": 1,
+        "runtime-pinned": 1
+      },
+      "variant_id": "variation-2"
+    }
+  ]
+}

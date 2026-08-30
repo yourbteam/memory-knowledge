@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/Tasks/requirements-machinery-projection-reconciliation/development-manifest.json",
+  "probe_id": "client-reader-boundary",
+  "approach_build_requests": [
+    {"approach_id": "command-only-policy", "request": "projection-command-only.json"},
+    {"approach_id": "explicit-outer-inner-policy", "request": "projection-full-boundary.json"}
+  ],
+  "evaluator": {
+    "adapter": {
+      "path": "../evaluation_adapter.py",
+      "sha256": "c5d577f4c002693c2378593520cdff1fde9c1f6c61e82b04e06fb1fd187f27ac"
+    },
+    "command": ["{python}", "{evaluation-adapter}", "{evaluation-request}", "{evaluation-response}"]
+  }
+}

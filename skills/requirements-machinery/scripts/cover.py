@@ -8,13 +8,16 @@ nothing is missing.
     cover.py open   --source <document> --work <dir>
     cover.py status --work <dir>
     cover.py answer --work <dir> --piece p-0007 --by "reader-1" --quote "<words from the page>" --what "..."
+    cover.py run    --work <dir> --target "<document being built>" --out <requirements.md> --reader-command '<command>'
     cover.py report --work <dir>
 
 State lives in <dir>. Stopping and coming back later is the same as never stopping.
 """
 import os
-import argparse, hashlib, importlib.util, json, re, subprocess, sys, time
+import argparse, hashlib, importlib.util, json, re, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
+
+sys.dont_write_bytecode = True
 
 HERE = Path(__file__).resolve().parent
 
@@ -63,6 +66,54 @@ def _canonical_sha256(value):
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def _projection_runtime_manifest(root):
+    files = []
+    for path in sorted((root / "scripts").glob("*.py")):
+        files.append({
+            "path": path.relative_to(root).as_posix(),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "size": path.stat().st_size,
+        })
+    policy = root / "client-model-policy.json"
+    if policy.is_file():
+        files.append({
+            "path": policy.name,
+            "sha256": hashlib.sha256(policy.read_bytes()).hexdigest(),
+            "size": policy.stat().st_size,
+        })
+    return {"schema_version": 1, "files": files}
+
+
+def _pin_projection_runtime(work):
+    """Use one immutable projection identity for every stage of one persisted run."""
+    global HERE
+    destination = Path(work) / ".projection-runtime-v1"
+    if HERE.parent == destination:
+        expected = json.loads((destination / "manifest.json").read_text())
+        if _projection_runtime_manifest(destination) != expected:
+            raise Refused("the run's projection snapshot changed; restore its recorded bytes")
+        return
+    if destination.exists():
+        expected = json.loads((destination / "manifest.json").read_text())
+        if _projection_runtime_manifest(destination) != expected:
+            raise Refused("the run's projection snapshot changed; restore its recorded bytes")
+        HERE = destination / "scripts"
+        return
+    source = HERE.parent
+    temporary = Path(tempfile.mkdtemp(prefix=".projection-runtime-v1.", dir=work))
+    shutil.copytree(source / "scripts", temporary / "scripts",
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    policy = source / "client-model-policy.json"
+    if policy.is_file():
+        shutil.copy2(policy, temporary / policy.name)
+    manifest = _projection_runtime_manifest(temporary)
+    (temporary / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    for path in temporary.rglob("*"):
+        path.chmod(0o555 if path.is_dir() else 0o444)
+    os.replace(temporary, destination)
+    HERE = destination / "scripts"
 
 
 def _build_split_graph(target, decision_id, parent_index, items, child_indexes):
@@ -627,7 +678,7 @@ def requirements(work, reader_command):
     # survives — the shape that won the checkable comparison; what every ask leaves out is
     # refused, with that as its recorded reason, never silently dropped.
     items = ([{"text": r["text"], "pages": sorted({rows[n - 1]["piece"] for n in r["entries"]}),
-               "kind": "rule"} for r in rules]
+               "kind": "rule", "source_rule_ids": [rule_number]} for rule_number, r in enumerate(rules, 1)]
              + [{"text": entries[n - 1], "pages": [rows[n - 1]["piece"]], "kind": "entry"}
                 for n in singles])
     # The repeat survives one level down when quotes from a reworded pair are themselves a
@@ -660,21 +711,31 @@ def requirements(work, reader_command):
     # (the bound the merge experiment measured: every real same-statement pair sat at or under
     # 2x, every swallow at 6.6x or more). A same-rule verdict across scales is genuine overlap
     # for the owner — one text states the rule alone, the other states it among several.
-    drop = set()
-    item_owner = list(item_owner)
-    for a, b in item_merged:
-        la, lb = len(rule_items[a - 1]["text"]), len(rule_items[b - 1]["text"])
-        if max(la, lb) > 2 * min(la, lb):
-            item_owner.append((a, b))
-            continue
-        keep_i, drop_i = (a, b) if la >= lb else (b, a)
-        rule_items[keep_i - 1]["pages"] = sorted(set(rule_items[keep_i - 1]["pages"])
-                                                 | set(rule_items[drop_i - 1]["pages"]))
-        rule_items[keep_i - 1].setdefault("also_stated_as", []).append(rule_items[drop_i - 1]["text"])
-        drop.add(drop_i)
+    lineage_mod = _load("rule_lineage")
+    reduction = lineage_mod.reduce(rule_items, item_merged)
+    item_owner = list(item_owner) + reduction["owner_pairs"]
     item_owner_texts = [[rule_items[a - 1]["text"][:80], rule_items[b - 1]["text"][:80]]
                         for a, b in item_owner]
-    items = [it for n, it in enumerate(rule_items, 1) if n not in drop] + other_items
+    rule_items = reduction["items"]
+    conservation_mod = _load("rule_conservation")
+    conservation = conservation_mod.check(len(rules), rule_items)
+    req_state = state.setdefault("requirements", {}).setdefault(target, {})
+    req_state["rule_lineage"] = {
+        "source_count": len(rules),
+        "components": reduction["components"],
+        "ambiguous": reduction["ambiguous"],
+    }
+    req_state["rule_conservation"] = conservation
+    _write(work, state)
+    if not conservation["valid"]:
+        print(
+            "refusing incomplete rule merge before checkability: "
+            f"missing={conservation['missing']} duplicates={conservation['duplicates']} "
+            f"unknown={conservation['unknown']}",
+            file=sys.stderr,
+        )
+        return 3
+    items = rule_items + other_items
     interview_mod = _load("interview")
     numbered = "\n".join(f"{i}. {it['text']}" for i, it in enumerate(items, 1))
     # The target names itself. The first version hardcoded "for the Step 3 Measurement Brief"
@@ -694,10 +755,22 @@ def requirements(work, reader_command):
         try:
             decision_record = checkability_mod.validate(saved_record, item_texts, target, ask)
         except (KeyError, TypeError, ValueError) as exc:
-            print(f"refusing invalid stored checkability evidence: {exc}", file=sys.stderr)
-            return 3
-        print("reusing the replay-validated checkability record (0 reader calls)", flush=True)
-    else:
+            req_state = state.setdefault("requirements", {}).setdefault(target, {})
+            # Unanimous yes keeps, unanimous no refuses, a split is genuine doubt and goes to the owner
+            # — the same gray band the promoted dedupe uses, because a judgement the asks disagree on is
+            # not a judgement either way.
+            req_state.setdefault("checkability_history", []).append({
+                "record": saved_record,
+                "invalidated_because": str(exc),
+                "at": time.time(),
+            })
+            req_state.pop("checkability_record", None)
+            _write(work, state)
+            saved_record = None
+            print(f"preserved stale checkability evidence before reassessment: {exc}", flush=True)
+        else:
+            print("reusing the replay-validated checkability record (0 reader calls)", flush=True)
+    if not saved_record:
         raw_replies = [
             interview_mod.ask_free(reader_command, ask, stage="checkable", seat=seat)
             for seat in range(1, 4)
@@ -705,9 +778,6 @@ def requirements(work, reader_command):
         decision_record = checkability_mod.build(raw_replies, item_texts, target, ask)
         state.setdefault("requirements", {}).setdefault(target, {})["checkability_record"] = decision_record
         _write(work, state)
-    # Unanimous yes keeps, unanimous no refuses, a split is genuine doubt and goes to the owner
-    # — the same gray band the promoted dedupe uses, because a judgement the asks disagree on is
-    # not a judgement either way.
     for i, it in enumerate(items, 1):
         decision = decision_record["aggregate"][i - 1]
         votes = decision["votes"]
@@ -921,7 +991,45 @@ def _owner_queue(state, target):
                                    f"marked with this page", "pages": [pid],
                       "why": why, "relevance_verdict": relevance_verdict,
                       "choices": ["admit", "dismiss"]})
-    return [q for q in queue if q["id"] not in rulings]
+    open_queue = [q for q in queue if q["id"] not in rulings]
+    # Auto re-queue: a recorded ruling a later ruling invalidated comes back as pending, with
+    # its prior answer attached, so the ordinary answer path can accept the owner's correction.
+    # On 2026-08-27 a checkability drop consumed one side of a recorded merge; the ruling could
+    # neither apply nor be corrected, and assembly dead-ended until a hand edit. Detection uses
+    # ruling_validity when the composed tree carries it, else this approach's own inline check.
+    def _stale_recorded_ids():
+        if os.environ.get("RULING_VALIDITY_DRY_RUN"):
+            # Inside the replay detector's own dry run: behave as the bare assembly seam so the
+            # refusal it reads surfaces, instead of recursing back into the detector.
+            return set()
+        try:
+            import ruling_validity
+            return set(ruling_validity.detect(state.get("_work", "")))
+        except Exception:
+            stale = set()
+            items = d.get("items") or []
+            for rid_, r_ in rulings.items():
+                item_ = r_.get("item") or {}
+                if item_.get("kind") != "source-overlap" or r_.get("choice") != "merge":
+                    continue
+                sides_ = [item_.get("a"), item_.get("b")]
+                matched_ = [i_ for i_, it_ in enumerate(items)
+                            if any(s_ in (it_.get("anchors") or []) for s_ in sides_)]
+                if len(matched_) != 2:
+                    stale.add(rid_)
+            return stale
+    for rid_ in sorted(_stale_recorded_ids()):
+        prior_ = rulings.get(rid_)
+        if prior_ is None:
+            continue
+        reopened = dict(prior_["item"])
+        reopened["id"] = rid_
+        reopened["why"] = ("a later ruling invalidated this recorded answer; it is pending "
+                           "again and the prior answer is preserved in its history")
+        reopened["reopened"] = True
+        reopened["prior_choice"] = prior_.get("choice")
+        open_queue.append(reopened)
+    return open_queue
 
 
 ASSESS_ASK = (
@@ -1224,9 +1332,14 @@ def answer_owner(work, decision_id, choice, because, reader_command=None):
                              reader_command)
     state.pop("_work", None)
     shown = state.get("owner_assessments", {}).get(target, {}).get(decision_id)
-    state.setdefault("owner_rulings", {}).setdefault(target, {})[decision_id] = {
-        "item": match, "choice": choice, "because": because or "",
-        "assessment_shown": shown, "at": time.time()}
+    ruling = {"item": match, "choice": choice, "because": because or "",
+              "assessment_shown": shown, "at": time.time()}
+    prior = state.get("owner_rulings", {}).get(target, {}).get(decision_id)
+    if prior is not None:
+        history = list(prior.get("history") or [])
+        history.append({k: v for k, v in prior.items() if k != "history"})
+        ruling["history"] = history
+    state.setdefault("owner_rulings", {}).setdefault(target, {})[decision_id] = ruling
     _write(work, state)
     remaining = len(queue) - 1
     print(f"recorded: {decision_id} -> {choice}" + (f" ({because})" if because else "")
@@ -1249,6 +1362,7 @@ def document(work, out_path, reader_command=None):
         print(f"cannot write the document: {len(queue)} ruling(s) still pending — run "
               f"`cover.py ask-owner` and answer them first.", file=sys.stderr)
         return 3
+    state.pop("_work", None)
     d = state["distilled"][target]
     rulings = state.get("owner_rulings", {}).get(target, {})
     reflow_mod = _load("reflow")
@@ -1364,12 +1478,47 @@ def document(work, out_path, reader_command=None):
     # the pen fails.
     if reader_command:
         distill_mod = _load("distill")
+        prepared = (state.setdefault("document_preparation", {}).setdefault(target, {})
+                    .setdefault("resurrected", {}))
+        legacy_pre_controller = not isinstance(state.get("self_sustained_run"), dict)
         for entry in resurrected.values():
-            written, _ = distill_mod.write_one([entry["statement"]], reader_command, attempts=2,
-                                               stage="document")
-            if written:
-                entry["how"] = "pen"
-                entry["statement"] = written
+            source_statement = entry["statement"]
+            preparation_id = _canonical_sha256({
+                "statement": source_statement, "pages": sorted(entry["pages"]),
+            })
+            recorded = prepared.get(preparation_id)
+            if (isinstance(recorded, dict)
+                    and recorded.get("source_statement") == source_statement
+                    and recorded.get("pages") == sorted(entry["pages"])
+                    and recorded.get("how") in ("pen", "verbatim")
+                    and isinstance(recorded.get("statement"), str)):
+                entry["how"] = recorded["how"]
+                entry["statement"] = recorded["statement"]
+                continue
+            if legacy_pre_controller:
+                written, transcript = None, [{
+                    "compatibility": "pre-controller-verbatim",
+                    "removal_condition": "all pre-controller runs have rendered or migrated",
+                }]
+                _controller_feed(
+                    work, "controller compatibility", stage="document",
+                    transition="pre-controller-verbatim", status="completed", target=target,
+                    preparation_id=preparation_id,
+                    removal_condition="all pre-controller runs have rendered or migrated")
+            else:
+                written, transcript = distill_mod.write_one(
+                    [source_statement], reader_command, attempts=2, stage="document")
+            entry["how"] = "pen" if written else "verbatim"
+            entry["statement"] = written or source_statement
+            prepared[preparation_id] = {
+                "source_statement": source_statement,
+                "pages": sorted(entry["pages"]),
+                "how": entry["how"],
+                "statement": entry["statement"],
+                "transcript": transcript,
+                "at": time.time(),
+            }
+            _write(work, state)
     items.extend(resurrected.values())
     lines = [f"# Requirements — {target}", "",
              f"Source of truth: {Path(state['source']).name}. Every",
@@ -1512,6 +1661,114 @@ def report(work):
     return 0
 
 
+AUTOMATIC_STAGES = ("relevance", "obligations", "collapse", "requirements", "distill")
+DISTILLED_FINAL_FIELDS = {
+    "items", "owner_pairs", "source_owner_pairs", "shared_rule_owner_records", "still_for_owner",
+}
+
+
+def _controller_feed(work, event, **fields):
+    """Record code-owned stage selection and transitions beside reader-call telemetry."""
+    path = os.environ.get("REQ_MACHINERY_FEED") or str(Path(work) / "feed.jsonl")
+    try:
+        with open(path, "a", encoding="utf-8") as stream:
+            stream.write(json.dumps({"at": round(time.time(), 1), "event": event, **fields}) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    except OSError:
+        pass
+
+
+def _next_stage_from_state(state, target, work=None):
+    """Derive the only lawful next stage from durable machinery state."""
+    rows = (state.get("relevance", {}).get("targets", {}).get(target, {})
+            .get("pieces", {}))
+    piece_ids = [piece["id"] for piece in state["pieces"]]
+    if any(piece_id not in rows for piece_id in piece_ids):
+        return "relevance"
+    expected_obligations = sorted(
+        piece_id for piece_id, row in rows.items()
+        if row.get("verdict") in ("bears", "for-the-owner", "yes-without-words", "no-answer")
+    )
+    completion = state.get("obligation_completion", {}).get(target, {})
+    if (completion.get("complete") is not True
+            or sorted(completion.get("piece_ids", [])) != expected_obligations):
+        return "obligations"
+    if target not in state.get("collapse", {}):
+        return "collapse"
+    requirements_state = state.get("requirements", {}).get(target, {})
+    if not isinstance(requirements_state.get("items"), list):
+        return "requirements"
+    distilled = state.get("distilled", {}).get(target, {})
+    if not DISTILLED_FINAL_FIELDS.issubset(distilled):
+        return "distill"
+    owner_state = dict(state)
+    if work is not None:
+        owner_state["_work"] = work
+    return "owner" if _owner_queue(owner_state, target) else "document"
+
+
+def run_automatic(work, target, out_path, reader_command):
+    """Carry one persisted run until its next legitimate human or terminal boundary."""
+    _pin_projection_runtime(work)
+    handlers = {
+        "relevance": lambda: relevance(work, target, reader_command),
+        "obligations": lambda: obligations(work, reader_command),
+        "collapse": lambda: collapse(work, reader_command),
+        "requirements": lambda: requirements(work, reader_command),
+        "distill": lambda: distill(work, reader_command),
+    }
+    started = time.monotonic()
+    while True:
+        state = _read(work)
+        stage = _next_stage_from_state(state, target, work)
+        if stage in AUTOMATIC_STAGES and not isinstance(state.get("self_sustained_run"), dict):
+            state["self_sustained_run"] = {
+                "schema_version": 1,
+                "started_from": stage,
+                "at": time.time(),
+            }
+            _write(work, state)
+        _controller_feed(work, "controller stage", stage=stage, transition="selected",
+                         attempt=1, elapsed_seconds=round(time.monotonic() - started, 3),
+                         status="running", target=target)
+        if stage == "owner":
+            code = ask_owner(work, reader_command)
+            _controller_feed(work, "controller stop", stage=stage,
+                             transition="owner-decision-required", attempt=1,
+                             elapsed_seconds=round(time.monotonic() - started, 3),
+                             status="waiting-for-owner", target=target, exit_code=code)
+            return code
+        if stage == "document":
+            code = document(work, out_path, reader_command)
+            _controller_feed(work, "controller stop", stage=stage,
+                             transition="completed", attempt=1,
+                             elapsed_seconds=round(time.monotonic() - started, 3),
+                             status="completed" if code == 0 else "error",
+                             target=target, exit_code=code, output=str(out_path))
+            return code
+        code = handlers[stage]()
+        if code != 0:
+            _controller_feed(work, "controller stage", stage=stage, transition="failed",
+                             attempt=1, elapsed_seconds=round(time.monotonic() - started, 3),
+                             status="error", target=target, exit_code=code)
+            return code
+        next_stage = _next_stage_from_state(_read(work), target, work)
+        if next_stage == stage:
+            print(f"refused: stage {stage!r} returned success but durable state still selects it; "
+                  "the stage must record its completion before the controller can continue.",
+                  file=sys.stderr)
+            _controller_feed(work, "controller stage", stage=stage,
+                             transition="no-durable-progress", attempt=1,
+                             elapsed_seconds=round(time.monotonic() - started, 3),
+                             status="error", target=target, exit_code=3)
+            return 3
+        _controller_feed(work, "controller stage", stage=stage, transition="completed",
+                         attempt=1, elapsed_seconds=round(time.monotonic() - started, 3),
+                         status="completed", target=target, exit_code=0,
+                         next_stage=next_stage)
+
+
 def build_parser():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
@@ -1540,6 +1797,9 @@ def build_parser():
     doc.add_argument("--out", required=True); doc.add_argument("--reader-command", default=None)
     b = sub.add_parser("bearing"); b.add_argument("--work", required=True)
     r = sub.add_parser("report"); r.add_argument("--work", required=True)
+    run = sub.add_parser("run"); run.add_argument("--work", required=True)
+    run.add_argument("--target", required=True); run.add_argument("--out", required=True)
+    run.add_argument("--reader-command", required=True)
     return ap
 
 
@@ -1627,6 +1887,8 @@ def _dispatch(args):
                             args.reader_command)
     if args.command == "document":
         return document(args.work, args.out, args.reader_command)
+    if args.command == "run":
+        return run_automatic(args.work, args.target, args.out, args.reader_command)
     if args.command == "bearing":
         return bearing(args.work)
     return report(args.work)

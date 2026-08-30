@@ -3,8 +3,8 @@
   "claims": [
     {
       "disposition": "unverified",
-      "id": "EC-13d47bad72cbff28",
-      "line": 203,
+      "id": "EC-86d0ccf110271356",
+      "line": 211,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "SKILL.md",
       "text": "- **How the document is cut** \u2014 by page, at headings, or by block. Page won on both declared",
@@ -12,8 +12,8 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-ba757d713e240bda",
-      "line": 218,
+      "id": "EC-7bd3f9dfe496f62e",
+      "line": 226,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "SKILL.md",
       "text": "**One thing grounding does not do, proven rather than assumed.** It shows a claim is made of the",
@@ -21,7 +21,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-c3945b3d001bdd0f",
+      "id": "EC-35d3830eb7d65b2e",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/dedupe/list-ask/approach.py",
@@ -30,7 +30,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-657af795af5e6885",
+      "id": "EC-04758b8533abcd35",
       "line": 32,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/dedupe/shared-rule-ask/approach.py",
@@ -39,7 +39,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-447cd6f060e477c5",
+      "id": "EC-02823dbaa3a82c2f",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/_reflow_shared.py",
@@ -48,7 +48,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-611a066cf97391ca",
+      "id": "EC-fc4abcaa54d5391c",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/_run.py",
@@ -57,7 +57,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-ab1bcba2d0ff57c2",
+      "id": "EC-d3efa2ec4084432b",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/at-most-double/reflow.py",
@@ -66,7 +66,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-fea849061293604f",
+      "id": "EC-5420ce6b51650fd0",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/at-most-double/run.py",
@@ -75,7 +75,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-d7c646c022a2c079",
+      "id": "EC-cba0d2ed6fbf28bc",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/no-completion/reflow.py",
@@ -84,7 +84,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-372749834d3a6167",
+      "id": "EC-d76226d55d1e86b6",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/no-completion/run.py",
@@ -93,7 +93,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-092f90b49d160ebe",
+      "id": "EC-2bdda0f178f47fcb",
       "line": 4,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/no-narrow-line/approach.py",
@@ -102,7 +102,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-11fc701d96365586",
+      "id": "EC-59d9184f5b583e98",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/no-narrow-line/reflow.py",
@@ -111,7 +111,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-6500668a675d7a51",
+      "id": "EC-7fd960ea416f63d2",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/no-narrow-line/run.py",
@@ -120,7 +120,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-57dfe1620b77bb01",
+      "id": "EC-2cb9c5ab7d971f55",
       "line": 8,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/offered-only/cuts.py",
@@ -129,7 +129,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-d9907d0bd3179b4f",
+      "id": "EC-05868a06c8699e1b",
       "line": 87,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/offered-only/cuts.py",
@@ -138,7 +138,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-db9543bfc719297e",
+      "id": "EC-0f16abeb2d553a3e",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/offered-only/reflow.py",
@@ -147,7 +147,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-86c5e15ac7565381",
+      "id": "EC-740cafe08ee7e48c",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/offered-only/run.py",
@@ -156,7 +156,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-2a3deac5ba3f348e",
+      "id": "EC-20b6b2b76852cdec",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/sentence-run/reflow.py",
@@ -165,7 +165,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-8f0ce0501543ae74",
+      "id": "EC-1b3b7ee174f167eb",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/sentence-run/run.py",
@@ -174,7 +174,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-cb1f4bd5230d69d0",
+      "id": "EC-d03cfa3e89698d46",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/sentence-terminated/reflow.py",
@@ -183,7 +183,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-fac2d79292735e8f",
+      "id": "EC-37c6f2119fd50c8a",
       "line": 92,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "probes/merge/sentence-terminated/run.py",
@@ -192,8 +192,8 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-0211ee5452787c26",
-      "line": 467,
+      "id": "EC-1fca99d61adc639e",
+      "line": 518,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/cover.py",
       "text": "# page, and the page reads as empty when it is not. Measured on the fourteen: five of thirteen,",
@@ -201,8 +201,8 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-8f7eea8be801a36a",
-      "line": 495,
+      "id": "EC-9c9e103e93b23fa5",
+      "line": 546,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/cover.py",
       "text": "Runs the promoted dedupe rule (dedupe.py \u2014 atom-5-dedupe round 2's champion) over every entry",
@@ -210,8 +210,8 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-3422c74c459109ba",
-      "line": 627,
+      "id": "EC-49a5fa8dcd84b72f",
+      "line": 678,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/cover.py",
       "text": "# survives \u2014 the shape that won the checkable comparison; what every ask leaves out is",
@@ -219,8 +219,8 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-ae4a0fee23a56b06",
-      "line": 634,
+      "id": "EC-05dbfeab2f1dccbc",
+      "line": 685,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/cover.py",
       "text": "# reworded pair. The promoted dedupe runs again \u2014 but ONLY over the extracted rules, never",
@@ -228,8 +228,8 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-795c625ba4b41cf2",
-      "line": 709,
+      "id": "EC-7a61e5523f7dafdf",
+      "line": 760,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/cover.py",
       "text": "# \u2014 the same gray band the promoted dedupe uses, because a judgement the asks disagree on is",
@@ -237,7 +237,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-d31ce87e15224b28",
+      "id": "EC-5ab41ee60f6771cd",
       "line": 4,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/dedupe.py",
@@ -246,7 +246,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-f2ad76a3350731bf",
+      "id": "EC-664e7b6f25c33491",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/distill.py",
@@ -255,7 +255,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-0fa4c2cc080ffa7a",
+      "id": "EC-923f4b950fb93798",
       "line": 90,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/distill.py",
@@ -264,7 +264,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-63581a29ea46bc02",
+      "id": "EC-b638ae0696ec66dc",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/obligations.py",
@@ -273,7 +273,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-d5f3140015f11a74",
+      "id": "EC-a379a6e7326cf06a",
       "line": 86,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/obligations.py",
@@ -282,7 +282,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-2a05e606b7a4ae2d",
+      "id": "EC-b1e8b894ddf18e13",
       "line": 106,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/obligations.py",
@@ -291,7 +291,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-b15e5f01f54870a2",
+      "id": "EC-bcb0baf4755b5ae7",
       "line": 124,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/obligations.py",
@@ -300,7 +300,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-3cd8c4640eee3c3b",
+      "id": "EC-2adc030ba2340788",
       "line": 8,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/reflow.py",
@@ -309,7 +309,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-a4dbccc1cb6a9c28",
+      "id": "EC-6bd2b5dd19a4e5af",
       "line": 87,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/reflow.py",
@@ -318,7 +318,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-2996a234550ca48d",
+      "id": "EC-85f232f2b9157b30",
       "line": 162,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/reflow.py",
@@ -327,7 +327,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-944b28fcbc9abbf8",
+      "id": "EC-446fc6c63271e33e",
       "line": 165,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/reflow.py",
@@ -336,7 +336,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-c40b943bb8b47bb4",
+      "id": "EC-bd0ebe39dbf7b1e3",
       "line": 3,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/relevance.py",
@@ -345,7 +345,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-4e83c04724fc1e09",
+      "id": "EC-d4ce46cfa85028a3",
       "line": 9,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/relevance.py",
@@ -354,7 +354,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-f814c7253511ae08",
+      "id": "EC-a00694a0f14098f0",
       "line": 8,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/rules.py",
@@ -363,7 +363,7 @@
     },
     {
       "disposition": "unverified",
-      "id": "EC-107e5118a36ff886",
+      "id": "EC-c9b26cbbf3c213a5",
       "line": 79,
       "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
       "source": "scripts/rules.py",
@@ -371,7 +371,7 @@
       "text_sha256": "2dcc6231daa09756a6654f9976fa5bc8309cde2c4ecabea70b38d8e69471f583"
     }
   ],
-  "claims_fingerprint": "7b2769482e788c2a4444ab4e678b47abf9cbfd4e94bec430091fc4f87222d6be",
-  "manifest_sha256": "7f37008f4a8c9854d4a828dd8cd22614618e6fb134caeb8af321aec8b1f2a756",
+  "claims_fingerprint": "c73b5cfc1bcd2ea17b280b00f5ce91cfe816d26706028f5379f8f6c8e0d5c707",
+  "manifest_sha256": "7695943082e9ecca90086e3543234afcd03b8c7cd32a2cf5f290245fcdd2ece0",
   "schema_version": 1
 }

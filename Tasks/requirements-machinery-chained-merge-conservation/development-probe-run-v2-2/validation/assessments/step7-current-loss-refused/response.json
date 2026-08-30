@@ -1,0 +1,8 @@
+{
+  "case_id": "step7-current-loss-refused",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "the historical silently lossy output is refused and identifies both missing six-type sources",
+  "verdict": "satisfied"
+}

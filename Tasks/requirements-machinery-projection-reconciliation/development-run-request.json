@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "development_manifest": {
+    "path": "development-manifest.json",
+    "sha256": "014640c89fb617dce8c6a249278d68c4e193f45970d852466f97cd6b33d02fec"
+  },
+  "baseline": {
+    "path": "development/baseline",
+    "sha256": "b0d86e9af79ddbf6a711e5ab49c75098056cef2a3c9e51baec533c67471b7e96"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "shared-behavior-reconciliation",
+      "request": "requests/behavior-cross-case.json",
+      "request_sha256": "1f9844f77e62d36dcfd626fed3c4447a153d9640271dc802ed2aa14cc3e6584e"
+    },
+    {
+      "probe_id": "client-reader-boundary",
+      "request": "requests/projection-cross-case.json",
+      "request_sha256": "cc861de062f3002acb102dac6d43acc249fda5d6691601923df743cdc3e39565"
+    }
+  ],
+  "assessment": {
+    "adapter": {
+      "path": "assessment_adapter.py",
+      "sha256": "1f830081cd29abc8f68bb8de475c8af313cf07befc5a17ce2494cdc8d337fcb4"
+    },
+    "command": ["{python}", "{assessment-adapter}", "{assessment-request}", "{assessment-response}"]
+  }
+}

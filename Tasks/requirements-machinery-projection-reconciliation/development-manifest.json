@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "atomic_step": {
+    "id": "requirements-projection-reconciliation",
+    "outcome": "The repository-authoritative Requirements Machinery preserves the validated Codex-only behavior, composes it with chained-rule conservation, and generates matching installable Codex and Claude projections.",
+    "practical_value": "Installing the corrected machinery no longer erases useful Codex behavior, and both clients can run the same loss-proof requirements process with their own enforced reader boundary.",
+    "stopping_condition": "Canonical validation passes, both generated projection trees pass parity after transactional installation, Codex retains automatic continuation and immutable reader isolation, Claude retains its own reader policy, and the real Step 7 case still accounts for all 35 rule identities including 11 and 27.",
+    "captured_cases": [
+      {
+        "id": "step7-chain-remains-complete",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/intake-to-requirements-machinery/runs/step7-message-architecture-run/coverage.json",
+        "sha256": "529a81c5ee748df6e5c5befc97f2c11ab719cbb2468e42e1e84e7946be9a21fc",
+        "kind": "success",
+        "expected_outcome": "All 35 source rule identities remain represented exactly once and six-type sources 11 and 27 reach one terminal lineage after reconciliation."
+      },
+      {
+        "id": "codex-installed-behavior-is-not-erased",
+        "source": "Tasks/requirements-machinery-projection-reconciliation/cases/codex-projection-drift.json",
+        "sha256": "ea414e985491227aa623dc6c9fa2461be59d7c116b5a17929e66835b4ac0944a",
+        "kind": "failure",
+        "expected_outcome": "Canonical promotion retains the installed Codex continuation, immutable projection snapshot, stale-ruling recovery, stable evidence identity, and exact read-only reader command instead of overwriting them."
+      },
+      {
+        "id": "claude-receives-corrected-machinery",
+        "source": "Tasks/requirements-machinery-projection-reconciliation/cases/claude-projection-stale.json",
+        "sha256": "6a7ea6509c8d07b9bb214700d3c3229bab92beb94bd8adc38602c625657825e6",
+        "kind": "failure",
+        "expected_outcome": "The Claude projection receives chained-rule conservation and the reconciled shared behavior while keeping the Claude reader command."
+      }
+    ]
+  },
+  "mini_probes": [
+    {
+      "id": "shared-behavior-reconciliation",
+      "goal": "Choose whether canonical replacement or functional reconciliation preserves the installed operator behavior while retaining chained-rule conservation.",
+      "practical_value": "A projection refresh cannot silently remove automatic continuation, immutable run identity, or rule conservation.",
+      "work_type": "code",
+      "work_type_reason": "The required behaviors are executable state transitions and exact identity invariants.",
+      "allowed_paths": [
+        "skills/requirements-machinery/SKILL.md",
+        "skills/requirements-machinery/evidence/empirical-claims.json",
+        "skills/requirements-machinery/probes/self-sustained-controller/experiment_adapter.py",
+        "skills/requirements-machinery/scripts/contract_surface.py",
+        "skills/requirements-machinery/scripts/cover.py",
+        "skills/requirements-machinery/scripts/empirical_claims.py"
+      ],
+      "inputs": [{"case_id": "step7-chain-remains-complete"}],
+      "approaches": [
+        {
+          "id": "canonical-replacement",
+          "hypothesis": "Replacing the installed projection from the current canonical tree loses no required operator behavior.",
+          "implementation": "Use the current canonical tree unchanged as the projection source.",
+          "predicted_tradeoff": "Minimal surface, but the observed installed-only continuation and snapshot behavior may disappear."
+        },
+        {
+          "id": "functional-reconciliation",
+          "hypothesis": "Transferring the installed behavior into the canonical tree while retaining the new requirements reducer preserves both sets of validated behavior.",
+          "implementation": "Use installed continuation, snapshot, stale-ruling and stable-evidence behavior around the canonical chained-rule requirements function.",
+          "predicted_tradeoff": "Larger explicit surface, but no validated behavior is discarded."
+        }
+      ],
+      "proof": {
+        "success_criterion": "The controller resumes to its terminal boundary through a pinned runtime and all 35 rule identities remain complete.",
+        "failure_criterion": "Any controller capability disappears, projection drift breaks resume, or rule identities 11 and 27 are lost."
+      },
+      "evaluation": {
+        "metrics": [
+          {"name": "controller-complete", "direction": "maximize"},
+          {"name": "runtime-pinned", "direction": "maximize"},
+          {"name": "policy-drift-survived", "direction": "maximize"},
+          {"name": "chain-complete", "direction": "maximize"}
+        ],
+        "across_cases": [
+          {"name": "controller-complete", "method": "worst"},
+          {"name": "runtime-pinned", "method": "worst"},
+          {"name": "policy-drift-survived", "method": "worst"},
+          {"name": "chain-complete", "method": "worst"}
+        ]
+      },
+      "winner_output": {
+        "artifact": "reconciled-shared-machinery",
+        "description": "The shared Requirements Machinery tree containing both the installed operator behavior and chained-rule conservation."
+      }
+    },
+    {
+      "id": "client-reader-boundary",
+      "goal": "Choose the generated client boundary that keeps each client provider-bound and preserves Codex read-only nested execution.",
+      "practical_value": "Codex runs do not fail initialization or weaken the nested reader, while Claude remains Claude-owned.",
+      "work_type": "code",
+      "work_type_reason": "Projection policy fields and generated instructions are deterministic client-specific contracts.",
+      "allowed_paths": [
+        "working-agreement/machinery-client-model-v2.json",
+        "working-agreement/project_client_skills.py"
+      ],
+      "inputs": [
+        {"case_id": "codex-installed-behavior-is-not-erased"},
+        {"case_id": "claude-receives-corrected-machinery"}
+      ],
+      "approaches": [
+        {
+          "id": "command-only-policy",
+          "hypothesis": "Recording only the exact nested reader command fully preserves the Codex execution boundary.",
+          "implementation": "Change the Codex recommended command but leave the projection policy schema unchanged.",
+          "predicted_tradeoff": "Small generator change, but the required outer launch and inner read-only boundary remain implicit."
+        },
+        {
+          "id": "explicit-outer-inner-policy",
+          "hypothesis": "Generating both the outer launch requirement and inner sandbox alongside the exact command preserves the complete boundary without changing Claude.",
+          "implementation": "Allow two bounded optional policy fields and render them into the generated policy and instructions only when declared.",
+          "predicted_tradeoff": "Two additional explicit fields, with deterministic validation and no provider mixing."
+        }
+      ],
+      "proof": {
+        "success_criterion": "Codex receives the exact reader, outer escalation and inner read-only boundary; Claude receives claude -p without Codex-only fields; both include chain modules.",
+        "failure_criterion": "Either client loses its own runtime, Codex isolation is incomplete, or shared chain modules are absent."
+      },
+      "evaluation": {
+        "metrics": [
+          {"name": "reader-boundary-complete", "direction": "maximize"},
+          {"name": "client-policy-correct", "direction": "maximize"},
+          {"name": "shared-chain-present", "direction": "maximize"}
+        ],
+        "across_cases": [
+          {"name": "reader-boundary-complete", "method": "worst"},
+          {"name": "client-policy-correct", "method": "worst"},
+          {"name": "shared-chain-present", "method": "worst"}
+        ]
+      },
+      "winner_output": {
+        "artifact": "generated-client-boundary",
+        "description": "A deterministic projection generator that emits the complete Codex boundary and unchanged Claude ownership."
+      }
+    }
+  ],
+  "composition": {
+    "consumes": [
+      {"probe_id": "shared-behavior-reconciliation", "artifact": "reconciled-shared-machinery"},
+      {"probe_id": "client-reader-boundary", "artifact": "generated-client-boundary"}
+    ],
+    "assembly_contract": "Generate each client projection from one reconciled canonical machinery tree, adding only that client's explicit reader boundary.",
+    "final_validation": {
+      "operator_path": "transactionally generated and installed Requirements Machinery invoked through Codex and Claude",
+      "case_ids": [
+        "step7-chain-remains-complete",
+        "codex-installed-behavior-is-not-erased",
+        "claude-receives-corrected-machinery"
+      ],
+      "success_criterion": "The real Step 7 chain remains complete and Codex retains its installed behavior under an explicit read-only boundary.",
+      "failure_criterion": "A rule disappears, an installed behavior regresses, a client runtime crosses providers, or projection parity remains false."
+    }
+  }
+}

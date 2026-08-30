@@ -1,0 +1,184 @@
+{
+  "atomic_step_id": "requirements-projection-reconciliation",
+  "baseline_sha256": "6261fa1d8358a5eff200ecdcef0649ee179cb3c4a79a1520b1a7f73da97260f3",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "c9766939d0727eea80e8ced6da869378a906f0bb5e52e91bad6460bdfc76b371",
+      "before_mode": 420,
+      "before_sha256": "e0ab45e48cc838d7770db9d35cc52b2eb4a1055cfa6f4c07ea6b6af0d1c1d63e",
+      "kind": "changed",
+      "path": "skills/requirements-machinery/SKILL.md"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "c0e9e7cda6a872950ce44ab532d6d09402a59f96ca3d435ed0c5d6238fcff399",
+      "before_mode": 420,
+      "before_sha256": "60a0fc3f6873dd0f059a2421c6e5a7eac1142f6a49913c659731341b9b0c8ddd",
+      "kind": "changed",
+      "path": "skills/requirements-machinery/evidence/empirical-claims.json"
+    },
+    {
+      "after_mode": 292,
+      "after_sha256": "3ebd383390e8dc472e81dedf01956d5bfda8ac762015172aba5a70e263659665",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/requirements-machinery/probes/self-sustained-controller/experiment_adapter.py"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "59343cd19e91b0fe6670a56a1767f93c5c3095463f549628495d38166a8d0e8d",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/checkability.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "bb69c95bf7d2d04efb8ceff50c88a7fc180b7b0012349c0f4434967b83a32c76",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/cover.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "3c4e601e3002146a9b91aede82b50892f2b4ec2b2a48655db9cac8afb780846c",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/dedupe.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "4bdbd86ceade0c35077eddd68369b02bb313b1a7f48a326806d0f8ae376808f5",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/interview.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "1f6fb43a1b5aaffab8913e159c90286762d90ea3526750a8c32539d39b1280f7",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/quotecheck.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "b7370dccf855cbf82a11f2c4fa93334c08ebfa3a9d9066f55c855e76382decb7",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/reflow.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "6774fe738a56612c1073c565bc50c0a24d37088c3d3386a9b12bc65745d34605",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/register.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "17e671151efe9d82c3be359ab6ea8615fdfcd24acdf92d45b793941540668969",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/rule_conservation.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "a15ccb14ad71809e1d25dcaa543fc5be6238fb14b38c4494121bb86e25976cbb",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/rule_lineage.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "48455805fd510c34a517defcdd17bf626e0af44753814de815b9956a8fcbe3a0",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/rules.cpython-314.pyc"
+    },
+    {
+      "after_mode": null,
+      "after_sha256": null,
+      "before_mode": 420,
+      "before_sha256": "581cfff302bb1256da9e65064896eb53b7fb02002bb7659cd396a112aef6860a",
+      "kind": "deleted",
+      "path": "skills/requirements-machinery/scripts/__pycache__/splitter.cpython-314.pyc"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "430066f18257b6426d539e0a6cb0f39f182041792bdf2ec7779980cc97ae233e",
+      "before_mode": 420,
+      "before_sha256": "f9f3238956644e064131c769c033ddbe1684e0fbd2277ce0ab6ece68b75eca79",
+      "kind": "changed",
+      "path": "skills/requirements-machinery/scripts/contract_surface.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "277584f51f594f0adee7a4cc423c0b43906a01ee6334c8387a05e63ec324f121",
+      "before_mode": 420,
+      "before_sha256": "5c30ca5d37f22b96ed2962c6783dfc88bdedb9a36b8e47c43d64c088b96b8ced",
+      "kind": "changed",
+      "path": "skills/requirements-machinery/scripts/cover.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "d655149885192f6942bd340793e47ebd2571abe8816b434fbb0969b0b7bb3541",
+      "before_mode": 420,
+      "before_sha256": "216bc7c471c4b3f650341ba3625d8f33b3297c2660db9b850a527ac529b574fb",
+      "kind": "changed",
+      "path": "skills/requirements-machinery/scripts/empirical_claims.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "ac0527e913971f6fa4ef361ec18e169dcac5e20ee1e92b7626d71e8786efff6d",
+      "before_mode": 420,
+      "before_sha256": "5c2712d3afd79dbca732b4276ecbbed56d219e3768fd4c21f18ea7fbaffca040",
+      "kind": "changed",
+      "path": "tests/test_client_skill_projections.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "50c53ff3d4b3b748168dd6699938d71a8c48f3370ba6fd8c5f33af7d2c562a02",
+      "before_mode": 420,
+      "before_sha256": "2819d71f2e78e8108a89b89b41c58afa662fcbdfb65cd57febedd3613796bf33",
+      "kind": "changed",
+      "path": "tests/test_requirements_machinery_cover.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "475862efd883da7499885d55deb225789c2241496bc8378fe6e081e007ed7d15",
+      "before_mode": 420,
+      "before_sha256": "1daca5f3dcb2bff3ef504a2bdcd972db635c00ba2c5ad0468384c40b2589c4d9",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "70fbf3155f75718fe10efd078becf87eaf593b84f0e310e181e6f7ad5fb30ffa",
+      "before_mode": 420,
+      "before_sha256": "5bcbfc9adc51ffcd569923fbff75fca21ca174f5ebf3fa50cec2fb8d9d7f0961",
+      "kind": "changed",
+      "path": "working-agreement/machinery-client-model-v2.json"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "6ed672310cfc55ca69718ebad4637ce2fb286c331b4a258f01a1d903e1b3841d",
+      "before_mode": 420,
+      "before_sha256": "e639d4263c75b0d87dc03bdb10ba7a86a9106e3f0260eb7c32cc7cbf10cc2285",
+      "kind": "changed",
+      "path": "working-agreement/project_client_skills.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge",
+  "schema_version": 1
+}

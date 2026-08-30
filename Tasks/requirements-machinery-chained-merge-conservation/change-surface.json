@@ -1,0 +1,40 @@
+{
+  "atomic_step_id": "requirements-chained-merge-conservation",
+  "baseline_sha256": "481b4f8c5f7184105e20b9da05d8ce3f967a1976610199f5e8b731af336b5419",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "5c30ca5d37f22b96ed2962c6783dfc88bdedb9a36b8e47c43d64c088b96b8ced",
+      "before_mode": 420,
+      "before_sha256": "8622173b6e3d64ce0a82d202f4b06fbd0e9be2831f84d6627cf04416dec98e4e",
+      "kind": "changed",
+      "path": "skills/requirements-machinery/scripts/cover.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "ea91098b64c5bff3a5712e4a2f57e303a3f6207a9d0187ca864ca1b5043ce98d",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/requirements-machinery/scripts/rule_conservation.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "7ddc3d539942d3bdbb73667fb935db82b16b147a8663e5ba5771b60d7087d22d",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/requirements-machinery/scripts/rule_lineage.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "88a8c56562f2d47fd0e9726c30ac34589bacf4c6ad39a3fe4e3fc45b92a7b3ae",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "tests/test_requirements_machinery_rule_lineage.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge",
+  "schema_version": 1
+}
