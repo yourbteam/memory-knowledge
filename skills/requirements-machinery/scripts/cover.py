@@ -1003,6 +1003,9 @@ def _owner_queue(state, target):
     # On 2026-08-27 a checkability drop consumed one side of a recorded merge; the ruling could
     # neither apply nor be corrected, and assembly dead-ended until a hand edit. Detection uses
     # ruling_validity when the composed tree carries it, else this approach's own inline check.
+    stale_reasons = {}
+    stale_conflicts = []
+
     def _stale_recorded_ids():
         if os.environ.get("RULING_VALIDITY_DRY_RUN"):
             # Inside the replay detector's own dry run: behave as the bare assembly seam so the
@@ -1010,7 +1013,17 @@ def _owner_queue(state, target):
             return set()
         try:
             import ruling_validity
-            return set(ruling_validity.detect(state.get("_work", "")))
+            conflicts = ruling_validity.conflicts(state.get("_work", ""))
+            stale_conflicts.extend(conflicts)
+            for conflict in conflicts:
+                duty = conflict["source_duty"]
+                drop_id = conflict["dropped_ruling_id"]
+                selecting_id = conflict["selecting_ruling_id"]
+                reason = (f"{drop_id} drops source duty {duty!r}, while {selecting_id} "
+                          f"selects that same duty. Change this selection to retain only a "
+                          f"non-dropped side or drop both; the prior answer remains in its history.")
+                stale_reasons.setdefault(selecting_id, []).append(reason)
+            return {conflict["selecting_ruling_id"] for conflict in conflicts}
         except Exception:
             stale = set()
             items = d.get("items") or []
@@ -1030,7 +1043,21 @@ def _owner_queue(state, target):
             continue
         reopened = dict(prior_["item"])
         reopened["id"] = rid_
-        reopened["why"] = ("a later ruling invalidated this recorded answer; it is pending "
+        conflicts_for_ruling = [conflict for conflict in stale_conflicts
+                                if conflict["selecting_ruling_id"] == rid_]
+        if reopened.get("kind") in ("overlap", "shared-rule") and conflicts_for_ruling:
+            conflicting_sides = {conflict["selected_side"] for conflict in conflicts_for_ruling}
+            choices = []
+            if "a" not in conflicting_sides:
+                choices.append("select-a")
+            if "b" not in conflicting_sides:
+                choices.append("select-b")
+            choices.append("drop-both")
+            reopened["question"] = ("A recorded checkability ruling drops at least one of these "
+                                    "source duties; which non-dropped duty, if any, survives?")
+            reopened["choices"] = choices
+        reopened["why"] = (" ".join(stale_reasons.get(rid_, [])) or
+                           "a later ruling invalidated this recorded answer; it is pending "
                            "again and the prior answer is preserved in its history")
         reopened["reopened"] = True
         reopened["prior_choice"] = prior_.get("choice")
@@ -1353,6 +1380,30 @@ def answer_owner(work, decision_id, choice, because, reader_command=None):
     return 0
 
 
+def _consolidate_kept_items(items, reflow_mod):
+    """Materialize an identical kept duty once while retaining all of its lineage."""
+    consolidated, by_statement = [], {}
+    for item in items:
+        if item.get("_drop") or item.get("how") == "refused" or not item.get("statement"):
+            consolidated.append(item)
+            continue
+        identity = reflow_mod.flow(item["statement"])
+        prior = by_statement.get(identity)
+        if prior is None:
+            by_statement[identity] = item
+            consolidated.append(item)
+            continue
+        prior["pages"] = sorted(set(prior.get("pages") or []) | set(item.get("pages") or []))
+        prior["anchors"] = list(dict.fromkeys(
+            (prior.get("anchors") or []) + (item.get("anchors") or [])
+        ))
+        notes = [note for note in (prior.get("_kept_by_owner"), item.get("_kept_by_owner"))
+                 if note]
+        if notes:
+            prior["_kept_by_owner"] = "; ".join(dict.fromkeys(notes))
+    return consolidated
+
+
 def document(work, out_path, reader_command=None):
     """The finished requirements document, written by the machinery with every owner ruling
     applied. Refuses while any ruling is still pending — a document over an unanswered question
@@ -1421,7 +1472,8 @@ def document(work, out_path, reader_command=None):
         if r["item"]["kind"] != "shared-rule":
             continue
         selected = (("a", "b") if r["choice"] == "keep-both"
-                    else (("a",) if r["choice"] == "select-a" else ("b",)))
+                    else (("a",) if r["choice"] == "select-a"
+                          else (("b",) if r["choice"] == "select-b" else ())))
         page_by_side = {"a": r["item"]["a_piece"], "b": r["item"]["b_piece"]}
         for side in selected:
             items.append({
@@ -1456,9 +1508,12 @@ def document(work, out_path, reader_command=None):
             twin_of[reflow_mod.flow(rule_texts[b_i - 1])] = reflow_mod.flow(rule_texts[a_i - 1])
     resurrected = {}
     for rid, r in rulings.items():
-        if r["item"]["kind"] != "overlap" or r["choice"] != "keep-separate":
+        if r["item"]["kind"] != "overlap" or r["choice"] not in (
+                "keep-separate", "select-a", "select-b"):
             continue
-        for side in (r["item"].get("a"), r["item"].get("b")):
+        selected_names = (("a", "b") if r["choice"] == "keep-separate"
+                          else (("a",) if r["choice"] == "select-a" else ("b",)))
+        for side in (r["item"].get(name) for name in selected_names):
             if not side:
                 continue
             flowed = reflow_mod.flow(side)
@@ -1526,6 +1581,10 @@ def document(work, out_path, reader_command=None):
             }
             _write(work, state)
     items.extend(resurrected.values())
+    # One selected source duty becomes one requirement even when several owner rulings select it.
+    # Consolidate only kept, identical statements: distinct wording remains distinct, while pages,
+    # anchors, and every owner-selection note remain traceable on the surviving item.
+    items = _consolidate_kept_items(items, reflow_mod)
     lines = [f"# Requirements — {target}", "",
              f"Source of truth: {Path(state['source']).name}. Every",
              "requirement traces to the verbatim pages named beside it; statements were written by",

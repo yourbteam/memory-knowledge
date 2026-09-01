@@ -465,6 +465,170 @@ def test_zero_ruling_absence_and_explicit_empty_assemble_identically() -> None:
     assert "byte-identical documents" in contract
 
 
+def test_conflicting_source_selection_reopens_and_corrects_through_cli() -> None:
+    target = "fixture requirements"
+    kept = ("Every quality gate tests this line of sight; anything orphaned goes to the "
+            "appendix, never the strategy.")
+    dropped = "Every step maps to its exact quality gate and deliverable."
+    pair_id = "pair-" + hashlib.sha256((kept + "||" + dropped).encode()).hexdigest()[:8]
+    check_item = {
+        "id": "check-1", "kind": "checkability", "question": "Does this belong?",
+        "statement": dropped, "pages": ["p-0002"], "anchors": [dropped],
+        "choices": ["keep", "drop", "split"],
+    }
+    pair_item = {
+        "id": pair_id, "kind": "overlap", "question": "Do these state the same rule?",
+        "a": kept, "b": dropped, "statement": f"A: {kept}\nB: {dropped}",
+        "pages": [], "choices": ["merge", "keep-separate"],
+    }
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [
+                {"id": "p-0001", "chars": 0, "sha256": ""},
+                {"id": "p-0002", "chars": 0, "sha256": ""},
+            ],
+            "answers": {}, "relevance": {"target": target},
+            "distilled": {target: {
+                "items": [{
+                    "pages": ["p-0002"], "statement": dropped, "how": "pen",
+                    "anchors": [dropped], "checkable": False,
+                }],
+                "owner_pairs": [[kept, dropped]], "source_owner_pairs": [],
+                "shared_rule_owner_records": [], "still_for_owner": [],
+            }},
+            "owner_rulings": {target: {
+                "check-1": {"item": check_item, "choice": "drop", "because": "not in scope"},
+                pair_id: {"item": pair_item, "choice": "keep-separate", "because": "distinct"},
+            }},
+            "requirements": {target: {
+                "rules_stage": {"rules": [
+                    {"text": kept, "entries": [1]}, {"text": dropped, "entries": [2]},
+                ]},
+                "rule_judgement": {"texts": [], "merged": []},
+            }},
+            "collapse": {target: {"entries": [
+                {"piece": "p-0001", "text": kept},
+                {"piece": "p-0002", "text": dropped},
+            ]}},
+        })
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
+
+        pending = subprocess.run(
+            [sys.executable, str(COVER), "ask-owner", "--work", str(run)],
+            check=True, capture_output=True, text=True,
+        )
+        assert pair_id in pending.stdout
+        assert "which non-dropped duty, if any, survives" in pending.stdout
+        answered = subprocess.run(
+            [sys.executable, str(COVER), "answer-owner", "--work", str(run),
+             "--id", pair_id, "--choice", "select-a", "--because", "retain only A"],
+            check=True, capture_output=True, text=True,
+        )
+        assert "0 ruling(s) still pending" in answered.stdout
+        output = Path(directory) / "requirements.md"
+        subprocess.run(
+            [sys.executable, str(COVER), "document", "--work", str(run), "--out", str(output)],
+            check=True, capture_output=True, text=True,
+        )
+        text = output.read_text(encoding="utf-8")
+        assert text.count(kept) == 1
+        requirements_section = text.split("## Rejected, with reasons", 1)[0]
+        assert dropped not in requirements_section
+        history = json.loads((run / "coverage.json").read_text())["owner_rulings"][target][pair_id]
+        assert history["history"][0]["choice"] == "keep-separate"
+
+
+def test_reopened_selection_never_offers_an_alternate_dropped_side() -> None:
+    target = "fixture requirements"
+    side_a = "It applies from the first build and is checked at every gate. 1."
+    side_b = ("These requirements apply to all documents, internal and client-facing, and are "
+              "checked at every gate.")
+    pair_id = "shared-rule-both-sides-dropped"
+    pair_item = {
+        "id": pair_id, "kind": "shared-rule",
+        "question": "No validated shared rule could be extracted; which source duties survive?",
+        "a": side_a, "b": side_b, "statement": f"A: {side_a}\nB: {side_b}",
+        "pages": ["p-0001", "p-0002"],
+        "choices": ["keep-both", "select-a", "select-b"],
+    }
+    dropped = {
+        "check-1": {"item": {
+            "id": "check-1", "kind": "checkability", "statement": side_a,
+            "anchors": [side_a], "choices": ["keep", "drop", "split"],
+        }, "choice": "drop"},
+        "check-2": {"item": {
+            "id": "check-2", "kind": "checkability", "statement": side_b,
+            "anchors": [side_b], "choices": ["keep", "drop", "split"],
+        }, "choice": "drop"},
+    }
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [
+                {"id": "p-0001", "chars": 0, "sha256": ""},
+                {"id": "p-0002", "chars": 0, "sha256": ""},
+            ],
+            "answers": {}, "relevance": {"target": target},
+            "distilled": {target: {
+                "items": [], "owner_pairs": [], "source_owner_pairs": [],
+                "shared_rule_owner_records": [], "still_for_owner": [],
+            }},
+            "owner_rulings": {target: {
+                **dropped,
+                pair_id: {"item": pair_item, "choice": "select-b", "because": "prior"},
+            }},
+            "requirements": {target: {
+                "rules_stage": {"rules": []},
+                "rule_judgement": {"texts": [], "merged": []},
+            }},
+            "collapse": {target: {"entries": []}},
+        })
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
+
+        pending = subprocess.run(
+            [sys.executable, str(COVER), "ask-owner", "--work", str(run)],
+            check=True, capture_output=True, text=True,
+        )
+        item = json.loads(pending.stdout)["item"]
+        assert item["id"] == pair_id
+        assert item["choices"] == ["drop-both"]
+
+        answered = subprocess.run(
+            [sys.executable, str(COVER), "answer-owner", "--work", str(run),
+             "--id", pair_id, "--choice", "drop-both", "--because", "both were dropped"],
+            check=True, capture_output=True, text=True,
+        )
+        assert "0 ruling(s) still pending" in answered.stdout
+        complete = subprocess.run(
+            [sys.executable, str(COVER), "ask-owner", "--work", str(run)],
+            check=True, capture_output=True, text=True,
+        )
+        assert "nothing pending" in complete.stdout
+
+
+def test_identical_selected_duties_materialize_once_with_combined_lineage() -> None:
+    cover = load("requirements_cover_owner_materialization", COVER)
+    reflow = load("requirements_reflow_owner_materialization", MACHINERY / "scripts" / "reflow.py")
+    statement = "Preserve query logic and definitions so the research is repeatable."
+    items = [
+        {"statement": statement, "pages": ["p-0001"], "anchors": ["source A"],
+         "how": "verbatim", "_kept_by_owner": "selected by first ruling"},
+        {"statement": statement, "pages": ["p-0002"], "anchors": ["source B"],
+         "how": "verbatim", "_kept_by_owner": "selected by second ruling"},
+    ]
+
+    result = cover._consolidate_kept_items(items, reflow)
+
+    assert len(result) == 1
+    assert result[0]["pages"] == ["p-0001", "p-0002"]
+    assert result[0]["anchors"] == ["source A", "source B"]
+    assert "first ruling" in result[0]["_kept_by_owner"]
+    assert "second ruling" in result[0]["_kept_by_owner"]
+
+
 def test_run_identity_is_immutable_and_detects_artifact_drift(capsys) -> None:
     cover = load("requirements_cover_run_identity", COVER)
     with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:

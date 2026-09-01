@@ -162,6 +162,13 @@ When a merged pair yields no verbatim shared rule, neither original is consumed.
 extraction attempt. Finalization blocks until the owner chooses `keep-both`, `select-a`, or
 `select-b`; every choice materializes a nonempty, source-traceable result.
 
+Owner rulings compose as one decision set, not as independent instructions with hidden precedence.
+If a later overlap or shared-rule selection would restore a source duty an earlier checkability
+ruling dropped, that later selection reopens through the same owner interview with its prior answer
+in history. Its correction offers each non-dropped side and `drop-both`; unrelated rulings remain
+recorded. Finalization then materializes an identical selected duty once, combining its pages,
+anchors, and owner notes, while distinct selected wording remains separate.
+
 Checkability is always target-bound. The exact active target appears in the prompt and its
 persisted replay record; target, prompt, and item hashes jointly define the decision identity.
 Changing only the target therefore creates a different decision record, and Step 3 Measurement
