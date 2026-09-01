@@ -22,6 +22,8 @@ is the shape wanted rather than a compromise.
 import collections
 import re
 
+STRATEGY = "blank-block-structure"
+
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z\u25cf\u2022])")
 
 
@@ -145,7 +147,54 @@ def by_cell(text, min_chars=25):
     return out
 
 
-CUTS = {"line": by_line, "indent": by_indent, "sentence": by_sentence, "cell": by_cell}
+def paragraph_blocks(text):
+    """Split only at visible blank-line boundaries retained by PDF extraction."""
+    return [block for block in re.split(r"\n\s*\n", text) if block.strip()]
+
+
+def _table_columns(block):
+    cols = columns(block)
+    if len(cols) >= 3:
+        return cols
+    if len(cols) != 2:
+        return [0]
+    edge = cols[1]
+    paired = 0
+    for line in block.split("\n"):
+        if edge < len(line) and line[:edge].strip() and line[edge:].strip():
+            paired += 1
+    return cols if paired >= 3 else [0]
+
+
+def _row_units(block, cols, min_chars=25):
+    rows = []
+    current = []
+    first_edge = cols[1]
+    for raw in (line for line in block.split("\n") if line.strip()):
+        first_cell = raw[:first_edge].strip()
+        continuation_label = bool(re.fullmatch(r"[a-z][a-z /-]*", first_cell or ""))
+        if first_cell and current and not continuation_label:
+            rows.append(flow("\n".join(current)))
+            current = []
+        current.append(raw)
+    if current:
+        rows.append(flow("\n".join(current)))
+    return [row for row in rows if len(row) >= min_chars]
+
+
+def by_structure(text, min_chars=25):
+    """Return only contiguous meaning units: prose sentences or complete physical table rows."""
+    out = []
+    for block in paragraph_blocks(text):
+        cols = _table_columns(block)
+        if len(cols) >= 2:
+            out.extend(_row_units(block, cols, min_chars))
+        else:
+            out.extend(units(block, min_chars))
+    return out
+
+
+CUTS = {"structure": by_structure}
 
 
 def whole(pick, text, narrow=40):

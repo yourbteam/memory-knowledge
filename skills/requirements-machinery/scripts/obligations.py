@@ -61,6 +61,16 @@ def units(piece_text):
     return _reflow.units(piece_text, MIN_CHARS)
 
 
+def candidate_units(piece_text):
+    """Return the deterministic units each obligation-reader cut receives."""
+    page_len = len(_reflow.flow(piece_text))
+    return {
+        name: [u for u in cut(piece_text, MIN_CHARS)
+               if len(u) <= 600 or len(u) <= 0.5 * page_len]
+        for name, cut in _reflow.CUTS.items()
+    }
+
+
 def _ask_one_cut(candidates, target, reader_command, piece_text, quotecheck, piece=None):
     """One cut, one ask. Returns what it picked, verified verbatim against the piece."""
     if not candidates:
@@ -106,11 +116,8 @@ def extract(piece_text, target, reader_command, quotecheck, admitted_on=(), piec
     # 1,913 characters — 77% of its page — and the merged result was the page back. Measured over
     # all 99 recorded picks, nothing real comes close: the largest genuine statement is 34% of its
     # page (588 chars). The 600-character floor keeps a short page's one whole statement offerable.
-    page_len = len(_reflow.flow(piece_text))
     picked, offered, by_cut = [], 0, {}
-    for name, cut in _reflow.CUTS.items():
-        candidates = [u for u in cut(piece_text, MIN_CHARS)
-                      if len(u) <= 600 or len(u) <= 0.5 * page_len]
+    for name, candidates in candidate_units(piece_text).items():
         offered += len(candidates)
         mine = _ask_one_cut(candidates, target, reader_command, piece_text, quotecheck, piece=piece)
         by_cut[name] = {"offered": len(candidates), "picked": mine}

@@ -39,9 +39,10 @@ QUESTION = (
     "--- PAGE ---\n{page}\n--- END PAGE ---"
 )
 QUOTE_QUESTION = (
-    "You said this page constrains {target}.\n\n"
-    "Quote the exact words from the page that do it."
-    "\n\nThis is a data-extraction request, not a task report. Do not begin with any status line, anchor or preamble of any kind. The first character of your reply must be the first character of the answer.\n\n"
+    "The page was already classified YES: it bears on this target:\n\n{target}\n\n"
+    "Copy one exact excerpt from the page that is evidence for that YES. The excerpt does not "
+    "need to repeat the target's full name or every property. Any exact excerpt showing why this "
+    "page bears on the target qualifies.\n\n"
     "--- PAGE ---\n{page}\n--- END PAGE ---"
 )
 CHOICES = ["YES", "NO"]

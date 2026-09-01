@@ -672,7 +672,9 @@ def requirements(work, reader_command):
             "entries_at_rules": [e["text"] for e in rows], "at": time.time()}
         _write(work, state)
     paired = {n for p in merged for n in p}
-    singles = [n for n in range(1, len(entries) + 1) if n not in paired]
+    represented = rules_mod.fully_represented_entries(entries, rules)
+    carriers = [n for n in range(1, len(entries) + 1)
+                if n not in paired or n not in represented]
     # The final list: every extracted rule once, plus every entry no pair touched, each carrying
     # its pages. Checkability: three independent asks over the numbered list, the intersection
     # survives — the shape that won the checkable comparison; what every ask leaves out is
@@ -680,7 +682,7 @@ def requirements(work, reader_command):
     items = ([{"text": r["text"], "pages": sorted({rows[n - 1]["piece"] for n in r["entries"]}),
                "kind": "rule", "source_rule_ids": [rule_number]} for rule_number, r in enumerate(rules, 1)]
              + [{"text": entries[n - 1], "pages": [rows[n - 1]["piece"]], "kind": "entry"}
-                for n in singles])
+                for n in carriers])
     # The repeat survives one level down when quotes from a reworded pair are themselves a
     # reworded pair. The promoted dedupe runs again — but ONLY over the extracted rules, never
     # over composite items. Merging composite carriers loses rules, and this build has now proven
@@ -810,6 +812,10 @@ def requirements(work, reader_command):
         })
     state["requirements"][target].update({
         "items": items, "unresolved_pairs": unresolved, "rule_detail": detail,
+        "source_conservation": {
+            "represented_by_rule": sorted(represented),
+            "retained_as_carrier": carriers,
+        },
         "owner_pairs": col["owner_pairs"],
         "source_owner_pairs": source_owner_pairs,
         "shared_rule_owner_records": shared_rule_owner_records,
@@ -818,7 +824,7 @@ def requirements(work, reader_command):
         "reconciled": col["reconciled_unsettled"], "at": time.time()})
     _write(work, state)
     kept_n = sum(1 for it in items if it["checkable"])
-    print(f"{len(items)} items ({len(rules)} rules cut once, {len(singles)} standalone entries); "
+    print(f"{len(items)} items ({len(rules)} rules cut once, {len(carriers)} source carriers); "
           f"{kept_n} checkable, {len(items) - kept_n} refused with reason; "
           f"{len(unresolved)} pair(s) yielded no verbatim rule; "
           f"owner items: pairs {col['owner_pairs']} pieces {col['still_for_owner']}", flush=True)
