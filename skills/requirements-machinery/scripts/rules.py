@@ -86,6 +86,24 @@ def to_sentences(rule, entry):
     return grown if grown and grown in entry and len(grown) >= len(rule) else rule
 
 
+def fully_represented_entries(entries, rules):
+    """Return source-entry numbers whose complete normalized text survives in a rule.
+
+    A same-rule pair proves shared material, not that either complete carrier is expendable.
+    Code therefore permits a carrier to disappear only when one extracted rule linked to that
+    entry contains its complete normalized text. Anything less remains a verbatim carrier.
+    """
+    represented = set()
+    for number, entry in enumerate(entries, 1):
+        carrier = dedupe.norm(entry)
+        if carrier and any(
+            number in rule["entries"] and carrier in dedupe.norm(rule["text"])
+            for rule in rules
+        ):
+            represented.add(number)
+    return represented
+
+
 def extract(entries, merged_pairs, reader_command):
     """Returns (rules, unresolved_pairs, detail). Each rule: text + the 1-based entries backing it."""
     found = {}      # normalized rule -> {"text", "entries"}
