@@ -392,6 +392,43 @@ def answer(work, piece, by, what, quote):
     return 0
 
 
+COVERAGE_ASK = """Read the complete source piece below before answering.
+
+SOURCE PIECE START
+{piece_text}
+SOURCE PIECE END
+
+Copy one complete, substantive passage that demonstrates the piece was read. The passage must
+appear exactly in the source piece. Do not summarize or add words."""
+
+
+def cover_unanswered(work, reader_command):
+    """Ground every source piece in the public coverage register before extraction begins."""
+    interview_mod = _load("interview")
+    state = _read(work)
+    unanswered = [piece["id"] for piece in state["pieces"]
+                  if piece["id"] not in state["answers"]]
+    for piece_id in unanswered:
+        piece_text = (Path(work) / "pieces" / f"{piece_id}.txt").read_text()
+        grounded, _transcript = interview_mod.ask_quote(
+            reader_command,
+            COVERAGE_ASK.format(piece_text=piece_text),
+            piece_text,
+            quotecheck,
+            stage="coverage",
+            piece=piece_id,
+        )
+        if grounded is None:
+            print(f"cannot complete coverage: reader did not ground {piece_id}; "
+                  "the piece remains unanswered", file=sys.stderr)
+            return 3
+        code = answer(work, piece_id, "self-sustained reader", grounded, grounded)
+        if code != 0:
+            return code
+    print(f"coverage complete: {len(state['pieces'])} of {len(state['pieces'])} pieces answered")
+    return 0
+
+
 def _verdicts(state, target):
     """Verdicts for one target, kept beside any others this directory already holds.
 
@@ -1409,6 +1446,11 @@ def document(work, out_path, reader_command=None):
     applied. Refuses while any ruling is still pending — a document over an unanswered question
     would look complete and be one decision short of the truth."""
     state = _read(work)
+    try:
+        _rebuild(state).report()
+    except register.Incomplete as refusal:
+        print(f"cannot write the document: {refusal}", file=sys.stderr)
+        return 3
     state["_work"] = work
     target = _last_target(state)
     queue = _owner_queue(state, target)
@@ -1482,7 +1524,7 @@ def document(work, out_path, reader_command=None):
                 "_kept_by_owner": f"selected by ruling {rid}: {r['because']}",
             })
     # keep-separate rulings resurrect a rule the merge had folded away, verbatim from the register
-    register = state["requirements"][target]["rules_stage"]["rules"]
+    rules_register = state["requirements"][target]["rules_stage"]["rules"]
     col_rows = state["collapse"][target]["entries"]
     present = " ".join((it.get("statement") or "") for it in items)
     # A side is resurrected only when its rule is genuinely absent: a side that equals a kept
@@ -1520,7 +1562,7 @@ def document(work, out_path, reader_command=None):
             canonical = twin_of.get(flowed, flowed)
             if flowed in kept_anchor_texts or flowed in kept_statements:
                 continue          # its penned form, or a statement, already carries this rule
-            rule = next((x for x in register if x["text"] == side), None)
+            rule = next((x for x in rules_register if x["text"] == side), None)
             if rule is None:
                 continue
             pages = sorted({col_rows[n - 1]["piece"] for n in rule["entries"]})
@@ -1726,7 +1768,7 @@ def report(work):
     return 0
 
 
-AUTOMATIC_STAGES = ("relevance", "obligations", "collapse", "requirements", "distill")
+AUTOMATIC_STAGES = ("coverage", "relevance", "obligations", "collapse", "requirements", "distill")
 DISTILLED_FINAL_FIELDS = {
     "items", "owner_pairs", "source_owner_pairs", "shared_rule_owner_records", "still_for_owner",
 }
@@ -1746,6 +1788,8 @@ def _controller_feed(work, event, **fields):
 
 def _next_stage_from_state(state, target, work=None):
     """Derive the only lawful next stage from durable machinery state."""
+    if any(piece["id"] not in state["answers"] for piece in state["pieces"]):
+        return "coverage"
     rows = (state.get("relevance", {}).get("targets", {}).get(target, {})
             .get("pieces", {}))
     piece_ids = [piece["id"] for piece in state["pieces"]]
@@ -1777,6 +1821,7 @@ def run_automatic(work, target, out_path, reader_command):
     """Carry one persisted run until its next legitimate human or terminal boundary."""
     _pin_projection_runtime(work)
     handlers = {
+        "coverage": lambda: cover_unanswered(work, reader_command),
         "relevance": lambda: relevance(work, target, reader_command),
         "obligations": lambda: obligations(work, reader_command),
         "collapse": lambda: collapse(work, reader_command),

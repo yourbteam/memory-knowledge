@@ -48,6 +48,14 @@ def bind_run_identity(run: Path, state: dict) -> dict:
     return state
 
 
+def answer_all_pieces(run: Path, state: dict) -> None:
+    for piece in state.get("pieces", []):
+        text = (run / "pieces" / f"{piece['id']}.txt").read_text(encoding="utf-8")
+        state["answers"][piece["id"]] = {
+            "what": text, "quote": text, "by": "fixture-reader", "at": 0,
+        }
+
+
 def test_published_command_surface_matches_real_cli() -> None:
     completed = subprocess.run(
         [
@@ -136,6 +144,74 @@ def test_manual_and_reader_grounding_share_one_substantive_contract() -> None:
         assert cover.answer(run, "p-0001", "reader-1", "meaning", normalized) == 0
         state = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
         assert state["answers"]["p-0001"]["quote"] == normalized
+
+
+def test_autonomous_coverage_is_first_and_persists_each_grounded_piece() -> None:
+    cover = load("requirements_cover_autonomous_coverage", COVER)
+
+    class Interview:
+        calls = []
+
+        @classmethod
+        def ask_quote(cls, _reader, _question, piece_text, _quotecheck, **labels):
+            cls.calls.append(labels)
+            return piece_text, []
+
+    original_load = cover._load
+    cover._load = lambda name: Interview if name == "interview" else original_load(name)
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [
+                {"id": "p-0001", "chars": 0, "sha256": ""},
+                {"id": "p-0002", "chars": 0, "sha256": ""},
+            ],
+            "answers": {},
+        })
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
+
+        assert cover._next_stage_from_state(state, "target", run) == "coverage"
+        assert cover.cover_unanswered(run, "fixture-reader") == 0
+
+        persisted = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
+        assert sorted(persisted["answers"]) == ["p-0001", "p-0002"]
+        assert [call["piece"] for call in Interview.calls] == ["p-0001", "p-0002"]
+        assert cover._next_stage_from_state(persisted, "target", run) == "relevance"
+
+
+def test_interrupted_coverage_keeps_progress_and_blocks_document_write() -> None:
+    cover = load("requirements_cover_interrupted_coverage", COVER)
+
+    class Interview:
+        calls = 0
+
+        @classmethod
+        def ask_quote(cls, _reader, _question, piece_text, _quotecheck, **_labels):
+            cls.calls += 1
+            return (piece_text, []) if cls.calls == 1 else (None, [])
+
+    original_load = cover._load
+    cover._load = lambda name: Interview if name == "interview" else original_load(name)
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [
+                {"id": "p-0001", "chars": 0, "sha256": ""},
+                {"id": "p-0002", "chars": 0, "sha256": ""},
+            ],
+            "answers": {},
+        })
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
+        output = Path(directory) / "requirements.md"
+        output.write_text("DO-NOT-OVERWRITE\n", encoding="utf-8")
+
+        assert cover.cover_unanswered(run, "fixture-reader") == 3
+        persisted = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
+        assert sorted(persisted["answers"]) == ["p-0001"]
+        assert cover.document(run, output) == 3
+        assert output.read_text(encoding="utf-8") == "DO-NOT-OVERWRITE\n"
 
 
 def test_public_disclosure_and_private_state_boundary_are_exact() -> None:
@@ -513,6 +589,7 @@ def test_conflicting_source_selection_reopens_and_corrects_through_cli() -> None
                 {"piece": "p-0002", "text": dropped},
             ]}},
         })
+        answer_all_pieces(run, state)
         (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
 
         pending = subprocess.run(

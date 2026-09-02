@@ -54,9 +54,11 @@ python3 scripts/cover.py report  --work <dir>
 ```
 
 Use `run` as the normal continuation entrypoint. It derives the next incomplete stage from the
-persisted coverage state, advances every automatic stage, and exits only after presenting one owner
-ruling or writing the finished document. Re-run the same command after each owner answer; completed
-reader work is reused and no separate stage command is required.
+persisted coverage state, grounds every unanswered piece before relevance, advances every later
+automatic stage, and exits only after presenting one owner ruling or writing the finished document.
+Each grounded coverage answer is persisted immediately, so interruption resumes at the first
+unanswered piece. Re-run the same command after each owner answer; completed reader work is reused
+and no separate stage command is required.
 
 `open` cuts the document and writes every piece to `<dir>/pieces/`. `report` refuses, naming what is
 still unanswered, until nothing is. State lives in `<dir>`, so stopping and coming back later is the
@@ -122,7 +124,10 @@ The entry point has fourteen public commands. The table is both the human contra
 Source coverage ends with a complete `report`. `relevance` through `obligation-list` interpret that
 covered source; `collapse` through `distill` derive a requirements set from it. Those derived stages
 do not acquire owner authority: every undecidable inclusion, merge, or casting choice remains in
-`ask-owner`/`answer-owner`. Only after that queue is empty may `document` assemble the result.
+`ask-owner`/`answer-owner`. `document` independently invokes the coverage report gate before it
+consults that queue, so neither a direct call nor the autonomous controller can write an output
+over unanswered pieces. Only after coverage is complete and the owner queue is empty may it
+assemble the result.
 
 **Public-output disclosure boundary.** While manual coverage is incomplete, public commands reveal
 which pieces are answered and by whom, but never the stored `what` or grounding `quote`. `report`
