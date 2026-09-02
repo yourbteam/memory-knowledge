@@ -321,6 +321,60 @@ def _rebuild(state):
     return reg
 
 
+def _read_source_text(source):
+    suffix = source.suffix.lower()
+    if suffix == ".pdf":
+        return subprocess.run(
+            ["pdftotext", "-layout", str(source), "-"],
+            capture_output=True,
+            check=True,
+        ).stdout.decode("utf-8", "replace")
+    if suffix == ".md":
+        try:
+            return source.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            print(f"refusing to open: Markdown source is not valid UTF-8: {source}", file=sys.stderr)
+            return None
+    print(
+        f"refusing to open: unsupported source format {suffix or '<none>'}; "
+        "supported formats are .pdf and .md",
+        file=sys.stderr,
+    )
+    return None
+
+
+_ARTIFACT_LINE = re.compile(r"(?m)^ARTIFACT\s+(\d+)\b")
+_ARTIFACT_RECORD = re.compile(
+    r"(?m)^={20,}\nARTIFACT\s+(\d+)\s+·\s+[^\n]+\n"
+    r"source file:\s+[^\n]+\n={20,}\n"
+)
+
+
+def _split_source_text(source, text):
+    if source.suffix.lower() != ".md" or splitter.FF in text:
+        return splitter.split(text)
+    declared = list(_ARTIFACT_LINE.finditer(text))
+    if not declared:
+        return splitter.split(text)
+    records = list(_ARTIFACT_RECORD.finditer(text))
+    numbers = [int(match.group(1)) for match in records]
+    if len(records) != len(declared) or numbers != list(range(1, len(records) + 1)):
+        print(
+            "refusing to open: malformed ARTIFACT provenance boundaries; "
+            "records must be framed, carry a source file, and be numbered consecutively from 1",
+            file=sys.stderr,
+        )
+        return None
+    starts = [record.start() for record in records]
+    parts = []
+    for index, start in enumerate(starts):
+        if index == 0:
+            start = 0
+        end = starts[index + 1] if index + 1 < len(starts) else len(text)
+        parts.append(text[start:end] + splitter.FF)
+    return parts
+
+
 def open_document(source, work):
     source = Path(source).expanduser().resolve(strict=True)
     work_path = Path(work)
@@ -328,9 +382,12 @@ def open_document(source, work):
         print(f"refusing to open: {work} already contains a run identity or piece artifacts. "
               f"Use a new nested work directory; open never replaces a run.", file=sys.stderr)
         return 3
-    text = subprocess.run(["pdftotext", "-layout", str(source), "-"],
-                          capture_output=True, check=True).stdout.decode("utf-8", "replace")
-    parts = splitter.split(text)
+    text = _read_source_text(source)
+    if text is None:
+        return 3
+    parts = _split_source_text(source, text)
+    if parts is None:
+        return 3
     pieces = [{"id": f"p-{i:04d}", "chars": len(t), "sha256": hashlib.sha256(t.encode()).hexdigest()}
               for i, t in enumerate(parts, 1)]
     work_path.mkdir(parents=True, exist_ok=True)

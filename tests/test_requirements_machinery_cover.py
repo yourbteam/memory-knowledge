@@ -115,6 +115,102 @@ def test_documented_answer_example_executes_its_state_transition() -> None:
         assert state["answers"]["p-0007"]["quote"] == quote
 
 
+def test_open_dispatches_markdown_and_pdf_and_refuses_unsupported(monkeypatch, capsys) -> None:
+    cover = load("requirements_cover_source_formats", COVER)
+    calls = []
+
+    class Completed:
+        stdout = b"PDF page one\fPDF page two\f"
+
+    def fake_run(command, **options):
+        calls.append((command, options))
+        return Completed()
+
+    monkeypatch.setattr(cover.subprocess, "run", fake_run)
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        root = Path(directory)
+
+        markdown = root / "source.md"
+        markdown.write_text("Markdown source text.", encoding="utf-8")
+        markdown_work = root / "markdown-run"
+        assert cover.open_document(markdown, markdown_work) == 0
+        markdown_state = json.loads((markdown_work / "coverage.json").read_text(encoding="utf-8"))
+        assert calls == []
+        assert markdown_state["source_sha256"] == hashlib.sha256(markdown.read_bytes()).hexdigest()
+        assert (markdown_work / "pieces" / "p-0001.txt").read_text(encoding="utf-8") == (
+            "Markdown source text.\f"
+        )
+
+        pdf = root / "source.pdf"
+        pdf.write_bytes(b"real input bytes")
+        pdf_work = root / "pdf-run"
+        assert cover.open_document(pdf, pdf_work) == 0
+        assert calls == [
+            (["pdftotext", "-layout", str(pdf.resolve()), "-"], {
+                "capture_output": True,
+                "check": True,
+            })
+        ]
+        pdf_state = json.loads((pdf_work / "coverage.json").read_text(encoding="utf-8"))
+        assert len(pdf_state["pieces"]) == 2
+        assert (pdf_work / "pieces" / "p-0001.txt").read_bytes() == b"PDF page one\f"
+        assert (pdf_work / "pieces" / "p-0002.txt").read_bytes() == b"PDF page two\f"
+
+        unsupported = root / "source.docx"
+        unsupported.write_bytes(b"unsupported")
+        unsupported_work = root / "unsupported-run"
+        assert cover.open_document(unsupported, unsupported_work) == 3
+        assert not unsupported_work.exists()
+        error = capsys.readouterr().err
+        assert "unsupported source format .docx" in error
+        assert "supported formats are .pdf and .md" in error
+
+
+def test_open_splits_strict_markdown_artifact_records_and_refuses_malformed(capsys) -> None:
+    cover = load("requirements_cover_artifact_records", COVER)
+    frame = "=" * 30
+    source_text = (
+        "Corpus preamble.\n\n"
+        f"{frame}\nARTIFACT 01 · first\nsource file: first.docx\n{frame}\n"
+        "First body.\n\n"
+        f"{frame}\nARTIFACT 02 · second\nsource file: second.docx\n{frame}\n"
+        "Second body.\n"
+    )
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        root = Path(directory)
+        source = root / "corpus.md"
+        source.write_text(source_text, encoding="utf-8")
+        work = root / "corpus-run"
+
+        assert cover.open_document(source, work) == 0
+        state = json.loads((work / "coverage.json").read_text(encoding="utf-8"))
+        assert len(state["pieces"]) == 2
+        texts = [
+            (work / "pieces" / f"p-{index:04d}.txt").read_text(encoding="utf-8")
+            for index in range(1, 3)
+        ]
+        assert [len(cover._ARTIFACT_LINE.findall(text)) for text in texts] == [1, 1]
+        assert "".join(text.removesuffix(cover.splitter.FF) for text in texts) == source_text
+
+        paged = root / "paged.md"
+        paged.write_text("first\fsecond\f", encoding="utf-8")
+        paged_work = root / "paged-run"
+        assert cover.open_document(paged, paged_work) == 0
+        assert (paged_work / "pieces" / "p-0001.txt").read_text(encoding="utf-8") == "first\f"
+        assert (paged_work / "pieces" / "p-0002.txt").read_text(encoding="utf-8") == "second\f"
+
+        malformed = root / "malformed.md"
+        malformed.write_text(
+            "ARTIFACT 01 · missing frame\nsource file: first.docx\nBody.\n",
+            encoding="utf-8",
+        )
+        malformed_work = root / "malformed-run"
+        assert cover.open_document(malformed, malformed_work) == 3
+        assert not malformed_work.exists()
+        error = capsys.readouterr().err
+        assert "malformed ARTIFACT provenance boundaries" in error
+
+
 def test_manual_and_reader_grounding_share_one_substantive_contract() -> None:
     quotecheck = load("requirements_quotecheck", MACHINERY / "scripts" / "quotecheck.py")
     interview = load("requirements_interview", MACHINERY / "scripts" / "interview.py")

@@ -31,6 +31,14 @@ the source bytes, registered piece hashes and character counts, and the exact pi
 before use; missing, changed, extra, symlinked, or non-UTF-8 artifacts fail with distinct drift
 diagnostics. Recovery is a new nested work directory, never implicit cleanup.
 
+`open` accepts PDF through the existing `pdftotext -layout` path and reads `.md` directly as strict
+UTF-8. It refuses every other source suffix before creating state or piece artifacts. Markdown with
+form feeds keeps those page boundaries unchanged. Without form feeds, a structured corpus whose
+records use framed, sourced, consecutively numbered `ARTIFACT` provenance headers becomes one
+piece per whole record; the preamble stays with the first record. Any declared `ARTIFACT` line that
+does not satisfy that complete structure is refused before state exists. Ordinary Markdown without
+form feeds or artifact declarations remains one piece.
+
 ```bash
 python3 scripts/cover.py open   --source <document> --work <dir>
 python3 scripts/cover.py status --work <dir>
