@@ -1,0 +1,1 @@
+{"approach_id": "action-grounded", "atomic_step_id": "critique-grounded-verdict", "bundle_sha256": "07c79e965e447821d6fb5b2919fde779b3839a827f4c8b7cfa8bf53bdff54ade", "probe_id": "verdict-contract", "status": "built"}

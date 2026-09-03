@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-grounded-verdict",
+  "case_id": "stale-door-red",
+  "experiment_id": "development-probe-8ad9c33bb06ea6bef731",
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "92759ecf959c136fcd1cdc2fa25a1b097a10f0d86e555269eab28efbef0b1478",
+  "schema_version": 1,
+  "status": "completed"
+}

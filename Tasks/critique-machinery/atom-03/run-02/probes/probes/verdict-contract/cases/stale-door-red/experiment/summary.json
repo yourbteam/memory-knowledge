@@ -1,0 +1,213 @@
+{
+  "champion": "variation-2",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/evaluator.py",
+        "sha256": "306e3e145b3b9258e6ba08b6049e14b564ef55a39539f5b9f278aa001dd14a60"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-17ee4164ef5d769e7dbe",
+  "frozen_input_sha256": "959b0437e41c1da875ab6961e3253bb8e8e30d4f58f8d61c4151f559ff178ea4",
+  "hypothesis": "Every approach declared by mini-probe 'verdict-contract' can run against captured case 'stale-door-red', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 0.0
+      },
+      "rank": 1,
+      "variant_id": "variation-2"
+    },
+    {
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 0.0
+      },
+      "rank": 2,
+      "variant_id": "control"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 8112,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 0.0
+      },
+      "outcome": {
+        "actionable_quote_count": 0,
+        "actual": "judged",
+        "case_id": "stale-door-red",
+        "classification_correct": false,
+        "classification_count": 0,
+        "correct": true,
+        "error": null,
+        "expected": "judged",
+        "expected_quality": "defective",
+        "grounded_count": 0,
+        "invalid_quote_error": "",
+        "invalid_quote_refused": false,
+        "judgments": [
+          {
+            "cell_id": "u-001-0067fbb9::buyer-read",
+            "lens": "buyer-read",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-001-0067fbb9",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-001-0067fbb9::journalist",
+            "lens": "journalist",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-001-0067fbb9",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-001-0067fbb9::employee-insider",
+            "lens": "employee-insider",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-001-0067fbb9",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-001-0067fbb9::competitor-counter-position",
+            "lens": "competitor-counter-position",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-001-0067fbb9",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          }
+        ],
+        "lenses": [
+          "buyer-read",
+          "journalist",
+          "employee-insider",
+          "competitor-counter-position"
+        ],
+        "manifest_sha256": "cbcc871ce1c184dc1410390f2de00b62baa14cb02642af7bc61c93d4624ec121",
+        "pair_id": "stale-door",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "be662fb91070287c1ed1da019ed88acf6753b1833429c5e0a55f4a957c9767ea",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "73c31773efae342ad4226507a8d4f23d069f765eeaf02090ab14f8f786fe2aea",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 11375,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 0.0
+      },
+      "outcome": {
+        "actionable_quote_count": 0,
+        "actual": "refused-other",
+        "case_id": "stale-door-red",
+        "classification_correct": false,
+        "classification_count": 0,
+        "correct": false,
+        "error": "quote for cell 'u-001-0067fbb9::buyer-read' is not present in unit 'u-001-0067fbb9' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+        "expected": "judged",
+        "expected_quality": "defective",
+        "grounded_count": 0,
+        "invalid_quote_error": "quote for cell 'u-001-0067fbb9::buyer-read' is not present in unit 'u-001-0067fbb9' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+        "invalid_quote_refused": true,
+        "judgments": [],
+        "lenses": [
+          "buyer-read",
+          "journalist",
+          "employee-insider",
+          "competitor-counter-position"
+        ],
+        "manifest_sha256": "23af48fbc70ec10304a9499ca70b660ba06cc637073cd3d2b8a85f09b7c02e74",
+        "pair_id": "stale-door",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "8fb340810b4d953f7ef27ec4f0a19d39b351b3eaf57fa015c0ad28e721fb4962",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "17e08cbc4f29e593d49d7d47984afdfcbc778d86f209d2e98d72c9223fe18a2c",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

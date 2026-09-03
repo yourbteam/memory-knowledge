@@ -1,0 +1,1 @@
+{"approach_id": "binary-groundless", "atomic_step_id": "critique-grounded-verdict", "bundle_sha256": "b869025a68e58847d2c437dfec56175bd27a883b17eb2e7c6697a25a060f2d8f", "probe_id": "verdict-contract", "status": "built"}

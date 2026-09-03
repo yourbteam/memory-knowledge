@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-grounded-verdict",
+  "promotion_event_sha256": "7e9436e211c98ed7024c93b81e8e99aeebdae4932b28cae36bfa5e7b98a381ea",
+  "cases": [
+    {
+      "case_id": "stale-door-red",
+      "verdict": "satisfied",
+      "reason": "The promoted CLI preserved the stale claim, accepted its real upstream contradiction, and refused a fabricated quote.",
+      "evidence": [
+        {
+          "case_id": "stale-door-red",
+          "path": "operator-validation/stale-door-red.json",
+          "sha256": "e568415a3ce8c524b4379d068c48462731696ae2c5f7263dac399ebdd0678f76"
+        }
+      ]
+    },
+    {
+      "case_id": "stale-door-green",
+      "verdict": "satisfied",
+      "reason": "The promoted CLI accepted the corrected decision language as clear and refused a fabricated quote.",
+      "evidence": [
+        {
+          "case_id": "stale-door-green",
+          "path": "operator-validation/stale-door-green.json",
+          "sha256": "d7d81f51cf0f95e7b37bf074bf0e62c63a8d4843b9c5d71d9f4307865be38c62"
+        }
+      ]
+    },
+    {
+      "case_id": "calendar-red",
+      "verdict": "satisfied",
+      "reason": "The promoted CLI rejected the real incomplete calendar with a source-owned quote and refused a fabricated quote.",
+      "evidence": [
+        {
+          "case_id": "calendar-red",
+          "path": "operator-validation/calendar-red.json",
+          "sha256": "f9fdf469823c0a6a82f60ea7bbfe47974382bda1cdbde4dbff65b446afb6a8f4"
+        }
+      ]
+    },
+    {
+      "case_id": "calendar-green",
+      "verdict": "satisfied",
+      "reason": "The promoted CLI accepted the corrected twelve-month calendar as clear with a source-owned quote and refused a fabricated quote.",
+      "evidence": [
+        {
+          "case_id": "calendar-green",
+          "path": "operator-validation/calendar-green.json",
+          "sha256": "6ed778a54dd167616ebaad4dbb9b38aea7921cbfe48b3be418f57bc4c09465ba"
+        }
+      ]
+    }
+  ]
+}

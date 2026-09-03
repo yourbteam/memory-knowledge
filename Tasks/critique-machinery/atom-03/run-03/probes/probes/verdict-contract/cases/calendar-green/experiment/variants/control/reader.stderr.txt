@@ -1,0 +1,306 @@
+2026-09-03T19:46:01.757951Z ERROR codex_core_skills::service: failed to install system skills: io error while write system skill file: Invalid argument (os error 22)
+2026-09-03T19:46:01.765104Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 95 column 5
+2026-09-03T19:46:03.282612Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-03T19:46:03.296801Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-03T19:46:03.307981Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-03T19:46:03.316405Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-03T19:46:03.329384Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+OpenAI Codex v0.145.0
+--------
+workdir: /var/folders/mq/n8fb5xvn1lqgz14brfqm1mvh0000gn/T/tmp7gln38qj
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 01a068ce-9110-7d71-8e54-84a43a273c07
+--------
+user
+Judge one immutable delivered-page unit through each named lens.
+Return exactly one judgment per lens, in the listed order.
+Vocabulary: weak = a material defect exists under that lens; fine = no material defect exists under that lens.
+Return only the lens and verdict; do not include a quote or rationale. Do not use knowledge outside the unit.
+Reject or revise only when the quoted words themselves demonstrate a concrete failure of the lens question. Do not penalize a general risk, a style preference, or context absent from this unit. If no concrete failure is present, return clear or fine and quote the strongest words that establish clarity when the schema asks for a quote.
+
+LENSES
+- cfo: Does this unit make the full annual program and its planning coverage visible enough to fund and govern?
+- benchmark-vs-reference: Does this calendar unit meet the professional reference shape of twelve explicitly labeled months?
+- upstream-trace: Does this calendar unit preserve the upstream promise of a visible full-year cadence?
+
+UNIT TEXT
+### The editorial calendar
+
+Every slot ties a moment to a message and a ready asset.
+
+| month | phase | audience track | moment | key message | asset | channel | KPI (key performance indicator) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Month 1 | Pre-Seed / Tease | Internal alignment and claim clearance | Proof lock and sign-off preparation, with the Conversation Management loop running as the always-on baseline. | Reach is proved carefully, not claimed broadly. | Needs: Key-Message Table (KMT) | Owned and internal | All priority claims mapped to approved proof and Legal and Regulatory Affairs review status recorded. |
+| Month 2 | Pre-Seed / Tease | Employees, service teams and leaders | Internal briefing before public launch, with The Observatory newsroom running as the always-on baseline. | Every service moment is where The Invisible Thread is either proved or broken in public. | Needs: Spokesperson materials | Owned and internal | Briefed teams use approved language in service, leadership and media preparation. |
+| Month 3 | Launch | Existing customers and media | Earned-led public launch of So You Can and The Invisible Thread. | Vivacom keeps The Invisible Thread working, So You Can get on with daily life. | Needs: Press release | Earned, owned, shared and selective paid | Quality earned coverage, message pull-through and owned proof-page visits. |
+| Month 4 | Launch | Existing customers and consumer audiences | Household launch story continues through owned proof and social reinforcement. | The Invisible Thread starts at home. | Needs: Social pack | Owned, shared and paid | Engagement with approved posts, repeat visits to proof pages and service-friction themes tracked. |
+| Month 5 | Sustain | Consumer customers and the critical urban audience | Household Proof Series begins, with the Conversation Management loop running as the always-on baseline. | Vivacom is strongest when it proves the household relationship people already use. | Needs: Fact sheet / backgrounder | Owned, shared and earned | Repeat visits, earned use of approved proof and tracker movement on affinity. |
+| Month 6 | Sustain | Regulators, media, government and parent-group stakeholders | Reach explainer push, with The Observatory newsroom running as the always-on baseline. | Vivacom can show reach through coverage-experience proof, not through broad network claims. | Needs: Infographics & imagery | Owned, earned and paid amplification | Share of coverage using approved reach wording and absence of unsupported network claims. |
+| Month 7 | Sustain | Existing customers and service teams | Service Moment Response Lines refresh, with the Conversation Management loop running as the always-on baseline. | Service moments prove the idea in public. | Needs: Q&A (questions and answers) / FAQ (frequently asked questions) | Owned, shared and earned response | Speed of approved response, customer understanding and reduction in repeated issue themes. |
+| Month 8 | Sustain | Consumer customers and credible third parties | Advertorial and expert proof moment, with The Observatory newsroom running as the always-on baseline. | The household relationship is Vivacom's first proof. | Needs: Advertorial outline | Earned, owned and paid | Third-party proof use, time on owned explanation pages and message recall. |
+| Month 9 | Sustain | Existing customers, employees and service teams | Quiet month with always-on household and service proof only. | Vivacom keeps The Invisible Thread working from the home outward. | Needs: Social pack | Owned and shared | Baseline engagement, service-update sentiment and recurring customer questions. |
+| Month 10 | Amplify | Business buyers, public-sector customers and municipalities | Proof travels beyond the home through named institution stories once cleared. | The same proof logic carries from the home to workplaces, municipalities and public services. | Needs: Event / experiential kit | Earned, owned, events and stakeholder briefings | Cleared case participation, stakeholder engagement and qualified business or public-sector interest. |
+| Month 11 | Amplify | Parent-group stakeholders, media and professional influencers | Credible third-party amplification, with The Observatory newsroom running as the always-on baseline. | Useful relationships are stronger than broad claims about size. | Needs: 30-second pitch | Earned, stakeholder briefings and shared | Influencer use of approved language, earned quality and absence of do-not-say breaches. |
+| Month 12 | Amplify | Executive, communications, service and stakeholder teams | Year-close scorecard and next-cycle recalibration, with the Conversation Management loop running as the always-on baseline. | The Invisible Thread works when proof is visible. | Needs: Key-Message Table (KMT) | Owned and executive reporting | Executive scorecard completed with paid, earned, shared, owned, service and reputation measures. |
+
+FULL PAGE CONTEXT
+Use this only to detect relationships or contradictions involving the unit. Every returned quote must still come from UNIT TEXT.
+# Execution Toolkit
+
+The bridge from an approved strategy to activity on the ground: a self-contained pack any team, market or partner can run to the same standard, without the strategist in the room.
+
+**10 of 10 assets still to be produced.** They are listed as such rather than implied to exist.
+
+**Not approved.** The assets and the do-not-say lines are a person's to approve, and no owner has.
+
+## A · The strategic foundation
+
+**Platform recap.** The platform is So You Can, launched through The Invisible Thread. Vivacom shows how it keeps daily digital life working from the household outward, so people can live, work, watch, pay, study and stay close to family without thinking about the system behind it.
+
+**Story skeleton.** Insight: People judge digital connection in ordinary moments: the home internet works, the television plays, the bill is clear, the app payment goes through, and help is there when something breaks. · Reason to Believe: Vivacom can prove one daily relationship through fixed internet, pay television, coverage-experience reach and service moments. · Benefit: People can get on with daily life because the connection stays useful, clear and supported. · Proof: The source material cites Vivacom's 2024 fixed internet subscriber share, about 60% pay-television subscriber share, OpenSignal coverage-experience strength in January 2026, and visible service touchpoints such as bills, app payments, outages and help.
+
+**Strategy recap.** The plan is earned-led because corporate reputation needs third-party proof. Owned channels hold the full proof, shared channels carry customer, employee and community proof, and paid channels selectively drive reach and action. The story starts at home, then extends to workplaces, municipalities and public services only when proof is named, current and cleared.
+
+## B · The plan
+
+### Pre-Seed / Tease
+
+**Objective.** Lock proof, claims and internal lines before any public launch activity.
+
+**Audience.** Employees, service teams, leaders, Legal and Regulatory Affairs, media contacts and priority stakeholders.
+
+**Messages.** Vivacom keeps The Invisible Thread working, So You Can get on with daily life. · Reach is proved carefully, not claimed broadly. · Every service moment is where The Invisible Thread is either proved or broken in public.
+
+**Activities.** Clear claim language for reach, service and household proof. · Prepare spokesperson materials, the question and answer pack, the fact sheet and service response lines. · Brief internal teams on the approved language and the do-not-say guardrails.
+
+### Launch
+
+**Objective.** Introduce So You Can and The Invisible Thread through a credible household story led by earned media.
+
+**Audience.** Existing customers, with Maya as the first believer, plus media, consumer audiences and the critical urban audience.
+
+**Messages.** The Invisible Thread starts at home. · Vivacom is strongest when it proves the household relationship people already use. · The household relationship is Vivacom's first proof.
+
+**Activities.** Issue the launch press release after sign-off. · Place the first household story through earned media. · Drive readers to owned proof pages with selective paid support. · Publish social assets that use approved lines and point back to proof.
+
+### Sustain
+
+**Objective.** Keep the idea visible through recurring household, service and reach proof.
+
+**Audience.** Existing customers, consumer customers, employees, service teams, regulators, media and government stakeholders.
+
+**Messages.** Vivacom keeps The Invisible Thread working from the home outward. · Coverage-experience proof supports reach, not speed, reliability or quality. · Service moments prove the idea in public.
+
+**Activities.** Run the Household Proof Series on owned channels. · Maintain the Conversation Management loop every day. · Use The Observatory newsroom to enter relevant moments with cleared lines. · Publish short service explainers for common customer questions.
+
+### Amplify
+
+**Objective.** Extend the proof from homes to workplaces, municipalities and public services when evidence is cleared.
+
+**Audience.** Business buyers, public-sector customers, municipalities, employees, parent-group stakeholders and credible third parties.
+
+**Messages.** The same proof logic carries from the home to workplaces, municipalities and public services. · Useful relationships are stronger than broad claims about size. · The Invisible Thread works when proof is visible.
+
+**Activities.** Publish named case stories only after partner and claim clearance. · Equip spokespeople and credible third parties with approved proof. · Use events and earned stories to show how the proof travels beyond the household. · Review performance and recalibrate each quarter.
+
+### The editorial calendar
+
+Every slot ties a moment to a message and a ready asset.
+
+| month | phase | audience track | moment | key message | asset | channel | KPI (key performance indicator) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Month 1 | Pre-Seed / Tease | Internal alignment and claim clearance | Proof lock and sign-off preparation, with the Conversation Management loop running as the always-on baseline. | Reach is proved carefully, not claimed broadly. | Needs: Key-Message Table (KMT) | Owned and internal | All priority claims mapped to approved proof and Legal and Regulatory Affairs review status recorded. |
+| Month 2 | Pre-Seed / Tease | Employees, service teams and leaders | Internal briefing before public launch, with The Observatory newsroom running as the always-on baseline. | Every service moment is where The Invisible Thread is either proved or broken in public. | Needs: Spokesperson materials | Owned and internal | Briefed teams use approved language in service, leadership and media preparation. |
+| Month 3 | Launch | Existing customers and media | Earned-led public launch of So You Can and The Invisible Thread. | Vivacom keeps The Invisible Thread working, So You Can get on with daily life. | Needs: Press release | Earned, owned, shared and selective paid | Quality earned coverage, message pull-through and owned proof-page visits. |
+| Month 4 | Launch | Existing customers and consumer audiences | Household launch story continues through owned proof and social reinforcement. | The Invisible Thread starts at home. | Needs: Social pack | Owned, shared and paid | Engagement with approved posts, repeat visits to proof pages and service-friction themes tracked. |
+| Month 5 | Sustain | Consumer customers and the critical urban audience | Household Proof Series begins, with the Conversation Management loop running as the always-on baseline. | Vivacom is strongest when it proves the household relationship people already use. | Needs: Fact sheet / backgrounder | Owned, shared and earned | Repeat visits, earned use of approved proof and tracker movement on affinity. |
+| Month 6 | Sustain | Regulators, media, government and parent-group stakeholders | Reach explainer push, with The Observatory newsroom running as the always-on baseline. | Vivacom can show reach through coverage-experience proof, not through broad network claims. | Needs: Infographics & imagery | Owned, earned and paid amplification | Share of coverage using approved reach wording and absence of unsupported network claims. |
+| Month 7 | Sustain | Existing customers and service teams | Service Moment Response Lines refresh, with the Conversation Management loop running as the always-on baseline. | Service moments prove the idea in public. | Needs: Q&A (questions and answers) / FAQ (frequently asked questions) | Owned, shared and earned response | Speed of approved response, customer understanding and reduction in repeated issue themes. |
+| Month 8 | Sustain | Consumer customers and credible third parties | Advertorial and expert proof moment, with The Observatory newsroom running as the always-on baseline. | The household relationship is Vivacom's first proof. | Needs: Advertorial outline | Earned, owned and paid | Third-party proof use, time on owned explanation pages and message recall. |
+| Month 9 | Sustain | Existing customers, employees and service teams | Quiet month with always-on household and service proof only. | Vivacom keeps The Invisible Thread working from the home outward. | Needs: Social pack | Owned and shared | Baseline engagement, service-update sentiment and recurring customer questions. |
+| Month 10 | Amplify | Business buyers, public-sector customers and municipalities | Proof travels beyond the home through named institution stories once cleared. | The same proof logic carries from the home to workplaces, municipalities and public services. | Needs: Event / experiential kit | Earned, owned, events and stakeholder briefings | Cleared case participation, stakeholder engagement and qualified business or public-sector interest. |
+| Month 11 | Amplify | Parent-group stakeholders, media and professional influencers | Credible third-party amplification, with The Observatory newsroom running as the always-on baseline. | Useful relationships are stronger than broad claims about size. | Needs: 30-second pitch | Earned, stakeholder briefings and shared | Influencer use of approved language, earned quality and absence of do-not-say breaches. |
+| Month 12 | Amplify | Executive, communications, service and stakeholder teams | Year-close scorecard and next-cycle recalibration, with the Conversation Management loop running as the always-on baseline. | The Invisible Thread works when proof is visible. | Needs: Key-Message Table (KMT) | Owned and executive reporting | Executive scorecard completed with paid, earned, shared, owned, service and reputation measures. |
+
+## C · The messages & assets
+
+### Message tracks
+
+#### Existing customers, with Maya as the first believer
+
+**Insight.** Existing customers judge Vivacom through ordinary household moments: internet, television, bills, app payments, outages and help.
+
+**Benefit.** They see Vivacom as useful and warmer because the promise is shown in daily life.
+
+**Proof.** The approved brief names existing customers as the primary first-believer audience and says Vivacom under-indexes on warmth.
+
+**What they will say.** Vivacom keeps The Invisible Thread working, So You Can get on with daily life.
+
+**What they will see.** A named household story, clear service explainers, proof pages and social posts that connect home internet, television, bills, app payments and help.
+
+#### Consumer customers and the critical urban audience
+
+**Insight.** Vivacom is most believable when it proves the relationship people already use every day.
+
+**Benefit.** They understand the household relationship as Vivacom's first proof, not a broad claim about size.
+
+**Proof.** The International Comparative Legal Guides report Vivacom at 39.4% of fixed internet subscribers and about 60% of pay-television subscribers in 2024.
+
+**What they will say.** Vivacom is strongest when it proves the household relationship people already use.
+
+**What they will see.** Recurring household stories, customer-service facts, product proof and approved paid, owned and shared lines.
+
+#### Regulators, media, government and parent-group stakeholders
+
+**Insight.** Coverage-experience proof can support reach, but it cannot support claims about speed, reliability or overall quality.
+
+**Benefit.** They see a disciplined proof story that respects claim boundaries.
+
+**Proof.** OpenSignal says Vivacom dominated coverage experience in January 2026, while A1 was fastest and Yettel led reliability and time on network.
+
+**What they will say.** Vivacom can show reach through coverage-experience proof, not through broad network claims.
+
+**What they will see.** Claim-cleared explainers, media lines, source notes and approved responses to competitor comparisons.
+
+#### Employees, service teams and leaders
+
+**Insight.** A service issue can prove or break The Invisible Thread in public.
+
+**Benefit.** Teams know that service friction sits inside the promise and must be answered clearly.
+
+**Proof.** The Research and Insight Pack records app reviews, Trustpilot criticism, contract penalties, outages and data-protection pressure as visible friction.
+
+**What they will say.** Every service moment is where The Invisible Thread is either proved or broken in public.
+
+**What they will see.** Plain-language updates that say what happened, who it affects, what Vivacom is doing and what changes for customers.
+
+#### Business buyers, public-sector customers, municipalities, employees and parent-group stakeholders
+
+**Insight.** The household proof logic can travel only when workplace, municipal and public-service examples are named, current and cleared.
+
+**Benefit.** They see the idea extend beyond the home through useful relationships, not through claims about total leadership.
+
+**Proof.** The Strategy One-Pager states that the idea starts with Maya at home, then extends the same proof logic to employees, business buyers, municipalities, regulators, media and parent-group stakeholders.
+
+**What they will say.** The same proof logic carries from the home to workplaces, municipalities and public services.
+
+**What they will see.** Cleared case stories from business customers, local services, schools, institutions and employees.
+
+Spokespeople are trained to deliver them consistently before anything publishes; the tracks above are their training set.
+
+### The collateral library
+
+| asset | purpose | status |
+| --- | --- | --- |
+| Key-Message Table (KMT) | Hold the approved umbrella message, audience messages, proof points and do-not-say guardrails in one working table. | to be produced |
+| Press release | Launch So You Can and The Invisible Thread through an earned-led household story. | to be produced |
+| 30-second pitch | Give spokespeople one short, approved way to explain the platform in meetings, briefings and media conversations. | to be produced |
+| Advertorial outline | Structure a proof-led paid or partner story without drifting into unsupported network or size claims. | to be produced |
+| Q&A / FAQ | Answer expected questions about reach, service moments, household proof and claim boundaries in plain language. | to be produced |
+| Fact sheet / backgrounder | Give media and stakeholders the approved facts behind fixed internet, pay television, reach and service proof. | to be produced |
+| Social pack | Carry approved household, service and proof messages across shared channels and point people back to owned proof. | to be produced |
+| Infographics & imagery | Show the household relationship, coverage-experience reach boundary and proof logic in simple visual form. | to be produced |
+| Spokesperson materials | Prepare leaders and spokespeople to use the approved story, proof and guardrails consistently. | to be produced |
+| Event / experiential kit | Help teams show The Invisible Thread through cleared household, workplace, municipal or public-service moments. | to be produced |
+
+## D · Activation & execution
+
+- Channel activation guidelines across paid, earned, shared and owned
+- Influencer and creator activation, including disclosure
+- Localisation guidance — what is fixed and what is locally adaptable
+- Execution and lifecycle guidance, including who does what
+
+## The build workflow — assembling the toolkit
+
+| step | what you do | output |
+| --- | --- | --- |
+| 1 Recap the platform | Distil the approved strategy to a one-page foundation the toolkit can stand on | Platform + story skeleton |
+| 2 Phase the plan | Break the roadmap into Pre-Seed → Launch → Sustain → Amplify with objectives per phase | Phased plan |
+| 3 Build the calendar | Lay the messages and moments onto a month-by-month calendar per audience track | Editorial calendar |
+| 4 Write the message tracks | Turn key messages into audience-ready copy, incl. what they'll say and see | Message tracks |
+| 5 Produce the collateral | Create the ready-to-use assets from templates | Collateral library |
+| 6 Write the guidelines | Channel, influencer, localisation, logistics, measurement, governance | Activation guidelines |
+| 7 Package & QA (quality assurance) | Assemble; run the pre-publish quality gate; version and distribute | The toolkit |
+
+## Influencer and creator activation
+
+A repeatable way to activate creators, with the targets stated up front rather than negotiated each time.
+
+**Targets, per creator.** 1 blog / long post · 3–5 social updates over ~14 days · 2–3 posts per day during a live challenge · an agreed number of pieces committed up front
+
+**Golden rules.** be relevant & targeted · crowd-source their expertise · personalise — never cut-and-paste · make it easy — ready assets, local adaptation · be transparent and require disclosure of gifted product · be persistent with relevance
+
+## Localisation — global toolkit → local markets
+
+One core toolkit of channel-agnostic assets that local markets adapt. What is fixed and what is flexible is marked here, because a market that is not told will decide for itself.
+
+**Fixed.** the platform · the narrative · the do-not-say lines · a small global KPI set
+
+**Flexible.** local hooks · spokespeople · language · local proof · market-specific tactics
+
+## Measurement — wired in, not an afterthought
+
+**Tagging.** Every asset carries a campaign ID and UTM (urchin tracking module) code in this format: vivacom_so-you-can_invisible-thread_[audience-track]_[phase]_[asset]_[channel]_[month]. Use lowercase words and hyphens, and keep the same audience-track, phase, asset, channel and month names across reports.
+
+**Cadence.** Paid activity is checked daily while live. Headline KPIs are reviewed weekly. The executive scorecard closes the year with paid, earned, shared, owned, service and reputation results.
+
+**Levels.** [{'level': 'Output', 'measure': 'Assets produced, approved and published by phase, channel and audience track.'}, {'level': 'Outtake', 'measure': 'Message recall, approved wording pull-through, proof understanding and absence of do-not-say breaches.'}, {'level': 'Outcome', 'measure': 'Movement in affinity, trust, service sentiment, quality earned attention, owned proof-page visits and issue-theme reduction.'}]
+
+## Governance & the pre-publish gate
+
+**Do not say.**
+- Do not say coverage means speed, reliability or quality.
+- Do not say Vivacom is the best network, fastest network or most reliable network in Bulgaria.
+- Do not say Vivacom is total technology leader or ask people to admire its size.
+- Do not say service friction is a side issue.
+- Do not use the old BTK (the former state-monopoly telecom name in Bulgaria) frame as the story.
+
+**Legal and disclosure.** Nothing publishes until the owner approves the story and proof in writing. Legal and Regulatory Affairs must clear every public claim, source note and comparison before release, especially any OpenSignal coverage-experience wording. Partner, workplace, municipal and public-service examples need written approval from the named party before use.
+
+**The pre-publish checklist.** Self-contained · every phase has its objective, audience, messages and activities · message tracks are audience-specific with insight, benefit and proof · the collateral library is complete and on-template · fixed vs flexible is clear · measurement is wired in · governance is in place · versioned for distribution.
+
+**Crisis tripwire.** Litigation, disclosure, deal, restructuring, life-safety and regulatory triggers escalate to a senior person before anything publishes.
+
+**Data and AI (artificial intelligence).** Material non-public information never enters AI tools; #noAI defaults apply for restricted clients.
+
+## Execution logistics — how the work actually runs
+
+### The content lifecycle
+
+- **CREATE** — brief & produce assets from the toolkit templates
+- **ROLL OUT** — publish per the calendar, across PESO (Paid, Earned, Shared, Owned)
+- **AMPLIFY** — boost reach, activate influencers & advocates
+- **LISTEN & RESPOND** — monitor, run the newsroom, optimise on live signals
+
+**Roles (RACI (Responsible, Accountable, Consulted, Informed) — Responsible, Accountable, Consulted, Informed).** Who briefs, creates, approves, publishes and reports each asset. **Always-on newsroom:** a standing team for real-time stories and issues. **Approvals:** the sign-off path (incl. legal / client) before anything publishes.
+
+No names are recorded against these roles. They are the client's to assign.
+
+## Open — waiting on a person
+
+- **Are these assets and these do-not-say lines approved?** — not yet; no owner recorded.
+- **Who holds each RACI role?** — not yet assigned.
+
+## Client Style Note applied
+
+- **tone:** Vivacom's own voice is direct, service-led, and confident. It often opens with the customer benefit, then supports it with network scale, product detail, or programme proof.
+- **sentence length:** The client uses mostly short to medium sentences in public-facing copy, with longer sentences when it lists service features, coverage figures, or programme details.
+- **vocabulary:** The client's vocabulary centres on connectivity, customers, digital services, innovation, technology, coverage, speed, education, skills, entertainment, support, and Bulgaria's digital development.
+- **self reference:** Vivacom refers to itself by the brand name, by the company name, and through first-person plural forms in Bulgarian when it wants a warmer social or employer tone.
+- **signature do words:** customers, digital services, connectivity, coverage, technology, innovation, education, skills, support, Bulgaria
+- **signature dont words:** world-class, best-in-class, game-changing, state utility, former monopoly, price war, political positioning
+- **sources:** https://www.vivacom.bg/za-nas/za-kompaniyata, https://www.vivacom.bg/za-nas/novini, https://www.vivacom.bg/za-nas/sotsialna-otgovornost, https://www.vivacom.bg/za-nas/karieri, https://www.vivacom.bg/pomosht/kontakti, https://www.vivacom.bg/business/satelitni-uslugi
+- **long form voice:** Not yet calibrated: no long-form writing of the client's own has been read.
+
+
+codex
+{"judgments":[{"lens":"cfo","verdict":"fine"},{"lens":"benchmark-vs-reference","verdict":"fine"},{"lens":"upstream-trace","verdict":"fine"}]}
+codex
+{"judgments":[{"lens":"cfo","verdict":"fine"},{"lens":"benchmark-vs-reference","verdict":"fine"},{"lens":"upstream-trace","verdict":"fine"}]}
+tokens used
+21,486

@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "806dbbc2de7eaafe8eb89677a0eddaf863aa4087a3844f7de4beac44511b1ef9",
+  "atom_run_id": "563b2257a29fdc192a10dfc8a820b5785560ab995789ebe4554e13c884dda79d",
+  "atomic_step_id": "critique-grounded-verdict",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441"
+}

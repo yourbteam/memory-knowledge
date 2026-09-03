@@ -1,0 +1,10 @@
+{
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/manifest.json",
+  "probe_requests": [
+    {
+      "probe_id": "verdict-contract",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/cross-verdict-contract.json"
+    }
+  ],
+  "schema_version": 1
+}

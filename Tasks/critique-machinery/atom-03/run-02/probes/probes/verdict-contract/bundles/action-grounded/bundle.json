@@ -1,0 +1,78 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "action-grounded",
+    "atomic_step_id": "critique-grounded-verdict",
+    "development_manifest_sha256": "64844baaff0456ed24e27880d5b790745f5301c4a03d19bf32f8c90f899b22f2",
+    "probe_id": "verdict-contract"
+  },
+  "inputs": {
+    "case_ids": [
+      "stale-door-red",
+      "stale-door-green",
+      "calendar-red",
+      "calendar-green"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "11f42100e429631dcb6f75846f4965b8c5b417d57dcdc83c63521a2b3c6cc7cb",
+        "size": 22146
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+        "size": 2245
+      }
+    ],
+    "baseline_sha256": "5bc11cf3bb67aef97fe2aa39e31303a3734256793dd94dd71e390bbb911f9d4f",
+    "candidate_sha256": "8feee755c6d628c6d47d6343446c74a6a26a8082d0e831cd5d34425c8ec34026",
+    "changed_paths": [
+      "skills/critique-machinery/scripts/critique.py",
+      "tests/test_critique_machinery.py"
+    ],
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "7f8e67f3f562012c6f74ab7636aac67367ddaf10b125240f51e4b5132f7c2484",
+        "size": 29624
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "4f5b97e1a274dd3b8a05c9fc2b41f2815a2ba329b62d78cf4983d4beb246377a",
+        "size": 3470
+      }
+    ],
+    "root": "source"
+  }
+}

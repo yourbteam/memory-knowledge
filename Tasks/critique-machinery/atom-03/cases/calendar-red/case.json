@@ -1,0 +1,8 @@
+{
+  "case_id": "calendar-red",
+  "pair_id": "calendar-coverage",
+  "payload_key": "context.up.cd_s_002.execution_toolkit",
+  "expected_quality": "defective",
+  "recorded_defect": "The first Step 9 delivery contains nine calendar rows and skips months 7, 9, and 11.",
+  "applicable_lenses": ["cfo", "benchmark-vs-reference", "upstream-trace"]
+}

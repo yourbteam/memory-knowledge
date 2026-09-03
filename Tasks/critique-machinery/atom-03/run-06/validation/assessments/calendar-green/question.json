@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75",
+  "atomic_outcome": "One matrix cell records a discriminating fixed verdict plus an exact unit quote, and refuses invented evidence.",
+  "atomic_step_id": "critique-grounded-verdict",
+  "case_id": "calendar-green",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/validation/executions/calendar-green/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/validation/executions/calendar-green/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/validation/executions/calendar-green/telemetry.jsonl",
+      "sha256": "99a507abf82ddff44ca2ed6d1efba8c75d5595d272fc78b76485c11ee0ee92fa"
+    }
+  ],
+  "expected_outcome": "The same lenses clear the corrected twelve-month calendar.",
+  "operator_path": "open each frozen page, select its recorded-defect unit, run each assigned lens through codex exec, and record each cell through judge",
+  "overall_criterion": "Every real case is classified correctly with an exact actionable quote, and an invented quote refuses.",
+  "schema_version": 1
+}

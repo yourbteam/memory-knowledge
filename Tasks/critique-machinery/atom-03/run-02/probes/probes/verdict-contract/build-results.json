@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "approach_id": "binary-groundless",
+      "bundle": "bundles/binary-groundless",
+      "bundle_sha256": "b869025a68e58847d2c437dfec56175bd27a883b17eb2e7c6697a25a060f2d8f",
+      "candidate_sha256": "9020a75688737dfb30c8b8bf071e9e78e955d0c1fabd814b6a989a7a61872b18",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "error": null,
+      "probe_id": "verdict-contract",
+      "status": "built"
+    },
+    {
+      "approach_id": "action-grounded",
+      "bundle": "bundles/action-grounded",
+      "bundle_sha256": "8dd78d0a1d48aaf1013b3d550f9a9934175672cf2f3b36445f5cb815957a6d60",
+      "candidate_sha256": "8feee755c6d628c6d47d6343446c74a6a26a8082d0e831cd5d34425c8ec34026",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "error": null,
+      "probe_id": "verdict-contract",
+      "status": "built"
+    }
+  ],
+  "schema_version": 1
+}

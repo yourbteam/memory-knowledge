@@ -58,3 +58,29 @@ authorized the next atom at proof event
 
 **Cost.** Four local Development-Probe cycles, two implementations × two captured cases; no model
 calls. The additional final assessment reused the already selected fourth-cycle assembly.
+
+## Atom 3 — grounded verdict — 2026-09-03
+
+**Outcome.** A critique cell now accepts only `reject`, `revise`, or `clear`, and every accepted
+verdict carries words copied from its own immutable unit. Fabricated or cross-unit quotations are
+refused before they can enter state.
+
+**Experiment.** Six bounded cycles are preserved in `atom-03/run-01/` through `run-06/`. Asking
+the model to copy prose was semantically useful but mechanically brittle: corrected pages were
+occasionally over-criticized, and otherwise sound judgments sometimes joined non-contiguous
+source fragments. The selected `action-grounded` approach makes the model identify a source line
+span and lets code copy those exact words. On the unchanged stale-door and calendar red/green
+pairs it achieved 14/14 lens discriminations, 14/14 grounded verdicts, 14/14 actionable handoffs,
+and refused 4/4 fabricated quotes. `binary-groundless` discriminated 14/14 but grounded and
+actionable scores remained zero and it refused none of the fabricated quotes.
+
+**Promotion.** The controller recorded selected assembly SHA-256
+`1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75`.
+
+**Real operator path.** `atom-03/operator-validation/` records the promoted CLI reopening all four
+real cases, accepting their run-06 judgments, and refusing a fabricated quotation in every case.
+The atom controller authorized the next atom at proof event
+`1a1d1455ab2ea227d45a041564e46d649a880ded013210749150b440842cff5b`.
+
+**Cost.** Six Development-Probe cycles, two approaches × four captured cases: 48 Codex model calls.
+All cases were unchanged real artifacts; no synthetic evaluation case was introduced.

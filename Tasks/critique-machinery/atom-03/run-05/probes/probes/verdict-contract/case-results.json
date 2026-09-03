@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "case_id": "stale-door-red",
+      "output": "cases/stale-door-red",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "stale-door-green",
+      "output": "cases/stale-door-green",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "calendar-red",
+      "output": "cases/calendar-red",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "calendar-green",
+      "output": "cases/calendar-green",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

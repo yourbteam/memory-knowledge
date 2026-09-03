@@ -1,0 +1,19 @@
+{
+  "case_id": "calendar-green",
+  "expected_judgment_count": 3,
+  "invalid_quote_error": "critique refused: quote for cell 'u-008-eb8c85bd::cfo' is not present in unit 'u-008-eb8c85bd' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+  "invalid_quote_refused": true,
+  "judgment_count": 3,
+  "opened": {
+    "status": "opened",
+    "units": 26,
+    "work": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/operator-validation/runs/calendar-green"
+  },
+  "quotes_grounded": true,
+  "source_model_evidence": "Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/calendar-green/experiment/variants/variation-2/result.json",
+  "verdicts": [
+    "clear",
+    "clear",
+    "clear"
+  ]
+}

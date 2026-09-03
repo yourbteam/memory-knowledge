@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "critique-grounded-verdict",
+  "baseline_sha256": "fcd16b70217133603d609c13c570c92e049c397670672785ac43ece1972ae7ca",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "1d8efd9084838a86c33edca6c56c196cf50b0261b76dd06c39514f263aa8af69",
+      "before_mode": 420,
+      "before_sha256": "11f42100e429631dcb6f75846f4965b8c5b417d57dcdc83c63521a2b3c6cc7cb",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "4f5b97e1a274dd3b8a05c9fc2b41f2815a2ba329b62d78cf4983d4beb246377a",
+      "before_mode": 292,
+      "before_sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+      "kind": "changed",
+      "path": "tests/test_critique_machinery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

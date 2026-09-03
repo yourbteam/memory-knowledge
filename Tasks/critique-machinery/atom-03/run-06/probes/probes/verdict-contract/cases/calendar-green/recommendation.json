@@ -1,0 +1,14 @@
+{
+  "approach_id": "action-grounded",
+  "atomic_step_id": "critique-grounded-verdict",
+  "bundle": "../../bundles/action-grounded",
+  "bundle_sha256": "91b909249988f2a6de8d9e077b18dff33dba306b5b26b749f2d0548acfdcb1af",
+  "case_id": "calendar-green",
+  "experiment_id": "development-probe-c88ae2491cea0552d651",
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "variation-2"
+}

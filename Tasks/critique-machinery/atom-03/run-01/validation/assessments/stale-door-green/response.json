@@ -1,0 +1,8 @@
+{
+  "case_id": "stale-door-green",
+  "evidence_pointers": [
+    "candidate-telemetry"
+  ],
+  "reason": "Observed correct classifications=0/4, grounded=4/4, actionable=4/4, invalid quote refusal=True.",
+  "verdict": "not-satisfied"
+}

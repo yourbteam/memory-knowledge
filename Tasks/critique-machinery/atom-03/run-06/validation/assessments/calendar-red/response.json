@@ -1,0 +1,8 @@
+{
+  "case_id": "calendar-red",
+  "evidence_pointers": [
+    "candidate-telemetry"
+  ],
+  "reason": "Observed correct classifications=3/3, grounded=3/3, actionable=3/3, invalid quote refusal=True.",
+  "verdict": "satisfied"
+}

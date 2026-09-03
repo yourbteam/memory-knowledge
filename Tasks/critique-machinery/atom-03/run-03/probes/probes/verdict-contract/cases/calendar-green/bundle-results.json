@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "approach_id": "binary-groundless",
+      "bundle": "../../bundles/binary-groundless",
+      "bundle_sha256": "6cbdcca7c62d09902fe6646be57fd744b5732bfbed64bccef90579ab4265c597",
+      "candidate_sha256": "f422a68698deeb399faca9a231d7fe99b7fc840b78e15b25d887abbed8bad6aa",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "error": null,
+      "probe_id": "verdict-contract",
+      "status": "reused"
+    },
+    {
+      "approach_id": "action-grounded",
+      "bundle": "../../bundles/action-grounded",
+      "bundle_sha256": "07c79e965e447821d6fb5b2919fde779b3839a827f4c8b7cfa8bf53bdff54ade",
+      "candidate_sha256": "8eaeba92411aa218838625d9785b2de78946401a5931c6655332ca9078c38aa4",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "error": null,
+      "probe_id": "verdict-contract",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

@@ -1,0 +1,18 @@
+{
+  "approach_id": "action-grounded",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/manifest.json",
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "probe_id": "verdict-contract",
+  "schema_version": 1,
+  "source": {
+    "baseline": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/baseline",
+    "candidate": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/action-grounded",
+    "entrypoint": "skills/critique-machinery/scripts/critique.py"
+  }
+}

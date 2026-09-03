@@ -1,0 +1,147 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "Every assigned lens identifies the recorded decision contradiction.",
+        "id": "stale-door-red",
+        "kind": "failure",
+        "sha256": "959b0437e41c1da875ab6961e3253bb8e8e30d4f58f8d61c4151f559ff178ea4",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/stale-door-red.tar"
+      },
+      {
+        "expected_outcome": "The same lenses clear the corrected recorded decision.",
+        "id": "stale-door-green",
+        "kind": "success",
+        "sha256": "dec550f254567164e55398f1147e0cfe52732e0c73aa80031c53bc4cf051aa93",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/stale-door-green.tar"
+      },
+      {
+        "expected_outcome": "Every assigned lens identifies the recorded incomplete annual calendar.",
+        "id": "calendar-red",
+        "kind": "failure",
+        "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-red.tar"
+      },
+      {
+        "expected_outcome": "The same lenses clear the corrected twelve-month calendar.",
+        "id": "calendar-green",
+        "kind": "success",
+        "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-green.tar"
+      }
+    ],
+    "id": "critique-grounded-verdict",
+    "outcome": "One matrix cell records a discriminating fixed verdict plus an exact unit quote, and refuses invented evidence.",
+    "practical_value": "Each criticism names the delivered words that caused it, while corrected real pages receive different verdicts.",
+    "stopping_condition": "All seven lenses discriminate their assigned real red/green pair, every accepted verdict is grounded, and invalid quotes refuse."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use the selected verdict vocabulary, quote admission, and model-backed experiment path unchanged.",
+    "consumes": [
+      {
+        "artifact": "grounded-verdict-contract",
+        "probe_id": "verdict-contract"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "failure_criterion": "Any case is misclassified, ungrounded, non-actionable, or admits invented words.",
+      "operator_path": "open each frozen page, select its recorded-defect unit, run each assigned lens through codex exec, and record each cell through judge",
+      "success_criterion": "Every real case is classified correctly with an exact actionable quote, and an invented quote refuses."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A weak-or-fine verdict alone discriminates defects with less response burden.",
+          "id": "binary-groundless",
+          "implementation": "Accept weak/fine without a quote and run the reader with a verdict-only schema.",
+          "predicted_tradeoff": "Cheap classification, but no page words are handed to the operator and invented evidence cannot be rejected."
+        },
+        {
+          "hypothesis": "Reject/revise/clear plus an exact unit quote preserves discrimination and yields actionable evidence.",
+          "id": "action-grounded",
+          "implementation": "Require an allowed action verdict and an exact whitespace-collapsed quote of at least 25 characters or the whole short unit.",
+          "predicted_tradeoff": "Stricter responses and more model tokens, but every call is located in immutable page language."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "lens-discrimination"
+          },
+          {
+            "method": "sum",
+            "name": "grounded-verdicts"
+          },
+          {
+            "method": "sum",
+            "name": "actionable-handoffs"
+          },
+          {
+            "method": "sum",
+            "name": "invalid-quote-refusal"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "lens-discrimination"
+          },
+          {
+            "direction": "maximize",
+            "name": "grounded-verdicts"
+          },
+          {
+            "direction": "maximize",
+            "name": "actionable-handoffs"
+          },
+          {
+            "direction": "maximize",
+            "name": "invalid-quote-refusal"
+          }
+        ]
+      },
+      "goal": "Select a fixed verdict and grounding contract that discriminates recorded real defects from their corrections.",
+      "id": "verdict-contract",
+      "inputs": [
+        {
+          "case_id": "stale-door-red"
+        },
+        {
+          "case_id": "stale-door-green"
+        },
+        {
+          "case_id": "calendar-red"
+        },
+        {
+          "case_id": "calendar-green"
+        }
+      ],
+      "practical_value": "Each criticism names the delivered words that caused it, while corrected real pages receive different verdicts.",
+      "proof": {
+        "failure_criterion": "Any lens gives the same defect state to both twins, any accepted judgment lacks unit words, or an invented quote is stored.",
+        "success_criterion": "All assigned lens verdicts match the recorded red/green status, accepted quotes are exact and actionable, and a fabricated quote refuses."
+      },
+      "winner_output": {
+        "artifact": "grounded-verdict-contract",
+        "description": "The fixed verdict vocabulary, exact quote admission boundary, reader prompt, and judge command."
+      },
+      "work_type": "hybrid",
+      "work_type_reason": "Code owns accepted words and exact-quote admission; a model applies each semantic lens to the frozen unit."
+    }
+  ],
+  "schema_version": 2
+}

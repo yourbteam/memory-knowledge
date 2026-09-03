@@ -1,0 +1,15 @@
+{
+  "aggregated_summary_sha256": "84ce151172fdce22812aad37833a10944b2df0b18bedc5722c4d86ab7288f07d",
+  "atomic_step_id": "critique-grounded-verdict",
+  "case_ids": [
+    "stale-door-red",
+    "stale-door-green",
+    "calendar-red",
+    "calendar-green"
+  ],
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "1e54e8dfacca21139ed78114fabd3e33ed078353335b47533349e310696e237a",
+  "schema_version": 1,
+  "status": "completed"
+}

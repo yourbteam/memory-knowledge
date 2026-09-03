@@ -1,0 +1,23 @@
+{
+  "atomic_step_id": "critique-grounded-verdict",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "approach_id": "action-grounded",
+      "artifact": "grounded-verdict-contract",
+      "bundle": "probes/verdict-contract/bundles/action-grounded",
+      "bundle_sha256": "10643331ab3ebe9b094168a8dd7ad8d66402e3562ec2f7021cdbf10d4d75251a",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "probe_id": "verdict-contract",
+      "recommendation": "probes/verdict-contract/recommendation.json"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "candidates-ready"
+}

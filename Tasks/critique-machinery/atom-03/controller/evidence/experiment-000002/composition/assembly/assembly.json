@@ -1,0 +1,88 @@
+{
+  "baseline_sha256": "5bc11cf3bb67aef97fe2aa39e31303a3734256793dd94dd71e390bbb911f9d4f",
+  "candidates": [
+    {
+      "approach_id": "action-grounded",
+      "artifact": "grounded-verdict-contract",
+      "bundle_sha256": "91b909249988f2a6de8d9e077b18dff33dba306b5b26b749f2d0548acfdcb1af",
+      "probe_id": "verdict-contract"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-grounded-verdict",
+    "development_manifest_sha256": "64844baaff0456ed24e27880d5b790745f5301c4a03d19bf32f8c90f899b22f2"
+  },
+  "inputs": [
+    {
+      "case_id": "stale-door-red",
+      "path": "stale-door-red.input",
+      "sha256": "959b0437e41c1da875ab6961e3253bb8e8e30d4f58f8d61c4151f559ff178ea4",
+      "size": 5294080
+    },
+    {
+      "case_id": "stale-door-green",
+      "path": "stale-door-green.input",
+      "sha256": "dec550f254567164e55398f1147e0cfe52732e0c73aa80031c53bc4cf051aa93",
+      "size": 5300736
+    },
+    {
+      "case_id": "calendar-red",
+      "path": "calendar-red.input",
+      "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+      "size": 3553792
+    },
+    {
+      "case_id": "calendar-green",
+      "path": "calendar-green.input",
+      "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+      "size": 5398528
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "verdict-contract"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "1d8efd9084838a86c33edca6c56c196cf50b0261b76dd06c39514f263aa8af69",
+      "size": 31569
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "verdict-contract"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "4f5b97e1a274dd3b8a05c9fc2b41f2815a2ba329b62d78cf4983d4beb246377a",
+      "size": 3470
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "1d8efd9084838a86c33edca6c56c196cf50b0261b76dd06c39514f263aa8af69",
+        "size": 31569
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "4f5b97e1a274dd3b8a05c9fc2b41f2815a2ba329b62d78cf4983d4beb246377a",
+        "size": 3470
+      }
+    ],
+    "root": "source",
+    "sha256": "8b2e4c978ec2561d811c1e533d6dfec85590ab8be79353abb07918103f16be1d"
+  },
+  "status": "assembled"
+}

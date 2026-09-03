@@ -1,0 +1,14 @@
+{
+  "approach_id": "action-grounded",
+  "atomic_step_id": "critique-grounded-verdict",
+  "bundle": "../../bundles/action-grounded",
+  "bundle_sha256": "07c79e965e447821d6fb5b2919fde779b3839a827f4c8b7cfa8bf53bdff54ade",
+  "case_id": "stale-door-green",
+  "experiment_id": "development-probe-22d5391bac09a2924223",
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "variation-2"
+}

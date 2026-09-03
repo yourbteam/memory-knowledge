@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/cases/calendar-red/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/cases/calendar-red/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/cases/calendar-red/experiment/variants/control/telemetry.jsonl",
+          "sha256": "82ad2090ff54c5fbe8418bafaec8aeccea2aa4e2eb60b784985f37a2d89a0b26"
+        }
+      ],
+      "execution": {
+        "duration_ms": 7958,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "d567b9bed11fda56f23e6121055d788ae898b034aad4c9e0a83d91f389f27332",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/cases/calendar-red/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/cases/calendar-red/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/cases/calendar-red/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "636be08618e871ff1f0c29e7eaa2958f842c4620035cdd280d8def50ec48a16b"
+        }
+      ],
+      "execution": {
+        "duration_ms": 15589,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "f4f75d2c282c66e07180b644f1d2ce896837fd0a9dacb261a4f3885340bb1b5a",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-b211c89a495c9b921e4d",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "lens-discrimination"
+    },
+    {
+      "direction": "maximize",
+      "name": "grounded-verdicts"
+    },
+    {
+      "direction": "maximize",
+      "name": "actionable-handoffs"
+    },
+    {
+      "direction": "maximize",
+      "name": "invalid-quote-refusal"
+    }
+  ],
+  "schema_version": 1
+}

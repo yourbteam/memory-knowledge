@@ -1,0 +1,61 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75",
+        "atomic_step_id": "critique-grounded-verdict",
+        "case_id": "stale-door-red",
+        "evidence_pointers": [
+          "candidate-telemetry"
+        ],
+        "reason": "Observed correct classifications=4/4, grounded=4/4, actionable=4/4, invalid quote refusal=True.",
+        "status": "satisfied"
+      },
+      "case_id": "stale-door-red",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75",
+        "atomic_step_id": "critique-grounded-verdict",
+        "case_id": "stale-door-green",
+        "evidence_pointers": [
+          "candidate-telemetry"
+        ],
+        "reason": "Observed correct classifications=4/4, grounded=4/4, actionable=4/4, invalid quote refusal=True.",
+        "status": "satisfied"
+      },
+      "case_id": "stale-door-green",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75",
+        "atomic_step_id": "critique-grounded-verdict",
+        "case_id": "calendar-red",
+        "evidence_pointers": [
+          "candidate-telemetry"
+        ],
+        "reason": "Observed correct classifications=3/3, grounded=3/3, actionable=3/3, invalid quote refusal=True.",
+        "status": "satisfied"
+      },
+      "case_id": "calendar-red",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75",
+        "atomic_step_id": "critique-grounded-verdict",
+        "case_id": "calendar-green",
+        "evidence_pointers": [
+          "candidate-telemetry"
+        ],
+        "reason": "Observed correct classifications=3/3, grounded=3/3, actionable=3/3, invalid quote refusal=True.",
+        "status": "satisfied"
+      },
+      "case_id": "calendar-green",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,30 @@
+{
+  "approach_bundles": [
+    {
+      "approach_id": "binary-groundless",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/bundles/binary-groundless",
+      "bundle_sha256": "3b6a1c7158940193820ecf822d5654f3098a4e2611177c4908112c96399621f9"
+    },
+    {
+      "approach_id": "action-grounded",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/probes/probes/verdict-contract/bundles/action-grounded",
+      "bundle_sha256": "10643331ab3ebe9b094168a8dd7ad8d66402e3562ec2f7021cdbf10d4d75251a"
+    }
+  ],
+  "case_id": "stale-door-red",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/evaluator.py",
+      "sha256": "306e3e145b3b9258e6ba08b6049e14b564ef55a39539f5b9f278aa001dd14a60"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "verdict-contract",
+  "schema_version": 1
+}

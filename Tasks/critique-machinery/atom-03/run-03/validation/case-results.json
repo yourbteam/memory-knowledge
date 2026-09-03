@@ -1,0 +1,373 @@
+{
+  "completion_order": [
+    "calendar-red",
+    "stale-door-red",
+    "calendar-green",
+    "stale-door-green"
+  ],
+  "results": [
+    {
+      "case_id": "stale-door-red",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/stale-door-red/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/stale-door-red/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/stale-door-red/telemetry.jsonl",
+          "sha256": "40a69d4966465f7a1b323d8eb3166ba820c7763c32577eb55e3f176441936e85"
+        }
+      ],
+      "output": "executions/stale-door-red",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 0,
+          "actual": "judged",
+          "case_id": "stale-door-red",
+          "classification_correct": true,
+          "classification_count": 4,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "defective",
+          "grounded_count": 0,
+          "invalid_quote_error": "",
+          "invalid_quote_refused": false,
+          "judgments": [
+            {
+              "cell_id": "u-001-0067fbb9::buyer-read",
+              "lens": "buyer-read",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-001-0067fbb9::journalist",
+              "lens": "journalist",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-001-0067fbb9::employee-insider",
+              "lens": "employee-insider",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-001-0067fbb9::competitor-counter-position",
+              "lens": "competitor-counter-position",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            }
+          ],
+          "lenses": [
+            "buyer-read",
+            "journalist",
+            "employee-insider",
+            "competitor-counter-position"
+          ],
+          "manifest_sha256": "fec785c42d85cd86f7ad8cde004335e13181c4fccfcb8f04349a1d8ce2852bd2",
+          "pair_id": "stale-door",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "stale-door-green",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/stale-door-green/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/stale-door-green/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/stale-door-green/telemetry.jsonl",
+          "sha256": "afa3c89eb5558a7a6937250f34eec303910ede9991570fd4bd2f31143308dd90"
+        }
+      ],
+      "output": "executions/stale-door-green",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 0,
+          "actual": "judged",
+          "case_id": "stale-door-green",
+          "classification_correct": false,
+          "classification_count": 0,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "corrected",
+          "grounded_count": 0,
+          "invalid_quote_error": "",
+          "invalid_quote_refused": false,
+          "judgments": [
+            {
+              "cell_id": "u-002-0067fbb9::buyer-read",
+              "lens": "buyer-read",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-002-0067fbb9::journalist",
+              "lens": "journalist",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-002-0067fbb9::employee-insider",
+              "lens": "employee-insider",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-002-0067fbb9::competitor-counter-position",
+              "lens": "competitor-counter-position",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            }
+          ],
+          "lenses": [
+            "buyer-read",
+            "journalist",
+            "employee-insider",
+            "competitor-counter-position"
+          ],
+          "manifest_sha256": "1b40c2574e9f5171bc2dd30ab3d6aebc9b2c70b45e89531831cd5972b1f2b24b",
+          "pair_id": "stale-door",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "calendar-red",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/calendar-red/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/calendar-red/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/calendar-red/telemetry.jsonl",
+          "sha256": "a280d128e96ae8955514fba8d92459991feacbc9d90fa8ea3f0ae7966f29b55a"
+        }
+      ],
+      "output": "executions/calendar-red",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 0,
+          "actual": "judged",
+          "case_id": "calendar-red",
+          "classification_correct": true,
+          "classification_count": 3,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "defective",
+          "grounded_count": 0,
+          "invalid_quote_error": "",
+          "invalid_quote_refused": false,
+          "judgments": [
+            {
+              "cell_id": "u-008-2a91bbf4::cfo",
+              "lens": "cfo",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-008-2a91bbf4",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-008-2a91bbf4::benchmark-vs-reference",
+              "lens": "benchmark-vs-reference",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-008-2a91bbf4",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-008-2a91bbf4::upstream-trace",
+              "lens": "upstream-trace",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-008-2a91bbf4",
+              "verdict": "weak",
+              "verdict_strategy": "binary-groundless"
+            }
+          ],
+          "lenses": [
+            "cfo",
+            "benchmark-vs-reference",
+            "upstream-trace"
+          ],
+          "manifest_sha256": "c6f788318cfcfd6f775ac0cc79617ce9ae581ae4066c0cf447f16fc058e2a414",
+          "pair_id": "calendar-coverage",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "calendar-green",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/calendar-green/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/calendar-green/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-03/validation/executions/calendar-green/telemetry.jsonl",
+          "sha256": "744bac7da504df81a8e3bd1707e7f8d5790bc0b11d0254d86e11a04e716736aa"
+        }
+      ],
+      "output": "executions/calendar-green",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 0,
+          "actual": "judged",
+          "case_id": "calendar-green",
+          "classification_correct": true,
+          "classification_count": 3,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "corrected",
+          "grounded_count": 0,
+          "invalid_quote_error": "",
+          "invalid_quote_refused": false,
+          "judgments": [
+            {
+              "cell_id": "u-008-eb8c85bd::cfo",
+              "lens": "cfo",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-008-eb8c85bd",
+              "verdict": "fine",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-008-eb8c85bd::benchmark-vs-reference",
+              "lens": "benchmark-vs-reference",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-008-eb8c85bd",
+              "verdict": "fine",
+              "verdict_strategy": "binary-groundless"
+            },
+            {
+              "cell_id": "u-008-eb8c85bd::upstream-trace",
+              "lens": "upstream-trace",
+              "quote": null,
+              "quote_sha256": null,
+              "status": "judged",
+              "unit_id": "u-008-eb8c85bd",
+              "verdict": "fine",
+              "verdict_strategy": "binary-groundless"
+            }
+          ],
+          "lenses": [
+            "cfo",
+            "benchmark-vs-reference",
+            "upstream-trace"
+          ],
+          "manifest_sha256": "551acc1c344a5d05f9fa88c7e05b81d527c4bd0abfcfff906c1443bec0bf6b6e",
+          "pair_id": "calendar-coverage",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

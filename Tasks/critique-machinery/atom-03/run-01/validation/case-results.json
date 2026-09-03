@@ -1,0 +1,373 @@
+{
+  "completion_order": [
+    "calendar-green",
+    "stale-door-green",
+    "stale-door-red",
+    "calendar-red"
+  ],
+  "results": [
+    {
+      "case_id": "stale-door-red",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/stale-door-red/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/stale-door-red/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/stale-door-red/telemetry.jsonl",
+          "sha256": "bf7dbbd95ba3ba72e981787f5aaa0a570f4c6e62d18de1dbb42dae078df8ec6d"
+        }
+      ],
+      "output": "executions/stale-door-red",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 4,
+          "actual": "judged",
+          "case_id": "stale-door-red",
+          "classification_correct": true,
+          "classification_count": 4,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "defective",
+          "grounded_count": 4,
+          "invalid_quote_error": "quote for cell 'u-001-0067fbb9::buyer-read' is not present in unit 'u-001-0067fbb9' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+          "invalid_quote_refused": true,
+          "judgments": [
+            {
+              "cell_id": "u-001-0067fbb9::buyer-read",
+              "lens": "buyer-read",
+              "quote": "**No approach has been chosen.** The options are below with their evaluation; the choice belongs to a person and no owner is recorded.",
+              "quote_sha256": "e1e359ed463ef7bc06bcb6113d1b59960853df35c42808ef6a02a2a407c603fa",
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-001-0067fbb9::journalist",
+              "lens": "journalist",
+              "quote": "Concept boundary: The fixed concept is useful daily digital life proven from the household outward.",
+              "quote_sha256": "f1c912062c4d90cb70ab5c0991a34b17067af5c35676f364ca970f0c5669f970",
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-001-0067fbb9::employee-insider",
+              "lens": "employee-insider",
+              "quote": "**No approach has been chosen.**",
+              "quote_sha256": "ef3c8a693e6739c5bc51b8250989dd7520e800355e86d16d21db9c2d75b61239",
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-001-0067fbb9::competitor-counter-position",
+              "lens": "competitor-counter-position",
+              "quote": "The one page everything else flows from. A gap here is a gap in the thinking.",
+              "quote_sha256": "d38d20ee0bfde2f47c91329522b0b4a009b4c54be527e4bbfe4cf311ba0f0269",
+              "status": "judged",
+              "unit_id": "u-001-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            }
+          ],
+          "lenses": [
+            "buyer-read",
+            "journalist",
+            "employee-insider",
+            "competitor-counter-position"
+          ],
+          "manifest_sha256": "2b41dbd4fd4ec2d481a70e74d6b2b7726841586eb74397d216c921bbe1dffee3",
+          "pair_id": "stale-door",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "stale-door-green",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/stale-door-green/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/stale-door-green/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/stale-door-green/telemetry.jsonl",
+          "sha256": "4830326c5eaadd55f52708a67b442b1f43b0a08aac1032269fef61ac058b19b1"
+        }
+      ],
+      "output": "executions/stale-door-green",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 4,
+          "actual": "judged",
+          "case_id": "stale-door-green",
+          "classification_correct": false,
+          "classification_count": 0,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "corrected",
+          "grounded_count": 4,
+          "invalid_quote_error": "quote for cell 'u-002-0067fbb9::buyer-read' is not present in unit 'u-002-0067fbb9' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+          "invalid_quote_refused": true,
+          "judgments": [
+            {
+              "cell_id": "u-002-0067fbb9::buyer-read",
+              "lens": "buyer-read",
+              "quote": "The options below show the evaluation it was chosen from.",
+              "quote_sha256": "111f614b0071f9f58ff70918f251fbd8644cdebb3670ec9e0c884dc400e63b8a",
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-002-0067fbb9::journalist",
+              "lens": "journalist",
+              "quote": "Engagement tier: regulated \u2014 the ten boxes of this page are the complete set for this tier.",
+              "quote_sha256": "c230396aae3c01fccae4c7abb8fc135e8d3b9ad52b2bc5d62a9d9c4273019f75",
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-002-0067fbb9::employee-insider",
+              "lens": "employee-insider",
+              "quote": "**The approach is decided:** So You Can, recorded by Maria Bengtsson. The options below show the evaluation it was chosen from.",
+              "quote_sha256": "f535aa68afa2bf43105116969ab88602788e26e7be8cb9d362cf1e5bd5f234cb",
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-002-0067fbb9::competitor-counter-position",
+              "lens": "competitor-counter-position",
+              "quote": "The one page everything else flows from. A gap here is a gap in the thinking.",
+              "quote_sha256": "d38d20ee0bfde2f47c91329522b0b4a009b4c54be527e4bbfe4cf311ba0f0269",
+              "status": "judged",
+              "unit_id": "u-002-0067fbb9",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            }
+          ],
+          "lenses": [
+            "buyer-read",
+            "journalist",
+            "employee-insider",
+            "competitor-counter-position"
+          ],
+          "manifest_sha256": "b1d0c78c27b2d29ec621b682e74fd9e364da77d82533f1be961df9dbaec53b8d",
+          "pair_id": "stale-door",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "calendar-red",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/calendar-red/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/calendar-red/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/calendar-red/telemetry.jsonl",
+          "sha256": "3766723d14cec8d693bfb3d669b36239c14fe6601963185603c38613e5702541"
+        }
+      ],
+      "output": "executions/calendar-red",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 3,
+          "actual": "judged",
+          "case_id": "calendar-red",
+          "classification_correct": true,
+          "classification_count": 3,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "defective",
+          "grounded_count": 3,
+          "invalid_quote_error": "quote for cell 'u-008-2a91bbf4::cfo' is not present in unit 'u-008-2a91bbf4' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+          "invalid_quote_refused": true,
+          "judgments": [
+            {
+              "cell_id": "u-008-2a91bbf4::cfo",
+              "lens": "cfo",
+              "quote": "Every slot ties a moment to a message and a ready asset.",
+              "quote_sha256": "396092f9bdfbebc3af91d7aa85b86b793a3cdbcb559349dcbc59ae40261b381f",
+              "status": "judged",
+              "unit_id": "u-008-2a91bbf4",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-008-2a91bbf4::benchmark-vs-reference",
+              "lens": "benchmark-vs-reference",
+              "quote": "| Month 8 | Sustain | Gen Z and digital-first audiences | Validated digital-format test | Youth relevance has to be earned through formats and stories that feel made for digital life. | Infographics & imagery | Shared social formats and creator-informed test content | Format engagement, completion rate, qualitative relevance signals and learning capture |",
+              "quote_sha256": "b62224059d96df647f68fbbf9132b367b3da01ec5463a56f92732ef9fc04356f",
+              "status": "judged",
+              "unit_id": "u-008-2a91bbf4",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-008-2a91bbf4::upstream-trace",
+              "lens": "upstream-trace",
+              "quote": "| Month 12 | Amplify | Leadership, media, customers and employees | Proof-year recap and recalibration | The company people already rely on is becoming more useful, modern and personally relevant. | Press release | Earned media, owned recap hub, social and internal cascade | Reputation pull-through, proof believability, sentiment quality, content reuse and next-cycle decisions |",
+              "quote_sha256": "d2462da13c16e5d41aad1172a8af79c2783ed948a70328e8a724092f9957762b",
+              "status": "judged",
+              "unit_id": "u-008-2a91bbf4",
+              "verdict": "revise",
+              "verdict_strategy": "action-grounded"
+            }
+          ],
+          "lenses": [
+            "cfo",
+            "benchmark-vs-reference",
+            "upstream-trace"
+          ],
+          "manifest_sha256": "28313c4130e3c62ebc3011a560ad423797f9f8430d72365c5fc36a831abe6690",
+          "pair_id": "calendar-coverage",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "calendar-green",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/calendar-green/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/calendar-green/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-01/validation/executions/calendar-green/telemetry.jsonl",
+          "sha256": "c0ab39a27c07bd4cd8163bcc54ce75b9e4445251653e729dbd53fcc9c6a6af91"
+        }
+      ],
+      "output": "executions/calendar-green",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actionable_quote_count": 3,
+          "actual": "judged",
+          "case_id": "calendar-green",
+          "classification_correct": true,
+          "classification_count": 3,
+          "correct": true,
+          "error": null,
+          "expected": "judged",
+          "expected_quality": "corrected",
+          "grounded_count": 3,
+          "invalid_quote_error": "quote for cell 'u-008-eb8c85bd::cfo' is not present in unit 'u-008-eb8c85bd' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+          "invalid_quote_refused": true,
+          "judgments": [
+            {
+              "cell_id": "u-008-eb8c85bd::cfo",
+              "lens": "cfo",
+              "quote": "Executive scorecard completed with paid, earned, shared, owned, service and reputation measures.",
+              "quote_sha256": "06081f16c3e85e942153a9e4aaa393507566a68be77284d87afd9217797f3fed",
+              "status": "judged",
+              "unit_id": "u-008-eb8c85bd",
+              "verdict": "clear",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-008-eb8c85bd::benchmark-vs-reference",
+              "lens": "benchmark-vs-reference",
+              "quote": "| Month 12 | Amplify | Executive, communications, service and stakeholder teams | Year-close scorecard and next-cycle recalibration, with the Conversation Management loop running as the always-on baseline. | The Invisible Thread works when proof is visible. | Needs: Key-Message Table (KMT) | Owned and executive reporting | Executive scorecard completed with paid, earned, shared, owned, service and reputation measures. |",
+              "quote_sha256": "ecd3e8e2a0f2dcdb1082c97bc01595e878d74cf5d3dbd37cf0755ccce6432f33",
+              "status": "judged",
+              "unit_id": "u-008-eb8c85bd",
+              "verdict": "clear",
+              "verdict_strategy": "action-grounded"
+            },
+            {
+              "cell_id": "u-008-eb8c85bd::upstream-trace",
+              "lens": "upstream-trace",
+              "quote": "Year-close scorecard and next-cycle recalibration, with the Conversation Management loop running as the always-on baseline.",
+              "quote_sha256": "d507a3eade66e9f0b5b1abae1f65f4fed008163bc25e3ada8c7a552c7eb73d33",
+              "status": "judged",
+              "unit_id": "u-008-eb8c85bd",
+              "verdict": "clear",
+              "verdict_strategy": "action-grounded"
+            }
+          ],
+          "lenses": [
+            "cfo",
+            "benchmark-vs-reference",
+            "upstream-trace"
+          ],
+          "manifest_sha256": "f13e4a00dbeb95233689d81d004fcd4d27445d0682455197d31e5518d000b2a8",
+          "pair_id": "calendar-coverage",
+          "route_evidence": {}
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

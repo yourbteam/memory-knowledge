@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/verdict-contract",
+      "probe_id": "verdict-contract",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,1 @@
+{"schema_version": 1, "scores": [{"metrics": {"actionable-handoffs": 0, "grounded-verdicts": 0, "invalid-quote-refusal": 0, "lens-discrimination": 3}, "variant_id": "control"}, {"metrics": {"actionable-handoffs": 2, "grounded-verdicts": 2, "invalid-quote-refusal": 1, "lens-discrimination": 2}, "variant_id": "variation-2"}]}

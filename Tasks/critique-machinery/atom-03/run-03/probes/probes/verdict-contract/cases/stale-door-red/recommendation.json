@@ -1,0 +1,14 @@
+{
+  "approach_id": "binary-groundless",
+  "atomic_step_id": "critique-grounded-verdict",
+  "bundle": "../../bundles/binary-groundless",
+  "bundle_sha256": "6cbdcca7c62d09902fe6646be57fd744b5732bfbed64bccef90579ab4265c597",
+  "case_id": "stale-door-red",
+  "experiment_id": "development-probe-93f322277ad724ef6d19",
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

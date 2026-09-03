@@ -1,0 +1,232 @@
+{
+  "champion": "variation-2",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/evaluator.py",
+        "sha256": "306e3e145b3b9258e6ba08b6049e14b564ef55a39539f5b9f278aa001dd14a60"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-9140eab97654e42d4ec0",
+  "frozen_input_sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+  "hypothesis": "Every approach declared by mini-probe 'verdict-contract' can run against captured case 'calendar-red', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "actionable-handoffs": 3.0,
+        "grounded-verdicts": 3.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 3.0
+      },
+      "rank": 1,
+      "variant_id": "variation-2"
+    },
+    {
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 3.0
+      },
+      "rank": 2,
+      "variant_id": "control"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 9235,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 3.0
+      },
+      "outcome": {
+        "actionable_quote_count": 0,
+        "actual": "judged",
+        "case_id": "calendar-red",
+        "classification_correct": true,
+        "classification_count": 3,
+        "correct": true,
+        "error": null,
+        "expected": "judged",
+        "expected_quality": "defective",
+        "grounded_count": 0,
+        "invalid_quote_error": "",
+        "invalid_quote_refused": false,
+        "judgments": [
+          {
+            "cell_id": "u-008-2a91bbf4::cfo",
+            "lens": "cfo",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-2a91bbf4",
+            "verdict": "weak",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-008-2a91bbf4::benchmark-vs-reference",
+            "lens": "benchmark-vs-reference",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-2a91bbf4",
+            "verdict": "weak",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-008-2a91bbf4::upstream-trace",
+            "lens": "upstream-trace",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-2a91bbf4",
+            "verdict": "weak",
+            "verdict_strategy": "binary-groundless"
+          }
+        ],
+        "lenses": [
+          "cfo",
+          "benchmark-vs-reference",
+          "upstream-trace"
+        ],
+        "manifest_sha256": "f6943d63ebfe6dd970fcf4f385e7a1a6aaac30230be29d4102afbac7a6bbcd7e",
+        "pair_id": "calendar-coverage",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "eb460d17702c1bdc0b83cd9e08e06d97a6749d4b1025cc6b3daf112e908c0d91",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "b57bd985160239f783e5f875f651cb33dadfe969830b0dde7c6f5e8eb6b1eac8",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 18665,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 3.0,
+        "grounded-verdicts": 3.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 3.0
+      },
+      "outcome": {
+        "actionable_quote_count": 3,
+        "actual": "judged",
+        "case_id": "calendar-red",
+        "classification_correct": true,
+        "classification_count": 3,
+        "correct": true,
+        "error": null,
+        "expected": "judged",
+        "expected_quality": "defective",
+        "grounded_count": 3,
+        "invalid_quote_error": "quote for cell 'u-008-2a91bbf4::cfo' is not present in unit 'u-008-2a91bbf4' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+        "invalid_quote_refused": true,
+        "judgments": [
+          {
+            "cell_id": "u-008-2a91bbf4::cfo",
+            "lens": "cfo",
+            "quote": "| Month 6 | Sustain | Existing customers and customer-service-adjacent audiences | FAQ and proof explainer refresh | Warmth is credible only when customers can see the proof behind the claim. | Q&A / FAQ | Owned hub, customer communications and social response content | FAQ completion, response reuse, reduction in unresolved recurring questions | | Month 8 | Sustain | Gen Z and digital-first audiences | Validated digital-format test | Youth relevance has to be earned through formats and stories that feel made for digital life. | Infographics & imagery | Shared social formats and creator-informed test content | Format engagement, completion rate, qualitative relevance signals and learning capture |",
+            "quote_sha256": "8292a34d41ebc140b9fad9953031b331c0dd3ae8ce77831b2a2a75bfd54af9da",
+            "status": "judged",
+            "unit_id": "u-008-2a91bbf4",
+            "verdict": "revise",
+            "verdict_strategy": "action-grounded"
+          },
+          {
+            "cell_id": "u-008-2a91bbf4::benchmark-vs-reference",
+            "lens": "benchmark-vs-reference",
+            "quote": "| Month 8 | Sustain | Gen Z and digital-first audiences | Validated digital-format test | Youth relevance has to be earned through formats and stories that feel made for digital life. | Infographics & imagery | Shared social formats and creator-informed test content | Format engagement, completion rate, qualitative relevance signals and learning capture | | Month 10 | Amplify | Professional influencers, sector voices and employees | Credible third-party and employee advocacy push | Vivacom's proof is strongest when credible people can see, use and repeat it themselves. | Event / experiential kit | Briefings, employee channels, partner moments and selective paid support | Third-party mentions, employee advocacy participation, message accuracy and earned amplification |",
+            "quote_sha256": "ea67415faa0b2619bb586ad32c180b2c81fd0ac12ec3615685ad4a0c0bd7f616",
+            "status": "judged",
+            "unit_id": "u-008-2a91bbf4",
+            "verdict": "revise",
+            "verdict_strategy": "action-grounded"
+          },
+          {
+            "cell_id": "u-008-2a91bbf4::upstream-trace",
+            "lens": "upstream-trace",
+            "quote": "| Month 10 | Amplify | Professional influencers, sector voices and employees | Credible third-party and employee advocacy push | Vivacom's proof is strongest when credible people can see, use and repeat it themselves. | Event / experiential kit | Briefings, employee channels, partner moments and selective paid support | Third-party mentions, employee advocacy participation, message accuracy and earned amplification | | Month 12 | Amplify | Leadership, media, customers and employees | Proof-year recap and recalibration | The company people already rely on is becoming more useful, modern and personally relevant. | Press release | Earned media, owned recap hub, social and internal cascade | Reputation pull-through, proof believability, sentiment quality, content reuse and next-cycle decisions |",
+            "quote_sha256": "47f6d3677eefb77f9a5340d61a7c3b972784cbee7fa4d69c02eac82c8215f7a9",
+            "status": "judged",
+            "unit_id": "u-008-2a91bbf4",
+            "verdict": "revise",
+            "verdict_strategy": "action-grounded"
+          }
+        ],
+        "lenses": [
+          "cfo",
+          "benchmark-vs-reference",
+          "upstream-trace"
+        ],
+        "manifest_sha256": "d19fca96704ce176df1f6a98e2fa628c1a28e5ee457737b4e22c3b107fc80f6b",
+        "pair_id": "calendar-coverage",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "bf6fa926f7a07a85f0de4fbb625124553091682abdd0958f0fd935ae5fad3954",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "033c4eb9bc01083cf5b8f5b249c9fa57ecce3517452fb61edb0ecc605fccad15",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

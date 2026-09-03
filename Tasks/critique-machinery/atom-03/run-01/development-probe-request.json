@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/assessment.py",
+      "sha256": "98201e3f346d28bf3907a31ba7538caaba63c834dead91a686a2275dbb8050da"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "critique-grounded-verdict",
+  "baseline": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/baseline",
+    "sha256": "5bc11cf3bb67aef97fe2aa39e31303a3734256793dd94dd71e390bbb911f9d4f"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/manifest.json",
+    "sha256": "7bc6e2b167e66288636318f03fc1b682f34200f6cb2f64d6d3ad0acf53f08694"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "verdict-contract",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/cross-verdict-contract.json",
+      "request_sha256": "a9e8d401ca21503a4cf8d2395391735bc5485cde873a93164b0aa5000791c613"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

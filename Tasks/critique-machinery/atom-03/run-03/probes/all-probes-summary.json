@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-grounded-verdict",
+  "probe_ids": [
+    "verdict-contract"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "88d795786e746d21e04fb6bd22daa214d4fa6719039889d721b4da813aa4245d",
+  "schema_version": 1,
+  "status": "completed"
+}

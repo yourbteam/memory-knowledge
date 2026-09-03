@@ -1,0 +1,232 @@
+{
+  "champion": "variation-2",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/evaluator.py",
+        "sha256": "306e3e145b3b9258e6ba08b6049e14b564ef55a39539f5b9f278aa001dd14a60"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-f2f0415ed3be9ad95f84",
+  "frozen_input_sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+  "hypothesis": "Every approach declared by mini-probe 'verdict-contract' can run against captured case 'calendar-green', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "actionable-handoffs": 3.0,
+        "grounded-verdicts": 3.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 3.0
+      },
+      "rank": 1,
+      "variant_id": "variation-2"
+    },
+    {
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 3.0
+      },
+      "rank": 2,
+      "variant_id": "control"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 6911,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 3.0
+      },
+      "outcome": {
+        "actionable_quote_count": 0,
+        "actual": "judged",
+        "case_id": "calendar-green",
+        "classification_correct": true,
+        "classification_count": 3,
+        "correct": true,
+        "error": null,
+        "expected": "judged",
+        "expected_quality": "corrected",
+        "grounded_count": 0,
+        "invalid_quote_error": "",
+        "invalid_quote_refused": false,
+        "judgments": [
+          {
+            "cell_id": "u-008-eb8c85bd::cfo",
+            "lens": "cfo",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-008-eb8c85bd::benchmark-vs-reference",
+            "lens": "benchmark-vs-reference",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-008-eb8c85bd::upstream-trace",
+            "lens": "upstream-trace",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          }
+        ],
+        "lenses": [
+          "cfo",
+          "benchmark-vs-reference",
+          "upstream-trace"
+        ],
+        "manifest_sha256": "a0049c1649004c6960d5ed701402d40be1ab3d3124cbb4d1084bf748d4cac760",
+        "pair_id": "calendar-coverage",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "9433f6be26d763603d28381fb9ff922bb5e59fd6899ead91387d1f535585f8ea",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "963f85118de8e6eeafa40b1ac44f228fc644ea618b4fd1eb9125c4e72e006f98",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 7871,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 3.0,
+        "grounded-verdicts": 3.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 3.0
+      },
+      "outcome": {
+        "actionable_quote_count": 3,
+        "actual": "judged",
+        "case_id": "calendar-green",
+        "classification_correct": true,
+        "classification_count": 3,
+        "correct": true,
+        "error": null,
+        "expected": "judged",
+        "expected_quality": "corrected",
+        "grounded_count": 3,
+        "invalid_quote_error": "quote for cell 'u-008-eb8c85bd::cfo' is not present in unit 'u-008-eb8c85bd' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+        "invalid_quote_refused": true,
+        "judgments": [
+          {
+            "cell_id": "u-008-eb8c85bd::cfo",
+            "lens": "cfo",
+            "quote": "| Month 1 | Pre-Seed / Tease | Internal alignment and claim clearance |",
+            "quote_sha256": "60b353597bb1f39efbc4b2885890fe4921f017a971440ad36fffea9a9559f315",
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "clear",
+            "verdict_strategy": "action-grounded"
+          },
+          {
+            "cell_id": "u-008-eb8c85bd::benchmark-vs-reference",
+            "lens": "benchmark-vs-reference",
+            "quote": "| Month 12 | Amplify | Executive, communications, service and stakeholder teams |",
+            "quote_sha256": "875d08a275af1cae1b2fff5c5eda24fd8d49c1696010c15e5e49c0996c5be076",
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "clear",
+            "verdict_strategy": "action-grounded"
+          },
+          {
+            "cell_id": "u-008-eb8c85bd::upstream-trace",
+            "lens": "upstream-trace",
+            "quote": "### The editorial calendar Every slot ties a moment to a message and a ready asset.",
+            "quote_sha256": "d1c0f415253b531f58c83db0a36b5d6ea5bec7e4b576f03566da1870b74478b1",
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "clear",
+            "verdict_strategy": "action-grounded"
+          }
+        ],
+        "lenses": [
+          "cfo",
+          "benchmark-vs-reference",
+          "upstream-trace"
+        ],
+        "manifest_sha256": "27eb39d17e4aee0a93811f4a85ca377116c19b1532ed1181f8b73156e49c0036",
+        "pair_id": "calendar-coverage",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "8cbaa11dd7d23ccf441175ef5273a437b4e4371f30769299be507b63e94964c9",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "7f31d2a4cea95ba0896c117e2e9df5272634cb4472b52eb9ada3490920e1a9ac",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

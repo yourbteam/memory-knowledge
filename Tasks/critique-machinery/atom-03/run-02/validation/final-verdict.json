@@ -1,0 +1,42 @@
+{
+  "assembly_sha256": "1294996f91ebbe1887eaff68376553a0754a4030af6f24a1426ed5984179dcba",
+  "atomic_step_id": "critique-grounded-verdict",
+  "cases": [
+    {
+      "case_id": "stale-door-red",
+      "evidence_pointers": [
+        "candidate-telemetry"
+      ],
+      "reason": "Observed correct classifications=4/4, grounded=0/4, actionable=0/4, invalid quote refusal=False.",
+      "verdict": "not-satisfied"
+    },
+    {
+      "case_id": "stale-door-green",
+      "evidence_pointers": [
+        "candidate-telemetry"
+      ],
+      "reason": "Observed correct classifications=4/4, grounded=0/4, actionable=0/4, invalid quote refusal=False.",
+      "verdict": "not-satisfied"
+    },
+    {
+      "case_id": "calendar-red",
+      "evidence_pointers": [
+        "candidate-telemetry"
+      ],
+      "reason": "Observed correct classifications=3/3, grounded=0/3, actionable=0/3, invalid quote refusal=False.",
+      "verdict": "not-satisfied"
+    },
+    {
+      "case_id": "calendar-green",
+      "evidence_pointers": [
+        "candidate-telemetry"
+      ],
+      "reason": "Observed correct classifications=3/3, grounded=0/3, actionable=0/3, invalid quote refusal=False.",
+      "verdict": "not-satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "failed"
+}

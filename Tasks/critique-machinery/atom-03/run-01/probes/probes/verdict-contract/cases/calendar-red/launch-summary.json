@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-grounded-verdict",
+  "case_id": "calendar-red",
+  "experiment_id": "development-probe-b211c89a495c9b921e4d",
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "2d582c87ffadf53fc302415e4bea93312266dd5fcf2f01b7f6c158d5ee43bf2f",
+  "schema_version": 1,
+  "status": "completed"
+}

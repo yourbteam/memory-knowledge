@@ -1,0 +1,212 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/evaluator.py",
+        "sha256": "306e3e145b3b9258e6ba08b6049e14b564ef55a39539f5b9f278aa001dd14a60"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-10283edc4b3b8d75e951",
+  "frozen_input_sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+  "hypothesis": "Every approach declared by mini-probe 'verdict-contract' can run against captured case 'calendar-green', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 3.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "actionable-handoffs": 1.0,
+        "grounded-verdicts": 1.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 1.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 6212,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 3.0
+      },
+      "outcome": {
+        "actionable_quote_count": 0,
+        "actual": "judged",
+        "case_id": "calendar-green",
+        "classification_correct": true,
+        "classification_count": 3,
+        "correct": true,
+        "error": null,
+        "expected": "judged",
+        "expected_quality": "corrected",
+        "grounded_count": 0,
+        "invalid_quote_error": "",
+        "invalid_quote_refused": false,
+        "judgments": [
+          {
+            "cell_id": "u-008-eb8c85bd::cfo",
+            "lens": "cfo",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-008-eb8c85bd::benchmark-vs-reference",
+            "lens": "benchmark-vs-reference",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          },
+          {
+            "cell_id": "u-008-eb8c85bd::upstream-trace",
+            "lens": "upstream-trace",
+            "quote": null,
+            "quote_sha256": null,
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "fine",
+            "verdict_strategy": "binary-groundless"
+          }
+        ],
+        "lenses": [
+          "cfo",
+          "benchmark-vs-reference",
+          "upstream-trace"
+        ],
+        "manifest_sha256": "95a5610a50fd96482b9c1e24b3d471491045bd6fe89502e1fcc55504ac4e07f7",
+        "pair_id": "calendar-coverage",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "9526cbaaa332b4baaeab990a7f23b1db53a705a9b3b271ecb13931372e5a4076",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "b1e1c46e83a397380507f575b8a64c8c1413c9045189ea25eb7d0d1d3b5b7b40",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 11357,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "actionable-handoffs": 1.0,
+        "grounded-verdicts": 1.0,
+        "invalid-quote-refusal": 1.0,
+        "lens-discrimination": 1.0
+      },
+      "outcome": {
+        "actionable_quote_count": 1,
+        "actual": "refused-other",
+        "case_id": "calendar-green",
+        "classification_correct": true,
+        "classification_count": 1,
+        "correct": false,
+        "error": "quote for cell 'u-008-eb8c85bd::benchmark-vs-reference' has 8 characters; provide at least 25 characters copied verbatim from unit 'u-008-eb8c85bd', or its whole text if shorter.",
+        "expected": "judged",
+        "expected_quality": "corrected",
+        "grounded_count": 1,
+        "invalid_quote_error": "quote for cell 'u-008-eb8c85bd::cfo' is not present in unit 'u-008-eb8c85bd' after whitespace collapse; copy the exact words from that unit, not a paraphrase or another unit.",
+        "invalid_quote_refused": true,
+        "judgments": [
+          {
+            "cell_id": "u-008-eb8c85bd::cfo",
+            "lens": "cfo",
+            "quote": "Executive scorecard completed with paid, earned, shared, owned, service and reputation measures.",
+            "quote_sha256": "06081f16c3e85e942153a9e4aaa393507566a68be77284d87afd9217797f3fed",
+            "status": "judged",
+            "unit_id": "u-008-eb8c85bd",
+            "verdict": "clear",
+            "verdict_strategy": "action-grounded"
+          }
+        ],
+        "lenses": [
+          "cfo",
+          "benchmark-vs-reference",
+          "upstream-trace"
+        ],
+        "manifest_sha256": "244631c5c8597bcda408e4d2c683e5cbb5219f6237880d9e9e89fb046c0ecef3",
+        "pair_id": "calendar-coverage",
+        "route_evidence": {}
+      },
+      "reported_metrics": {},
+      "result_sha256": "46b5e909ef0dcff97d25b47c1ad5550a6fb444eb1e29863d629f029b4c2e4e40",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "f872ca973d8fc0438690a485d9b191f126fff1ecb478e9adc471e8df49447f24",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

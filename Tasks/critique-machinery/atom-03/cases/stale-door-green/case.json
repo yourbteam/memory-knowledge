@@ -1,0 +1,8 @@
+{
+  "case_id": "stale-door-green",
+  "pair_id": "stale-door",
+  "payload_key": "context.up.cd_s_002.strategy_one_pager",
+  "expected_quality": "corrected",
+  "recorded_defect": "The corrected page states that So You Can is decided and records Maria Bengtsson as the decision maker.",
+  "applicable_lenses": ["buyer-read", "journalist", "employee-insider", "competitor-counter-position"]
+}

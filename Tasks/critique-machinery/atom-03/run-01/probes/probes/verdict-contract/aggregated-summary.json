@@ -1,0 +1,59 @@
+{
+  "case_ids": [
+    "stale-door-red",
+    "stale-door-green",
+    "calendar-red",
+    "calendar-green"
+  ],
+  "champion": "action-grounded",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "probe_id": "verdict-contract",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "actionable-handoffs": 14.0,
+        "grounded-verdicts": 14.0,
+        "invalid-quote-refusal": 4.0,
+        "lens-discrimination": 10.0
+      },
+      "approach_id": "action-grounded",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "actionable-handoffs": 0.0,
+        "grounded-verdicts": 0.0,
+        "invalid-quote-refusal": 0.0,
+        "lens-discrimination": 0.0
+      },
+      "approach_id": "binary-groundless",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

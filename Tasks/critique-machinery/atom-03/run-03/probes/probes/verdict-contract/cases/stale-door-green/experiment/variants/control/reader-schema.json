@@ -1,0 +1,1 @@
+{"additionalProperties":false,"properties":{"judgments":{"items":{"additionalProperties":false,"properties":{"lens":{"enum":["buyer-read","journalist","employee-insider","competitor-counter-position"],"type":"string"},"verdict":{"enum":["weak","fine"],"type":"string"}},"required":["lens","verdict"],"type":"object"},"type":"array"}},"required":["judgments"],"type":"object"}

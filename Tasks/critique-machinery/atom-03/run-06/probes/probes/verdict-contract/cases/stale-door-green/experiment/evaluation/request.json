@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/stale-door-green/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/stale-door-green/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/stale-door-green/experiment/variants/control/telemetry.jsonl",
+          "sha256": "686d3f259de0eaf897e17a5c3644d44643897eb96fa2f2f36a58eaf08bb2a19c"
+        }
+      ],
+      "execution": {
+        "duration_ms": 8347,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "e131776d85c890c978e0a7d4f1890b5ac1a0137d7aa077172deb947e0fdfd1d1",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/stale-door-green/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/stale-door-green/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases/stale-door-green/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "b745c3031548b03e3fa330d682cfc849d7617841270d1228085428322f3ee712"
+        }
+      ],
+      "execution": {
+        "duration_ms": 10028,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "2abf8e9a7e009950ec2ccf0c169cc04a6731cb473b4e443d73e121e9430436be",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-df58497d5992b952cf3d",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "lens-discrimination"
+    },
+    {
+      "direction": "maximize",
+      "name": "grounded-verdicts"
+    },
+    {
+      "direction": "maximize",
+      "name": "actionable-handoffs"
+    },
+    {
+      "direction": "maximize",
+      "name": "invalid-quote-refusal"
+    }
+  ],
+  "schema_version": 1
+}

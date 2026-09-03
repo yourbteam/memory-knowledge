@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "atomic_step_id": "critique-grounded-verdict",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "11f42100e429631dcb6f75846f4965b8c5b417d57dcdc83c63521a2b3c6cc7cb",
+      "size": 22146
+    },
+    {
+      "mode": 292,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+      "size": 2245
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

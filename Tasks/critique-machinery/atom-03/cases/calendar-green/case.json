@@ -1,0 +1,8 @@
+{
+  "case_id": "calendar-green",
+  "pair_id": "calendar-coverage",
+  "payload_key": "context.up.cd_s_002.execution_toolkit",
+  "expected_quality": "corrected",
+  "recorded_defect": "The corrected Step 9 delivery contains a visible row for every month from 1 through 12.",
+  "applicable_lenses": ["cfo", "benchmark-vs-reference", "upstream-trace"]
+}

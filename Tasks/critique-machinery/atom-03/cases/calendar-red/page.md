@@ -1,0 +1,217 @@
+# Execution Toolkit
+
+The bridge from an approved strategy to activity on the ground: a self-contained pack any team, market or partner can run to the same standard, without the strategist in the room.
+
+**6 of 10 assets still to be produced.** They are listed as such rather than implied to exist.
+
+**Not approved.** The assets and the do-not-say lines are a person's to approve, and no owner has.
+
+## A · The strategic foundation
+
+**Platform recap.** Execute an earned-led, proof-first Vivacom reputation programme that makes the value people already rely on visible, useful and believable. The final platform line is not locked, so this toolkit operationalises the shared ground across the three candidates: do not ask audiences to forget the bumpy road; show reviewed proof through everyday Bulgarian life; build warmth only where it can be evidenced.
+
+**Story skeleton.** Insight: People do not give a telecom warmth just because it lists achievements, especially when they remember integrations, migrations, service frustrations and old-incumbent residue. · Reason to Believe: Vivacom has usable proof across fibre, EON, 5G, 10-gigabit capability, awards, CSR, skills programmes, customer-use stories and city or household relevance, provided every major claim is reviewed, sourced and paired with a human consequence. · Benefit: Customers, media, employees and critical urban audiences can understand Vivacom as more useful, modern and personally relevant in daily life, not merely bigger or louder. · Proof: The programme runs through a claim-plus-proof hub, customer validation, earned-led newsroom activity, innovation briefings, owned explainers, shared human formats and selective paid amplification.
+
+**Strategy recap.** Sequence proof before emotion: choose and validate the platform route, build the claim-plus-proof architecture, align leaders and Legal/Regulatory, test the story first with existing customers, then scale through earned-led reputation moments supported by owned proof, shared translation and paid amplification. Always-on conversation management and the Observatory newsroom hold the baseline between signature moments.
+
+## B · The plan
+
+### Pre-Seed / Tease
+
+**Objective.** Create the operating foundation before external scale: lock the route, review claims, prepare leadership, establish customer validation and build the proof base.
+
+**Audience.** Leadership, Corporate Communications, Legal, Regulatory Affairs, employees and selected existing-customer validation groups.
+
+**Messages.** A warmer Vivacom must also be a more disciplined Vivacom. · Every major claim needs proof, ownership and review before it becomes a reputation asset. · Existing customers are the first-believer audience; the story must feel true to them before it scales.
+
+**Activities.** Complete route decision between the open platform candidates. · Build the Claim-Plus-Proof Hub. · Prepare spokesperson narrative and red-line guidance. · Design customer validation for the Stayed With Vivacom Proof Series. · Prepare town hall materials and employee alignment.
+
+### Launch
+
+**Objective.** Introduce the proof-led story publicly through credible earned and owned moments while avoiding unsupported warmth or dominance framing.
+
+**Audience.** Existing customers, media, critical urban audiences, employees and technology commentators.
+
+**Messages.** Vivacom is not asking people to forget the bumpy road; it is showing how the value of staying is becoming easier to see. · Vivacom's scale matters when it is experienced as usefulness in everyday Bulgarian life. · Innovation earns reputation value when it shows who benefits.
+
+**Activities.** Publish the first customer proof stories. · Launch owned proof hub content and fact-sheet explainers. · Issue the launch press release after claim review. · Run initial media briefings on innovation with human consequence. · Activate social cutdowns and selective paid boosts only against reviewed proof.
+
+### Sustain
+
+**Objective.** Move from burst communication to a steady reputation rhythm that answers real questions and keeps proof visible in ordinary life.
+
+**Audience.** Existing customers, broader public, critical urban audiences, media, employees and Gen Z as a secondary growth audience pending validation.
+
+**Messages.** The value of Vivacom is clearest in the homes, work, families, entertainment, skills and communities it helps every day. · Useful scale is not dominance; it is practical dependability people can recognise. · Claims stay credible when they remain specific, sourced and reviewable.
+
+**Activities.** Run the Everyday Bulgaria Newsroom. · Publish recurring hub stories and hygiene explainers. · Monitor conversation themes and produce responses from the proof hub. · Refresh Q&A and spokesperson materials based on media and customer questions. · Test Gen Z formats without claiming validated impact before evidence exists.
+
+### Amplify
+
+**Objective.** Use validated proof, third-party credibility and audience participation to create visible reputation lift at scale.
+
+**Audience.** Professional influencers, sector voices, employees, existing customers, fans and followers.
+
+**Messages.** Vivacom's proof is strongest when credible people can see, use and repeat it themselves. · The company people already rely on is becoming more useful, modern and personally relevant. · Warmth is earned through proof audiences can recognise and defend.
+
+**Activities.** Amplify the strongest earned stories with paid support. · Equip employees and credible third parties with reviewed message materials. · Package reputation proof into event and experiential formats. · Publish recap infographics and imagery from validated proof. · Evaluate pull-through, sentiment quality, proof believability and participation before recalibrating.
+
+### The editorial calendar
+
+Every slot ties a moment to a message and a ready asset.
+
+| month | phase | audience track | moment | key message | asset | channel | KPI |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Month 1 | Pre-Seed / Tease | Leadership, Corporate Communications, Legal and Regulatory Affairs | Route decision and claim review sprint | A warmer Vivacom must also be a more disciplined Vivacom. | Key-Message Table (KMT) | Internal working sessions and owned claim register | Route chosen, priority claims reviewed, red-line guidance agreed |
+| Month 2 | Pre-Seed / Tease | Employees and leadership | Town hall alignment | Vivacom's story should be built from claims that are specific, useful, reviewable and believable. | Spokesperson materials | Town hall, manager cascades and employee channels | Leadership message consistency, employee understanding, approved Q&A usage |
+| Month 3 | Launch | Existing customers | First Stayed With Vivacom Proof Series release | You stayed with Vivacom; now the value of that choice should be easier to see. | Social pack | Owned proof hub, social and selective paid amplification | Proof believability, sentiment quality, saves, shares and customer participation |
+| Month 4 | Launch | Media and technology commentators | Innovation with human consequence briefing | Vivacom's innovation proof is strongest when it shows who benefits. | Fact sheet / backgrounder | Earned media briefings supported by owned explainers | Message pull-through, proof accuracy, commentator engagement, no unreviewed superlatives |
+| Month 5 | Sustain | Critical urban audiences and broader public | Everyday Bulgaria Newsroom always-on cycle | Vivacom's scale matters when it is experienced as usefulness in everyday Bulgarian life. | Advertorial outline | Earned-led newsroom, owned articles and shared cutdowns | Quality earned mentions, owned proof-hub visits, social saves and reduced dominance framing |
+| Month 6 | Sustain | Existing customers and customer-service-adjacent audiences | FAQ and proof explainer refresh | Warmth is credible only when customers can see the proof behind the claim. | Q&A / FAQ | Owned hub, customer communications and social response content | FAQ completion, response reuse, reduction in unresolved recurring questions |
+| Month 8 | Sustain | Gen Z and digital-first audiences | Validated digital-format test | Youth relevance has to be earned through formats and stories that feel made for digital life. | Infographics & imagery | Shared social formats and creator-informed test content | Format engagement, completion rate, qualitative relevance signals and learning capture |
+| Month 10 | Amplify | Professional influencers, sector voices and employees | Credible third-party and employee advocacy push | Vivacom's proof is strongest when credible people can see, use and repeat it themselves. | Event / experiential kit | Briefings, employee channels, partner moments and selective paid support | Third-party mentions, employee advocacy participation, message accuracy and earned amplification |
+| Month 12 | Amplify | Leadership, media, customers and employees | Proof-year recap and recalibration | The company people already rely on is becoming more useful, modern and personally relevant. | Press release | Earned media, owned recap hub, social and internal cascade | Reputation pull-through, proof believability, sentiment quality, content reuse and next-cycle decisions |
+
+## C · The messages & assets
+
+### Message tracks
+
+#### Existing customers who stayed through integrations, migrations and service frustrations
+
+**Insight.** They will not accept warmth unless the communication acknowledges the bumpy road and shows concrete value.
+
+**Benefit.** Staying with Vivacom can feel like a sensible choice, not just inertia.
+
+**Proof.** Customer proof stories, reviewed service and product claims, EON and fibre use cases, validation learnings and owned explainers.
+
+**What they will say.** We know staying through change has not always felt simple. That is why we are showing, with specific proof, how Vivacom now helps your home, work, family and entertainment connect better every day.
+
+**What they will see.** Customer-use stories, practical proof explainers, service reassurance, social cutdowns and invitations to validate or submit everyday moments.
+
+#### Critical urban audiences and broader public
+
+**Insight.** Vivacom's scale helps reputation only when people see what it enables in ordinary life, not when it sounds like dominance.
+
+**Benefit.** They can understand Vivacom as useful infrastructure for modern Bulgarian life without being asked to admire corporate size.
+
+**Proof.** City, household, work, entertainment, education, CSR and skills stories supported by the proof hub.
+
+**What they will say.** Vivacom's scale matters when it is useful: when it helps homes work, families connect, entertainment run, skills grow and communities participate in modern Bulgarian life.
+
+**What they will see.** Everyday Bulgaria Newsroom stories, city and community explainers, human-use imagery, earned articles and social formats.
+
+#### Media, technology commentators and business audiences
+
+**Insight.** Innovation proof has value only when it explains who benefits and what changes for them.
+
+**Benefit.** Coverage can shift from lists of firsts toward credible human and business consequence.
+
+**Proof.** Reviewed proof pairs for 5G, 10-gigabit, EON, awards and business-use examples, with Legal/Regulatory red lines.
+
+**What they will say.** The point of innovation is not the claim itself. The point is what changes for people, homes, businesses and digital life when that capability is available and useful.
+
+**What they will see.** Media briefings, fact sheets, technical explainers, commentator materials and shared cutdowns with clear claim boundaries.
+
+#### Leadership, Corporate Communications, Legal and Regulatory Affairs
+
+**Insight.** Warmer storytelling creates risk unless claims are specific, owned, sourced and reviewable.
+
+**Benefit.** They can align around a story that is emotionally warmer because it is operationally disciplined.
+
+**Proof.** Claim-plus-proof hub, Key-Message Table, red-line guidance, Q&A, spokesperson materials and review workflow.
+
+**What they will say.** A warmer Vivacom cannot be built from softer words alone. It has to be built from claims we can prove, own and review before they reach audiences.
+
+**What they will see.** Claim register, proof pairs, approval notes, leadership narrative, FAQ and town hall cascade materials.
+
+#### Employees and internal advocates
+
+**Insight.** Employees can carry the story credibly if they understand the proof and the boundaries.
+
+**Benefit.** They can explain the company story consistently without overclaiming.
+
+**Proof.** Town hall narrative, spokesperson materials, Q&A, employee-ready proof examples and internal cascade content.
+
+**What they will say.** We are making Vivacom's value easier to see by connecting every claim to real examples from customers, communities, services and everyday life.
+
+**What they will see.** Internal briefings, manager talking points, employee social guidance, Q&A and proof-led story examples.
+
+#### Gen Z audiences
+
+**Insight.** Gen Z is named as a secondary growth audience, but the material does not yet prove which formats or messages will work.
+
+**Benefit.** Vivacom can test relevance in digital, colourful and personally useful formats without pretending validation already exists.
+
+**Proof.** Format tests, social listening, digital-first content pilots and innovation stories translated into practical youth relevance.
+
+**What they will say.** For younger audiences, Vivacom has to show up in ways that feel useful to digital life, and we will test what actually earns attention before scaling it.
+
+**What they will see.** Short-form social tests, visual explainers, digital-life stories and creator-informed formats once validated.
+
+### The collateral library
+
+| asset | purpose | status |
+| --- | --- | --- |
+| Key-Message Table (KMT) | Hold the audience messages, pillars, proof points and do-not-say guardrails that all activity must trace back to. | drafted |
+| Press release | Announce a reviewed reputation moment or proof-year recap using only approved claims and sourced proof. | to be produced |
+| 30-second pitch | Give spokespeople a concise way to explain the proof-led Vivacom story without unsupported warmth or dominance framing. | drafted |
+| Advertorial outline | Structure earned or paid editorial-style storytelling around everyday usefulness, customer proof and reviewed claims. | to be produced |
+| Q&A / FAQ | Prepare approved answers for media, employees, customers and social response teams on claims, proof, risks and guardrails. | drafted |
+| Fact sheet / backgrounder | Provide sourced context for fibre, EON, innovation, CSR, skills and customer-use proof with claim boundaries. | to be produced |
+| Social pack | Translate reviewed proof into human shared formats for customers, urban audiences, employees and test audiences. | to be produced |
+| Infographics & imagery | Make proof visible through simple, human, legally reviewable visual assets for owned, shared and earned support. | to be produced |
+| Spokesperson materials | Equip leaders, communications teams and trained advocates with the narrative, proof boundaries and approved language. | drafted |
+| Event / experiential kit | Package validated proof into briefings, activations or stakeholder moments that credible third parties and employees can repeat. | to be produced |
+
+## D · Activation & execution
+
+- Channel activation guidelines across paid, earned, shared and owned
+- Influencer and creator activation, including disclosure
+- Localisation guidance — what is fixed and what is locally adaptable
+- Execution and lifecycle guidance, including who does what
+
+## The build workflow — assembling the toolkit
+
+| step | what you do | output |
+| --- | --- | --- |
+| 1 Recap the platform | Distil the approved strategy to a one-page foundation the toolkit can stand on | Platform + story skeleton |
+| 2 Phase the plan | Break the roadmap into Pre-Seed → Launch → Sustain → Amplify with objectives per phase | Phased plan |
+| 3 Build the calendar | Lay the messages and moments onto a month-by-month calendar per audience track | Editorial calendar |
+| 4 Write the message tracks | Turn key messages into audience-ready copy, incl. what they'll say and see | Message tracks |
+| 5 Produce the collateral | Create the ready-to-use assets from templates | Collateral library |
+| 6 Write the guidelines | Channel, influencer, localisation, logistics, measurement, governance | Activation guidelines |
+| 7 Package & QA | Assemble; run the pre-publish quality gate; version and distribute | The toolkit |
+
+## Influencer and creator activation
+
+A repeatable way to activate creators, with the targets stated up front rather than negotiated each time.
+
+**Targets, per creator.** 1 blog / long post · 3–5 social updates over ~14 days · 2–3 posts per day during a live challenge · an agreed number of pieces committed up front
+
+**Golden rules.** be relevant & targeted · crowd-source their expertise · personalise — never cut-and-paste · make it easy — ready assets, local adaptation · be transparent and require disclosure of gifted product · be persistent with relevance
+
+## Localisation — global toolkit → local markets
+
+One core toolkit of channel-agnostic assets that local markets adapt. What is fixed and what is flexible is marked here, because a market that is not told will decide for itself.
+
+**Fixed.** the platform · the narrative · the do-not-say lines · the global KPIs
+
+**Flexible.** local hooks · spokespeople · language · local proof · market-specific tactics
+
+## Execution logistics — how the work actually runs
+
+### The content lifecycle
+
+- **CREATE** — brief & produce assets from the toolkit templates
+- **ROLL OUT** — publish per the calendar, across PESO
+- **AMPLIFY** — boost reach, activate influencers & advocates
+- **LISTEN & RESPOND** — monitor, run the newsroom, optimise on live signals
+
+**Roles (RACI).** Who briefs, creates, approves, publishes and reports each asset. **Always-on newsroom:** a standing team for real-time stories and issues. **Approvals:** the sign-off path (incl. legal / client) before anything publishes.
+
+No names are recorded against these roles. They are the client's to assign.
+
+## Open — waiting on a person
+
+- **Are these assets and these do-not-say lines approved?** — not yet; no owner recorded.
+- **Who holds each RACI role?** — not yet assigned.

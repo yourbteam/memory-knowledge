@@ -1,0 +1,77 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "lens-discrimination"
+      },
+      {
+        "direction": "maximize",
+        "name": "grounded-verdicts"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-handoffs"
+      },
+      {
+        "direction": "maximize",
+        "name": "invalid-quote-refusal"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "binary-groundless",
+    "atomic_step_id": "critique-grounded-verdict",
+    "development_manifest_sha256": "64844baaff0456ed24e27880d5b790745f5301c4a03d19bf32f8c90f899b22f2",
+    "probe_id": "verdict-contract"
+  },
+  "inputs": {
+    "case_ids": [
+      "stale-door-red",
+      "stale-door-green",
+      "calendar-red",
+      "calendar-green"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "11f42100e429631dcb6f75846f4965b8c5b417d57dcdc83c63521a2b3c6cc7cb",
+        "size": 22146
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+        "size": 2245
+      }
+    ],
+    "baseline_sha256": "5bc11cf3bb67aef97fe2aa39e31303a3734256793dd94dd71e390bbb911f9d4f",
+    "candidate_sha256": "f422a68698deeb399faca9a231d7fe99b7fc840b78e15b25d887abbed8bad6aa",
+    "changed_paths": [
+      "skills/critique-machinery/scripts/critique.py"
+    ],
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "8391c66031b5ac3ae7f2f6e217add89983083db937ac8c602e54b4c2edcb4e40",
+        "size": 29901
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+        "size": 2245
+      }
+    ],
+    "root": "source"
+  }
+}

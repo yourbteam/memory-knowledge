@@ -1,0 +1,27 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "binary-groundless",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/build-binary-groundless.json"
+    },
+    {
+      "approach_id": "action-grounded",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/build-action-grounded.json"
+    }
+  ],
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/development/evaluator.py",
+      "sha256": "306e3e145b3b9258e6ba08b6049e14b564ef55a39539f5b9f278aa001dd14a60"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "verdict-contract",
+  "schema_version": 1
+}

@@ -1,0 +1,8 @@
+{
+  "case_id": "stale-door-red",
+  "pair_id": "stale-door",
+  "payload_key": "context.up.cd_s_002.strategy_one_pager",
+  "expected_quality": "defective",
+  "recorded_defect": "The page says no approach is chosen even though the same delivered page recommends and signs an approach.",
+  "applicable_lenses": ["buyer-read", "journalist", "employee-insider", "competitor-counter-position"]
+}

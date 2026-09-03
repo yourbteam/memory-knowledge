@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "638c54159c20850bce168eaf14f984d66b4bf4d77805761d5827efdf3cbbe37b",
+  "assessment_adapter_sha256": "98201e3f346d28bf3907a31ba7538caaba63c834dead91a686a2275dbb8050da",
+  "atomic_step_id": "critique-grounded-verdict",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "failed"
+}

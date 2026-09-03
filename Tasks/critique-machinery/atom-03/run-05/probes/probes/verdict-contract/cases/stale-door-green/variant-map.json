@@ -1,0 +1,32 @@
+{
+  "experiment_id": "development-probe-cc22f1c26c990b03f5c7",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "binary-groundless",
+      "bundle": "../../bundles/binary-groundless",
+      "bundle_sha256": "05a94eb6d3436781de50d1a1688c0c844cc2846a2e8de5913fe29793a0787b82",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "probe_id": "verdict-contract",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "action-grounded",
+      "bundle": "../../bundles/action-grounded",
+      "bundle_sha256": "be0f24ef865b60bfffc47a3ac85a1a4e5e695f6397bc91284e0eaba88dfa9341",
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green",
+        "calendar-red",
+        "calendar-green"
+      ],
+      "probe_id": "verdict-contract",
+      "variant_id": "variation-2"
+    }
+  ]
+}

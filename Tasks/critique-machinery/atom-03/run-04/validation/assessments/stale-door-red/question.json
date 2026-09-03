@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "638c54159c20850bce168eaf14f984d66b4bf4d77805761d5827efdf3cbbe37b",
+  "atomic_outcome": "One matrix cell records a discriminating fixed verdict plus an exact unit quote, and refuses invented evidence.",
+  "atomic_step_id": "critique-grounded-verdict",
+  "case_id": "stale-door-red",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-04/validation/executions/stale-door-red/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-04/validation/executions/stale-door-red/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-03/run-04/validation/executions/stale-door-red/telemetry.jsonl",
+      "sha256": "c47c643087ef2b6918a46d238e6e6bdaacf914577e7c69b93db1cddc98a39115"
+    }
+  ],
+  "expected_outcome": "Every assigned lens identifies the recorded decision contradiction.",
+  "operator_path": "open each frozen page, select its recorded-defect unit, run each assigned lens through codex exec, and record each cell through judge",
+  "overall_criterion": "Any case is misclassified, ungrounded, non-actionable, or admits invented words.",
+  "schema_version": 1
+}

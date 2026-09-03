@@ -1,0 +1,1 @@
+{"judgments":[{"lens":"buyer-read","verdict":"fine"},{"lens":"journalist","verdict":"fine"},{"lens":"employee-insider","verdict":"fine"},{"lens":"competitor-counter-position","verdict":"fine"}]}

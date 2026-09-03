@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "critique-grounded-verdict",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "726e437375b53caaa09e1eab76618d21e9409afd3a3815d513ff7f4d74118265",
+  "experiment_assembly_sha256": "1383d98b116c28122a5647e67c1b5be593bf16d999ffa267404855adec983f75",
+  "changed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "1e9e51599b3fa511daf30ed0a0b35a554b59c606eed58dd8ee684483450f6f6d"
+  },
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "216e41161aaf5b8cbcaa79ec6beeebfa6d3a873d4aea7ff82b723b7eefdf2448"
+  },
+  "evidence": [
+    {"case_id": "stale-door-red", "path": "operator-validation/stale-door-red.json", "sha256": "e568415a3ce8c524b4379d068c48462731696ae2c5f7263dac399ebdd0678f76"},
+    {"case_id": "stale-door-green", "path": "operator-validation/stale-door-green.json", "sha256": "d7d81f51cf0f95e7b37bf074bf0e62c63a8d4843b9c5d71d9f4307865be38c62"},
+    {"case_id": "calendar-red", "path": "operator-validation/calendar-red.json", "sha256": "f9fdf469823c0a6a82f60ea7bbfe47974382bda1cdbde4dbff65b446afb6a8f4"},
+    {"case_id": "calendar-green", "path": "operator-validation/calendar-green.json", "sha256": "6ed778a54dd167616ebaad4dbb9b38aea7921cbfe48b3be418f57bc4c09465ba"}
+  ]
+}

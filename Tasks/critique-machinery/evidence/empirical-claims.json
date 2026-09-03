@@ -47,6 +47,29 @@
       },
       "operator_validation": "Tasks/critique-machinery/atom-02/operator-validation",
       "status": "promoted"
+    },
+    {
+      "atom_id": "critique-grounded-verdict",
+      "claim": "Source-line selection followed by code-owned quotation preserves the semantic discrimination of model judgments while guaranteeing that every accepted verdict contains verbatim words from its immutable unit.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-03/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/aggregated-summary.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-03/run-06/probes/probes/verdict-contract/cases",
+      "metrics": {
+        "binary-groundless": {
+          "actionable-handoffs": 0.0,
+          "grounded-verdicts": 0.0,
+          "invalid-quote-refusal": 0.0,
+          "lens-discrimination": 14.0
+        },
+        "action-grounded": {
+          "actionable-handoffs": 14.0,
+          "grounded-verdicts": 14.0,
+          "invalid-quote-refusal": 4.0,
+          "lens-discrimination": 14.0
+        }
+      },
+      "operator_validation": "Tasks/critique-machinery/atom-03/operator-validation",
+      "status": "promoted"
     }
   ],
   "schema_version": 1
