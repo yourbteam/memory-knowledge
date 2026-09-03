@@ -18,6 +18,7 @@ sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 from development_probe_manifest import ManifestError, validate_manifest
+from development_probe_experiment import _prepare_bundles
 
 CONTRACT = 1
 MAX_CASE_WORKERS = 4
@@ -200,7 +201,7 @@ def _run_cases(
     output: Path,
     manifest_path: Path,
     probe: dict[str, Any],
-    approach_requests: list[dict[str, str]],
+    approach_bundles: list[dict[str, Any]],
     evaluator: object,
 ) -> list[dict[str, Any]]:
     launcher = Path(__file__).with_name("development_probe_experiment.py")
@@ -217,7 +218,14 @@ def _run_cases(
                 "development_manifest": str(manifest_path),
                 "probe_id": probe["id"],
                 "case_id": case_id,
-                "approach_build_requests": approach_requests,
+                "approach_bundles": [
+                    {
+                        "approach_id": item["approach_id"],
+                        "bundle": str(item["bundle"]),
+                        "bundle_sha256": item["bundle_sha256"],
+                    }
+                    for item in approach_bundles
+                ],
                 "evaluator": evaluator,
             },
         )
@@ -451,7 +459,7 @@ def _bind_recommendation(
                 "bind-recommendation",
                 f"case {case_id!r} has no exact bundle mapping for champion {champion!r}",
             )
-        bundle = output / "cases" / case_id / selected["bundle"]
+        bundle = (output / "cases" / case_id / selected["bundle"]).resolve()
         fresh = _fresh_digest(bundle)
         recorded = selected.get("bundle_sha256")
         if fresh != recorded:
@@ -515,6 +523,9 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
         approach_requests = _approach_requests(
             probe["approaches"], request["approach_build_requests"], request_path.parent
         )
+        approach_bundles = _prepare_bundles(
+            approach_requests, output, manifest, probe["id"]
+        )
         evaluator = _exact(
             request["evaluator"],
             "evaluator",
@@ -539,7 +550,7 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
             "command": evaluator["command"],
         }
         case_ids = [item["case_id"] for item in probe["inputs"]]
-        _run_cases(output, manifest_path, probe, approach_requests, normalized_evaluator)
+        _run_cases(output, manifest_path, probe, approach_bundles, normalized_evaluator)
         scores, mappings = _case_metrics(output, probe, case_ids)
         aggregate = _aggregate(probe, case_ids, scores)
         aggregate_sha256 = _write_once(output / "aggregated-summary.json", aggregate)

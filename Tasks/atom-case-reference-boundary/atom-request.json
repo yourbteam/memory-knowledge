@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-case-reference-boundary",
+  "outcome": "Development manifests keep each captured case's immutable source_ref separate from an explicit source_root used to locate bytes, so manifest depth cannot change case resolution and assembled inputs remain hash-bound.",
+  "practical_value": "Operators can move or nest manifests and runs without manufacturing duplicate directory trees or changing approved case identity.",
+  "stopping_condition": "A repository-relative source_ref works from two manifest depths through the canonical launcher and composition paths, an absolute source_root does not alter the logical reference, a moved assembly still verifies, and changed imported bytes fail closed.",
+  "allowed_paths": [
+    "Tasks/atom-case-reference-boundary",
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "skills/experiment-machinery/SKILL.md",
+    "skills/experiment-machinery/scripts/development_probe_compose.py",
+    "skills/experiment-machinery/scripts/development_probe_experiment.py",
+    "skills/experiment-machinery/scripts/development_probe_manifest.py",
+    "skills/experiment-machinery/scripts/development_probe_repair.py",
+    "tests/test_atom_building_machinery.py",
+    "tests/test_development_probe_candidate.py",
+    "tests/test_development_probe_manifest.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "nested-manifest",
+      "source_ref": "Tasks/atom-case-reference-boundary/captured/nested-manifest.json",
+      "sha256": "cd2b883b8e830871604f36df322236fb01dad78fdd6f5ac3ed825174fa28cec9",
+      "kind": "success",
+      "expected_outcome": "The canonical launcher and composer resolve unchanged source_ref bytes from an explicit source_root at any manifest depth."
+    },
+    {
+      "case_id": "imported-case-tamper",
+      "source_ref": "Tasks/atom-case-reference-boundary/captured/imported-case-tamper.json",
+      "sha256": "808f938d98422961f306bac938614df623bea86d131c6e74c6ff4a54eaaef822",
+      "kind": "failure",
+      "expected_outcome": "Assembly verification accepts a moved intact package and rejects any changed imported case bytes without changing logical case identity."
+    }
+  ]
+}

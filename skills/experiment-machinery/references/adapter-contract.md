@@ -99,17 +99,32 @@ A completed result exits zero. A failed result exits non-zero, uses `status: "fa
 the practical error text, and remains in the experiment record. Candidate metrics are preserved as
 `reported_metrics` for audit and ignored for ranking.
 
-After all eligible variants finish, the runner gives their outcomes and evidence to the frozen
-evaluator in one code-controlled request. The evaluator returns exactly one ordered score object
-per eligible variant and one finite value per declared metric. Code rejects changed inputs,
-configurations, adapters, evaluator bytes, incomplete scores, unknown identities, and reordered
-answers. The evaluator does not receive permission to edit candidates or the parent ledger.
+After all eligible variants finish, the runner gives code-owned execution facts, the result hash,
+and hash-bound stdout, stderr, and telemetry references to the frozen evaluator in one
+code-controlled request. It deliberately withholds the candidate outcome object and reported
+metrics. The evaluator derives its scores from independently inspected evidence and returns exactly
+one ordered score object per eligible variant and one finite value per declared metric. Code rejects
+changed inputs, configurations, adapters, evaluator bytes, incomplete scores, unknown identities,
+and reordered answers. The evaluator cannot edit candidates or the parent ledger.
+Once the ledger records `experiment_started`, every path is terminal. Evaluation timeout, nonzero
+exit, malformed or invalid response, input or evaluator drift, and internal validation errors write
+one structured failure summary with no champion and append exactly one `experiment_failed` event.
+Successful and no-eligible runs append exactly one `evaluation_completed` event. A caller never
+needs stderr inspection to distinguish a failed run from a running one.
 
 ## Telemetry minimum
 
 Append and flush phase start, meaningful work or decisions, rejections/errors, and phase finish.
 Include the variant identity, sequence, timestamp, and safe evidence references or hashes. Preserve
 the exact setup in the variant configuration instead of duplicating sensitive payloads in events.
+
+For a Development-Probe candidate, the wrapper owns the variant feed. It gives the child operator
+a separate append-only feed starting at the integer in `EXPERIMENT_TELEMETRY_SEQUENCE_START`.
+Operator events are exactly `work_completed`, `decision_recorded`, `operator_rejected`, or
+`operator_error`; each carries the active variant id, timestamp, message, evidence SHA-256, and
+observations object. Rejections and errors also carry an actionable correction. The wrapper
+validates and forwards those records between its own start and terminal events. A successful
+candidate without work or decision evidence, or any malformed or non-monotonic feed, is ineligible.
 
 The runner produces `summary.json`, a hash-chained `ledger.jsonl`, captured stdout/stderr, and every
 variant directory. It always records `promotion_applied: false`.

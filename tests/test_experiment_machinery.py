@@ -9,6 +9,8 @@ import sys
 import time
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "skills" / "experiment-machinery" / "scripts" / "run_experiment.py"
 ADAPTER = ROOT / "skills" / "experiment-machinery" / "scripts" / "intake_purpose_probe.py"
@@ -364,6 +366,7 @@ from pathlib import Path
 
 variant = json.loads(Path(os.environ["EXPERIMENT_VARIANT_PATH"]).read_text(encoding="utf-8"))
 configuration = variant["configuration"]
+telemetry_path = Path(os.environ["EXPERIMENT_TELEMETRY_PATH"])
 print("candidate-started", flush=True)
 if configuration.get("hang"):
     while True:
@@ -376,6 +379,7 @@ result = {
     "metrics": {"quality": configuration["claimed_quality"]},
     "error": None,
 }
+telemetry_path.write_text(json.dumps({"event": "observed", "quality": configuration["observed_quality"]}) + "\\n", encoding="utf-8")
 Path(os.environ["EXPERIMENT_RESULT_PATH"]).write_text(json.dumps(result, sort_keys=True) + "\\n", encoding="utf-8")
 """,
         encoding="utf-8",
@@ -388,10 +392,13 @@ import sys
 from pathlib import Path
 
 request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-scores = [
-    {"variant_id": item["variant_id"], "metrics": {"quality": 1 if item["outcome"]["correct"] else 0}}
-    for item in request["candidates"]
-]
+scores = []
+for item in request["candidates"]:
+    assert "outcome" not in item
+    telemetry = next(record for record in item["evidence"] if record["id"] == "telemetry")
+    events = [json.loads(line) for line in Path(telemetry["path"]).read_text(encoding="utf-8").splitlines()]
+    observation = next(event for event in events if event.get("event") == "observed")
+    scores.append({"variant_id": item["variant_id"], "metrics": {"quality": observation["quality"]}})
 Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores}, sort_keys=True) + "\\n", encoding="utf-8")
 """,
         encoding="utf-8",
@@ -416,13 +423,13 @@ Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores},
                 "id": "control",
                 "command": [sys.executable, str(candidate)],
                 "adapter": {"path": str(candidate), "sha256": _digest(candidate)},
-                "configuration": {"correct": True, "claimed_quality": 1},
+                "configuration": {"correct": True, "observed_quality": 1, "claimed_quality": 1},
             },
             {
                 "id": "inflated",
                 "command": [sys.executable, str(candidate)],
                 "adapter": {"path": str(candidate), "sha256": _digest(candidate)},
-                "configuration": {"correct": False, "claimed_quality": 999},
+                "configuration": {"correct": False, "observed_quality": 0, "claimed_quality": 999},
             },
         ],
         "evaluation": {
@@ -524,8 +531,46 @@ def test_hung_evaluator_is_terminated_with_terminal_summary_and_evidence(
     assert "evaluator-started" in (output / "evaluation" / "stdout.txt").read_text()
     assert [record["event"] for record in _records(output / "ledger.jsonl")][-2:] == [
         "evaluator_timed_out",
-        "evaluation_completed",
+        "experiment_failed",
     ]
+
+
+@pytest.mark.parametrize(
+    ("mode", "evaluator_source"),
+    [
+        ("nonzero", "raise SystemExit(7)\n"),
+        ("malformed", "from pathlib import Path\nimport sys\nPath(sys.argv[2]).write_text('{')\n"),
+        (
+            "wrong-shape",
+            "from pathlib import Path\nimport json, sys\n"
+            "Path(sys.argv[2]).write_text(json.dumps({'schema_version':1,'scores':[]}))\n",
+        ),
+    ],
+)
+def test_evaluator_failures_always_terminalize(
+    tmp_path: Path, mode: str, evaluator_source: str
+) -> None:
+    spec_path, evaluator = _independent_scoring_spec(tmp_path)
+    evaluator.write_text(evaluator_source, encoding="utf-8")
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    spec["evaluation"]["evaluator"]["adapter"]["sha256"] = _digest(evaluator)
+    spec_path.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output = tmp_path / "run"
+
+    completed = _run(spec_path, output)
+
+    assert completed.returncode == 3, completed.stderr
+    summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "failed"
+    assert summary["champion"] is None
+    assert summary["ranking"] == []
+    assert summary["promotion_applied"] is False
+    assert summary["evaluation_error"]["kind"] == "evaluation-error"
+    terminal = [
+        row["event"] for row in _records(output / "ledger.jsonl")
+        if row["event"] in {"evaluation_completed", "experiment_failed"}
+    ]
+    assert terminal == ["experiment_failed"]
 
 
 def test_complete_probe_runner_prevents_parent_and_child_bytecode(tmp_path: Path) -> None:

@@ -16,7 +16,7 @@ from typing import Any
 sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
-from development_probe_manifest import ManifestError, validate_manifest
+from development_probe_manifest import ManifestError, resolve_case_source, validate_manifest
 
 CONTRACT = 1
 MAX_BUILD_WORKERS = 4
@@ -171,9 +171,7 @@ def _find_case(
     case = next(
         item for item in manifest["atomic_step"]["captured_cases"] if item["id"] == case_id
     )
-    case_path = _resolve(
-        case["source"], manifest_path.parent, f"captured case {case_id!r} source", "validate-request"
-    )
+    case_path = resolve_case_source(manifest, case, manifest_path.parent)
     if not case_path.is_file():
         raise LaunchError(
             "validate-request", f"captured case {case_id!r} source is missing: {case_path}"
@@ -239,6 +237,95 @@ def _reconcile_approaches(
         raise LaunchError("validate-request", "; ".join(errors))
     by_id = {item["approach_id"]: item for item in accepted}
     return [by_id[approach_id] for approach_id in declared_ids]
+
+
+def _reconcile_bundles(
+    declared: list[dict[str, Any]], values: object, base: Path,
+    manifest: dict[str, Any], probe_id: str,
+) -> list[dict[str, Any]]:
+    if type(values) is not list:
+        raise LaunchError("validate-request", "approach_bundles must be a list")
+    accepted: list[dict[str, Any]] = []
+    for index, value in enumerate(values):
+        item = _exact(
+            value,
+            f"approach_bundles[{index}]",
+            {"approach_id", "bundle", "bundle_sha256"},
+            "validate-request",
+        )
+        accepted.append(
+            {
+                "approach_id": _identifier(
+                    item["approach_id"], f"approach_bundles[{index}].approach_id",
+                    "validate-request",
+                ),
+                "bundle": _resolve(
+                    item["bundle"], base, f"approach_bundles[{index}].bundle",
+                    "validate-request",
+                ),
+                "bundle_sha256": item["bundle_sha256"],
+            }
+        )
+    declared_ids = [item["id"] for item in declared]
+    actual_ids = [item["approach_id"] for item in accepted]
+    duplicates = sorted({item for item in actual_ids if actual_ids.count(item) > 1})
+    unknown = sorted(set(actual_ids) - set(declared_ids))
+    missing = [item for item in declared_ids if item not in actual_ids]
+    if duplicates or unknown or missing:
+        raise LaunchError(
+            "validate-request",
+            f"approach_bundles has duplicate {duplicates!r}, unknown {unknown!r}, and missing "
+            f"{missing!r}; provide exactly every declared approach once",
+        )
+    expected_manifest = _digest(_canonical(manifest))
+    by_id = {item["approach_id"]: item for item in accepted}
+    results = []
+    for approach_id in declared_ids:
+        item = by_id[approach_id]
+        fresh = _fresh_bundle_digest(
+            Path(__file__).with_name("development_probe_candidate.py"), item["bundle"]
+        )
+        bundle = _load(
+            item["bundle"] / "bundle.json", f"approach {approach_id!r} bundle",
+            "validate-request",
+        )
+        identity = bundle.get("identity", {})
+        if fresh != item["bundle_sha256"]:
+            raise LaunchError(
+                "validate-request",
+                f"approach {approach_id!r} bundle digest is {fresh!r}, not recorded "
+                f"{item['bundle_sha256']!r}; provide the unchanged verified bundle",
+            )
+        if (
+            identity.get("approach_id") != approach_id
+            or identity.get("probe_id") != probe_id
+            or identity.get("development_manifest_sha256") != expected_manifest
+        ):
+            raise LaunchError(
+                "validate-request",
+                f"approach {approach_id!r} bundle identity does not match this probe and manifest",
+            )
+        results.append(
+            {
+                **item,
+                "status": "reused",
+                "candidate_sha256": bundle["source"]["candidate_sha256"],
+                "probe_id": probe_id,
+                "case_ids": bundle["inputs"]["case_ids"],
+                "error": None,
+            }
+        )
+    by_candidate: dict[str, list[str]] = {}
+    for item in results:
+        by_candidate.setdefault(item["candidate_sha256"], []).append(item["approach_id"])
+    repeated = [ids for ids in by_candidate.values() if len(ids) > 1]
+    if repeated:
+        raise LaunchError(
+            "validate-distinct-candidates",
+            "byte-identical candidate implementations cannot be compared as distinct approaches: "
+            + "; ".join(", ".join(ids) for ids in repeated),
+        )
+    return results
 
 
 def _run_command(command: list[str]) -> subprocess.CompletedProcess[str]:
@@ -508,7 +595,7 @@ def _run_experiment(
             "variants": [
                 {
                     **item,
-                    "bundle": str(item["bundle"].relative_to(output)),
+                    "bundle": os.path.relpath(item["bundle"], output),
                 }
                 for item in mappings
             ],
@@ -624,7 +711,7 @@ def _bind_recommendation(
         "experiment_id": summary["experiment_id"],
         "variant_id": champion,
         "approach_id": selected["approach_id"],
-        "bundle": str(selected["bundle"].relative_to(output)),
+        "bundle": os.path.relpath(selected["bundle"], output),
         "bundle_sha256": selected["bundle_sha256"],
         "rank": 1,
         "promotion_applied": False,
@@ -633,19 +720,21 @@ def _bind_recommendation(
 
 def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
     request_path = request_path.absolute()
-    request = _exact(
-        _load(request_path, "single-probe experiment request", "validate-request"),
-        "single-probe experiment request",
-        {
-            "schema_version",
-            "development_manifest",
-            "probe_id",
-            "case_id",
-            "approach_build_requests",
-            "evaluator",
-        },
-        "validate-request",
-    )
+    request = _load(request_path, "single-probe experiment request", "validate-request")
+    common = {
+        "schema_version", "development_manifest", "probe_id", "case_id", "evaluator"
+    }
+    fields = set(request)
+    if fields == common | {"approach_build_requests"}:
+        candidate_source = "build"
+    elif fields == common | {"approach_bundles"}:
+        candidate_source = "reuse"
+    else:
+        raise LaunchError(
+            "validate-request",
+            "single-probe experiment request must contain the common fields plus exactly one "
+            "of approach_build_requests or approach_bundles",
+        )
     if type(request["schema_version"]) is not int or request["schema_version"] != CONTRACT:
         raise LaunchError(
             "validate-request", f"request schema_version must be integer {CONTRACT}"
@@ -673,10 +762,30 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
         case_id = _identifier(request["case_id"], "case_id", "validate-request")
         probe = _find_probe(manifest, probe_id)
         case, case_path = _find_case(manifest, probe, case_id, manifest_path)
-        tasks = _reconcile_approaches(
-            probe["approaches"], request["approach_build_requests"], request_path.parent
-        )
-        results = _prepare_bundles(tasks, output, manifest, probe_id)
+        if candidate_source == "build":
+            tasks = _reconcile_approaches(
+                probe["approaches"], request["approach_build_requests"], request_path.parent
+            )
+            results = _prepare_bundles(tasks, output, manifest, probe_id)
+        else:
+            results = _reconcile_bundles(
+                probe["approaches"], request["approach_bundles"], request_path.parent,
+                manifest, probe_id,
+            )
+            _write_once(
+                output / "bundle-results.json",
+                {
+                    "schema_version": CONTRACT,
+                    "source": "cross-case-shared",
+                    "results": [
+                        {
+                            **item,
+                            "bundle": os.path.relpath(item["bundle"], output),
+                        }
+                        for item in results
+                    ],
+                },
+            )
         mappings = _variant_map(results)
         evaluator = _normalize_evaluator(request["evaluator"], request_path.parent)
         summary = _run_experiment(

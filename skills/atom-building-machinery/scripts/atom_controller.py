@@ -13,6 +13,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+MODULE_ROOT = Path(__file__).resolve().parents[3]
+if str(MODULE_ROOT) not in sys.path:
+    sys.path.insert(0, str(MODULE_ROOT))
+from scripts import blocker_catalog, work_memory
+
 CONTRACT = 1
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 EXPERIMENT_STAGES = ["run-probes", "compose-winners", "final-validation"]
@@ -123,12 +128,18 @@ LEGACY_PROMOTION_EVENT_FIELDS = {
     "evidence",
 }
 PROMOTION_EVENT_FIELDS = LEGACY_PROMOTION_EVENT_FIELDS | {"change_surface", "review"}
-VALIDATION_EVENT_FIELDS = {
+LEGACY_VALIDATION_EVENT_FIELDS = {
     "receipt_path",
     "receipt_sha256",
     "promotion_event_sha256",
     "verdict",
     "case_evidence",
+}
+VALIDATION_EVENT_FIELDS = LEGACY_VALIDATION_EVENT_FIELDS | {"blocker_closeout"}
+BLOCKER_CLOSEOUT_FIELDS = {
+    "schema_version", "atomic_step_id", "atom_request_sha256", "atom_run_id",
+    "work_memory_ledger_sha256", "clear", "linked_occurrence_count",
+    "blocking_occurrence_count", "blocking_occurrences", "dispositions",
 }
 
 
@@ -279,6 +290,22 @@ def _relative_path(value: str, label: str, stage: str) -> str:
     if path.is_absolute() or value in {"", "."} or ".." in path.parts:
         raise AtomError(stage, f"{label} is {value!r}; provide one safe repository-relative path")
     return path.as_posix().rstrip("/")
+
+
+def _require_disjoint_run(run: Path, repository_root: Path, allowed_paths: list[str]) -> None:
+    resolved_run = run.resolve()
+    for boundary in allowed_paths:
+        resolved_boundary = (repository_root / boundary).resolve()
+        if (
+            resolved_run == resolved_boundary
+            or resolved_run.is_relative_to(resolved_boundary)
+            or resolved_boundary.is_relative_to(resolved_run)
+        ):
+            raise AtomError(
+                "start",
+                f"run directory {run} overlaps allowed_paths boundary {boundary!r}; "
+                "choose a controller-owned path outside the product surface",
+            )
 
 
 def _snapshot(repository_root: Path, allowed_paths: list[str], stage: str) -> list[dict[str, object]]:
@@ -498,11 +525,11 @@ def _write_snapshot(path: Path, payload: bytes, stage: str) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         if path.is_symlink() or not path.is_file():
-            raise AtomError(stage, f"validation snapshot is unavailable or linked at {path}")
+            raise AtomError(stage, f"evidence snapshot is unavailable or linked at {path}")
         actual = _digest(path.read_bytes())
         expected = _digest(payload)
         if actual != expected:
-            raise AtomError(stage, f"validation snapshot has SHA-256 {actual} at {path}; require {expected}")
+            raise AtomError(stage, f"evidence snapshot has SHA-256 {actual} at {path}; require {expected}")
         return actual
     return _write_new(path, payload)
 
@@ -511,7 +538,8 @@ def _snapshot_validation(
     run: Path,
     receipt_path: Path,
     case_evidence: list[dict[str, object]],
-) -> tuple[dict[str, str], list[dict[str, object]]]:
+    blocker_closeout: dict[str, Any],
+) -> tuple[dict[str, str], list[dict[str, object]], dict[str, str]]:
     sequence = len(_read_ledger(run)[0]) + 1
     root = run / "evidence" / f"validation-{sequence:06d}"
     receipt_snapshot = root / "receipt.json"
@@ -529,7 +557,123 @@ def _snapshot_validation(
                 "sha256": sha256,
             })
         snapshot_cases.append({"case_id": case["case_id"], "evidence": snapshot_evidence})
-    return {"path": str(receipt_snapshot), "sha256": receipt_sha256}, snapshot_cases
+    closeout_target = root / "blocker-closeout.json"
+    closeout_sha256 = _write_snapshot(
+        closeout_target, _document(blocker_closeout), "record-validation",
+    )
+    return (
+        {"path": str(receipt_snapshot), "sha256": receipt_sha256},
+        snapshot_cases,
+        {"path": str(closeout_target), "sha256": closeout_sha256},
+    )
+
+
+def _canonical_blocker_closeout(run: Path, stage: str) -> dict[str, Any]:
+    try:
+        return blocker_catalog.atom_closeout(run)
+    except work_memory.WorkMemoryError as error:
+        raise AtomError(stage, f"canonical blocker closeout failed: {error.code}") from None
+
+
+def _recorded_blocker_closeout(
+    reference: object, request: dict[str, Any], run_id: str,
+) -> dict[str, Any]:
+    item = _file_reference(reference, "recorded blocker closeout", "load-run")
+    value = _exact(
+        _load(Path(item["path"]), "recorded blocker closeout", "load-run"),
+        "recorded blocker closeout", BLOCKER_CLOSEOUT_FIELDS, "load-run",
+    )
+    if (
+        value["schema_version"] != CONTRACT
+        or value["atomic_step_id"] != request["atomic_step_id"]
+        or value["atom_request_sha256"]
+        != _digest((Path(run_id) / "inputs" / "atom-request.json").read_bytes())
+        or value["atom_run_id"] != _digest((Path(run_id) / "ledger.jsonl").read_bytes().splitlines(keepends=True)[0])
+        or type(value["clear"]) is not bool
+        or type(value["linked_occurrence_count"]) is not int
+        or type(value["blocking_occurrence_count"]) is not int
+        or type(value["blocking_occurrences"]) is not list
+        or type(value["dispositions"]) is not list
+        or value["linked_occurrence_count"] != len(value["dispositions"])
+        or value["blocking_occurrence_count"] != len(value["blocking_occurrences"])
+        or value["clear"] != (value["blocking_occurrence_count"] == 0)
+    ):
+        raise AtomError("load-run", "recorded blocker closeout does not match its atom or counts")
+    _sha(value["work_memory_ledger_sha256"], "blocker closeout ledger SHA-256", "load-run")
+    return value
+
+
+def _snapshot_tree(source: Path, target: Path, stage: str) -> None:
+    if source.is_symlink() or not source.is_dir():
+        raise AtomError(stage, f"snapshot source is unavailable or linked at {source}")
+    target.mkdir(parents=True, exist_ok=True)
+    directories = []
+    for candidate in sorted(source.rglob("*")):
+        relative = candidate.relative_to(source)
+        if candidate.is_symlink():
+            raise AtomError(stage, f"snapshot source contains linked entry {relative.as_posix()!r}")
+        if candidate.is_dir():
+            (target / relative).mkdir(parents=True, exist_ok=True)
+            directories.append(candidate)
+            continue
+        if not candidate.is_file():
+            raise AtomError(stage, f"snapshot source contains unsupported entry {relative.as_posix()!r}")
+        snapshot = target / relative
+        _write_snapshot(snapshot, candidate.read_bytes(), stage)
+        os.chmod(snapshot, candidate.stat().st_mode & 0o777)
+    for directory in sorted(directories, key=lambda item: len(item.parts), reverse=True):
+        os.chmod(target / directory.relative_to(source), directory.stat().st_mode & 0o777)
+    os.chmod(target, source.stat().st_mode & 0o777)
+
+
+def _snapshot_experiment(run: Path, experiment: Path) -> Path:
+    sequence = len(_read_ledger(run)[0]) + 1
+    root = run / "evidence" / f"experiment-{sequence:06d}"
+    for relative in (Path("development-probe-summary.json"), Path("final-verdict.json")):
+        source = experiment / relative
+        _write_snapshot(root / relative, source.read_bytes(), "record-experiment")
+    _snapshot_tree(
+        experiment / "composition" / "assembly",
+        root / "composition" / "assembly",
+        "record-experiment",
+    )
+    return root
+
+
+def _snapshot_promotion(
+    run: Path,
+    receipt_path: Path,
+    evidence: list[dict[str, str]],
+    surface: dict[str, str] | None,
+    review: dict[str, str] | None,
+) -> tuple[dict[str, str], list[dict[str, str]], dict[str, str] | None, dict[str, str] | None]:
+    sequence = len(_read_ledger(run)[0]) + 1
+    root = run / "evidence" / f"promotion-{sequence:06d}"
+    receipt_target = root / "receipt.json"
+    receipt_sha256 = _write_snapshot(receipt_target, receipt_path.read_bytes(), "record-promotion")
+    snapshot_evidence = []
+    for index, item in enumerate(evidence, start=1):
+        source = Path(item["path"])
+        target = root / f"case-{index:03d}-evidence.bin"
+        sha256 = _write_snapshot(target, source.read_bytes(), "record-promotion")
+        snapshot_evidence.append({"case_id": item["case_id"], "path": str(target), "sha256": sha256})
+
+    def snapshot_reference(value: dict[str, str] | None, name: str) -> dict[str, str] | None:
+        if value is None:
+            return None
+        source = Path(value["path"])
+        target = root / name
+        return {
+            "path": str(target),
+            "sha256": _write_snapshot(target, source.read_bytes(), "record-promotion"),
+        }
+
+    return (
+        {"path": str(receipt_target), "sha256": receipt_sha256},
+        snapshot_evidence,
+        snapshot_reference(surface, "change-surface.json"),
+        snapshot_reference(review, "review.json"),
+    )
 
 
 def _read_ledger(run: Path) -> tuple[list[dict[str, Any]], list[str]]:
@@ -688,7 +832,12 @@ def _state(run: Path) -> dict[str, Any]:
         elif record["event"] == "validation-recorded":
             if stage != "validation" or current_promotion is None:
                 raise AtomError("load-run", f"validation-recorded appears during {stage!r}; restore the valid event order")
-            payload = _exact(record["payload"], "validation-recorded payload", VALIDATION_EVENT_FIELDS, "load-run")
+            validation_fields = (
+                VALIDATION_EVENT_FIELDS
+                if "blocker_closeout" in record["payload"]
+                else LEGACY_VALIDATION_EVENT_FIELDS
+            )
+            payload = _exact(record["payload"], "validation-recorded payload", validation_fields, "load-run")
             _unchanged(payload["receipt_path"], payload["receipt_sha256"], "recorded validation receipt")
             if payload["promotion_event_sha256"] != current_promotion["event_sha256"]:
                 raise AtomError("load-run", "validation receipt is not bound to the current promotion event")
@@ -722,11 +871,16 @@ def _state(run: Path) -> dict[str, Any]:
                     "verdict": "failed",
                     "status": "superseded-external-evidence-drift",
                 })
-            if payload["verdict"] == "passed":
+            closeout_clear = True
+            if "blocker_closeout" in payload:
+                closeout_clear = _recorded_blocker_closeout(
+                    payload["blocker_closeout"], request, str(run),
+                )["clear"]
+            if payload["verdict"] == "passed" and closeout_clear:
                 stage = "complete"
                 next_skill = None
                 required_capability = None
-            else:
+            elif payload["verdict"] == "failed":
                 stage = "experiment"
                 next_skill = "prototype-driven-implementation"
                 required_capability = "experiment-machinery"
@@ -755,6 +909,7 @@ def start(request_path: Path, run: Path) -> dict[str, Any]:
         raise AtomError("start", f"run directory must be new or empty: {run}")
     request = _validate_request(_load(request_path, "atom request", "validate-request"))
     repository_root = Path.cwd().resolve()
+    _require_disjoint_run(run, repository_root, request["allowed_paths"])
     baseline = _baseline_document(request, repository_root)
     run.mkdir(parents=True, exist_ok=True)
     request_sha256 = _write_new(run / "inputs" / "atom-request.json", _document(request))
@@ -865,10 +1020,11 @@ def _verify_assembly(experiment: Path, request: dict[str, Any], expected_sha256:
     captured = atomic_step.get("captured_cases")
     if type(captured) is not list:
         raise AtomError(stage, "verified assembly manifest has no captured_cases list")
+    source_field = "source" if manifest.get("schema_version") == 1 else "source_ref"
     expected_cases = [
         {
             "id": case["case_id"],
-            "source": case["source_ref"],
+            source_field: case["source_ref"],
             "sha256": case["sha256"],
             "kind": case["kind"],
             "expected_outcome": case["expected_outcome"],
@@ -936,6 +1092,9 @@ def record_experiment(run: Path, experiment: Path) -> dict[str, Any]:
         problems.append("passed verdict requires every case verdict to be 'satisfied'")
     if problems:
         raise AtomError("record-experiment", "; ".join(problems))
+    experiment = _snapshot_experiment(run, experiment)
+    summary_path = experiment / "development-probe-summary.json"
+    final_path = experiment / "final-verdict.json"
     payload = {
         "experiment_path": str(experiment),
         "summary_sha256": _digest(summary_path.read_bytes()),
@@ -1024,9 +1183,12 @@ def record_promotion(run: Path, receipt_path: Path) -> dict[str, Any]:
         _validate_review(Path(review["path"]), surface["sha256"], "review", "record-promotion")
     if problems:
         raise AtomError("record-promotion", "; ".join(problems))
+    receipt, evidence, surface, review = _snapshot_promotion(
+        run, receipt_path, evidence, surface, review,
+    )
     payload = {
-        "receipt_path": str(receipt_path),
-        "receipt_sha256": _digest(receipt_path.read_bytes()),
+        "receipt_path": receipt["path"],
+        "receipt_sha256": receipt["sha256"],
         "experiment_event_sha256": current["event_sha256"],
         "assembly_sha256": current["assembly_sha256"],
         "changed_paths": normalized,
@@ -1092,30 +1254,43 @@ def record_validation(run: Path, receipt_path: Path) -> dict[str, Any]:
     if problems:
         raise AtomError("record-validation", "; ".join(problems))
     verdict = "passed" if statuses and all(status == "satisfied" for status in statuses) else "failed"
-    receipt_snapshot, case_evidence = _snapshot_validation(run, receipt_path, case_evidence)
+    closeout = _canonical_blocker_closeout(run, "record-validation")
+    receipt_snapshot, case_evidence, closeout_snapshot = _snapshot_validation(
+        run, receipt_path, case_evidence, closeout,
+    )
     payload = {
         "receipt_path": receipt_snapshot["path"],
         "receipt_sha256": receipt_snapshot["sha256"],
         "promotion_event_sha256": promotion["event_sha256"],
         "verdict": verdict,
         "case_evidence": case_evidence,
+        "blocker_closeout": closeout_snapshot,
     }
     _append(run, "validation-recorded", payload)
     return _state(run)
 
 
 def authorize_next(run: Path) -> dict[str, Any]:
-    state = _state(run.absolute())
+    run = run.absolute()
+    state = _state(run)
     if state["stage"] != "complete":
         raise AtomError(
             "authorize-next",
             f"current stage is {state['stage']!r}; finish the reported required_capability before selecting another atom",
+        )
+    closeout = _canonical_blocker_closeout(run, "authorize-next")
+    if not closeout["clear"]:
+        raise AtomError(
+            "authorize-next",
+            f"canonical blocker closeout has {closeout['blocking_occurrence_count']} blocking occurrence(s)",
         )
     return {
         "schema_version": CONTRACT,
         "atomic_step_id": state["atomic_step_id"],
         "authorized": True,
         "proof_event_sha256": state["latest_event_sha256"],
+        "blocker_closeout_sha256": _digest(_document(closeout)),
+        "linked_blocker_occurrences": closeout["linked_occurrence_count"],
     }
 
 

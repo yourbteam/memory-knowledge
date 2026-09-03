@@ -526,6 +526,88 @@ def _read_variant_result(
     }
 
 
+def _development_telemetry_errors(path: Path, variant_id: str, exit_code: int) -> list[str]:
+    if not path.is_file():
+        return ["development-probe candidate omitted telemetry.jsonl"]
+    errors: list[str] = []
+    records: list[dict[str, Any]] = []
+    for sequence, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as error:
+            errors.append(f"telemetry sequence {sequence} is invalid JSON: {error}")
+            continue
+        required = {
+            "schema_version",
+            "sequence",
+            "event",
+            "state",
+            "recorded_at",
+            "atomic_step_id",
+            "probe_id",
+            "case_id",
+            "approach_id",
+            "variant_id",
+        }
+        if not isinstance(record, dict) or not required.issubset(record):
+            missing = sorted(required - set(record) if isinstance(record, dict) else required)
+            errors.append(f"telemetry sequence {sequence} omits required fields {missing!r}")
+            continue
+        records.append(record)
+        if record["schema_version"] != CONTRACT or type(record["schema_version"]) is not int:
+            errors.append(f"telemetry sequence {sequence} schema_version must be integer 1")
+        if record["sequence"] != sequence or type(record["sequence"]) is not int:
+            errors.append(
+                f"telemetry sequence is {record['sequence']!r}; require positive monotonic {sequence}"
+            )
+        if record["variant_id"] != variant_id:
+            errors.append(f"telemetry sequence {sequence} has a different variant identity")
+        for identity in ("atomic_step_id", "probe_id", "case_id", "approach_id"):
+            if type(record[identity]) is not str or not record[identity]:
+                errors.append(f"telemetry sequence {sequence} {identity} must be nonempty")
+        if type(record["event"]) is not str or not record["event"]:
+            errors.append(f"telemetry sequence {sequence} event must be nonempty")
+        if type(record["state"]) is not str or not record["state"]:
+            errors.append(f"telemetry sequence {sequence} state must be nonempty")
+        if type(record["recorded_at"]) is not str or not record["recorded_at"]:
+            errors.append(f"telemetry sequence {sequence} recorded_at must be nonempty")
+    events = [record.get("event") for record in records]
+    if not records:
+        errors.append("development-probe candidate telemetry contains no valid events")
+        return errors
+    if events[0] != "candidate_started":
+        errors.append("candidate_started must be the first telemetry event")
+    if "operator_started" not in events:
+        errors.append("candidate telemetry omits operator_started")
+    if "candidate_bundle_verified" not in events:
+        errors.append("candidate telemetry omits candidate_bundle_verified")
+    if events[-1] != "candidate_finished":
+        errors.append("candidate_finished must be the terminal telemetry event")
+    terminal = records[-1]
+    if exit_code == 0:
+        if not any(event in {"operator_work", "operator_decision"} for event in events):
+            errors.append("successful candidate telemetry omits meaningful work or a decision")
+        if "operator_finished" not in events:
+            errors.append("successful candidate telemetry omits operator_finished")
+        if terminal.get("state") != "completed":
+            errors.append("successful candidate telemetry does not finish completed")
+    else:
+        failures = [record for record in records if record.get("event") == "operator_failed"]
+        if not failures and not any(
+            record.get("event") == "candidate_bundle_verified" and record.get("state") == "failed"
+            for record in records
+        ):
+            errors.append("failed candidate telemetry omits its failing boundary")
+        if failures and any(
+            type(record.get("correction")) is not str or not record["correction"].strip()
+            for record in failures
+        ):
+            errors.append("operator_failed telemetry omits an actionable correction")
+        if terminal.get("state") != "failed":
+            errors.append("failed candidate telemetry does not finish failed")
+    return errors
+
+
 def _signal_process_group(process: Any, selected_signal: signal.Signals) -> None:
     try:
         os.killpg(process.pid, selected_signal)
@@ -734,6 +816,17 @@ async def _execute(
             )
             record["eligible"] = False
         telemetry = work / "telemetry.jsonl"
+        if spec["target"]["phase"] == "development-probe-candidate":
+            telemetry_errors = _development_telemetry_errors(
+                telemetry,
+                variant["id"],
+                int(process.returncode),
+            )
+            if telemetry_errors:
+                record["integrity_errors"].extend(telemetry_errors)
+                record["eligible"] = False
+                if record["error"] is None:
+                    record["error"] = "; ".join(telemetry_errors)
         record.update(
             {
                 "exit_code": int(process.returncode),
@@ -796,7 +889,12 @@ def _invoke_evaluator(
         "candidates": [
             {
                 "variant_id": row["variant_id"],
-                "outcome": row["outcome"],
+                "execution": {
+                    "status": row["status"],
+                    "exit_code": row["exit_code"],
+                    "duration_ms": row["duration_ms"],
+                    "timed_out": row["timed_out"],
+                },
                 "result_sha256": row["result_sha256"],
                 "evidence": [
                     {
@@ -1027,52 +1125,65 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
             "evaluator_sha256": evaluator["adapter"]["sha256"],
         },
     )
-    if _digest_file(evaluator["adapter"]["path"]) != evaluator["adapter"]["sha256"]:
-        raise ExperimentError(
-            "independent evaluator changed before variant execution; no experiment result was produced"
-        )
-    results = await _execute(
-        spec,
-        output,
-        frozen_root,
-        input_sha256,
-        target_files,
-        target_sha256,
-        target_source_root,
-        adapters,
-        ledger,
-    )
-    if _digest_file(frozen_root) != input_sha256:
-        raise ExperimentError("the root frozen input changed during the experiment")
-    if _digest_file(evaluator["adapter"]["path"]) != evaluator["adapter"]["sha256"]:
-        raise ExperimentError(
-            "independent evaluator changed before scoring; no experiment recommendation was produced"
-        )
-    eligible = [row for row in results if row["eligible"]]
+    results: list[dict[str, Any]] = []
+    eligible: list[dict[str, Any]] = []
     evaluation_error = None
+    failure_stage = "pre-variant-integrity"
     try:
+        if _digest_file(evaluator["adapter"]["path"]) != evaluator["adapter"]["sha256"]:
+            raise ExperimentError(
+                "independent evaluator changed before variant execution; no experiment result was produced"
+            )
+        failure_stage = "execute-variants"
+        results = await _execute(
+            spec,
+            output,
+            frozen_root,
+            input_sha256,
+            target_files,
+            target_sha256,
+            target_source_root,
+            adapters,
+            ledger,
+        )
+        if _digest_file(frozen_root) != input_sha256:
+            raise ExperimentError("the root frozen input changed during the experiment")
+        failure_stage = "evaluation-integrity"
+        if _digest_file(evaluator["adapter"]["path"]) != evaluator["adapter"]["sha256"]:
+            raise ExperimentError(
+                "independent evaluator changed before scoring; no experiment recommendation was produced"
+            )
+        eligible = [row for row in results if row["eligible"]]
+        failure_stage = "evaluate"
         scores = (
             _invoke_evaluator(spec, results, output, evaluator, evaluator_snapshot, ledger)
             if eligible
             else {}
         )
+        champion, ranking = _evaluate(spec, results, scores)
     except EvaluatorTimeout as error:
         scores = {}
+        champion, ranking = None, []
         evaluation_error = {
             "kind": "timeout",
+            "stage": "evaluate",
             "message": str(error),
             "timeout_ms": error.timeout_ms,
             "evidence_sha256": error.evidence_sha256,
         }
-    champion, ranking = (
-        _evaluate(spec, results, scores)
-        if evaluation_error is None
-        else (None, [])
-    )
+    except Exception as error:
+        scores = {}
+        champion, ranking = None, []
+        evaluation_error = {
+            "kind": "evaluation-error" if failure_stage.startswith("eval") else "experiment-error",
+            "stage": failure_stage,
+            "message": str(error),
+            "error_type": type(error).__name__,
+        }
     status = (
-        "evaluator-timeout"
-        if evaluation_error is not None
-        else ("completed" if champion is not None else "no-eligible-variant")
+        ("completed" if champion is not None else "no-eligible-variant")
+        if evaluation_error is None
+        else ("evaluator-timeout" if evaluation_error["kind"] == "timeout" else "failed")
     )
     summary = {
         "schema_version": CONTRACT,
@@ -1092,7 +1203,7 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
     }
     summary_sha256 = _write_exclusive_json(output / "summary.json", summary)
     ledger.append(
-        "evaluation_completed",
+        "evaluation_completed" if evaluation_error is None else "experiment_failed",
         {
             "experiment_id": spec["experiment_id"],
             "champion": champion,

@@ -9,6 +9,7 @@ import json
 import re
 import sys
 import uuid
+from pathlib import Path
 from typing import Any, Sequence
 
 try:
@@ -59,6 +60,171 @@ def _pre_run_identity(
     return {"subject_id": task_id, "lineage_id": task_id}
 
 
+ATOM_BINDING_FIELDS = (
+    "atomic_step_id", "atom_request_sha256", "atom_run_id", "atom_attempt",
+)
+
+
+def atom_identity(atom_run: Path) -> dict[str, Any]:
+    run = atom_run.resolve()
+    if run.is_symlink() or not run.is_dir():
+        raise work_memory.WorkMemoryError("atom-run-not-found", 3)
+    request_path = run / "inputs" / "atom-request.json"
+    ledger_path = run / "ledger.jsonl"
+    try:
+        request_bytes = request_path.read_bytes()
+        request = json.loads(request_bytes)
+        lines = ledger_path.read_bytes().splitlines(keepends=True)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise work_memory.WorkMemoryError("invalid-atom-run", 3) from exc
+    if not lines or not isinstance(request, dict):
+        raise work_memory.WorkMemoryError("invalid-atom-run", 3)
+    records = []
+    previous = None
+    for sequence, line in enumerate(lines, start=1):
+        try:
+            record = json.loads(line)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise work_memory.WorkMemoryError("invalid-atom-run-ledger", 3) from exc
+        if (
+            not isinstance(record, dict)
+            or record.get("sequence") != sequence
+            or record.get("previous_event_sha256") != previous
+            or not isinstance(record.get("payload"), dict)
+        ):
+            raise work_memory.WorkMemoryError("invalid-atom-run-ledger", 3)
+        records.append(record)
+        previous = hashlib.sha256(line).hexdigest()
+    first = records[0]
+    request_sha256 = hashlib.sha256(request_bytes).hexdigest()
+    if (
+        first.get("event") != "atom-started"
+        or first["payload"].get("atomic_step_id") != request.get("atomic_step_id")
+        or first["payload"].get("request_sha256") != request_sha256
+    ):
+        raise work_memory.WorkMemoryError("atom-run-identity-mismatch", 3)
+    experiments = [item for item in records if item.get("event") == "experiment-recorded"]
+    attempt = len(experiments)
+    if not experiments or experiments[-1]["payload"].get("verdict") != "passed":
+        attempt += 1
+    return {
+        "atomic_step_id": work_memory.require_id(request["atomic_step_id"], "atomic-step-id"),
+        "atom_request_sha256": request_sha256,
+        "atom_run_id": hashlib.sha256(lines[0]).hexdigest(),
+        "atom_attempt": max(1, attempt),
+        "atom_run_path": str(run),
+        "repository_root": first["payload"].get("repository_root"),
+    }
+
+
+def _atom_binding(atom_run: str | None) -> dict[str, Any]:
+    if atom_run is None:
+        return {}
+    identity = atom_identity(Path(atom_run))
+    return {field: identity[field] for field in ATOM_BINDING_FIELDS}
+
+
+def atom_closeout(atom_run: Path) -> dict[str, Any]:
+    identity = atom_identity(atom_run)
+    repository_root = identity["repository_root"]
+    if not isinstance(repository_root, str) or not Path(repository_root).is_absolute():
+        raise work_memory.WorkMemoryError("atom-repository-root-unavailable", 3)
+    work_memory.configure_root(Path(repository_root))
+    events, ledger_sha256 = work_memory.load_ledger()
+    linked: dict[tuple[str, str], dict[str, Any]] = {}
+    current: dict[str, str] = {}
+    for index, event in enumerate(events, start=1):
+        kind = event["event_type"]
+        blocker_id = event.get("blocker_id")
+        if kind in {"blocker_opened", "pre_run_blocker_opened", "blocker_recurred"}:
+            occurrence_id = event["occurrence_id"]
+            current[blocker_id] = occurrence_id
+            if all(event.get(field) == identity[field] for field in ATOM_BINDING_FIELDS[:3]):
+                linked[(blocker_id, occurrence_id)] = {
+                    "blocker_id": blocker_id,
+                    "occurrence_id": occurrence_id,
+                    "atom_attempt": event["atom_attempt"],
+                    "status": "open",
+                    "classification": "deliverable-blocker",
+                    "opened_event_id": event["event_id"],
+                    "opened_sequence": index,
+                }
+            continue
+        if blocker_id is None or blocker_id not in current:
+            continue
+        key = (blocker_id, current[blocker_id])
+        row = linked.get(key)
+        if row is None:
+            continue
+        if kind in {"blocker_transitioned", "pre_run_blocker_transitioned"}:
+            row["status"] = event["to_status"]
+            row["transition_event_id"] = event["event_id"]
+            for field in (
+                "remaining_work", "non_gap_evidence", "supersession_evidence",
+                "superseded_by_blocker_id", "superseded_by_occurrence_id",
+            ):
+                if field in event:
+                    row[field] = event[field]
+        elif kind == "blocker_assigned_downstream":
+            row["classification"] = event["classification"]
+            row["downstream_owner"] = event["downstream_owner"]
+            row["assignment_event_id"] = event["event_id"]
+
+    dispositions = []
+    blocking = []
+    for key, row in sorted(linked.items(), key=lambda item: item[1]["opened_sequence"]):
+        status = row["status"]
+        reason = None
+        disposition = None
+        if status == "closed" and row.get("remaining_work") == "none":
+            disposition = "closed"
+        elif status == "non-gap" and isinstance(row.get("non_gap_evidence"), str) and row["non_gap_evidence"].strip():
+            disposition = "non-gap"
+        elif status == "open" and (
+            row.get("classification") == "incidental-system-defect"
+            and isinstance(row.get("downstream_owner"), str)
+            and row["downstream_owner"].strip()
+        ):
+            disposition = "assigned-downstream"
+        elif status == "superseded":
+            successor = (
+                row.get("superseded_by_blocker_id"),
+                row.get("superseded_by_occurrence_id"),
+            )
+            if successor in linked and successor != key:
+                disposition = "superseded"
+            else:
+                reason = "supersession-successor-invalid"
+        elif status in {"open", "fixed-awaiting-verification", "verified"}:
+            reason = f"deliverable-blocker-{status}"
+        else:
+            reason = "undispositioned-blocker"
+        result = {**row, "disposition": disposition, "blocking_reason": reason}
+        dispositions.append(result)
+        if reason is not None:
+            blocking.append({
+                "blocker_id": row["blocker_id"],
+                "occurrence_id": row["occurrence_id"],
+                "reason": reason,
+            })
+    return {
+        "schema_version": 1,
+        "atomic_step_id": identity["atomic_step_id"],
+        "atom_request_sha256": identity["atom_request_sha256"],
+        "atom_run_id": identity["atom_run_id"],
+        "work_memory_ledger_sha256": ledger_sha256,
+        "clear": not blocking,
+        "linked_occurrence_count": len(dispositions),
+        "blocking_occurrence_count": len(blocking),
+        "blocking_occurrences": blocking,
+        "dispositions": dispositions,
+    }
+
+
+def cmd_atom_closeout(args: argparse.Namespace) -> dict[str, Any]:
+    return atom_closeout(Path(args.atom_run))
+
+
 def cmd_open(args: argparse.Namespace) -> dict[str, Any]:
     events, _ = work_memory.load_ledger()
     run_route = args.run_id is not None or args.subject_id is not None
@@ -87,6 +253,7 @@ def cmd_open(args: argparse.Namespace) -> dict[str, Any]:
             previous_status = event["to_status"]
         elif event["event_type"] == "blocker_recurred" and event["blocker_id"] == blocker_id:
             previous_status = "open"
+    atom_fields = _atom_binding(getattr(args, "atom_run", None))
     if previous_status is None:
         authority = (
             {"run_id": args.run_id}
@@ -103,12 +270,14 @@ def cmd_open(args: argparse.Namespace) -> dict[str, Any]:
             step_id=args.step_id, surface=args.surface,
             symptom=args.symptom, evidence=args.evidence, impact=args.impact,
             boundary=args.boundary, status="open",
+            **atom_fields,
         )
     elif previous_status == "closed":
         event = work_memory._event(
             "blocker_recurred", args.event_id, run_id=args.run_id, blocker_id=blocker_id,
             occurrence_id=occurrence_id, previous_status="closed", status="open",
             evidence=args.evidence,
+            **atom_fields,
         )
     else:
         raise work_memory.WorkMemoryError("blocker-already-active", 3)
@@ -345,6 +514,25 @@ def cmd_transition(args: argparse.Namespace) -> dict[str, Any]:
         extra["reopen_evidence"] = args.reopen_evidence
     elif args.to_status == "superseded":
         extra["supersession_evidence"] = args.supersession_evidence
+        superseded_by_blocker_id = getattr(args, "superseded_by_blocker_id", None)
+        superseded_by_occurrence_id = getattr(args, "superseded_by_occurrence_id", None)
+        if not superseded_by_blocker_id or not superseded_by_occurrence_id:
+            raise work_memory.WorkMemoryError("superseding-blocker-occurrence-required", 2)
+        current_occurrences: dict[str, dict[str, Any]] = {}
+        for item in events:
+            if item["event_type"] in {"blocker_opened", "blocker_recurred"}:
+                current_occurrences[item["blocker_id"]] = item
+        successor = current_occurrences.get(superseded_by_blocker_id)
+        source = current_occurrences.get(args.blocker_id)
+        if (
+            successor is None or source is None
+            or successor["occurrence_id"] != superseded_by_occurrence_id
+            or successor["blocker_id"] == source["blocker_id"]
+            or any(source.get(field) != successor.get(field) for field in ATOM_BINDING_FIELDS[:3])
+        ):
+            raise work_memory.WorkMemoryError("invalid-superseding-blocker-occurrence", 3)
+        extra["superseded_by_blocker_id"] = superseded_by_blocker_id
+        extra["superseded_by_occurrence_id"] = superseded_by_occurrence_id
     elif args.to_status == "non-gap":
         extra["non_gap_evidence"] = args.non_gap_evidence
     event = work_memory._event(
@@ -422,6 +610,7 @@ def cmd_assign_downstream(args: argparse.Namespace) -> dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path)
     sub = parser.add_subparsers(dest="command", required=True)
     opened = sub.add_parser("open")
     for flag in ("step-id", "surface", "error-signature", "symptom", "evidence",
@@ -430,6 +619,7 @@ def build_parser() -> argparse.ArgumentParser:
     opened.add_argument("--run-id"); opened.add_argument("--subject-id")
     opened.add_argument("--task-id"); opened.add_argument("--ownership-event-id")
     opened.add_argument("--occurrence-id"); opened.add_argument("--event-id")
+    opened.add_argument("--atom-run")
     opened.set_defaults(func=cmd_open)
     pre_correct = sub.add_parser("pre-run-correct")
     for flag in ("task-id", "ownership-event-id", "blocker-id", "occurrence-id",
@@ -460,6 +650,8 @@ def build_parser() -> argparse.ArgumentParser:
     transition.add_argument("--to-status", required=True, choices=["open", "fixed-awaiting-verification", "verified", "closed", "superseded", "non-gap"])
     transition.add_argument("--verification-event-id"); transition.add_argument("--remaining-work", default="none")
     transition.add_argument("--supersession-evidence"); transition.add_argument("--non-gap-evidence"); transition.add_argument("--reopen-evidence"); transition.add_argument("--event-id")
+    transition.add_argument("--superseded-by-blocker-id")
+    transition.add_argument("--superseded-by-occurrence-id")
     transition.set_defaults(func=cmd_transition)
     recover = sub.add_parser("recover")
     recover.add_argument("--run-id", required=True)
@@ -474,12 +666,17 @@ def build_parser() -> argparse.ArgumentParser:
     assign.add_argument("--evidence", required=True)
     assign.add_argument("--event-id")
     assign.set_defaults(func=cmd_assign_downstream)
+    closeout = sub.add_parser("atom-closeout")
+    closeout.add_argument("--atom-run", required=True)
+    closeout.set_defaults(func=cmd_atom_closeout)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     try:
         args = build_parser().parse_args(argv)
+        if args.root is not None:
+            work_memory.configure_root(args.root)
         print(json.dumps(args.func(args), sort_keys=True))
         return 0
     except work_memory.WorkMemoryError as exc:

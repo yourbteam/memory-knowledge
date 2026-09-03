@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -42,6 +43,7 @@ def _source_digest(path: Path) -> str:
 
 def _adapter(quality: int) -> str:
     return f"""from __future__ import annotations
+import hashlib
 import json
 import os
 from datetime import datetime, timezone
@@ -54,13 +56,16 @@ telemetry_path = Path(os.environ["EXPERIMENT_TELEMETRY_PATH"])
 payload = json.loads(input_path.read_text(encoding="utf-8"))
 telemetry = {{
     "schema_version": 1,
-    "sequence": 1,
-    "event": "candidate_finished",
+    "sequence": int(os.environ.get("EXPERIMENT_TELEMETRY_SEQUENCE_START", "1")),
+    "event": "work_completed",
     "recorded_at": datetime.now(timezone.utc).isoformat(),
     "variant_id": variant_id,
-    "input_value": payload["value"],
+    "message": "Read the frozen case and measured candidate quality.",
+    "evidence_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),
+    "observations": {{"observed_quality": {quality}}},
 }}
-telemetry_path.write_text(json.dumps(telemetry, sort_keys=True) + "\\n", encoding="utf-8")
+with telemetry_path.open("a", encoding="utf-8") as stream:
+    stream.write(json.dumps(telemetry, sort_keys=True) + "\\n")
 result = {{
     "schema_version": 1,
     "variant_id": variant_id,
@@ -95,7 +100,8 @@ def _fixture(root: Path) -> tuple[Path, Path, Path, Path]:
     works.write_text('{"value":"works"}\n', encoding="utf-8")
     refuses.write_text('{"value":"refuses"}\n', encoding="utf-8")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "case_source_root": str(root),
         "atomic_step": {
             "id": "candidate-bundle",
             "outcome": "A declared approach becomes a runnable immutable candidate.",
@@ -104,14 +110,14 @@ def _fixture(root: Path) -> tuple[Path, Path, Path, Path]:
             "captured_cases": [
                 {
                     "id": "works",
-                    "source": str(works),
+                    "source_ref": "cases/works.json",
                     "sha256": _digest(works),
                     "kind": "success",
                     "expected_outcome": "The candidate completes.",
                 },
                 {
                     "id": "refuses",
-                    "source": str(refuses),
+                    "source_ref": "cases/refuses.json",
                     "sha256": _digest(refuses),
                     "kind": "failure",
                     "expected_outcome": "The candidate refuses invalid input.",
@@ -230,11 +236,14 @@ from pathlib import Path
 request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 scores = []
 for candidate in request["candidates"]:
-    outcome = candidate["outcome"]
-    if "observed_quality" in outcome:
-        quality = outcome["observed_quality"]
+    telemetry = next(item["path"] for item in candidate["evidence"] if item["id"] == "telemetry")
+    events = [json.loads(line) for line in Path(telemetry).read_text(encoding="utf-8").splitlines()]
+    event = next(item for item in events if "observations" in item)
+    observations = event["observations"]
+    if "observed_quality" in observations:
+        quality = observations["observed_quality"]
     else:
-        quality = sum(value not in {"base-a", "base-b"} for value in outcome.get("features", []))
+        quality = sum(value not in {"base-a", "base-b"} for value in observations.get("features", []))
     scores.append({"variant_id": candidate["variant_id"], "metrics": {"quality": quality}})
 Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores}, sort_keys=True) + "\\n", encoding="utf-8")
 """,
@@ -376,6 +385,7 @@ def _run_all_probes(request: Path, output: Path) -> subprocess.CompletedProcess[
 
 def _composed_adapter() -> str:
     return """from __future__ import annotations
+import hashlib
 import json
 import os
 from datetime import datetime, timezone
@@ -390,12 +400,16 @@ telemetry_path = Path(os.environ["EXPERIMENT_TELEMETRY_PATH"])
 payload = json.loads(input_path.read_text(encoding="utf-8"))
 telemetry = {
     "schema_version": 1,
-    "sequence": 1,
-    "event": "composed_candidate_finished",
+    "sequence": int(os.environ.get("EXPERIMENT_TELEMETRY_SEQUENCE_START", "1")),
+    "event": "work_completed",
     "recorded_at": datetime.now(timezone.utc).isoformat(),
     "variant_id": variant_id,
+    "message": "Executed both composed features.",
+    "evidence_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),
+    "observations": {"features": [feature_a(), feature_b()]},
 }
-telemetry_path.write_text(json.dumps(telemetry, sort_keys=True) + "\\n", encoding="utf-8")
+with telemetry_path.open("a", encoding="utf-8") as stream:
+    stream.write(json.dumps(telemetry, sort_keys=True) + "\\n")
 result = {
     "schema_version": 1,
     "variant_id": variant_id,
@@ -437,7 +451,8 @@ def _composition_fixture(
     _write_source(sources["selector-control"], "base-a", "base-b")
     _write_source(sources["selector-variation"], "base-a", "selector-b")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "case_source_root": str(root),
         "atomic_step": {
             "id": "composed-candidate",
             "outcome": "Independent winners become one runnable candidate.",
@@ -446,14 +461,14 @@ def _composition_fixture(
             "captured_cases": [
                 {
                     "id": "works",
-                    "source": str(works),
+                    "source_ref": "composition-cases/works.json",
                     "sha256": _digest(works),
                     "kind": "success",
                     "expected_outcome": "The assembled candidate completes.",
                 },
                 {
                     "id": "refuses",
-                    "source": str(refuses),
+                    "source_ref": "composition-cases/refuses.json",
                     "sha256": _digest(refuses),
                     "kind": "failure",
                     "expected_outcome": "The assembled candidate preserves failure evidence.",
@@ -605,7 +620,7 @@ response = {{
     "case_id": case_id,
     "verdict": {verdicts!r}[case_id],
     "reason": "The recorded execution evidence determines this case.",
-    "evidence_pointers": ["execution-result"],
+    "evidence_pointers": ["candidate-telemetry"],
 }}
 if {malformed!r} == "unknown-verdict":
     response["verdict"] = "looks-good"
@@ -629,13 +644,16 @@ import sys
 from pathlib import Path
 
 question = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-features = question["execution_result"]["outcome"]["features"]
+telemetry = next(item for item in question["execution_evidence"] if item["id"] == "candidate-telemetry")
+events = [json.loads(line) for line in Path(telemetry["path"]).read_text(encoding="utf-8").splitlines()]
+event = next(item for item in events if "observations" in item)
+features = event["observations"]["features"]
 verdict = "satisfied" if question["case_id"] == "works" or features == ["runner-a", "selector-b"] else "not-satisfied"
 response = {
     "case_id": question["case_id"],
     "verdict": verdict,
     "reason": f"Observed assembled features {features!r}.",
-    "evidence_pointers": ["execution-result"],
+    "evidence_pointers": ["candidate-telemetry"],
 }
 Path(sys.argv[2]).write_text(json.dumps(response, sort_keys=True) + "\\n", encoding="utf-8")
 """
@@ -800,6 +818,18 @@ def _cross_case_module():
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.path.insert(0, str(CROSS_CASE.parent))
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.path.pop(0)
+    return module
+
+
+def _candidate_module():
+    spec = importlib.util.spec_from_file_location("development_probe_candidate", CANDIDATE)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(CANDIDATE.parent))
     try:
         spec.loader.exec_module(module)
     finally:
@@ -1051,7 +1081,10 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
             "entrypoint": CANDIDATE.name,
         },
         "frozen_input": {
-            "path": json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["source"],
+            "path": str(
+                Path(json.loads(manifest.read_text())["case_source_root"])
+                / json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["source_ref"]
+            ),
             "sha256": json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["sha256"],
         },
         "execution_limits": {
@@ -1091,8 +1124,26 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
     assert [row["variant_id"] for row in summary["ranking"]] == ["variation", "control"]
     assert all(row["eligible"] for row in summary["variants"])
     for variant_id in ("control", "variation"):
-        telemetry = (output / "variants" / variant_id / "telemetry.jsonl").read_text()
-        assert "candidate_bundle_verified" in telemetry
+        events = [
+            json.loads(line)
+            for line in (output / "variants" / variant_id / "telemetry.jsonl").read_text().splitlines()
+        ]
+        assert [item["sequence"] for item in events] == list(range(1, len(events) + 1))
+        assert [item["event"] for item in events] == [
+            "candidate_started",
+            "operator_started",
+            "operator_work",
+            "operator_finished",
+            "candidate_bundle_verified",
+            "candidate_finished",
+        ]
+        assert all(
+            item["atomic_step_id"] == "candidate-bundle"
+            and item["probe_id"] == "runner"
+            and item["case_id"] == "works"
+            and item["approach_id"] in {"control", "variation"}
+            for item in events
+        )
 
     invalid_env = os.environ.copy()
     invalid_env.update(
@@ -1101,7 +1152,8 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
             "EXPERIMENT_VARIANT_ID": "control",
             "EXPERIMENT_WORK_DIR": str(tmp_path),
             "EXPERIMENT_INPUT_PATH": str(
-                json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["source"]
+                Path(json.loads(manifest.read_text())["case_source_root"])
+                / json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["source_ref"]
             ),
             "EXPERIMENT_VARIANT_PATH": str(tmp_path / "invalid-variant.json"),
             "EXPERIMENT_RESULT_PATH": str(tmp_path / "invalid-result.json"),
@@ -1128,6 +1180,76 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
     )
     assert refused.returncode == 2
     assert "undeclared" in refused.stderr
+
+
+@pytest.mark.parametrize(
+    "mutate,diagnostic",
+    [
+        (
+            lambda source: source.replace(
+                'int(os.environ.get("EXPERIMENT_TELEMETRY_SEQUENCE_START", "1"))',
+                "2",
+            ),
+            "require 1",
+        ),
+        (
+            lambda source: source.replace('"event": "work_completed"', '"event": "unknown"'),
+            "unsupported",
+        ),
+    ],
+)
+def test_candidate_refuses_invalid_operator_telemetry_with_actionable_terminal_event(
+    tmp_path: Path,
+    mutate,
+    diagnostic: str,
+) -> None:
+    manifest, baseline, control, _ = _fixture(tmp_path)
+    (control / "adapter.py").write_text(mutate(_adapter(1)), encoding="utf-8")
+    bundle = tmp_path / "bundle"
+    built = _build(
+        _request(manifest, baseline, control, "control"),
+        tmp_path / "request.json",
+        bundle,
+    )
+    assert built.returncode == 0, built.stderr
+    variant = tmp_path / "variant.json"
+    _write_json(
+        variant,
+        {"schema_version": 1, "variant_id": "control", "configuration": {"case_id": "works"}},
+    )
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "EXPERIMENT_ID": "invalid-operator-telemetry",
+            "EXPERIMENT_VARIANT_ID": "control",
+            "EXPERIMENT_WORK_DIR": str(tmp_path),
+            "EXPERIMENT_INPUT_PATH": str(tmp_path / "cases" / "works.json"),
+            "EXPERIMENT_VARIANT_PATH": str(variant),
+            "EXPERIMENT_RESULT_PATH": str(tmp_path / "result.json"),
+            "EXPERIMENT_TELEMETRY_PATH": str(tmp_path / "telemetry.jsonl"),
+        }
+    )
+
+    completed = subprocess.run(
+        [sys.executable, str(CANDIDATE), "execute", str(bundle)],
+        cwd=ROOT,
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 2
+    assert diagnostic in completed.stderr
+    events = [
+        json.loads(line)
+        for line in (tmp_path / "telemetry.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert [item["sequence"] for item in events] == list(range(1, len(events) + 1))
+    assert events[-1]["event"] == "candidate_finished"
+    assert events[-1]["state"] == "failed"
+    failure = next(item for item in events if item["event"] == "operator_failed")
+    assert diagnostic in failure["correction"]
     assert not (tmp_path / "invalid-result.json").exists()
 
 
@@ -1278,6 +1400,15 @@ def test_launcher_refuses_partial_experiment_when_candidate_changes_its_bundle(
     summary = json.loads((output / "experiment" / "summary.json").read_text())
     changed = next(row for row in summary["variants"] if row["variant_id"] == "variation-2")
     assert changed["eligible"] is False
+    verified = subprocess.run(
+        [sys.executable, str(CANDIDATE), "verify", str(output / "bundles" / "variation")],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert verified.returncode == 0, verified.stderr
+    assert not any(path.name == "candidate-source" for path in output.rglob("candidate-source"))
     assert not (output / "recommendation.json").exists()
 
 
@@ -1316,6 +1447,22 @@ def test_cross_case_launcher_aggregates_every_case_into_one_probe_winner(
         "refuses",
     ]
     assert all(item["status"] == "completed" for item in case_results["results"])
+    assert sorted(path.parent.name for path in output.glob("bundles/*/bundle.json")) == [
+        "control",
+        "variation",
+    ]
+    assert not list(output.glob("cases/*/bundles"))
+    bundle_mappings: dict[str, set[tuple[str, str]]] = {}
+    for mapping_path in output.glob("cases/*/variant-map.json"):
+        for item in json.loads(mapping_path.read_text())["variants"]:
+            resolved = str((mapping_path.parent / item["bundle"]).resolve())
+            bundle_mappings.setdefault(item["approach_id"], set()).add(
+                (resolved, item["bundle_sha256"])
+            )
+    assert {name: len(values) for name, values in bundle_mappings.items()} == {
+        "control": 1,
+        "variation": 1,
+    }
 
 
 def test_cross_case_launcher_preserves_successful_case_when_another_case_fails(
@@ -1323,7 +1470,7 @@ def test_cross_case_launcher_preserves_successful_case_when_another_case_fails(
 ) -> None:
     manifest, baseline, control, variation = _fixture(tmp_path)
     captured = json.loads(manifest.read_text())["atomic_step"]["captured_cases"]
-    Path(captured[1]["source"]).unlink()
+    (Path(json.loads(manifest.read_text())["case_source_root"]) / captured[1]["source_ref"]).unlink()
     request = _cross_case_request(tmp_path, manifest, baseline, {"control": control, "variation": variation})
     output = tmp_path / "cross-output"
 
@@ -1502,12 +1649,36 @@ def test_all_probe_binding_refuses_candidate_changed_after_probe_run(
 
     summary["promotion_applied"] = False
     _write_json(summary_path, summary)
-    changed = output / "probes" / "runner" / "cases" / "works" / "bundles" / "variation" / "source" / "adapter.py"
+    changed = output / "probes" / "runner" / "bundles" / "variation" / "source" / "adapter.py"
     changed.chmod(0o644)
     changed.write_text(_adapter(99), encoding="utf-8")
 
     with pytest.raises(module.AllProbeError, match="candidate file size changed"):
         module._bind_candidates(output, manifest, results)
+
+
+def test_execution_source_materialization_falls_back_to_verified_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _candidate_module()
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "adapter.py").write_text("value = 1\n", encoding="utf-8")
+    target = tmp_path / "target"
+    real_run = module.subprocess.run
+
+    def refuse_reflink(command, *args, **kwargs):
+        if command[:2] == ["cp", "-cR"]:
+            return subprocess.CompletedProcess(command, 1, "", "reflink unavailable")
+        return real_run(command, *args, **kwargs)
+
+    monkeypatch.setattr(module.sys, "platform", "darwin")
+    monkeypatch.setattr(module.subprocess, "run", refuse_reflink)
+
+    method = module._materialize_execution_source(source, target)
+
+    assert method == "verified-copy"
+    assert (target / "adapter.py").read_text(encoding="utf-8") == "value = 1\n"
 
 
 def test_composer_combines_disjoint_winners_into_one_runnable_candidate(
@@ -1861,6 +2032,21 @@ def test_whole_process_runs_from_probe_experiments_to_passed_verdict(
     assert (output / "probes" / "promotion-candidates.json").is_file()
     assert (output / "composition" / "assembly" / "assembly.json").is_file()
     assert (output / "validation" / "final-verdict.json").is_file()
+    telemetry = [
+        json.loads(line)
+        for line in (output / "telemetry.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert [item["sequence"] for item in telemetry] == list(range(1, len(telemetry) + 1))
+    assert telemetry[0]["event"] == "development_probe_started"
+    assert telemetry[-1]["event"] == "development_probe_finished"
+    assert any(
+        item["event"] == "operator_work"
+        and item["atomic_step_id"] == "composed-candidate"
+        and item["probe_id"] in {"runner", "selector"}
+        and item["case_id"] in {"works", "refuses"}
+        and item["approach_id"] in {"control", "variation"}
+        for item in telemetry
+    )
 
 
 def test_whole_process_stage_controller_preserves_normal_completion(tmp_path: Path) -> None:
@@ -2256,3 +2442,71 @@ def test_repair_plan_refuses_an_approach_that_can_change_an_unapproved_file() ->
 
     with pytest.raises(module.RepairError, match="feature_a.py"):
         module._validate_plan(response, contract)
+
+
+def test_nested_manifest_case_resolution_uses_explicit_source_root(tmp_path: Path) -> None:
+    manifest, baseline, all_request, _, build_requests = _composition_fixture(tmp_path)
+    nested_manifest = tmp_path / "nested" / "manifests" / "development-manifest.json"
+    nested_manifest.parent.mkdir(parents=True)
+    manifest.rename(nested_manifest)
+    request_paths = [
+        *build_requests.values(),
+        tmp_path / "composition-cross-runner.json",
+        tmp_path / "composition-cross-selector.json",
+        all_request,
+    ]
+    for request_path in request_paths:
+        value = json.loads(request_path.read_text())
+        value["development_manifest"] = str(nested_manifest)
+        _write_json(request_path, value)
+
+    probe_output = tmp_path / "nested-probe-output"
+    probes = _run_all_probes(all_request, probe_output)
+    assert probes.returncode == 0, probes.stderr
+    request = _compose_request(
+        tmp_path / "nested-compose.json",
+        nested_manifest,
+        baseline,
+        probe_output / "promotion-candidates.json",
+    )
+    output = tmp_path / "nested-composition-output"
+    composed = _run_compose(request, output)
+
+    assert composed.returncode == 0, composed.stderr
+    copied_manifest = json.loads((output / "assembly" / "development-manifest.json").read_text())
+    assert copied_manifest["case_source_root"] == str(tmp_path)
+    assert copied_manifest["atomic_step"]["captured_cases"][0]["source_ref"] == (
+        "composition-cases/works.json"
+    )
+
+
+def test_moved_assembly_keeps_case_identity_and_refuses_import_tamper(tmp_path: Path) -> None:
+    _, assembly = _assembled_fixture(tmp_path)
+    moved = tmp_path / "moved" / "assembly"
+    moved.parent.mkdir()
+    shutil.copytree(assembly, moved, copy_function=shutil.copy2)
+    verified = subprocess.run(
+        [sys.executable, str(COMPOSE), "verify", str(moved)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert verified.returncode == 0, verified.stderr
+    manifest = json.loads((moved / "development-manifest.json").read_text())
+    assert manifest["atomic_step"]["captured_cases"][0]["source_ref"] == (
+        "composition-cases/works.json"
+    )
+
+    imported = moved / "inputs" / "works.input"
+    imported.chmod(0o644)
+    imported.write_text("changed\n", encoding="utf-8")
+    refused = subprocess.run(
+        [sys.executable, str(COMPOSE), "verify", str(moved)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert refused.returncode == 2
+    assert "assembled input changed" in refused.stderr

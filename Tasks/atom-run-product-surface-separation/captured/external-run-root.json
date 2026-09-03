@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "case_id": "external-run-root",
+  "repository_files": {
+    "product/kept.txt": "baseline\n"
+  },
+  "allowed_paths": [
+    "product"
+  ],
+  "run_path": "controller-runs/atom-run",
+  "expected": {
+    "start_exit": 0,
+    "controller_paths_in_change_surface": []
+  }
+}

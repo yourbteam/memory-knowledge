@@ -1,0 +1,5 @@
+{
+  "case_id": "nested-manifest",
+  "observed": "A repository-relative captured-case reference resolved below the nested manifest directory and was reported missing.",
+  "expected": "The same logical reference resolves from its explicit source root regardless of manifest depth."
+}

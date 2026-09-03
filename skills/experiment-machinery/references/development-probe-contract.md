@@ -100,13 +100,20 @@ deleted path falls outside the mini-probe's declared boundary, and names every o
 Run `verify` before use. It rejects changed, missing, extra, writable, linked, or relocated source
 evidence; undeclared identities or cases; mismatched metrics; and unsafe command shapes. Run
 `execute` only as an Experiment Machinery variant. It binds the frozen input bytes to the selected
-declared case, executes the copied candidate, and proves the bundle remained unchanged afterward.
-The candidate is still only a promotion candidate; the experiment records a recommendation and
-never writes canonical product code.
+declared case, materializes the source into the execution's work directory using a reflink or
+verified-copy fallback, executes only that disposable source, checks it for mutation, discards it,
+and proves the shared bundle remained unchanged afterward. The candidate is still only a promotion
+candidate; the experiment records a recommendation and never writes canonical product code.
+
+Execution separates the wrapper-owned variant feed from the child operator feed. The wrapper emits
+ordered candidate and operator starts, validates and forwards namespaced work or decision events,
+records operator completion or an actionable failure, records bundle integrity, and emits one
+candidate terminal. The generic runner validates that lifecycle before eligibility. A malformed,
+missing, misidentified, or non-monotonic operator feed cannot remain eligible.
 
 ## Run one complete mini-probe experiment
 
-Use one launcher request containing exactly:
+Use one public launcher request containing exactly:
 
 - `schema_version`;
 - `development_manifest`;
@@ -116,6 +123,10 @@ Use one launcher request containing exactly:
 - one independent evaluator adapter, its SHA-256, and the code-controlled command containing
   `{python}`, `{evaluation-adapter}`, `{evaluation-request}`, and `{evaluation-response}` exactly
   once. Cross-case, all-probe, complete-run, and repair controllers preserve this exact evaluator.
+
+The cross-case controller replaces `approach_build_requests` with `approach_bundles`, containing
+exactly one approach id, absolute bundle path, and freshly verified bundle digest per declared
+approach. This is a controller-owned handoff, not a second public candidate-construction path.
 
 Run:
 
@@ -150,8 +161,9 @@ Remove `case_id` from the single-case request and run:
 python3 scripts/development_probe_cross_case.py run <request.json> <new-output-directory>
 ```
 
-The launcher derives the complete ordered case set from the manifest and runs the proven
-single-case launcher once per case with bounded concurrency and isolated output. It waits for every
+The launcher derives the complete ordered case set from the manifest, builds each approach once
+into a shared immutable bundle, and runs the proven single-case launcher once per case against
+those exact bundle identities with bounded concurrency and isolated output. It waits for every
 case, preserves successful evidence when another case fails, and writes results in manifest order.
 Only a complete set advances to the metric method declared before execution.
 
@@ -240,14 +252,16 @@ waits for all cases, preserves successful and failed execution evidence, and ser
 manifest order. One case cannot cancel or erase another.
 
 Each case is then presented separately to the assessment adapter with the atomic outcome, operator
-path, expected case outcome, applicable success or failure criterion, execution result, named
-execution evidence, and exactly three available answers: `satisfied`, `not-satisfied`, or
-`cannot-assess`. Code accepts only one exact response object for that case, with a nonempty reason
-and at least one evidence pointer naming evidence actually presented for that case. Free-form,
-batched, misidentified, unknown, or ungrounded answers fail closed with all case runs preserved.
-A `satisfied` answer must cite the completed execution result, or the recorded execution error when
-the expected behavior is a refusal; execution status alone cannot establish satisfaction. An
-incomplete execution never offers `satisfied` as an available answer.
+path, expected case outcome, applicable success or failure criterion, code-owned execution facts,
+and hash-bound stdout, stderr, and telemetry references. The candidate result remains in the audit
+record but is withheld from the assessment question. The adapter has exactly three answers:
+`satisfied`, `not-satisfied`, or `cannot-assess`. Code accepts only one exact response object for
+that case, with a nonempty reason and at least one evidence pointer naming evidence actually
+presented for that case. Free-form, batched, misidentified, unknown, ungrounded, missing, or changed
+evidence fails closed with all case runs preserved. A `satisfied` answer for a completed execution
+must cite candidate telemetry; an execution error is required when refusal is the observed path.
+Execution status alone cannot establish satisfaction, and an incomplete execution never offers
+`satisfied` as an available answer.
 
 Only the exact complete assessment set advances. Code binds one assessment per declared case to
 the verified atomic-step and assembly identities, restores manifest order, and returns:
@@ -293,6 +307,12 @@ After final validation, code ignores stdout as verdict authority. It freshly has
 the final artifact, binds its atomic-step identity and assembly digest to a freshly verified
 assembly, requires `passed`, `failed`, or `inconclusive`, and requires `promotion_applied: false`.
 Only then does the top-level launcher return and preserve that verdict.
+
+The output root contains one live `telemetry.jsonl`. It starts before the first child stage, ends on
+success or failure, and uses a cross-process append lock to preserve one positive monotonic sequence.
+Stage events identify the active stage. Forwarded candidate events identify atomic step, probe,
+case, approach, variant, state, and last completed work without exposing input payloads or granting
+the candidate write access to the parent experiment ledger.
 
 The complete launcher does not merge away probe identities. Probe outputs, approach experiments,
 winners, and case evidence remain under the probe stage. Repair a probe-local issue through that

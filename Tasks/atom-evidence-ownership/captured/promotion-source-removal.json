@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "case_id": "promotion-source-removal",
+  "source_kind": "promotion-receipt-and-references",
+  "mutation": "remove-import-sources-after-record-promotion",
+  "expected": {
+    "status_exit": 0,
+    "stage": "validation",
+    "recorded_paths_owner": "atom-run",
+    "snapshot_tamper_exit": 2,
+    "unrelated_source_imported": false
+  }
+}

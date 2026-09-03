@@ -22,6 +22,7 @@ from development_probe_candidate import CandidateError, _snapshot_source
 from development_probe_compose import CompositionError, verify_assembly
 from development_probe_final_validation import FinalValidationError, _assessment_contract
 from development_probe_manifest import ManifestError, validate_manifest
+from development_probe_telemetry import append_event
 
 CONTRACT = 1
 STAGES = ["run-probes", "compose-winners", "final-validation"]
@@ -331,6 +332,10 @@ def _run_stage(
     stage: str,
     command: list[str],
     timeout_ms: int | None = None,
+    *,
+    telemetry_path: Path | None = None,
+    telemetry_identity: dict[str, Any] | None = None,
+    child_environment: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     stage_output, evidence_path, result_path = _stage_paths(output, stage)
     deadline_ms = BASE_STAGE_TIMEOUT_MS[stage] if timeout_ms is None else timeout_ms
@@ -340,12 +345,22 @@ def _run_stage(
             f"stage {stage!r} timeout is {deadline_ms!r}; require one positive integer millisecond deadline",
         )
     started_ns = time.monotonic_ns()
+    if telemetry_path is not None and telemetry_identity is not None:
+        append_event(
+            telemetry_path,
+            "stage_started",
+            "running",
+            telemetry_identity,
+            stage=stage,
+            message=f"Started {stage}.",
+        )
     process = subprocess.Popen(
         command,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         start_new_session=True,
+        env=child_environment,
     )
     timed_out = False
     try:
@@ -405,6 +420,17 @@ def _run_stage(
     }
     receipt_path = receipt_root / "receipt.json"
     _write_json(receipt_path, receipt)
+    if telemetry_path is not None and telemetry_identity is not None:
+        append_event(
+            telemetry_path,
+            "stage_finished",
+            receipt["status"],
+            telemetry_identity,
+            stage=stage,
+            message=f"Finished {stage} with status {receipt['status']}.",
+            duration_ms=duration_ms,
+            receipt=str(receipt_path.relative_to(output)),
+        )
     if timed_out:
         relative_receipt = str(receipt_path.relative_to(output))
         raise DevelopmentProbeRunError(
@@ -505,6 +531,24 @@ def run(request_path: Path, output: Path) -> dict[str, Any]:
     output = output.absolute()
     _prepare_output(output)
     normalized, paths = _normalize_request(request_path)
+    telemetry_path = output / "telemetry.jsonl"
+    telemetry_identity = {
+        "atomic_step_id": normalized["atomic_step_id"],
+        "probe_id": None,
+        "case_id": None,
+        "approach_id": None,
+        "variant_id": None,
+    }
+    append_event(
+        telemetry_path,
+        "development_probe_started",
+        "running",
+        telemetry_identity,
+        message="Started the complete Development-Probe run.",
+    )
+    child_environment = os.environ.copy()
+    child_environment["DEVELOPMENT_PROBE_TELEMETRY_PATH"] = str(telemetry_path)
+    child_environment["DEVELOPMENT_PROBE_ATOMIC_STEP_ID"] = normalized["atomic_step_id"]
     _write_json(output / "development-probe-request.json", normalized)
     request_root = output / "stage-requests"
     all_probe_request = {
@@ -539,43 +583,62 @@ def run(request_path: Path, output: Path) -> dict[str, Any]:
         },
     )
     scripts = Path(__file__).parent
-    _run_stage(
-        output,
-        "run-probes",
-        [
-            sys.executable,
-            str(scripts / "development_probe_all_probes.py"),
-            "run",
-            str(all_probe_path),
-            str(output / "probes"),
-        ],
-        timeout_ms=paths["stage_timeouts"]["run-probes"],
-    )
-    _run_stage(
-        output,
-        "compose-winners",
-        [
-            sys.executable,
-            str(scripts / "development_probe_compose.py"),
-            "run",
-            str(composition_path),
-            str(output / "composition"),
-        ],
-        timeout_ms=paths["stage_timeouts"]["compose-winners"],
-    )
-    final_receipt = _run_stage(
-        output,
-        "final-validation",
-        [
-            sys.executable,
-            str(scripts / "development_probe_final_validation.py"),
-            "run",
-            str(final_path),
-            str(output / "validation"),
-        ],
-        timeout_ms=paths["stage_timeouts"]["final-validation"],
-    )
-    verdict = _bind_final_result(output, normalized, final_receipt)
+    try:
+        _run_stage(
+            output,
+            "run-probes",
+            [
+                sys.executable,
+                str(scripts / "development_probe_all_probes.py"),
+                "run",
+                str(all_probe_path),
+                str(output / "probes"),
+            ],
+            timeout_ms=paths["stage_timeouts"]["run-probes"],
+            telemetry_path=telemetry_path,
+            telemetry_identity=telemetry_identity,
+            child_environment=child_environment,
+        )
+        _run_stage(
+            output,
+            "compose-winners",
+            [
+                sys.executable,
+                str(scripts / "development_probe_compose.py"),
+                "run",
+                str(composition_path),
+                str(output / "composition"),
+            ],
+            timeout_ms=paths["stage_timeouts"]["compose-winners"],
+            telemetry_path=telemetry_path,
+            telemetry_identity=telemetry_identity,
+            child_environment=child_environment,
+        )
+        final_receipt = _run_stage(
+            output,
+            "final-validation",
+            [
+                sys.executable,
+                str(scripts / "development_probe_final_validation.py"),
+                "run",
+                str(final_path),
+                str(output / "validation"),
+            ],
+            timeout_ms=paths["stage_timeouts"]["final-validation"],
+            telemetry_path=telemetry_path,
+            telemetry_identity=telemetry_identity,
+            child_environment=child_environment,
+        )
+        verdict = _bind_final_result(output, normalized, final_receipt)
+    except (DevelopmentProbeRunError, OSError, subprocess.SubprocessError) as error:
+        append_event(
+            telemetry_path,
+            "development_probe_finished",
+            "failed",
+            telemetry_identity,
+            message=f"The complete Development-Probe run failed: {error}",
+        )
+        raise
     _write_json(
         output / "development-probe-summary.json",
         {
@@ -587,6 +650,13 @@ def run(request_path: Path, output: Path) -> dict[str, Any]:
             "stages": _receipts(output),
             "promotion_applied": False,
         },
+    )
+    append_event(
+        telemetry_path,
+        "development_probe_finished",
+        "completed",
+        telemetry_identity,
+        message=f"The complete Development-Probe run finished with verdict {verdict['verdict']}.",
     )
     return verdict
 

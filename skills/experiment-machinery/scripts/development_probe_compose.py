@@ -23,7 +23,7 @@ from development_probe_candidate import (
     _snapshot_source,
     verify_bundle,
 )
-from development_probe_manifest import ManifestError, validate_manifest
+from development_probe_manifest import ManifestError, resolve_case_source, validate_manifest
 
 CONTRACT = 1
 ASSEMBLY_ENTRIES = {
@@ -332,7 +332,7 @@ def _captured_inputs(manifest: dict[str, Any], manifest_path: Path) -> tuple[dic
     payloads = {}
     records = []
     for case in manifest["atomic_step"]["captured_cases"]:
-        source = _resolve(case["source"], manifest_path.parent, f"captured case {case['id']!r}", "verify-inputs")
+        source = resolve_case_source(manifest, case, manifest_path.parent)
         try:
             payload = source.read_bytes()
         except OSError as error:

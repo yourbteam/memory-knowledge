@@ -400,7 +400,7 @@ def _repair_manifest(manifest: dict[str, Any], probe: dict[str, Any], plan: list
         for index, item in enumerate(plan)
     ]
     value = {
-        "schema_version": CONTRACT,
+        "schema_version": manifest["schema_version"],
         "atomic_step": manifest["atomic_step"],
         "mini_probes": [repaired_probe],
         "composition": {
@@ -409,6 +409,8 @@ def _repair_manifest(manifest: dict[str, Any], probe: dict[str, Any], plan: list
             "final_validation": manifest["composition"]["final_validation"],
         },
     }
+    if manifest["schema_version"] == 2:
+        value["case_source_root"] = manifest["case_source_root"]
     try:
         return validate_manifest(value)
     except ManifestError as error:

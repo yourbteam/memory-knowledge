@@ -199,6 +199,17 @@ def _run_case(assembly: Path, case_id: str, execution_root: Path) -> dict[str, A
         error = completed.stderr.strip() or (
             f"case {case_id!r} execution exited {completed.returncode} without diagnostics"
         )
+    evidence = []
+    for evidence_id, filename in (
+        ("candidate-stdout", "stdout.txt"),
+        ("candidate-stderr", "stderr.txt"),
+        ("candidate-telemetry", "telemetry.jsonl"),
+    ):
+        path = execution_root / filename
+        if path.is_file():
+            evidence.append(
+                {"id": evidence_id, "path": str(path.resolve()), "sha256": _digest(path.read_bytes())}
+            )
     return {
         "case_id": case_id,
         "status": status,
@@ -206,6 +217,7 @@ def _run_case(assembly: Path, case_id: str, execution_root: Path) -> dict[str, A
         "result": result,
         "error": error,
         "output": str(execution_root),
+        "evidence": evidence,
     }
 
 
@@ -272,8 +284,7 @@ def _question(
         {"id": "execution-status", "value": execution["status"]},
         {"id": "execution-returncode", "value": execution["returncode"]},
     ]
-    if execution["result"] is not None:
-        evidence.append({"id": "execution-result", "value": execution["result"]})
+    evidence.extend(execution.get("evidence", []))
     if execution["error"] is not None:
         evidence.append({"id": "execution-error", "value": execution["error"]})
     allowed_verdicts = ["not-satisfied", "cannot-assess"] if execution["status"] == "incomplete" else ALLOWED_VERDICTS
@@ -287,7 +298,6 @@ def _question(
         "case_kind": case["kind"],
         "expected_outcome": case["expected_outcome"],
         "overall_criterion": criterion,
-        "execution_result": execution["result"],
         "execution_evidence": evidence,
         "allowed_verdicts": allowed_verdicts,
     }
@@ -331,11 +341,17 @@ def _validate_response(raw: object, question: dict[str, Any]) -> dict[str, Any]:
             f"evidence pointers {unknown!r} are not grounded for case "
             f"{question['case_id']!r}; use only {sorted(grounded)!r}"
         )
+    for item in question["execution_evidence"]:
+        if "path" not in item:
+            continue
+        path = Path(item["path"])
+        if not path.is_file() or _digest(path.read_bytes()) != item.get("sha256"):
+            problems.append(f"execution evidence {item['id']!r} is missing or changed")
     if response["verdict"] == "satisfied":
         execution_status = next(
             item["value"] for item in question["execution_evidence"] if item["id"] == "execution-status"
         )
-        required_evidence = "execution-result" if execution_status == "completed" else "execution-error"
+        required_evidence = "candidate-telemetry" if execution_status == "completed" else "execution-error"
         if required_evidence not in pointers:
             problems.append(
                 f"satisfied verdict cites {pointers!r}; cite {required_evidence!r} "

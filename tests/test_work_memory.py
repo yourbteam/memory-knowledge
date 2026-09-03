@@ -5285,6 +5285,48 @@ def test_only_canonical_scripts_write_event_ledger():
     ]
 
 
+def test_atom_blocker_binding_is_complete_and_attempt_is_positive():
+    bound = event(
+        "blocker_opened", run_id=str(uuid.uuid4()),
+        blocker_id="blk-" + "a" * 24, occurrence_id=str(uuid.uuid4()),
+        fingerprint="b" * 64, subject_id="subject", lineage_id="lineage",
+        step_id="step", surface="surface", symptom="symptom", evidence="evidence",
+        impact="impact", boundary="boundary", status="open",
+        atomic_step_id="atom-closeout", atom_request_sha256="c" * 64,
+        atom_run_id="d" * 64, atom_attempt=1,
+    )
+    work_memory._validate_event_shape(bound)
+
+    partial = dict(bound)
+    partial.pop("atom_run_id")
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="incomplete-atom-blocker-binding"
+    ):
+        work_memory._validate_event_shape(partial)
+
+    invalid_attempt = dict(bound, atom_attempt=0)
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-atom-attempt"):
+        work_memory._validate_event_shape(invalid_attempt)
+
+
+def test_supersession_successor_reference_is_all_or_nothing():
+    transition = event(
+        "blocker_transitioned", run_id=str(uuid.uuid4()),
+        blocker_id="blk-" + "a" * 24, from_status="open", to_status="superseded",
+        supersession_evidence="successor owns the same gap",
+        superseded_by_blocker_id="blk-" + "b" * 24,
+        superseded_by_occurrence_id=str(uuid.uuid4()),
+    )
+    work_memory._validate_event_shape(transition)
+
+    partial = dict(transition)
+    partial.pop("superseded_by_occurrence_id")
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="invalid-blocker-transition-fields"
+    ):
+        work_memory._validate_event_shape(partial)
+
+
 CLAUDE_SESSION_A = "7c0f2c4e-9b1d-4c53-8a10-2f47c4b6de01"
 CLAUDE_SESSION_B = "8d1e3d5f-0c2e-4d64-9b21-3a58d5c7ef12"
 

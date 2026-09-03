@@ -448,7 +448,7 @@ def _bind_one_candidate(
                 f"approach {recommendation['approach_id']!r}; require exactly one",
             )
         selected = matches[0]
-        bundle = case_output / selected["bundle"]
+        bundle = (case_output / selected["bundle"]).resolve()
         fresh = _fresh_digest(bundle)
         recorded = selected.get("bundle_sha256")
         if selected.get("probe_id") != probe_id or case_id not in selected.get("case_ids", []):

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-meaningful-lifecycle-telemetry",
+  "outcome": "Every candidate execution emits validated, ordered lifecycle and meaningful-work telemetry, malformed telemetry makes the variant ineligible, and a complete Development-Probe run exposes one watcher-readable feed identifying atom, probe, case, approach, state, and last completed work.",
+  "practical_value": "An operator can distinguish real progress, a wrong execution, a rejection, and a stall without opening stderr or reconstructing nested run directories.",
+  "stopping_condition": "A successful candidate has code-owned start and terminal events, at least one validated namespaced work or decision event, and an integrity result; missing, malformed, or non-monotonic events make it ineligible; an operator failure records the failing boundary and actionable correction before its terminal event; the complete-run feed preserves positive monotonic sequence and full atom, probe, case, and approach identity.",
+  "allowed_paths": [
+    "Tasks/atom-meaningful-lifecycle-telemetry",
+    "skills/experiment-machinery/SKILL.md",
+    "skills/experiment-machinery/references/adapter-contract.md",
+    "skills/experiment-machinery/references/development-probe-contract.md",
+    "skills/experiment-machinery/scripts/development_probe_candidate.py",
+    "skills/experiment-machinery/scripts/development_probe_run.py",
+    "skills/experiment-machinery/scripts/development_probe_telemetry.py",
+    "skills/experiment-machinery/scripts/run_experiment.py",
+    "tests/test_development_probe_candidate.py",
+    "tests/test_experiment_machinery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "valid-lifecycle",
+      "source_ref": "Tasks/atom-meaningful-lifecycle-telemetry/captured/valid-lifecycle.json",
+      "sha256": "ac66834a3ba54fc789ba6db8c6bd02bdc668d0ccdd1b56d43f8f94b4150b1987",
+      "kind": "success",
+      "expected_outcome": "The eligible candidate exposes ordered start, meaningful work, finish, and integrity events in both variant and complete-run telemetry."
+    },
+    {
+      "case_id": "invalid-lifecycle",
+      "source_ref": "Tasks/atom-meaningful-lifecycle-telemetry/captured/invalid-lifecycle.json",
+      "sha256": "91686d66da535b6b9b88495d72101b70087b491d1c5396200e23a7b7e6866666",
+      "kind": "failure",
+      "expected_outcome": "Missing or non-monotonic operator telemetry is ineligible, and a crashed operator records its failing boundary and correction before terminalization."
+    }
+  ]
+}

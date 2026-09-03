@@ -1,0 +1,12 @@
+{
+  "case_id": "execution-mutation",
+  "mutation": "The candidate changes permissions on its own entrypoint and appends bytes while running.",
+  "operator_path": [
+    "development_probe_candidate.py build",
+    "development_probe_candidate.py verify",
+    "run_experiment.py --spec",
+    "development_probe_candidate.py execute",
+    "development_probe_candidate.py verify"
+  ],
+  "expected": "The mutating execution becomes ineligible, its temporary source is discarded, and the shared canonical bundle still verifies with its original digest."
+}

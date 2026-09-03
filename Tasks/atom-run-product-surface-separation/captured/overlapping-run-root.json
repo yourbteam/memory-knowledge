@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "case_id": "overlapping-run-root",
+  "repository_files": {
+    "product/kept.txt": "baseline\n"
+  },
+  "allowed_paths": [
+    "product"
+  ],
+  "run_path": "product/atom-run",
+  "expected": {
+    "start_exit": 2,
+    "error_contains": "overlaps allowed_paths"
+  }
+}

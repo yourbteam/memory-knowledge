@@ -57,7 +57,7 @@ def request(manifest: dict[str, object]) -> dict[str, object]:
         "captured_cases": [
             {
                 "case_id": case["id"],
-                "source_ref": case["source"],
+                "source_ref": case["source_ref"],
                 "sha256": case["sha256"],
                 "kind": case["kind"],
                 "expected_outcome": case["expected_outcome"],
@@ -259,6 +259,23 @@ def test_complete_journey_authorizes_next_atom(
     assert json.loads(result.stdout)["authorized"] is True
 
 
+def test_start_refuses_run_below_allowed_product_path(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    _, manifest, _ = assembly_fixture
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    request_path = repository / "request.json"
+    write_json(request_path, request(manifest))
+    run = repository / "src" / "records" / "atom-run"
+
+    result = invoke("start", request_path, run, cwd=repository)
+
+    assert result.returncode == 2
+    assert "overlaps allowed_paths" in result.stderr
+    assert not run.exists()
+
+
 def test_missing_or_mismatched_promotion_evidence_cannot_advance(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
@@ -312,7 +329,7 @@ def test_validation_snapshots_survive_caller_evidence_change_and_refuse_snapshot
     assert "has SHA-256" in result.stderr
 
 
-def test_tampered_promotion_evidence_blocks_validation_resume(
+def test_promotion_evidence_snapshot_survives_caller_change_and_refuses_tamper(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
     run = start(tmp_path, assembly_fixture)
@@ -325,6 +342,10 @@ def test_tampered_promotion_evidence_blocks_validation_resume(
 
     receipt = json.loads(promotion_path.read_text())
     Path(receipt["evidence"][0]["path"]).write_text("changed\n")
+    assert read_state(run)["stage"] == "validation"
+
+    payload = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    Path(payload["evidence"][0]["path"]).write_text("tampered snapshot\n")
     result = invoke("status", run)
     assert result.returncode == 2
     assert "recorded promotion evidence" in result.stderr
@@ -501,7 +522,7 @@ def test_validation_receipt_snapshot_survives_caller_change_and_remains_strict(
     assert "recorded validation receipt has SHA-256" in result.stderr
 
 
-def test_replaced_assembly_blocks_promotion_resume(
+def test_experiment_snapshot_survives_caller_assembly_removal(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
     run = start(tmp_path, assembly_fixture)
@@ -512,10 +533,50 @@ def test_replaced_assembly_blocks_promotion_resume(
         experiment_path / "composition" / "removed-assembly"
     )
 
-    result = invoke("status", run)
+    assert read_state(run)["stage"] == "promotion"
 
-    assert result.returncode == 2
-    assert "Experiment Machinery refused the recorded assembly" in result.stderr
+
+def test_experiment_snapshot_survives_source_removal_and_refuses_tamper(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    write_json(experiment_path / "unrelated.json", {"not": "admitted"})
+    assert invoke("record-experiment", run, experiment_path).returncode == 0
+    payload = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    snapshot = Path(payload["experiment_path"])
+    assert snapshot.is_relative_to(run / "evidence")
+    assert not (snapshot / "unrelated.json").exists()
+
+    experiment_path.rename(tmp_path / "removed-experiment")
+    assert read_state(run)["stage"] == "promotion"
+    (snapshot / "development-probe-summary.json").write_text("tampered\n")
+    assert invoke("status", run).returncode == 2
+
+
+def test_promotion_snapshot_survives_source_removal_and_refuses_tamper(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    source = tmp_path / "promotion-source"
+    promotion_path = source / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    write_json(source / "unrelated.json", {"not": "admitted"})
+    assert invoke("record-promotion", run, promotion_path).returncode == 0
+    payload = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    paths = [payload["receipt_path"], payload["change_surface"]["path"], payload["review"]["path"]]
+    paths.extend(item["path"] for item in payload["evidence"])
+    assert all(Path(path).is_relative_to(run / "evidence") for path in paths)
+    assert not any(path.name == "unrelated.json" for path in (run / "evidence").rglob("*"))
+
+    shutil.rmtree(source)
+    assert read_state(run)["stage"] == "validation"
+    Path(payload["evidence"][0]["path"]).write_text("tampered\n")
+    assert invoke("status", run).returncode == 2
 
 
 def test_change_surface_excludes_unchanged_preexisting_allowed_files(
@@ -607,7 +668,7 @@ def test_promotion_requires_present_current_untampered_review(
     assert "review has SHA-256" in tampered.stderr
 
 
-def test_tampered_review_blocks_promotion_resume(
+def test_promotion_review_snapshot_survives_caller_change_and_refuses_tamper(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
     run = start(tmp_path, assembly_fixture)
@@ -619,7 +680,10 @@ def test_tampered_review_blocks_promotion_resume(
     assert invoke("record-promotion", run, promotion_path).returncode == 0
     receipt = json.loads(promotion_path.read_text())
     Path(receipt["review"]["path"]).write_text("tampered\n")
+    assert read_state(run)["stage"] == "validation"
 
+    payload = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    Path(payload["review"]["path"]).write_text("tampered snapshot\n")
     result = invoke("status", run)
 
     assert result.returncode == 2

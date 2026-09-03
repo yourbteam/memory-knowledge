@@ -23,6 +23,15 @@ request contains exactly:
 - `captured_cases`: immutable success and failure cases, each with `case_id`, `source_ref`,
   lowercase SHA-256, `kind`, and `expected_outcome`.
 
+New version-two development manifests must preserve each approved `source_ref` exactly and keep its
+runtime `case_source_root` separate; Atom Controller compares logical references, not resolved
+paths. Version-one comparison remains only for already-recorded assemblies.
+
+While the atom is active, open every encountered blocker with
+`scripts/blocker_catalog.py open --atom-run <atom-run>` so code derives its immutable atom request,
+run, and attempt identity. Follow `references/blocker-closeout-contract.md`; never add those
+identity fields by hand.
+
 Start the append-only run:
 
 ```bash
@@ -32,6 +41,8 @@ python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory>
 Run this command from the repository root. The controller records the repository root and an
 immutable byte-level baseline of every regular file under `allowed_paths`, including already
 modified files. Those pre-start bytes are the boundary between existing work and this atom. The
+run directory must be outside and disjoint from every `allowed_paths` boundary; the controller
+refuses an overlapping run before it creates any controller output. The
 controller keeps `next_skill` fixed to `prototype-driven-implementation` for every incomplete
 state and reports the only bounded `required_capability` that may run next. Do not infer or begin
 another capability.
@@ -50,6 +61,8 @@ python3 scripts/atom_controller.py record-experiment <atom-run> <development-pro
 Code checks the complete fixed stage set, exact atom and case identities, final artifact hash,
 verdict enums, and `promotion_applied: false`. A failed or inconclusive experiment is preserved and
 leaves `experiment-machinery` as PDI's required capability. Only `passed` advances.
+The controller imports the admitted summary, final verdict, and verified assembly into the atom
+run; the supplied experiment directory is an import source, not continuing authority.
 
 ## Promote through PDI
 
@@ -87,8 +100,9 @@ exactly:
 `allowed_paths` is not enough. Code recomputes the live surface at promotion, requires the review
 to pass against that exact surface hash with no blocking findings, and rehashes both artifacts on
 every resume. Every evidence entry names one declared captured case and an existing regular file
-whose bytes match the declared SHA-256. Relative paths resolve from the receipt directory. Record
-it:
+whose bytes match the declared SHA-256. Relative paths resolve from the receipt directory. The
+receipt, case evidence, change surface, and review are imported into the atom run before the
+promotion event is appended; later state reads trust only those run-owned snapshots. Record it:
 
 ```bash
 python3 scripts/atom_controller.py record-promotion <atom-run> <promotion-receipt.json>
@@ -140,7 +154,9 @@ passed validations, and all run-owned snapshots remain strict.
 Any result other than `satisfied` preserves the evidence and routes the atom back to Experiment
 Machinery as PDI's required capability. Each nested evidence entry must name its enclosing
 captured case. Code rehashes every recorded evidence file during record and resume. Only
-all-satisfied immutable evidence completes the atom.
+all-satisfied immutable evidence plus a clear canonical blocker closeout completes the atom. The
+controller snapshots that closeout beside the validation evidence; unresolved linked blockers
+leave the atom at validation so they can be dispositioned and the validation recorded again.
 
 ## Stop boundary
 
@@ -156,6 +172,8 @@ Before selecting or defining another atom, require:
 python3 scripts/atom_controller.py authorize-next <atom-run>
 ```
 
-The command refuses until the promoted implementation passed every real captured case. Commit,
+The command refuses until the promoted implementation passed every real captured case. It also
+rechecks the canonical blocker ledger and refuses when any atom-linked occurrence became blocking
+after validation. Commit,
 push, deployment, credentials, destructive work, wider paths, or a changed requirement always
 need their own explicit approval; this machinery never grants them.

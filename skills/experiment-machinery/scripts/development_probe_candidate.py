@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from datetime import UTC, datetime
+import time
 from pathlib import Path, PurePath, PurePosixPath
 from typing import Any
 
@@ -20,6 +20,7 @@ sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 from development_probe_manifest import ManifestError, validate_manifest
+from development_probe_telemetry import TelemetryError, append_event
 
 CONTRACT = 1
 PROTOCOL = "experiment-result-v1"
@@ -432,6 +433,30 @@ def _restore_writable(root: Path) -> None:
             pass
 
 
+def _discard_materialization(root: Path) -> None:
+    _restore_writable(root)
+    shutil.rmtree(root, ignore_errors=True)
+
+
+def _materialize_execution_source(source: Path, target: Path) -> str:
+    if target.exists():
+        raise CandidateError(
+            f"execution source already exists: {target}; use one fresh variant work directory"
+        )
+    attempts: list[list[str]] = []
+    if sys.platform == "darwin":
+        attempts.append(["cp", "-cR", str(source), str(target)])
+    elif sys.platform.startswith("linux"):
+        attempts.append(["cp", "--reflink=always", "-R", str(source), str(target)])
+    for command in attempts:
+        completed = subprocess.run(command, text=True, capture_output=True, check=False)
+        if completed.returncode == 0:
+            return "reflink"
+        _discard_materialization(target)
+    shutil.copytree(source, target, copy_function=shutil.copy2)
+    return "verified-copy"
+
+
 def build_bundle(request_path: Path, output: Path) -> dict[str, object]:
     request = _exact(
         _load_json(request_path, "candidate build request"),
@@ -540,19 +565,109 @@ def _environment_path(name: str) -> Path:
     return Path(value).resolve()
 
 
-def _append_telemetry(path: Path, bundle_sha256: str, status: str) -> None:
-    record = {
-        "schema_version": CONTRACT,
-        "event": "candidate_bundle_verified",
-        "recorded_at": datetime.now(UTC).isoformat(),
-        "variant_id": os.environ.get("EXPERIMENT_VARIANT_ID"),
-        "bundle_sha256": bundle_sha256,
-        "status": status,
-    }
-    with path.open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps(record, sort_keys=True) + "\n")
-        stream.flush()
-        os.fsync(stream.fileno())
+def _emit_telemetry(
+    path: Path,
+    event: str,
+    state: str,
+    identity: dict[str, str],
+    **details: Any,
+) -> None:
+    try:
+        append_event(path, event, state, identity, **details)
+        aggregate = os.environ.get("DEVELOPMENT_PROBE_TELEMETRY_PATH")
+        if aggregate:
+            append_event(Path(aggregate).resolve(), event, state, identity, **details)
+    except TelemetryError as error:
+        raise CandidateError(f"code-owned telemetry cannot append safely: {error}") from None
+
+
+def _forward_operator_events(
+    path: Path,
+    offset: int,
+    expected_sequence: int,
+    telemetry_path: Path,
+    identity: dict[str, str],
+) -> tuple[int, int, int]:
+    if not path.exists():
+        return offset, expected_sequence, 0
+    meaningful = 0
+    with path.open("r", encoding="utf-8") as stream:
+        stream.seek(offset)
+        while True:
+            start = stream.tell()
+            line = stream.readline()
+            if not line:
+                break
+            if not line.endswith("\n"):
+                stream.seek(start)
+                break
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as error:
+                raise CandidateError(
+                    f"operator telemetry sequence {expected_sequence} is invalid JSON: {error}; "
+                    "append one complete contract event per line"
+                ) from None
+            required = {
+                "schema_version",
+                "sequence",
+                "event",
+                "recorded_at",
+                "variant_id",
+                "message",
+                "evidence_sha256",
+                "observations",
+            }
+            if type(record) is not dict or not required.issubset(record):
+                raise CandidateError(
+                    f"operator telemetry sequence {expected_sequence} omits {sorted(required - set(record) if isinstance(record, dict) else required)!r}; "
+                    "emit the complete operator telemetry contract"
+                )
+            if record["schema_version"] != CONTRACT or type(record["schema_version"]) is not int:
+                raise CandidateError("operator telemetry schema_version must be integer 1")
+            if record["sequence"] != expected_sequence or type(record["sequence"]) is not int:
+                raise CandidateError(
+                    f"operator telemetry sequence is {record['sequence']!r}; require {expected_sequence}"
+                )
+            if record["variant_id"] != identity["variant_id"]:
+                raise CandidateError("operator telemetry variant_id differs from the active variant")
+            event = record["event"]
+            if event not in {"work_completed", "decision_recorded", "operator_rejected", "operator_error"}:
+                raise CandidateError(
+                    f"operator telemetry event {event!r} is unsupported; emit work_completed, "
+                    "decision_recorded, operator_rejected, or operator_error"
+                )
+            if type(record["recorded_at"]) is not str or not record["recorded_at"].strip():
+                raise CandidateError("operator telemetry recorded_at must be a nonempty timestamp")
+            if type(record["message"]) is not str or not record["message"].strip():
+                raise CandidateError("operator telemetry message must describe the completed work or decision")
+            if type(record["evidence_sha256"]) is not str or not SHA256.fullmatch(record["evidence_sha256"]):
+                raise CandidateError("operator telemetry evidence_sha256 must be one SHA-256 digest")
+            if type(record["observations"]) is not dict:
+                raise CandidateError("operator telemetry observations must be one object")
+            details = {
+                "operator_sequence": expected_sequence,
+                "message": record["message"],
+                "evidence_sha256": record["evidence_sha256"],
+                "observations": record["observations"],
+            }
+            if event in {"operator_rejected", "operator_error"}:
+                correction = record.get("correction")
+                if type(correction) is not str or not correction.strip():
+                    raise CandidateError(
+                        f"operator telemetry event {event!r} requires one actionable correction"
+                    )
+                details["correction"] = correction
+            mapped = {
+                "work_completed": ("operator_work", "working"),
+                "decision_recorded": ("operator_decision", "working"),
+                "operator_rejected": ("operator_rejected", "failed"),
+                "operator_error": ("operator_error", "failed"),
+            }[event]
+            _emit_telemetry(telemetry_path, mapped[0], mapped[1], identity, **details)
+            meaningful += int(event in {"work_completed", "decision_recorded"})
+            expected_sequence += 1
+        return stream.tell(), expected_sequence, meaningful
 
 
 def execute_bundle(bundle_root: Path) -> int:
@@ -591,27 +706,192 @@ def execute_bundle(bundle_root: Path) -> int:
     result_path = _environment_path("EXPERIMENT_RESULT_PATH")
     telemetry_path = _environment_path("EXPERIMENT_TELEMETRY_PATH")
     work_dir = _environment_path("EXPERIMENT_WORK_DIR")
+    execution_source = work_dir / "candidate-source"
+    materialization = _materialize_execution_source(
+        bundle_root / bundle["source"]["root"], execution_source
+    )
+    try:
+        _, materialized_files, materialized_sha256 = _snapshot_source(
+            execution_source, "materialized candidate source"
+        )
+    except CandidateError:
+        _discard_materialization(execution_source)
+        raise
+    if (
+        materialized_files != bundle["source"]["files"]
+        or materialized_sha256 != bundle["source"]["candidate_sha256"]
+    ):
+        _discard_materialization(execution_source)
+        raise CandidateError(
+            "materialized candidate source differs from the verified shared bundle"
+        )
+    identity = {
+        "atomic_step_id": bundle["identity"]["atomic_step_id"],
+        "probe_id": bundle["identity"]["probe_id"],
+        "case_id": case_id,
+        "approach_id": bundle["identity"]["approach_id"],
+        "variant_id": str(os.environ["EXPERIMENT_VARIANT_ID"]),
+    }
+    operator_telemetry = work_dir / "operator-telemetry.jsonl"
+    if telemetry_path.exists() or operator_telemetry.exists():
+        _discard_materialization(execution_source)
+        raise CandidateError("telemetry output already exists; use one fresh variant work directory")
+    _emit_telemetry(
+        telemetry_path,
+        "candidate_started",
+        "running",
+        identity,
+        source_materialization=materialization,
+    )
+    _emit_telemetry(telemetry_path, "operator_started", "running", identity)
     replacements = {
         "{python}": sys.executable,
         "{candidate-entrypoint}": str(
-            bundle_root / bundle["source"]["root"] / bundle["source"]["entrypoint"]
+            execution_source / bundle["source"]["entrypoint"]
         ),
         "{frozen-input}": str(frozen_input),
         "{result-path}": str(result_path),
-        "{telemetry-path}": str(telemetry_path),
+        "{telemetry-path}": str(operator_telemetry),
     }
     command = [replacements.get(argument, argument) for argument in bundle["execution"]["command"]]
-    completed = subprocess.run(command, cwd=work_dir, env=os.environ.copy(), check=False)
+    child_environment = os.environ.copy()
+    child_environment["EXPERIMENT_TELEMETRY_PATH"] = str(operator_telemetry)
+    child_environment["EXPERIMENT_TELEMETRY_SEQUENCE_START"] = "1"
+    process = subprocess.Popen(command, cwd=work_dir, env=child_environment)
+    offset = 0
+    expected_sequence = 1
+    meaningful = 0
+    telemetry_error: CandidateError | None = None
+    while process.poll() is None:
+        try:
+            offset, expected_sequence, observed = _forward_operator_events(
+                operator_telemetry,
+                offset,
+                expected_sequence,
+                telemetry_path,
+                identity,
+            )
+            meaningful += observed
+        except CandidateError as error:
+            telemetry_error = error
+            process.terminate()
+            process.wait()
+            break
+        time.sleep(0.02)
+    if telemetry_error is None:
+        try:
+            offset, expected_sequence, observed = _forward_operator_events(
+                operator_telemetry,
+                offset,
+                expected_sequence,
+                telemetry_path,
+                identity,
+            )
+            meaningful += observed
+            if operator_telemetry.exists() and offset != operator_telemetry.stat().st_size:
+                raise CandidateError(
+                    f"operator telemetry sequence {expected_sequence} is not newline terminated; "
+                    "flush one complete JSON event per line"
+                )
+        except CandidateError as error:
+            telemetry_error = error
+    returncode = int(process.returncode)
+    if returncode != 0 and telemetry_error is None:
+        telemetry_error = CandidateError(
+            f"operator process exited {returncode}; inspect captured variant stderr and correct the operator command"
+        )
+    if returncode == 0 and meaningful == 0 and telemetry_error is None:
+        telemetry_error = CandidateError(
+            "operator telemetry contains no completed work or decision; emit at least one work_completed or decision_recorded event"
+        )
+    try:
+        _, after_files, after_source_sha256 = _snapshot_source(
+            execution_source, "materialized candidate source"
+        )
+        if (
+            after_files != bundle["source"]["files"]
+            or after_source_sha256 != bundle["source"]["candidate_sha256"]
+        ):
+            raise CandidateError(
+                "candidate changed its isolated execution source; discard this execution"
+            )
+    except CandidateError as error:
+        telemetry_error = error
+    if telemetry_error is None:
+        _emit_telemetry(
+            telemetry_path,
+            "operator_finished",
+            "completed",
+            identity,
+            exit_code=returncode,
+        )
+    else:
+        _emit_telemetry(
+            telemetry_path,
+            "operator_failed",
+            "failed",
+            identity,
+            failing_boundary="operator-telemetry" if returncode == 0 else "operator-process",
+            correction=str(telemetry_error),
+            exit_code=returncode,
+        )
     try:
         _, _, after_sha256 = verify_bundle(bundle_root)
-    except CandidateError:
-        _append_telemetry(telemetry_path, bundle_sha256, "changed-during-execution")
+    except CandidateError as error:
+        _emit_telemetry(
+            telemetry_path,
+            "candidate_bundle_verified",
+            "failed",
+            identity,
+            bundle_sha256=bundle_sha256,
+            status="changed-during-execution",
+        )
+        _emit_telemetry(
+            telemetry_path,
+            "candidate_finished",
+            "failed",
+            identity,
+            correction=str(error),
+        )
+        _discard_materialization(execution_source)
         raise
     if after_sha256 != bundle_sha256:
-        _append_telemetry(telemetry_path, bundle_sha256, "changed-during-execution")
+        _emit_telemetry(
+            telemetry_path,
+            "candidate_bundle_verified",
+            "failed",
+            identity,
+            bundle_sha256=bundle_sha256,
+            status="changed-during-execution",
+        )
+        _emit_telemetry(
+            telemetry_path,
+            "candidate_finished",
+            "failed",
+            identity,
+            correction="Restore the immutable candidate bundle and rerun in a fresh output directory.",
+        )
+        _discard_materialization(execution_source)
         raise CandidateError("candidate bundle digest changed during execution")
-    _append_telemetry(telemetry_path, bundle_sha256, "unchanged")
-    return int(completed.returncode)
+    _emit_telemetry(
+        telemetry_path,
+        "candidate_bundle_verified",
+        "completed",
+        identity,
+        bundle_sha256=bundle_sha256,
+        status="unchanged",
+    )
+    _emit_telemetry(
+        telemetry_path,
+        "candidate_finished",
+        "completed" if telemetry_error is None else "failed",
+        identity,
+        correction=None if telemetry_error is None else str(telemetry_error),
+    )
+    _discard_materialization(execution_source)
+    if telemetry_error is not None:
+        raise telemetry_error
+    return returncode
 
 
 def main() -> int:

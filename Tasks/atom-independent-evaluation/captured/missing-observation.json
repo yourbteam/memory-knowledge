@@ -1,0 +1,6 @@
+{
+  "case": "missing-observation",
+  "producer_claims": {"correct": true, "score": 999},
+  "independent_observations": null,
+  "expected": "A positive official verdict is refused when independently inspectable evidence is absent."
+}

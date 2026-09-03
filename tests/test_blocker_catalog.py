@@ -1,5 +1,8 @@
+import hashlib
+import json
 import uuid
 from argparse import Namespace
+from pathlib import Path
 
 import pytest
 
@@ -527,3 +530,74 @@ def test_reopen_transition_requires_evidence(monkeypatch: pytest.MonkeyPatch):
             verification_event_id=None, remaining_work="none", supersession_evidence=None,
             non_gap_evidence=None, reopen_evidence=None, event_id=None,
         ))
+
+
+def test_atom_identity_is_derived_from_immutable_run(tmp_path: Path):
+    request = {"atomic_step_id": "atom-closeout"}
+    request_path = tmp_path / "inputs/atom-request.json"
+    request_path.parent.mkdir()
+    request_path.write_text(json.dumps(request, sort_keys=True) + "\n")
+    request_sha = hashlib.sha256(request_path.read_bytes()).hexdigest()
+    first = {
+        "sequence": 1, "event": "atom-started", "previous_event_sha256": None,
+        "payload": {
+            "atomic_step_id": "atom-closeout", "request_sha256": request_sha,
+            "repository_root": str(tmp_path),
+        },
+    }
+    line = json.dumps(first, sort_keys=True, separators=(",", ":")) + "\n"
+    (tmp_path / "ledger.jsonl").write_text(line)
+
+    identity = blocker_catalog.atom_identity(tmp_path)
+
+    assert identity["atomic_step_id"] == "atom-closeout"
+    assert identity["atom_request_sha256"] == request_sha
+    assert identity["atom_run_id"] == hashlib.sha256(line.encode()).hexdigest()
+    assert identity["atom_attempt"] == 1
+
+
+def test_atom_closeout_distinguishes_blocking_and_owned_open_occurrences(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    identity = {
+        "atomic_step_id": "atom-closeout", "atom_request_sha256": "a" * 64,
+        "atom_run_id": "b" * 64, "atom_attempt": 1,
+        "repository_root": "/private/tmp/atom-closeout-test",
+    }
+    run_id = str(uuid.uuid4())
+    open_occurrence = str(uuid.uuid4())
+    owned_occurrence = str(uuid.uuid4())
+    events = [
+        {
+            "event_type": "blocker_opened", "event_id": str(uuid.uuid4()),
+            "run_id": run_id, "blocker_id": "blk-" + "1" * 24,
+            "occurrence_id": open_occurrence, **{
+                field: identity[field] for field in blocker_catalog.ATOM_BINDING_FIELDS
+            },
+        },
+        {
+            "event_type": "blocker_opened", "event_id": str(uuid.uuid4()),
+            "run_id": run_id, "blocker_id": "blk-" + "2" * 24,
+            "occurrence_id": owned_occurrence, **{
+                field: identity[field] for field in blocker_catalog.ATOM_BINDING_FIELDS
+            },
+        },
+        {
+            "event_type": "blocker_assigned_downstream", "event_id": str(uuid.uuid4()),
+            "run_id": run_id, "blocker_id": "blk-" + "2" * 24,
+            "occurrence_id": owned_occurrence,
+            "classification": "incidental-system-defect",
+            "downstream_owner": "ops-owner", "evidence": "tracked",
+        },
+    ]
+    monkeypatch.setattr(blocker_catalog, "atom_identity", lambda _run: identity)
+    monkeypatch.setattr(blocker_catalog.work_memory, "configure_root", lambda _root: None)
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "load_ledger", lambda: (events, "c" * 64),
+    )
+
+    result = blocker_catalog.atom_closeout(Path("/private/tmp/ignored"))
+
+    assert result["clear"] is False
+    assert result["blocking_occurrence_count"] == 1
+    assert result["dispositions"][1]["disposition"] == "assigned-downstream"

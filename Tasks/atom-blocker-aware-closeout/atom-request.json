@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-blocker-aware-closeout",
+  "outcome": "Every blocker occurrence encountered during an atom carries immutable work-memory run plus atom request, run, and attempt identity; Atom Controller preserves a canonical blocker-closeout summary during validation and refuses completion or successor authorization while any linked occurrence lacks an allowed disposition.",
+  "practical_value": "A passed implementation cannot silently leave its own deliverable blocker unresolved, lose an incidental defect without an owner, or authorize the next atom from a stale self-attestation.",
+  "stopping_condition": "Open, fixed-awaiting-verification, and verified deliverable blockers prevent completion; closed requires remaining_work none; superseded requires an existing successor occurrence bound to the same atom; open incidental defects require explicit downstream ownership; non-gap requires recorded evidence; validation preserves the canonical closeout result and authorization independently rechecks the live canonical ledger with zero orphaned or undispositioned linked occurrences.",
+  "allowed_paths": [
+    "Tasks/atom-blocker-aware-closeout",
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/references/blocker-closeout-contract.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "scripts/blocker_catalog.py",
+    "scripts/work_memory.py",
+    "tests/test_atom_building_machinery.py",
+    "tests/test_blocker_catalog.py",
+    "tests/test_work_memory.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "unresolved-deliverable",
+      "source_ref": "Tasks/atom-blocker-aware-closeout/captured/unresolved-deliverable.json",
+      "sha256": "b9cb48f2a81907dd791a38ca9b605018f22fa34d08cd8f59018a9c33ce7b3878",
+      "kind": "failure",
+      "expected_outcome": "Every open, fixed-awaiting-verification, or verified deliverable occurrence blocks completion and authorization through the real Atom Controller and blocker-catalog CLIs."
+    },
+    {
+      "case_id": "valid-dispositions",
+      "source_ref": "Tasks/atom-blocker-aware-closeout/captured/valid-dispositions.json",
+      "sha256": "cf5bf8e1c592724957a77c1fa4daf2a1a222e4304df7861d10b21c7ed1675122",
+      "kind": "success",
+      "expected_outcome": "Closed, evidenced non-gap, valid same-atom supersession, and explicitly downstream-owned incidental occurrences produce a preserved clear summary and permit live rechecked authorization."
+    }
+  ]
+}

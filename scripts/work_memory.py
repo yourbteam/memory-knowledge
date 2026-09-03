@@ -165,12 +165,14 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     ),
     "blocker_opened": (
         {"run_id", "blocker_id", "occurrence_id", "fingerprint", "subject_id", "lineage_id",
-         "step_id", "surface", "symptom", "evidence", "impact", "boundary", "status"}, set(),
+         "step_id", "surface", "symptom", "evidence", "impact", "boundary", "status"},
+        {"atomic_step_id", "atom_request_sha256", "atom_run_id", "atom_attempt"},
     ),
     "pre_run_blocker_opened": (
         {"task_id", "ownership_event_id", "blocker_id", "occurrence_id", "fingerprint",
          "subject_id", "lineage_id", "step_id", "surface", "symptom", "evidence",
-         "impact", "boundary", "status"}, set(),
+         "impact", "boundary", "status"},
+        {"atomic_step_id", "atom_request_sha256", "atom_run_id", "atom_attempt"},
     ),
     "pre_run_correction_recorded": (
         {"task_id", "ownership_event_id", "blocker_id", "occurrence_id", "correction_id",
@@ -189,7 +191,8 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
          "to_status"}, {"verification_event_id", "remaining_work"},
     ),
     "blocker_recurred": (
-        {"run_id", "blocker_id", "occurrence_id", "previous_status", "status", "evidence"}, set(),
+        {"run_id", "blocker_id", "occurrence_id", "previous_status", "status", "evidence"},
+        {"atomic_step_id", "atom_request_sha256", "atom_run_id", "atom_attempt"},
     ),
     "blocker_assigned_downstream": (
         {"run_id", "blocker_id", "occurrence_id", "classification",
@@ -239,7 +242,8 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "blocker_transitioned": (
         {"run_id", "blocker_id", "from_status", "to_status"},
         {"verification_event_id", "remaining_work", "supersession_evidence", "non_gap_evidence",
-         "reopen_evidence", "recovery_evidence", "reconciliation_basis_event_id"},
+         "reopen_evidence", "recovery_evidence", "reconciliation_basis_event_id",
+         "superseded_by_blocker_id", "superseded_by_occurrence_id"},
     ),
     "run_closed": (
         {"run_id", "subject_id", "lineage_id", "result", "completed_at_utc", "correction_count",
@@ -1194,6 +1198,19 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             require_uuid(event["ownership_event_id"], "ownership-event-id")
         if kind == "blocker_recurred" and event["previous_status"] != "closed":
             raise WorkMemoryError("invalid-recurrence-state", 2)
+        atom_fields = {
+            "atomic_step_id", "atom_request_sha256", "atom_run_id", "atom_attempt",
+        }
+        present = atom_fields & set(event)
+        if present and present != atom_fields:
+            raise WorkMemoryError("incomplete-atom-blocker-binding", 2)
+        if present:
+            require_id(event["atomic_step_id"], "atomic-step-id")
+            _require_hash(event["atom_request_sha256"], "atom-request-sha256")
+            _require_hash(event["atom_run_id"], "atom-run-id")
+            attempt = event["atom_attempt"]
+            if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
+                raise WorkMemoryError("invalid-atom-attempt", 2)
     elif kind == "blocker_assigned_downstream":
         if event["classification"] != "incidental-system-defect":
             raise WorkMemoryError("invalid-downstream-blocker-classification", 2)
@@ -1424,6 +1441,17 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             expected_optional[target].add("reconciliation_basis_event_id")
         if target == "non-gap" and "verification_event_id" in optional_present:
             expected_optional[target].add("verification_event_id")
+        successor_fields = {
+            "superseded_by_blocker_id", "superseded_by_occurrence_id",
+        }
+        present_successor = optional_present & successor_fields
+        if present_successor:
+            if target != "superseded" or present_successor != successor_fields:
+                raise WorkMemoryError("invalid-blocker-transition-fields", 2)
+            expected_optional[target] |= successor_fields
+            require_uuid(event["superseded_by_occurrence_id"], "superseded-by-occurrence-id")
+            if event["superseded_by_blocker_id"] == event["blocker_id"]:
+                raise WorkMemoryError("self-superseding-blocker", 2)
         if optional_present != expected_optional[target] or (target == "closed" and event["remaining_work"] != "none"):
             raise WorkMemoryError("invalid-blocker-transition-fields", 2)
         if target == "open":
@@ -2028,6 +2056,7 @@ def validate_lifecycle(
     blocker_meta: dict[str, dict[str, Any]] = {}
     blocker_occurrences: dict[str, str] = {}
     blocker_occurrence_runs: dict[str, str] = {}
+    blocker_occurrence_events: dict[tuple[str, str], dict[str, Any]] = {}
     blocker_verified_evidence: dict[str, str] = {}
     downstream_assignments: dict[str, dict[str, Any]] = {}
     legacy_stranded_fixed_sources: dict[str, str] = {}
@@ -2069,6 +2098,7 @@ def validate_lifecycle(
             blockers[event["blocker_id"]] = "open"
             blocker_meta[event["blocker_id"]] = event
             blocker_occurrences[event["blocker_id"]] = event["occurrence_id"]
+            blocker_occurrence_events[(event["blocker_id"], event["occurrence_id"])] = event
             if run_id is not None:
                 blocker_occurrence_runs[event["blocker_id"]] = run_id
             legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
@@ -2079,6 +2109,7 @@ def validate_lifecycle(
                 raise WorkMemoryError("invalid-blocker-recurrence", 3)
             blockers[event["blocker_id"]] = "open"
             blocker_occurrences[event["blocker_id"]] = event["occurrence_id"]
+            blocker_occurrence_events[(event["blocker_id"], event["occurrence_id"])] = event
             blocker_occurrence_runs[event["blocker_id"]] = run_id
             blocker_verified_evidence.pop(event["blocker_id"], None)
             downstream_assignments.pop(event["blocker_id"], None)
@@ -2360,6 +2391,28 @@ def validate_lifecycle(
             }
             if event["to_status"] not in valid.get(current, set()):
                 raise WorkMemoryError("invalid-blocker-status-transition", 3)
+            if "superseded_by_blocker_id" in event:
+                successor_key = (
+                    event["superseded_by_blocker_id"],
+                    event["superseded_by_occurrence_id"],
+                )
+                successor = blocker_occurrence_events.get(successor_key)
+                source_key = (
+                    event["blocker_id"], blocker_occurrences[event["blocker_id"]],
+                )
+                source = blocker_occurrence_events[source_key]
+                if (
+                    successor is None
+                    or blocker_occurrences.get(event["superseded_by_blocker_id"])
+                    != event["superseded_by_occurrence_id"]
+                    or any(
+                        source.get(field) != successor.get(field)
+                        for field in (
+                            "atomic_step_id", "atom_request_sha256", "atom_run_id",
+                        )
+                    )
+                ):
+                    raise WorkMemoryError("invalid-superseding-blocker-occurrence", 3)
             if current == "open" and event["to_status"] == "open":
                 occurrence_run_id = blocker_occurrence_runs[event["blocker_id"]]
                 occurrence_id = blocker_occurrences[event["blocker_id"]]

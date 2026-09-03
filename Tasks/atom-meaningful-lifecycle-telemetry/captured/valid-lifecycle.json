@@ -1,0 +1,4 @@
+{
+  "case": "valid-lifecycle",
+  "expected": "The eligible candidate exposes ordered start, meaningful work, finish, and integrity events in both variant and complete-run telemetry."
+}

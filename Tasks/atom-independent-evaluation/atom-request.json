@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-independent-evaluation",
+  "outcome": "Official experiment scoring and Development-Probe final assessment use independently inspectable execution evidence rather than candidate-produced conclusions, scores, or verdicts.",
+  "practical_value": "A candidate cannot win or pass by declaring itself correct, and an operator can reconstruct every official result from the exact evidence the judge received.",
+  "stopping_condition": "Flipping only a producer self-verdict cannot change ranking or final assessment; missing independent evidence cannot yield a positive verdict; equivalent observed behavior receives the same score; and every accepted verdict cites hash-bound evidence.",
+  "allowed_paths": [
+    "Tasks/atom-independent-evaluation",
+    "skills/experiment-machinery/SKILL.md",
+    "skills/experiment-machinery/references/adapter-contract.md",
+    "skills/experiment-machinery/references/development-probe-contract.md",
+    "skills/experiment-machinery/scripts/run_experiment.py",
+    "skills/experiment-machinery/scripts/development_probe_final_validation.py",
+    "tests/test_experiment_machinery.py",
+    "tests/test_development_probe_candidate.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "self-verdict-flip",
+      "source_ref": "Tasks/atom-independent-evaluation/captured/self-verdict-flip.json",
+      "sha256": "a01bf3f3604bfdc08fe3bede2e8cd498d465001db1a4f5692780cd8987ce8ac5",
+      "kind": "success",
+      "expected_outcome": "Independent observations determine the official result while contradictory producer claims remain audit-only."
+    },
+    {
+      "case_id": "missing-observation",
+      "source_ref": "Tasks/atom-independent-evaluation/captured/missing-observation.json",
+      "sha256": "51708b9e113f1864cc0895a1ebb798adee912af9bc947e63e95ddca40d109cb5",
+      "kind": "failure",
+      "expected_outcome": "A producer claim cannot substitute for missing independently inspectable evidence."
+    }
+  ]
+}

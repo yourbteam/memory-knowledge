@@ -77,7 +77,8 @@ def manifest() -> dict:
         _probe("ledger-writer", "ledger-writer-candidate"),
     ]
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "case_source_root": "/repository",
         "atomic_step": {
             "id": "read-and-record-source",
             "outcome": "One immutable source becomes a complete readable ledger entry.",
@@ -86,21 +87,21 @@ def manifest() -> dict:
             "captured_cases": [
                 {
                     "id": "works",
-                    "source": "captured/works.json",
+                    "source_ref": "captured/works.json",
                     "sha256": "1" * 64,
                     "kind": "success",
                     "expected_outcome": "The complete source is preserved and readable.",
                 },
                 {
                     "id": "refuses",
-                    "source": "captured/refuses.json",
+                    "source_ref": "captured/refuses.json",
                     "sha256": "2" * 64,
                     "kind": "failure",
                     "expected_outcome": "The unreadable unit remains an explicit gap.",
                 },
                 {
                     "id": "also-works",
-                    "source": "captured/also-works.json",
+                    "source_ref": "captured/also-works.json",
                     "sha256": "3" * 64,
                     "kind": "success",
                     "expected_outcome": "The second readable source is also preserved.",
@@ -275,3 +276,14 @@ def test_cli_validates_one_manifest_and_reports_parallel_probe_count(tmp_path: P
         "parallel": True,
         "status": "valid",
     }
+
+
+def test_version_one_manifest_remains_readable() -> None:
+    module = _module()
+    value = manifest()
+    value["schema_version"] = 1
+    value.pop("case_source_root")
+    for case in value["atomic_step"]["captured_cases"]:
+        case["source"] = case.pop("source_ref")
+
+    assert module.validate_manifest(value) == value

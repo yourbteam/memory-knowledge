@@ -1,0 +1,14 @@
+{
+  "case_id": "build-amplification",
+  "observed_run": "/private/tmp/atom-blocker-aware-closeout-experiment/complete-run-001",
+  "approach_count": 2,
+  "case_count": 2,
+  "retained_bundle_count": 4,
+  "unique_candidate_source_count": 2,
+  "operator_path": [
+    "development_probe_cross_case.py run",
+    "development_probe_experiment.py run",
+    "development_probe_all_probes.py run"
+  ],
+  "expected": "Two approaches are built exactly twice in total, then those two immutable bundle identities drive four isolated case executions and remain consumable by the all-probe collector."
+}

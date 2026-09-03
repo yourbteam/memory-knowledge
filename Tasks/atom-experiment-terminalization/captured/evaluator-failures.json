@@ -1,0 +1,1 @@
+{"case":"evaluator-failures","modes":["timeout","nonzero-exit","malformed-json","wrong-score-shape","digest-drift"],"expected":"no champion, one structured summary, and one terminal experiment event per run"}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-evidence-ownership",
+  "outcome": "Experiment and promotion events preserve the exact artifacts they revalidate as immutable atom-run-owned snapshots, so caller-owned inputs can disappear without breaking state while snapshot tampering still fails closed.",
+  "practical_value": "A completed or resumable atom remains readable and trustworthy without keeping every temporary producer directory alive.",
+  "stopping_condition": "Both real CLI cases survive removal of admitted external sources, every recorded authority is inside the atom run, unrelated source files are not imported, and changing a run-owned snapshot is refused.",
+  "allowed_paths": [
+    "Tasks/atom-evidence-ownership",
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "experiment-source-removal",
+      "source_ref": "Tasks/atom-evidence-ownership/captured/experiment-source-removal.json",
+      "sha256": "3652ccce78e6f33546107ebe723c85f68cc5cab0ddb1e8fd502e1703ee172a7d",
+      "kind": "success",
+      "expected_outcome": "Experiment state resumes from a minimal run-owned import after its source directory is removed, and tampered imported bytes are refused."
+    },
+    {
+      "case_id": "promotion-source-removal",
+      "source_ref": "Tasks/atom-evidence-ownership/captured/promotion-source-removal.json",
+      "sha256": "882b7d5eed9a430cf6a6c3ab980a8aed4a32c2743ccf2dd5d249a2ec48725334",
+      "kind": "failure",
+      "expected_outcome": "Promotion state resumes from minimal run-owned receipt, evidence, surface, and review imports, while tampered imported bytes are refused."
+    }
+  ]
+}

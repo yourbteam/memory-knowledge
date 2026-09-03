@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-run-product-surface-separation",
+  "outcome": "Atom Controller refuses every run root that overlaps the approved product change surface, while an external run root preserves the existing lifecycle and reports only real product changes.",
+  "practical_value": "Promotion review can never mistake controller requests, baselines, ledgers, or evidence for product work.",
+  "stopping_condition": "The real Atom Controller CLI completes the external-root case, rejects the overlapping-root case before creating output, and derives a change surface containing no controller-owned paths.",
+  "allowed_paths": [
+    "Tasks/atom-run-product-surface-separation",
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "external-run-root",
+      "source_ref": "Tasks/atom-run-product-surface-separation/captured/external-run-root.json",
+      "sha256": "c712cbeef7922994da1bd802b8935a2ebf89f31c54f66a0d30a1b30cc43f3976",
+      "kind": "success",
+      "expected_outcome": "An external controller run starts and its change surface contains no controller-owned path."
+    },
+    {
+      "case_id": "overlapping-run-root",
+      "source_ref": "Tasks/atom-run-product-surface-separation/captured/overlapping-run-root.json",
+      "sha256": "34bdb4f09c15d8bf149db36f68b3e42caddd1079c8c713cf4a87c67150db64c0",
+      "kind": "failure",
+      "expected_outcome": "A controller run nested below an allowed product path is refused before any run directory is created."
+    }
+  ]
+}

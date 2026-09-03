@@ -16,6 +16,7 @@ sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 CONTRACT = 1
+MANIFEST_CONTRACT = 2
 IDENTITY = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -76,6 +77,13 @@ def _relative_path(value: object, path: str) -> str:
     return text.rstrip("/")
 
 
+def _absolute_path(value: object, path: str) -> str:
+    text = _text(value, path)
+    if not Path(text).is_absolute():
+        raise ValueError(f"{path} is {text!r}; provide an absolute path")
+    return str(Path(text).resolve())
+
+
 def _enum(value: object, path: str, choices: set[str]) -> str:
     text = _text(value, path)
     if text not in choices:
@@ -83,14 +91,18 @@ def _enum(value: object, path: str, choices: set[str]) -> str:
     return text
 
 
-def _check_case(value: object, path: str) -> None:
+def _check_case(value: object, path: str, schema_version: int) -> None:
+    source_field = "source" if schema_version == 1 else "source_ref"
     case = _object(
         value,
         path,
-        {"id", "source", "sha256", "kind", "expected_outcome"},
+        {"id", source_field, "sha256", "kind", "expected_outcome"},
     )
     _identifier(case["id"], f"{path}.id")
-    _text(case["source"], f"{path}.source")
+    if schema_version == 1:
+        _text(case[source_field], f"{path}.{source_field}")
+    else:
+        _relative_path(case[source_field], f"{path}.{source_field}")
     digest = _text(case["sha256"], f"{path}.sha256")
     if not SHA256.fullmatch(digest):
         raise ValueError(
@@ -215,15 +227,23 @@ def _check_probe_shape(value: object, path: str) -> None:
 
 
 def _check_shape(manifest: object) -> None:
+    if type(manifest) is not dict:
+        raise ValueError("manifest must be one object")
+    schema_version = manifest.get("schema_version")
+    if type(schema_version) is not int or schema_version not in {1, MANIFEST_CONTRACT}:
+        raise ValueError(
+            f"manifest.schema_version is {schema_version!r}; use integer {MANIFEST_CONTRACT}"
+        )
+    fields = {"schema_version", "atomic_step", "mini_probes", "composition"}
+    if schema_version == MANIFEST_CONTRACT:
+        fields.add("case_source_root")
     root = _object(
         manifest,
         "manifest",
-        {"schema_version", "atomic_step", "mini_probes", "composition"},
+        fields,
     )
-    if type(root["schema_version"]) is not int or root["schema_version"] != CONTRACT:
-        raise ValueError(
-            f"manifest.schema_version is {root['schema_version']!r}; use integer {CONTRACT}"
-        )
+    if schema_version == MANIFEST_CONTRACT:
+        _absolute_path(root["case_source_root"], "manifest.case_source_root")
     step = _object(
         root["atomic_step"],
         "atomic_step",
@@ -233,7 +253,7 @@ def _check_shape(manifest: object) -> None:
     for name in ("outcome", "practical_value", "stopping_condition"):
         _text(step[name], f"atomic_step.{name}")
     for index, case in enumerate(_list(step["captured_cases"], "atomic_step.captured_cases")):
-        _check_case(case, f"atomic_step.captured_cases[{index}]")
+        _check_case(case, f"atomic_step.captured_cases[{index}]", schema_version)
     for index, probe in enumerate(_list(root["mini_probes"], "mini_probes")):
         _check_probe_shape(probe, f"mini_probes[{index}]")
     composition = _object(
@@ -401,6 +421,17 @@ def validate_manifest(value: object) -> dict[str, Any]:
     except (AssertionError, KeyError, TypeError, ValueError) as error:
         raise ManifestError(str(error)) from None
     return copy.deepcopy(value)
+
+
+def resolve_case_source(
+    manifest: dict[str, Any], case: dict[str, Any], legacy_base: Path
+) -> Path:
+    """Resolve one logical case reference from the manifest's explicit source root."""
+
+    if manifest["schema_version"] == 1:
+        source = Path(case["source"])
+        return (source if source.is_absolute() else legacy_base / source).resolve()
+    return (Path(manifest["case_source_root"]) / case["source_ref"]).resolve()
 
 
 def _load(path: Path) -> object:

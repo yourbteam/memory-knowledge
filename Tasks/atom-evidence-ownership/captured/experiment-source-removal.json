@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "case_id": "experiment-source-removal",
+  "source_kind": "development-probe-run",
+  "mutation": "remove-import-source-after-record-experiment",
+  "expected": {
+    "status_exit": 0,
+    "stage": "promotion",
+    "recorded_path_owner": "atom-run",
+    "snapshot_tamper_exit": 2,
+    "unrelated_source_imported": false
+  }
+}

@@ -20,6 +20,13 @@ manifest before launching experiments:
 python3 scripts/development_probe_manifest.py validate <manifest.json>
 ```
 
+Version-two manifests keep location separate from identity: `case_source_root` is one absolute
+import root, while every captured case carries a safe repository-relative `source_ref`. Launch and
+composition resolve bytes from that explicit pair, so moving or nesting the manifest does not
+change the case. The reader retains bounded version-one support for already-recorded assemblies;
+new manifests must use version two.
+Repair-derived manifests preserve that exact version and source root.
+
 Package every declared approach before it enters Experiment Machinery:
 
 ```bash
@@ -33,9 +40,10 @@ outside that boundary before an experiment launches. Accepted bundles preserve t
 records and exact changed paths so the scope decision can be verified again from immutable evidence.
 
 Use the bundle executor as the experiment variant command. Its configuration contains exactly the
-declared captured `case_id`; code verifies the bundle and frozen input before launching the copied
-candidate, then verifies the bundle again after execution. The canonical product source is never
-the candidate execution path.
+declared captured `case_id`; code verifies the bundle and frozen input, materializes a disposable
+execution-local candidate source by reflink or verified-copy fallback, launches only that local
+source, checks it for mutation, discards it, then verifies the shared bundle again. The canonical
+product source and shared bundle source are never the candidate execution path.
 
 Run one complete mini-probe comparison for one declared captured case with:
 
@@ -43,8 +51,10 @@ Run one complete mini-probe comparison for one declared captured case with:
 python3 scripts/development_probe_experiment.py run <request.json> <new-output-directory>
 ```
 
-The request supplies the validated development manifest, selected probe and case, and exactly one
-candidate-build request per declared approach. Code builds every candidate concurrently, launches
+The public request supplies the validated development manifest, selected probe and case, and
+exactly one candidate-build request per declared approach. The cross-case controller instead
+supplies its freshly verified shared bundle set. Code builds every candidate concurrently when
+the public single-case path is used, launches
 the real Experiment Machinery runner only after every approach completes, remains integrity valid,
 and has a distinct verified candidate source-tree digest. Byte-identical implementations under
 different approach names are refused with their build evidence preserved and no recommendation.
@@ -57,10 +67,12 @@ Run that mini-probe across every case declared by its manifest with:
 python3 scripts/development_probe_cross_case.py run <request.json> <new-output-directory>
 ```
 
-This request omits `case_id`. Code runs the single-case launcher for the complete manifest-ordered
-case set with bounded concurrency, preserves all case evidence, and applies the metric's declared
-`sum`, `mean`, or direction-aware `worst` method. It recommends one approach only when every case
-completed and that approach freshly verifies to one unchanged bundle digest across all cases.
+This request omits `case_id`. Code builds each approach exactly once, then runs the single-case
+launcher against that verified immutable bundle set for the complete manifest-ordered case set
+with bounded concurrency, preserves all case evidence, and applies the metric's declared `sum`,
+`mean`, or direction-aware `worst` method. Every execution receives its own disposable source.
+It recommends one approach only when every case completed and that approach freshly verifies to
+one unchanged bundle digest across all cases.
 
 Run every declared mini-probe with:
 
@@ -192,14 +204,26 @@ once in the same declared order.
   the frozen `execution_limits`. An overrun is terminated, its partial stdout and stderr are
   preserved, and the ledger plus terminal summary record the timeout. A timed-out variant is
   ineligible; a timed-out evaluator produces no champion.
-- Candidate adapters report outcomes and may preserve claimed metrics for audit, but claimed
-  metrics never participate in ranking. The one frozen independent evaluator receives all
-  eligible outcomes in one code-owned request and must return one exact finite score set per
-  variant and declared metric. Missing, reordered, unknown, non-numeric, or non-finite scores
-  refuse evaluation.
+- Candidate adapters report outcomes and may preserve claimed metrics for audit, but neither
+  conclusions nor claimed metrics enter official scoring. The one frozen independent evaluator
+  receives code-owned execution facts, the candidate result hash, and hash-bound stdout, stderr,
+  and telemetry references; it never receives the candidate outcome object. It must derive and
+  return one exact finite score set per variant and declared metric. Missing, reordered, unknown,
+  non-numeric, or non-finite scores refuse evaluation.
+- After `experiment_started`, the runner owns terminalization across variant execution, integrity
+  checks, and evaluation. Every failure writes `summary.json` with a structured `evaluation_error`,
+  null champion, empty ranking, and `promotion_applied: false`, then appends exactly one
+  `experiment_failed` terminal event. Successful and no-eligible runs append exactly one
+  `evaluation_completed` terminal event. Preflight refusals before the start remain output-free.
 - Changed variant-adapter or evaluator bytes fail closed. When a variant adapter is inside the
   target source tree, execute it from that complete read-only snapshot so its imports remain bound;
   otherwise execute its frozen standalone copy.
+- Development-Probe candidates use wrapper-owned lifecycle telemetry. The wrapper records ordered
+  candidate and operator starts, validates and forwards namespaced work or decision events, records
+  an actionable failure before terminalization, verifies bundle integrity, and finishes the
+  candidate. Missing, malformed, misidentified, or non-monotonic telemetry makes the variant
+  ineligible. A complete Development-Probe run also exposes one live `telemetry.jsonl` whose
+  globally monotonic events identify the atom, probe, case, approach, state, and last work.
 - Select a champion only from completed, integrity-valid variants. Break a true metric tie by the
   stable variant id so the same evidence yields the same recommendation.
 - Treat a recommendation as evidence for a later implementation decision, not as a machinery

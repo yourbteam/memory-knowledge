@@ -1,0 +1,24 @@
+{
+  "case_id": "unresolved-deliverable",
+  "operator_path": [
+    "atom_controller.py start",
+    "blocker_catalog.py open --atom-run",
+    "atom_controller.py record-validation",
+    "atom_controller.py authorize-next"
+  ],
+  "blockers": [
+    {
+      "classification": "deliverable-blocker",
+      "status": "open"
+    },
+    {
+      "classification": "deliverable-blocker",
+      "status": "fixed-awaiting-verification"
+    },
+    {
+      "classification": "deliverable-blocker",
+      "status": "verified"
+    }
+  ],
+  "expected": "Each unresolved linked occurrence prevents atom completion and successor authorization."
+}

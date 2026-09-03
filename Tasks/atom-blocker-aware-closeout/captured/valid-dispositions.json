@@ -1,0 +1,33 @@
+{
+  "case_id": "valid-dispositions",
+  "operator_path": [
+    "atom_controller.py start",
+    "blocker_catalog.py open --atom-run",
+    "blocker_catalog.py transition or assign-downstream",
+    "atom_controller.py record-validation",
+    "atom_controller.py authorize-next"
+  ],
+  "blockers": [
+    {
+      "classification": "deliverable-blocker",
+      "remaining_work": "none",
+      "status": "closed"
+    },
+    {
+      "classification": "incidental-system-defect",
+      "downstream_owner": "named-owner",
+      "status": "open"
+    },
+    {
+      "classification": "deliverable-blocker",
+      "status": "superseded",
+      "successor_occurrence": "existing occurrence in the same atom"
+    },
+    {
+      "classification": "non-gap",
+      "status": "non-gap",
+      "verification": "recorded"
+    }
+  ],
+  "expected": "Only explicit, mechanically valid dispositions permit completion and authorization; the closeout summary remains atom-owned evidence."
+}

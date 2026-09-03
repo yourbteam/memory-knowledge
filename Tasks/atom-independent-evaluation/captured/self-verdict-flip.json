@@ -1,0 +1,6 @@
+{
+  "case": "self-verdict-flip",
+  "producer_claims": {"correct": false, "score": 0},
+  "independent_observations": {"behavior": "completed", "quality": 1},
+  "expected": "Changing only producer_claims cannot change the official score or verdict."
+}

@@ -1,0 +1,4 @@
+{
+  "case": "invalid-lifecycle",
+  "expected": "Missing or non-monotonic operator telemetry is ineligible, and a crashed operator records its failing boundary and correction before terminalization."
+}

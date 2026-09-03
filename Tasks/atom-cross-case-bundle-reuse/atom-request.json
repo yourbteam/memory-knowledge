@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-cross-case-bundle-reuse",
+  "outcome": "Development-Probe Machinery builds each declared approach once at the cross-case boundary, binds that immutable bundle identity into every case execution, and protects shared evidence by running each candidate from a disposable isolated source materialization.",
+  "practical_value": "An experiment with M approaches and N cases retains M candidate bundles instead of M times N while preserving independent case execution, tamper detection, and downstream composition.",
+  "stopping_condition": "Real two-approach, two-case runs retain exactly two canonical bundles and perform four executions; every case maps an approach to the same verified bundle digest; mutating candidate source invalidates only that execution while the shared bundle remains verifiable; legacy single-case launch and all-probe winner collection remain operational.",
+  "allowed_paths": [
+    "Tasks/atom-cross-case-bundle-reuse",
+    "skills/experiment-machinery/SKILL.md",
+    "skills/experiment-machinery/references/development-probe-contract.md",
+    "skills/experiment-machinery/scripts/development_probe_candidate.py",
+    "skills/experiment-machinery/scripts/development_probe_experiment.py",
+    "skills/experiment-machinery/scripts/development_probe_cross_case.py",
+    "skills/experiment-machinery/scripts/development_probe_all_probes.py",
+    "tests/test_development_probe_candidate.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "build-amplification",
+      "source_ref": "Tasks/atom-cross-case-bundle-reuse/captured/build-amplification.json",
+      "sha256": "94a87aaa63cbddd8fc90ff8eaf1470feb5b82d9c6e1de88ee9835d2daceb32e8",
+      "kind": "success",
+      "expected_outcome": "Two approaches are built once each, execute across two cases, share one verified bundle identity per approach, and remain consumable by all-probe composition."
+    },
+    {
+      "case_id": "execution-mutation",
+      "source_ref": "Tasks/atom-cross-case-bundle-reuse/captured/execution-mutation.json",
+      "sha256": "7dd358636be04fdf441103454dbfc103b38451b07f5eb910813d7862cfc73cb5",
+      "kind": "failure",
+      "expected_outcome": "A source-mutating candidate becomes ineligible without changing the shared canonical bundle or preventing its subsequent verification."
+    }
+  ]
+}

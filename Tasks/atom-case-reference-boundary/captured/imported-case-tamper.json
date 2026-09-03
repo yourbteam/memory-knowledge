@@ -1,0 +1,5 @@
+{
+  "case_id": "imported-case-tamper",
+  "observed": "Assembly packages captured-case bytes and records their SHA-256.",
+  "expected": "Moving the assembly preserves case identity, while changed imported bytes are refused by verification."
+}

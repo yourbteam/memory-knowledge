@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "atom-experiment-terminalization",
+  "outcome": "Every experiment that records experiment_started writes exactly one terminal summary and one terminal experiment event, including evaluator timeout, nonzero exit, malformed response, invalid score shape, and integrity drift.",
+  "practical_value": "Controllers and operators can distinguish a failed experiment from a running one without reconstructing state from scattered stderr files.",
+  "stopping_condition": "A successful evaluator still selects its champion; every declared evaluator failure returns nonzero with champion null, promotion_applied false, structured evaluation_error evidence, and exactly one terminal experiment event; preflight refusals remain output-free.",
+  "allowed_paths": [
+    "Tasks/atom-experiment-terminalization",
+    "skills/experiment-machinery/SKILL.md",
+    "skills/experiment-machinery/references/adapter-contract.md",
+    "skills/experiment-machinery/scripts/run_experiment.py",
+    "tests/test_experiment_machinery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "evaluator-success",
+      "source_ref": "Tasks/atom-experiment-terminalization/captured/evaluator-success.json",
+      "sha256": "826b226269681cfe46eceb4b28aac6a81956a71bc5a61beab1af7765db69f738",
+      "kind": "success",
+      "expected_outcome": "The experiment selects a champion and closes with one terminal event."
+    },
+    {
+      "case_id": "evaluator-failures",
+      "source_ref": "Tasks/atom-experiment-terminalization/captured/evaluator-failures.json",
+      "sha256": "e77250c5c7f7ae736f9218ba88f60f9b10caf21cc7c93bf3fce913c84a0b49bc",
+      "kind": "failure",
+      "expected_outcome": "Every evaluator failure produces a structured terminal summary and exactly one terminal experiment event without a champion."
+    }
+  ]
+}
