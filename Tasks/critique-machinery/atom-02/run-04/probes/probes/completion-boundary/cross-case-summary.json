@@ -1,0 +1,13 @@
+{
+  "aggregated_summary_sha256": "6beee760dc57e877dcc75f86b1b3b0f1e79a4db4343b20444c34ba3495af7dd5",
+  "atomic_step_id": "critique-lens-matrix",
+  "case_ids": [
+    "btm-roadmap",
+    "viv-scorecard"
+  ],
+  "probe_id": "completion-boundary",
+  "promotion_applied": false,
+  "recommendation_sha256": "d5f6b7d4faed4270fad851de7cb6d6fdbe42fd5768bf3a6d8b7f6a7c954d2fb8",
+  "schema_version": 1,
+  "status": "completed"
+}

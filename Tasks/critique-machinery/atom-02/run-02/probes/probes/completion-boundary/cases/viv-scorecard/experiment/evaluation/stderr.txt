@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-02/probes/probes/completion-boundary/cases/viv-scorecard/experiment/evaluator/adapter.py", line 12, in <module>
+    outcome = candidate["outcome"]
+              ~~~~~~~~~^^^^^^^^^^^
+KeyError: 'outcome'

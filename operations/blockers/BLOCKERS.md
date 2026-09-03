@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `1332c1b951ab76fb1fe4b132fe2693dcae62e9523982b664796a7db2aa33ec8e`
+Ledger-SHA256: `86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -3334,6 +3334,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-promotion-lifecycle-source-receipt`
 - Symptom: Drive stdout says stage complete but the persisted source receipt discards that stage
 - Evidence: main writes result_identity next_stage for every non-status command while cmd_drive returns stage complete
+
+## blk-4c13dc3af4b80419c1460b01
+
+- Status: `closed`
+- Subject: `critique-machinery-atom-02-readonly-syntax`
+- Step: `atom-02-candidate-syntax`
+- Surface: `immutable-experiment-candidates`
+- Symptom: Python syntax verification fails because py_compile attempts to create __pycache__ inside an immutable candidate tree
+- Evidence: Two invocations returned Errno 1 Operation not permitted at the candidate __pycache__ path
 
 ## blk-4c46132a9e475781cbe2d9b6
 

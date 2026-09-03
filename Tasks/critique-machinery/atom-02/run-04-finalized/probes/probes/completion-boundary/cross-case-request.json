@@ -1,0 +1,27 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "terminal-only-gates",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/build-terminal-only-gates.json"
+    },
+    {
+      "approach_id": "universal-gate",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/build-universal-gate.json"
+    }
+  ],
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/evaluator.py",
+      "sha256": "f9c2ad28fdd403cf323984d44c01bbab35e5a158d40b6b2775bbb9cfdc49fb10"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "completion-boundary",
+  "schema_version": 1
+}

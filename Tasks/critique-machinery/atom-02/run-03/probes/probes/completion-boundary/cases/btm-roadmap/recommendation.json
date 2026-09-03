@@ -1,0 +1,14 @@
+{
+  "approach_id": "universal-gate",
+  "atomic_step_id": "critique-lens-matrix",
+  "bundle": "../../bundles/universal-gate",
+  "bundle_sha256": "0845e9ac965a43db7ea0725db8cd46e4a1ef3599f86821779130ea38bbc40741",
+  "case_id": "btm-roadmap",
+  "experiment_id": "development-probe-e2944dc7ad0a9bd056c2",
+  "probe_id": "completion-boundary",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "variation-2"
+}

@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-lens-matrix",
+  "probe_ids": [
+    "completion-boundary"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "960d5e84de1abbe2189b61380ad5158d816d1f49a218c4d5793db38a703ec564",
+  "schema_version": 1,
+  "status": "completed"
+}

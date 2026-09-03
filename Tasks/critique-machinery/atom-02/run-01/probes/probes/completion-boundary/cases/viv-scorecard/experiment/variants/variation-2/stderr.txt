@@ -1,0 +1,1 @@
+Development-probe candidate refused: operator telemetry contains no completed work or decision; emit at least one work_completed or decision_recorded event

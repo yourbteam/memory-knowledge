@@ -1,0 +1,27 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "atomic_step_id": "critique-lens-matrix",
+  "captured_cases": [
+    {
+      "case_id": "btm-roadmap",
+      "expected_outcome": "A controlled partial real roadmap refuses every result-bearing route.",
+      "kind": "failure",
+      "sha256": "b8d29d78cdfc446ed5d165ccb6bfba89bb2b0e12696bc3ee81ab1b8c9cab6db8",
+      "source_ref": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap.tar"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "expected_outcome": "A real scorecard produces units times seven cells and exposes partial status.",
+      "kind": "success",
+      "sha256": "faf056757b70468c5b6723f46831d898ae78134916c5d4701c0260b27d39c6e3",
+      "source_ref": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard.tar"
+    }
+  ],
+  "outcome": "Every opened unit is crossed with seven fixed lenses and no result route leaks before all cells are judged.",
+  "practical_value": "A partial critique is visibly partial and cannot be mistaken for a complete assessment.",
+  "schema_version": 1,
+  "stopping_condition": "Both real pages produce exact matrices and all result routes refuse the controlled partial state."
+}

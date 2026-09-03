@@ -1,0 +1,32 @@
+{
+  "atomic_step_id": "critique-lens-matrix",
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "d3f01fd189eae7b2eb09dad8bbad5687cf9bcb53b41b35e9941b660a01351df0"
+  },
+  "changed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "btm-roadmap",
+      "path": "run-04-finalized/validation/executions/btm-roadmap/result.json",
+      "sha256": "ce36afb27df7629cc588163303f5673fe7360760c1427b359b1d6db3d3a39543"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "path": "run-04-finalized/validation/executions/viv-scorecard/result.json",
+      "sha256": "56c33a568fa45f0d01b6395f07597453173b5ae071b5b0d3cd4e620b7cec20e7"
+    }
+  ],
+  "experiment_assembly_sha256": "29a711ac550291a0cb55d4915c5e9255bd9f9493db433ea2b63f04b5cf751093",
+  "experiment_event_sha256": "fde59d5ad84f6a17ea8b2c10dee8d4aa406587466e258475c438237babbbe901",
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "9bd8b0c12479f7c1ac3a1b37ab9ddb0cc994ddeefa779b5e9bac1556246870d7"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

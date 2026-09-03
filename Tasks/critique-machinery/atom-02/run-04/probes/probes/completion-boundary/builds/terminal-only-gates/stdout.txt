@@ -1,0 +1,1 @@
+{"approach_id": "terminal-only-gates", "atomic_step_id": "critique-lens-matrix", "bundle_sha256": "520a0588e078ba3e000872f16bc064d5645860d655b43b13037c07b1b288d1f8", "probe_id": "completion-boundary", "status": "built"}

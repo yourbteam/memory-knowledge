@@ -1,0 +1,7 @@
+{
+  "error": "one or more case assessments were refused: btm-roadmap: evidence pointers ['execution-result'] are not grounded for case 'btm-roadmap'; use only ['candidate-stderr', 'candidate-stdout', 'candidate-telemetry', 'execution-returncode', 'execution-status']; satisfied verdict cites ['execution-result']; cite 'candidate-telemetry' for the presented 'completed' execution; viv-scorecard: evidence pointers ['execution-result'] are not grounded for case 'viv-scorecard'; use only ['candidate-stderr', 'candidate-stdout', 'candidate-telemetry', 'execution-returncode', 'execution-status']; satisfied verdict cites ['execution-result']; cite 'candidate-telemetry' for the presented 'completed' execution",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "stage": "assess-cases",
+  "status": "failed"
+}

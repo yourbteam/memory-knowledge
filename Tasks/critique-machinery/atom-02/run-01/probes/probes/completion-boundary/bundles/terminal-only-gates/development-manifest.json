@@ -1,0 +1,132 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "A controlled partial real roadmap refuses every result-bearing route.",
+        "id": "btm-roadmap",
+        "kind": "failure",
+        "sha256": "b8d29d78cdfc446ed5d165ccb6bfba89bb2b0e12696bc3ee81ab1b8c9cab6db8",
+        "source": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap.tar"
+      },
+      {
+        "expected_outcome": "A real scorecard produces units times seven cells and exposes partial status.",
+        "id": "viv-scorecard",
+        "kind": "success",
+        "sha256": "faf056757b70468c5b6723f46831d898ae78134916c5d4701c0260b27d39c6e3",
+        "source": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard.tar"
+      }
+    ],
+    "id": "critique-lens-matrix",
+    "outcome": "Every opened unit is crossed with seven fixed lenses and no result route leaks before all cells are judged.",
+    "practical_value": "A partial critique is visibly partial and cannot be mistaken for a complete assessment.",
+    "stopping_condition": "Both real pages produce exact matrices and all result routes refuse the controlled partial state."
+  },
+  "composition": {
+    "assembly_contract": "Use the selected matrix construction and route gate unchanged.",
+    "consumes": [
+      {
+        "artifact": "matrix-completion-boundary",
+        "probe_id": "completion-boundary"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "failure_criterion": "Any matrix is malformed or any result route leaks.",
+      "operator_path": "open each frozen real archive, create controlled partial state, and invoke status/cell/report/document",
+      "success_criterion": "Both cases show exact partial matrices and all three result routes refuse."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Protecting only assembled outputs is enough because individual cells are not final reports.",
+          "id": "terminal-only-gates",
+          "implementation": "Gate report and document, but return any addressed judged cell.",
+          "predicted_tradeoff": "Less restrictive inspection, but a partial run can leak a completed-looking result."
+        },
+        {
+          "hypothesis": "Every result-bearing route must share one completeness gate to make partial work unmistakable.",
+          "id": "universal-gate",
+          "implementation": "Gate cell, report, and document through one missing-cell check; keep status diagnostic-only.",
+          "predicted_tradeoff": "Operators cannot inspect one completed cell until the whole matrix closes."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "open-correctness"
+          },
+          {
+            "method": "sum",
+            "name": "matrix-shape"
+          },
+          {
+            "method": "sum",
+            "name": "partial-visibility"
+          },
+          {
+            "method": "sum",
+            "name": "closed-result-routes"
+          },
+          {
+            "method": "sum",
+            "name": "actionable-refusals"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "open-correctness"
+          },
+          {
+            "direction": "maximize",
+            "name": "matrix-shape"
+          },
+          {
+            "direction": "maximize",
+            "name": "partial-visibility"
+          },
+          {
+            "direction": "maximize",
+            "name": "closed-result-routes"
+          },
+          {
+            "direction": "maximize",
+            "name": "actionable-refusals"
+          }
+        ]
+      },
+      "goal": "Close every result-bearing route over the same exact unit-by-lens matrix.",
+      "id": "completion-boundary",
+      "inputs": [
+        {
+          "case_id": "btm-roadmap"
+        },
+        {
+          "case_id": "viv-scorecard"
+        }
+      ],
+      "practical_value": "A partial critique is visibly partial and cannot be mistaken for a complete assessment.",
+      "proof": {
+        "failure_criterion": "Wrong dimensions, completed status, or any result-bearing route returns while a cell is unjudged.",
+        "success_criterion": "Exact matrix shape, partial status, and three actionable route refusals on both real pages."
+      },
+      "winner_output": {
+        "artifact": "matrix-completion-boundary",
+        "description": "The exact fixed-lens matrix and shared result-route gate."
+      },
+      "work_type": "code",
+      "work_type_reason": "Matrix enumeration and route admission are deterministic state boundaries."
+    }
+  ],
+  "schema_version": 1
+}

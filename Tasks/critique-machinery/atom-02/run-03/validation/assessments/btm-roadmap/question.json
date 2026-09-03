@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "29a711ac550291a0cb55d4915c5e9255bd9f9493db433ea2b63f04b5cf751093",
+  "atomic_outcome": "Every opened unit is crossed with seven fixed lenses and no result route leaks before all cells are judged.",
+  "atomic_step_id": "critique-lens-matrix",
+  "case_id": "btm-roadmap",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-03/validation/executions/btm-roadmap/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-03/validation/executions/btm-roadmap/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-03/validation/executions/btm-roadmap/telemetry.jsonl",
+      "sha256": "b77a44bf49922e742400267103bec08f6bb0b9ebc90238274f8beab65f722918"
+    }
+  ],
+  "expected_outcome": "A controlled partial real roadmap refuses every result-bearing route.",
+  "operator_path": "open each frozen real archive, create controlled partial state, and invoke status/cell/report/document",
+  "overall_criterion": "Any matrix is malformed or any result route leaks.",
+  "schema_version": 1
+}

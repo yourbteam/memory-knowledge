@@ -22,6 +22,31 @@
       },
       "operator_validation": "Tasks/critique-machinery/atom-01/operator-validation",
       "status": "promoted"
+    },
+    {
+      "atom_id": "critique-lens-matrix",
+      "claim": "A shared completion gate prevents partial critique results from leaking through cell, report, or document routes; gating only terminal outputs leaked the addressed cell on both captured real pages.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-02/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/aggregated-summary.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases",
+      "metrics": {
+        "terminal-only-gates": {
+          "actionable-refusals": 4.0,
+          "closed-result-routes": 4.0,
+          "matrix-shape": 2.0,
+          "open-correctness": 2.0,
+          "partial-visibility": 2.0
+        },
+        "universal-gate": {
+          "actionable-refusals": 6.0,
+          "closed-result-routes": 6.0,
+          "matrix-shape": 2.0,
+          "open-correctness": 2.0,
+          "partial-visibility": 2.0
+        }
+      },
+      "operator_validation": "Tasks/critique-machinery/atom-02/operator-validation",
+      "status": "promoted"
     }
   ],
   "schema_version": 1

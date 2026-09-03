@@ -1,0 +1,82 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/viv-scorecard/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/viv-scorecard/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/viv-scorecard/experiment/variants/control/telemetry.jsonl",
+          "sha256": "237771d5d39743e4608521156a9826a917262d8a6b3323c885264e96ad08fc31"
+        }
+      ],
+      "execution": {
+        "duration_ms": 113,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "1b158fdc44bd48e4eac976e36891e6d9d1753dee9fbaa722d539031f3f3a25c5",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/viv-scorecard/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/viv-scorecard/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/viv-scorecard/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "8c0bf25ff6a663c680e75aa2635b1ca4076f8d04fa41f730b0b87d47b38c802b"
+        }
+      ],
+      "execution": {
+        "duration_ms": 113,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "6da8492f1ff11af4e929aef83fcef82b2fe487f056b6f7a6422bb2159fc893b5",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-23d32cc205234cc1f401",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "open-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "matrix-shape"
+    },
+    {
+      "direction": "maximize",
+      "name": "partial-visibility"
+    },
+    {
+      "direction": "maximize",
+      "name": "closed-result-routes"
+    },
+    {
+      "direction": "maximize",
+      "name": "actionable-refusals"
+    }
+  ],
+  "schema_version": 1
+}

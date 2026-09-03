@@ -1,0 +1,19 @@
+{
+  "duration_ms": 55,
+  "evidence": "composition/composition-summary.json",
+  "evidence_sha256": "d40b2bde4dabcd2bfae431ceffe7f1234c8c542a29c703a23f4b3bc060e8095b",
+  "exit_code": 0,
+  "output": "composition",
+  "promotion_applied": false,
+  "result": "composition/assembly/assembly.json",
+  "result_sha256": "bd6a40202f481a9bcc3898b10c295490305129f30dabdfabc8c86565deb8ae79",
+  "schema_version": 1,
+  "stage": "compose-winners",
+  "status": "completed",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "537a2e6309c85abb83b50df1ea475ee5b186c0d61dc5641bbe0b306933c02708",
+  "timed_out": false,
+  "timeout": null,
+  "timeout_ms": 600000,
+  "timeout_sha256": null
+}

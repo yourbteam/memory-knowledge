@@ -1,0 +1,7 @@
+{
+  "error": "one or more case assessments were refused: btm-roadmap: case 'btm-roadmap' assessment exited 1: Traceback (most recent call last):\n  File \"/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/assessment.py\", line 10, in <module>\n    outcome = question[\"execution_result\"][\"outcome\"]\n              ~~~~~~~~^^^^^^^^^^^^^^^^^^^^\nKeyError: 'execution_result'; viv-scorecard: case 'viv-scorecard' assessment exited 1: Traceback (most recent call last):\n  File \"/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/assessment.py\", line 10, in <module>\n    outcome = question[\"execution_result\"][\"outcome\"]\n              ~~~~~~~~^^^^^^^^^^^^^^^^^^^^\nKeyError: 'execution_result'",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "stage": "assess-cases",
+  "status": "failed"
+}

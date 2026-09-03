@@ -1,0 +1,29 @@
+{
+  "error": "stage 'run-probes' failed: All-probe development run refused: one or more declared probes failed; preserved every result: completion-boundary: Cross-case development probe refused: one or more declared cases failed; preserved every result: btm-roadmap: Development-probe experiment refused: experiment did not complete every declared approach; incomplete variants: []; viv-scorecard: Development-probe experiment refused: experiment did not complete every declared approach; incomplete variants: []; inspect stage-receipts/run-probes/receipt.json",
+  "promotion_applied": false,
+  "receipt": "stage-receipts/run-probes/receipt.json",
+  "schema_version": 1,
+  "stage": "run-probes",
+  "stages": [
+    {
+      "duration_ms": 556,
+      "evidence": "probes/all-probes-summary.json",
+      "evidence_sha256": "ff0c17f4b119e68acae7486afb8f16b568e9ee4c53fa3962cb23550e9700199b",
+      "exit_code": 2,
+      "output": "probes",
+      "promotion_applied": false,
+      "result": null,
+      "result_sha256": null,
+      "schema_version": 1,
+      "stage": "run-probes",
+      "status": "failed",
+      "stderr_sha256": "77b5471f4d6bf96fd68489acf92d089ceba0d8c1c894718f071009cc48b8b6fc",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "timed_out": false,
+      "timeout": null,
+      "timeout_ms": 2700000,
+      "timeout_sha256": null
+    }
+  ],
+  "status": "failed"
+}

@@ -1,0 +1,30 @@
+{
+  "approach_bundles": [
+    {
+      "approach_id": "terminal-only-gates",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-02/probes/probes/completion-boundary/bundles/terminal-only-gates",
+      "bundle_sha256": "520a0588e078ba3e000872f16bc064d5645860d655b43b13037c07b1b288d1f8"
+    },
+    {
+      "approach_id": "universal-gate",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-02/probes/probes/completion-boundary/bundles/universal-gate",
+      "bundle_sha256": "0845e9ac965a43db7ea0725db8cd46e4a1ef3599f86821779130ea38bbc40741"
+    }
+  ],
+  "case_id": "btm-roadmap",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/evaluator.py",
+      "sha256": "13f42905e3397959e9b81d64bf8a819d04b2805238814394e8ceb58ee611f34f"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "completion-boundary",
+  "schema_version": 1
+}

@@ -1,0 +1,75 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "open-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "matrix-shape"
+      },
+      {
+        "direction": "maximize",
+        "name": "partial-visibility"
+      },
+      {
+        "direction": "maximize",
+        "name": "closed-result-routes"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-refusals"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "terminal-only-gates",
+    "atomic_step_id": "critique-lens-matrix",
+    "development_manifest_sha256": "2f84e444fed7ec05282e26875d552abf067ce6fcc3d3e0824dab31c9e23e2717",
+    "probe_id": "completion-boundary"
+  },
+  "inputs": {
+    "case_ids": [
+      "btm-roadmap",
+      "viv-scorecard"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "e4aeebe8136384e396eb8fb92deef8709f32ec56536415e996418c28e972e397",
+        "size": 14690
+      }
+    ],
+    "baseline_sha256": "e521a172195b933d14c2a56989a67cb4dbb48f3cce9054076685172129000a78",
+    "candidate_sha256": "da29cc7c911df47c03f573d10cf83ace367ef7b88401929bfd410d4f8a893970",
+    "changed_paths": [
+      "skills/critique-machinery/scripts/critique.py",
+      "tests/test_critique_machinery.py"
+    ],
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "39fca3fea378d443feb807e07d2a68eaaa109e04d630e66fbff489f4ddfa6268",
+        "size": 21357
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+        "size": 2245
+      }
+    ],
+    "root": "source"
+  }
+}

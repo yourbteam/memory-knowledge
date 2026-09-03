@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-lens-matrix",
+  "case_id": "viv-scorecard",
+  "experiment_id": "development-probe-23d32cc205234cc1f401",
+  "probe_id": "completion-boundary",
+  "promotion_applied": false,
+  "recommendation_sha256": "7c4132931b75d5d351b1b49e9fb963f014d09ac77b2cc2a1463b8f7a2477c9ad",
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "critique-lens-matrix",
+  "baseline_sha256": "1717de4de3d4366fe7af4c2eb3555257e6480cc0d79245dbf621ebcba88c5e2d",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "11f42100e429631dcb6f75846f4965b8c5b417d57dcdc83c63521a2b3c6cc7cb",
+      "before_mode": 420,
+      "before_sha256": "e4aeebe8136384e396eb8fb92deef8709f32ec56536415e996418c28e972e397",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 292,
+      "after_sha256": "cf6b302e38171d204897aaa52dde0653bb73791399713c4a7ae6956f976b30f0",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "tests/test_critique_machinery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

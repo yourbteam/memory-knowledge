@@ -1,0 +1,1 @@
+{"schema_version": 1, "scores": [{"metrics": {"actionable-refusals": 2, "closed-result-routes": 2, "matrix-shape": 1, "open-correctness": 1, "partial-visibility": 1}, "variant_id": "control"}, {"metrics": {"actionable-refusals": 3, "closed-result-routes": 3, "matrix-shape": 1, "open-correctness": 1, "partial-visibility": 1}, "variant_id": "variation-2"}]}

@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "29a711ac550291a0cb55d4915c5e9255bd9f9493db433ea2b63f04b5cf751093",
+  "atomic_outcome": "Every opened unit is crossed with seven fixed lenses and no result route leaks before all cells are judged.",
+  "atomic_step_id": "critique-lens-matrix",
+  "case_id": "viv-scorecard",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/validation/executions/viv-scorecard/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/validation/executions/viv-scorecard/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/validation/executions/viv-scorecard/telemetry.jsonl",
+      "sha256": "6ba7844461f2bc35393c860d4ed935da50ec1a9505473d5da82fa7fc4655a575"
+    }
+  ],
+  "expected_outcome": "A real scorecard produces units times seven cells and exposes partial status.",
+  "operator_path": "open each frozen real archive, create controlled partial state, and invoke status/cell/report/document",
+  "overall_criterion": "Both cases show exact partial matrices and all three result routes refuse.",
+  "schema_version": 1
+}

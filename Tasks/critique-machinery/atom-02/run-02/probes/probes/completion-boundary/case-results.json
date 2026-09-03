@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "case_id": "btm-roadmap",
+      "error": "Development-probe experiment refused: experiment did not complete every declared approach; incomplete variants: []",
+      "output": "cases/btm-roadmap",
+      "returncode": 2,
+      "status": "failed"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "error": "Development-probe experiment refused: experiment did not complete every declared approach; incomplete variants: []",
+      "output": "cases/viv-scorecard",
+      "returncode": 2,
+      "status": "failed"
+    }
+  ],
+  "schema_version": 1
+}

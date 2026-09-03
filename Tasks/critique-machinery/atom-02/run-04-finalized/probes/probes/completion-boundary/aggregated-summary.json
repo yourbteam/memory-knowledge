@@ -1,0 +1,64 @@
+{
+  "case_ids": [
+    "btm-roadmap",
+    "viv-scorecard"
+  ],
+  "champion": "universal-gate",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "open-correctness"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "matrix-shape"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "partial-visibility"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "closed-result-routes"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "actionable-refusals"
+      }
+    ]
+  },
+  "probe_id": "completion-boundary",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "actionable-refusals": 6.0,
+        "closed-result-routes": 6.0,
+        "matrix-shape": 2.0,
+        "open-correctness": 2.0,
+        "partial-visibility": 2.0
+      },
+      "approach_id": "universal-gate",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "actionable-refusals": 4.0,
+        "closed-result-routes": 4.0,
+        "matrix-shape": 2.0,
+        "open-correctness": 2.0,
+        "partial-visibility": 2.0
+      },
+      "approach_id": "terminal-only-gates",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

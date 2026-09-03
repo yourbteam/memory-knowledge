@@ -1,0 +1,82 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/btm-roadmap/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/btm-roadmap/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/btm-roadmap/experiment/variants/control/telemetry.jsonl",
+          "sha256": "b8a0fad0f921892da540aa2cf4b98c756e21d36637391cc1cd6b15d27e1fe3b3"
+        }
+      ],
+      "execution": {
+        "duration_ms": 109,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "751a275f70e231b474461e0b30a0e0a71f369d0f4b25aa753ae4a4dda07adf8e",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/btm-roadmap/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/btm-roadmap/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-04/probes/probes/completion-boundary/cases/btm-roadmap/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "8ce3bae74b5192364dcd35309717507532cc18d91cbc32b5da1f3be408a3c00b"
+        }
+      ],
+      "execution": {
+        "duration_ms": 113,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "6bf57e6b967b7b967bd57e6946530e53731d7d33b0cde98e10e0fb719cd35546",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-e2944dc7ad0a9bd056c2",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "open-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "matrix-shape"
+    },
+    {
+      "direction": "maximize",
+      "name": "partial-visibility"
+    },
+    {
+      "direction": "maximize",
+      "name": "closed-result-routes"
+    },
+    {
+      "direction": "maximize",
+      "name": "actionable-refusals"
+    }
+  ],
+  "schema_version": 1
+}

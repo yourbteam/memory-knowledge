@@ -1,0 +1,12 @@
+{
+  "results": [
+    {
+      "error": "Cross-case development probe refused: one or more declared cases failed; preserved every result: btm-roadmap: Development-probe experiment refused: experiment did not complete every declared approach; incomplete variants: ['control', 'variation-2']; viv-scorecard: Development-probe experiment refused: experiment did not complete every declared approach; incomplete variants: ['control', 'variation-2']",
+      "output": "probes/completion-boundary",
+      "probe_id": "completion-boundary",
+      "returncode": 2,
+      "status": "failed"
+    }
+  ],
+  "schema_version": 1
+}

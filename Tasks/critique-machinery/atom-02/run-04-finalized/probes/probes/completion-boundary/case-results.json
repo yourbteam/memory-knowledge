@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "case_id": "btm-roadmap",
+      "output": "cases/btm-roadmap",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "output": "cases/viv-scorecard",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

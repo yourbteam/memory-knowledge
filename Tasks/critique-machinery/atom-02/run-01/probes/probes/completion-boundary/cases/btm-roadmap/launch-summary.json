@@ -1,0 +1,7 @@
+{
+  "error": "experiment did not complete every declared approach; incomplete variants: ['control', 'variation-2']",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "stage": "verify-experiment",
+  "status": "failed"
+}

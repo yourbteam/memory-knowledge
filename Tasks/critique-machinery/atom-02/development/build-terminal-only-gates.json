@@ -1,0 +1,18 @@
+{
+  "approach_id": "terminal-only-gates",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/manifest.json",
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "probe_id": "completion-boundary",
+  "schema_version": 1,
+  "source": {
+    "baseline": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/baseline",
+    "candidate": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/terminal-only-gates",
+    "entrypoint": "skills/critique-machinery/scripts/critique.py"
+  }
+}

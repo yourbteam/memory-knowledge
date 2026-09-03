@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/completion-boundary",
+      "probe_id": "completion-boundary",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

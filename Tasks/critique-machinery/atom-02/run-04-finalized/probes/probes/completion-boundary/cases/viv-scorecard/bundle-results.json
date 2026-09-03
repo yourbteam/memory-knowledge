@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "approach_id": "terminal-only-gates",
+      "bundle": "../../bundles/terminal-only-gates",
+      "bundle_sha256": "520a0588e078ba3e000872f16bc064d5645860d655b43b13037c07b1b288d1f8",
+      "candidate_sha256": "7508413fd7ed39d2c6a586c1a32e82f3d02d130ad5433c6d0144202b1bbe9b43",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "error": null,
+      "probe_id": "completion-boundary",
+      "status": "reused"
+    },
+    {
+      "approach_id": "universal-gate",
+      "bundle": "../../bundles/universal-gate",
+      "bundle_sha256": "0845e9ac965a43db7ea0725db8cd46e4a1ef3599f86821779130ea38bbc40741",
+      "candidate_sha256": "5bc11cf3bb67aef97fe2aa39e31303a3734256793dd94dd71e390bbb911f9d4f",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "error": null,
+      "probe_id": "completion-boundary",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

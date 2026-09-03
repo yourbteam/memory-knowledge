@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/assessment.py",
+      "sha256": "34853e5abf9c8d2dc619b20ef47d3488e298e53de6562bf1c3d36891f2587a40"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "critique-lens-matrix",
+  "baseline": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/baseline",
+    "sha256": "e521a172195b933d14c2a56989a67cb4dbb48f3cce9054076685172129000a78"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/manifest.json",
+    "sha256": "e0dd01708cd0f020ccc35b1591e1cb6bc48096a9483da1e2e0620a90d9d11d5e"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "completion-boundary",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/cross-completion-boundary.json",
+      "request_sha256": "307cabb1ea6383eed45698aaeebc36a6ad9bc97b3ab982d84a0d70604b317e8d"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

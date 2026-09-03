@@ -1,0 +1,8 @@
+{
+  "case_id": "viv-scorecard",
+  "evidence_pointers": [
+    "candidate-telemetry"
+  ],
+  "reason": "Observed expected cells=84, shape=True, partial=True, closed result routes=3/3.",
+  "verdict": "satisfied"
+}

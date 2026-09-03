@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "29a711ac550291a0cb55d4915c5e9255bd9f9493db433ea2b63f04b5cf751093",
+        "atomic_step_id": "critique-lens-matrix",
+        "case_id": "btm-roadmap",
+        "evidence_pointers": [
+          "candidate-telemetry"
+        ],
+        "reason": "Observed expected cells=175, shape=True, partial=True, closed result routes=3/3.",
+        "status": "satisfied"
+      },
+      "case_id": "btm-roadmap",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "29a711ac550291a0cb55d4915c5e9255bd9f9493db433ea2b63f04b5cf751093",
+        "atomic_step_id": "critique-lens-matrix",
+        "case_id": "viv-scorecard",
+        "evidence_pointers": [
+          "candidate-telemetry"
+        ],
+        "reason": "Observed expected cells=84, shape=True, partial=True, closed result routes=3/3.",
+        "status": "satisfied"
+      },
+      "case_id": "viv-scorecard",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

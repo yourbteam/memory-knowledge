@@ -1,0 +1,32 @@
+{
+  "atomic_step_id": "critique-lens-matrix",
+  "cases": [
+    {
+      "case_id": "btm-roadmap",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap",
+          "path": "operator-validation/btm-roadmap.json",
+          "sha256": "0c72a8857ac19a465f352d349965ce76a305193f452c87f4eb60030b84b616c0"
+        }
+      ],
+      "reason": "The promoted CLI built 175 cells, exposed 174 as unjudged after one controlled judgment, and refused cell, report, and document with exact identities and repair action.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "evidence": [
+        {
+          "case_id": "viv-scorecard",
+          "path": "operator-validation/viv-scorecard.json",
+          "sha256": "b1d251f19f1c2b1ca33d6d827355a5caf062545736c983b334f060c46b54a6ac"
+        }
+      ],
+      "reason": "The promoted CLI built 84 cells, exposed 83 as unjudged after one controlled judgment, and refused all three result routes actionably.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "50c61f13208bc6a8b5853d0a1ea35f536fb753ab60b0b9b04a301aa1681e28c5",
+  "schema_version": 1,
+  "status": "completed"
+}

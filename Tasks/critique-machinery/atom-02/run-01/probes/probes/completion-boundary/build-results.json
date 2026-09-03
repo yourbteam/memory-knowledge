@@ -1,0 +1,31 @@
+{
+  "results": [
+    {
+      "approach_id": "terminal-only-gates",
+      "bundle": "bundles/terminal-only-gates",
+      "bundle_sha256": "74cb85dec5d9eb8ce5991c1a4af01f7963afc8230778fcb54e46801ee0e82334",
+      "candidate_sha256": "da29cc7c911df47c03f573d10cf83ace367ef7b88401929bfd410d4f8a893970",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "error": null,
+      "probe_id": "completion-boundary",
+      "status": "built"
+    },
+    {
+      "approach_id": "universal-gate",
+      "bundle": "bundles/universal-gate",
+      "bundle_sha256": "14899ef4d12eba2bc923256dd429d482b320cf3bc4991fab35b7e62a01a43981",
+      "candidate_sha256": "f48d83c213c3911f495822289d05a3062617f64da8a08a03754cb0f684860824",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "error": null,
+      "probe_id": "completion-boundary",
+      "status": "built"
+    }
+  ],
+  "schema_version": 1
+}

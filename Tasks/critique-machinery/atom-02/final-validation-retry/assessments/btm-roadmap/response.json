@@ -1,0 +1,8 @@
+{
+  "case_id": "btm-roadmap",
+  "evidence_pointers": [
+    "candidate-telemetry"
+  ],
+  "reason": "Observed expected cells=175, shape=True, partial=True, closed result routes=3/3.",
+  "verdict": "satisfied"
+}

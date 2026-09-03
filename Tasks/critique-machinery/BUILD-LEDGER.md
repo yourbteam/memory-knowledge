@@ -32,3 +32,29 @@ reopen. The atom controller authorized the next atom at proof event
 
 **Cost.** One complete local Development-Probe cycle, two implementations × three captured cases;
 no model calls. Disk cost is dominated by preserved frozen state and raw runner copies.
+
+## Atom 2 — lens matrix — 2026-09-03
+
+**Outcome.** Every opened unit now receives the same seven fixed lenses. `status` exposes the exact
+partial matrix, while cell, report, and document routes all refuse until every cell is judged. Each
+refusal names the missing count, concrete cell identities, and the action required to continue.
+
+**Experiment.** Four bounded cycles are preserved in `atom-02/run-01/` through `run-04/`. The first
+three exposed current experiment-protocol requirements for operator telemetry, evidence-backed
+evaluation, and evidence-backed assessment. The fourth selected `universal-gate`; its final
+assessment was completed separately in `run-04-finalized/` after correcting only the required
+evidence label, without a fifth experiment. Across the two real pages, `universal-gate` closed six
+of six result routes; `terminal-only-gates` closed four because its cell route leaked.
+
+**Promotion.** The exact selected assembly supplies both the promoted script and focused tests.
+The controller-recorded assembly SHA-256 is
+`29a711ac550291a0cb55d4915c5e9255bd9f9493db433ea2b63f04b5cf751093`.
+
+**Real operator path.** `atom-02/operator-validation/` records the promoted CLI producing 175 BTM
+cells and 84 Vivacom cells. After one controlled judgment, both remain visibly partial and all
+three result routes refuse with the precise remaining count and repair action. The atom controller
+authorized the next atom at proof event
+`fb6c270c5087d9578b0967df6fe063471ad965b5d9f2110d59b8961f3c09ade5`.
+
+**Cost.** Four local Development-Probe cycles, two implementations × two captured cases; no model
+calls. The additional final assessment reused the already selected fourth-cycle assembly.

@@ -1,0 +1,92 @@
+{
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/development/evaluator.py",
+        "sha256": "f9c2ad28fdd403cf323984d44c01bbab35e5a158d40b6b2775bbb9cfdc49fb10"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "open-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "matrix-shape"
+      },
+      {
+        "direction": "maximize",
+        "name": "partial-visibility"
+      },
+      {
+        "direction": "maximize",
+        "name": "closed-result-routes"
+      },
+      {
+        "direction": "maximize",
+        "name": "actionable-refusals"
+      }
+    ]
+  },
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-23d32cc205234cc1f401",
+  "frozen_input": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard.tar",
+    "sha256": "faf056757b70468c5b6723f46831d898ae78134916c5d4701c0260b27d39c6e3"
+  },
+  "hypothesis": "Every approach declared by mini-probe 'completion-boundary' can run against captured case 'viv-scorecard', and the declared metrics recommend one bundle.",
+  "schema_version": 4,
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "variants": [
+    {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-03/probes/probes/completion-boundary/bundles/terminal-only-gates"
+      ],
+      "configuration": {
+        "case_id": "viv-scorecard"
+      },
+      "id": "control"
+    },
+    {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-02/run-03/probes/probes/completion-boundary/bundles/universal-gate"
+      ],
+      "configuration": {
+        "case_id": "viv-scorecard"
+      },
+      "id": "variation-2"
+    }
+  ]
+}

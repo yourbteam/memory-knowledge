@@ -1,0 +1,28 @@
+{
+  "experiment_id": "development-probe-0fcc6c8f2f7fe1a2bf8f",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "terminal-only-gates",
+      "bundle": "../../bundles/terminal-only-gates",
+      "bundle_sha256": "74cb85dec5d9eb8ce5991c1a4af01f7963afc8230778fcb54e46801ee0e82334",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "probe_id": "completion-boundary",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "universal-gate",
+      "bundle": "../../bundles/universal-gate",
+      "bundle_sha256": "14899ef4d12eba2bc923256dd429d482b320cf3bc4991fab35b7e62a01a43981",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard"
+      ],
+      "probe_id": "completion-boundary",
+      "variant_id": "variation-2"
+    }
+  ]
+}

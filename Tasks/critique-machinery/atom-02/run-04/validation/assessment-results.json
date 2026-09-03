@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "case_id": "btm-roadmap",
+      "error": "evidence pointers ['execution-result'] are not grounded for case 'btm-roadmap'; use only ['candidate-stderr', 'candidate-stdout', 'candidate-telemetry', 'execution-returncode', 'execution-status']; satisfied verdict cites ['execution-result']; cite 'candidate-telemetry' for the presented 'completed' execution",
+      "status": "refused"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "error": "evidence pointers ['execution-result'] are not grounded for case 'viv-scorecard'; use only ['candidate-stderr', 'candidate-stdout', 'candidate-telemetry', 'execution-returncode', 'execution-status']; satisfied verdict cites ['execution-result']; cite 'candidate-telemetry' for the presented 'completed' execution",
+      "status": "refused"
+    }
+  ],
+  "schema_version": 1
+}
