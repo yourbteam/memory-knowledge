@@ -16,15 +16,15 @@
       ]
     },
     "atom-building-machinery": {
-      "canonical_tree_sha256": "b108c839f90e4358541e0239410dd1c7ce353429e6f3a57ff470614d2859cffe",
+      "canonical_tree_sha256": "b0074fdfcd479cf14f0749f4d083259ed41b82b0ee066dec5d827d2d529963f7",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "7a6d6351e85cd46139dd87a6f253968e564a99f9fde8521f9a65ff2214d78494",
-        "codex": "d20511bd41ff9afe2f818fa658d36880a7df64c2c37aa024f5652af9319f188e"
+        "claude": "d9a4ad282f0c114cdbac4f34feeb5a0a3c352a22dbea58f4acf706a455435570",
+        "codex": "e5c0665f1b2f325deafe9aecbf76eb1d64ada3f9e8e2c43acc7748787d29b0ec"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -84,12 +84,12 @@
       ]
     },
     "experiment-machinery": {
-      "canonical_tree_sha256": "39eb1921a94bcc005137fde0323d03cc3694f498734d3bb8a47a077f30f3a766",
+      "canonical_tree_sha256": "eb46032dfcfc232ff91f3c959bf1bfd347ebddcbc2363a9eab69969d3c272728",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "39eb1921a94bcc005137fde0323d03cc3694f498734d3bb8a47a077f30f3a766",
+      "projected_tree_sha256": "eb46032dfcfc232ff91f3c959bf1bfd347ebddcbc2363a9eab69969d3c272728",
       "scenario_groups": [
         "CAP-PDI"
       ],
