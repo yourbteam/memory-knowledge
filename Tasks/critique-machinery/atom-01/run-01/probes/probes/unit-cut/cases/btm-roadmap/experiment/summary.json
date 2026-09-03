@@ -1,0 +1,152 @@
+{
+  "champion": "variation-2",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/evaluator.py",
+        "sha256": "7105af48418b44b236d8712097205f39039046ba6bc527ac8250a0469bf58888"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "territory-completeness"
+      },
+      {
+        "direction": "maximize",
+        "name": "judgeability"
+      },
+      {
+        "direction": "maximize",
+        "name": "payload-grounding"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-f1968bfdefc34cb4cd85",
+  "frozen_input_sha256": "b8d29d78cdfc446ed5d165ccb6bfba89bb2b0e12696bc3ee81ab1b8c9cab6db8",
+  "hypothesis": "Every approach declared by mini-probe 'unit-cut' can run against captured case 'btm-roadmap', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 0.88,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "rank": 1,
+      "variant_id": "variation-2"
+    },
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 0.7619047619047619,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "rank": 2,
+      "variant_id": "control"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts",
+      "sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9"
+    }
+  },
+  "target_source_sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9",
+  "variants": [
+    {
+      "duration_ms": 102,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 0.7619047619047619,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "outcome": {
+        "actual": "opened",
+        "case_id": "btm-roadmap",
+        "correct": true,
+        "error": null,
+        "expected": "opened",
+        "judgeable_ratio": 0.7619047619047619,
+        "judgeable_unit_count": 16,
+        "manifest_sha256": "91170b0cec13f2d6ee9eea9b3221a80ce9c56c7214ff71ab83e929466ecb29bb",
+        "nonempty_unit_count": 21,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 41
+      },
+      "reported_metrics": {},
+      "result_sha256": "791b490a8df0bea5583b9ebc05523849952bcac30d6f2fca834aaced70f6a167",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "ebce545bbd84ab79c6f435a64bdc7cd8dbc629f7ccf120556372ae3ef8c211a0",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 98,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 0.88,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "outcome": {
+        "actual": "opened",
+        "case_id": "btm-roadmap",
+        "correct": true,
+        "error": null,
+        "expected": "opened",
+        "judgeable_ratio": 0.88,
+        "judgeable_unit_count": 22,
+        "manifest_sha256": "16ce20602b89c54b51947f4364ada6536e1a5e6ae64ff9e0239e8a080cd368e6",
+        "nonempty_unit_count": 25,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 25
+      },
+      "reported_metrics": {},
+      "result_sha256": "b91891726232249b1783208d3c90e25ae7a10f284323459896ebd538c5af7d4d",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "582a570505837f66d929f2d90d9a82cc3865c570be2ccfbd835b3354b63bacb0",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

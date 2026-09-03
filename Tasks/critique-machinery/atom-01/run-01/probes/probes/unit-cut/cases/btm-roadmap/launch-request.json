@@ -1,0 +1,28 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "payload-records",
+      "request": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/build-payload-records.json"
+    },
+    {
+      "approach_id": "rendered-sections",
+      "request": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/build-rendered-sections.json"
+    }
+  ],
+  "case_id": "btm-roadmap",
+  "development_manifest": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/evaluator.py",
+      "sha256": "7105af48418b44b236d8712097205f39039046ba6bc527ac8250a0469bf58888"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "unit-cut",
+  "schema_version": 1
+}

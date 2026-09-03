@@ -1,0 +1,71 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "territory-completeness"
+      },
+      {
+        "direction": "maximize",
+        "name": "judgeability"
+      },
+      {
+        "direction": "maximize",
+        "name": "payload-grounding"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "payload-records",
+    "atomic_step_id": "critique-unit-enumeration",
+    "development_manifest_sha256": "e5e0b45e4a1779dba26a52ef4885ca6397fb838e6e0c92b129ec79e8f423bf9a",
+    "probe_id": "unit-cut"
+  },
+  "inputs": {
+    "case_ids": [
+      "btm-roadmap",
+      "viv-scorecard",
+      "btm-roadmap-wrong-payload"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "BASELINE",
+        "sha256": "76a5c7ad309aad947f08ede99cd355cc1f95d07c00e1ac62fee2f2cbf0e165d3",
+        "size": 48
+      }
+    ],
+    "baseline_sha256": "1abd0b9cee098feeb1ffc4a61d7a4a1e32956001f9862c486f53a7a45461153e",
+    "candidate_sha256": "88868f4a1b8c9297bec2e240d3175262447c4cd699224c402d3e7ac1a0dce979",
+    "changed_paths": [
+      "skills/critique-machinery/scripts/critique.py"
+    ],
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "BASELINE",
+        "sha256": "76a5c7ad309aad947f08ede99cd355cc1f95d07c00e1ac62fee2f2cbf0e165d3",
+        "size": 48
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "afe1542fa076dab5a35c0ecc7f7a3c7fc7eea4a390d6bb9ce7a5d84bef98a7e6",
+        "size": 13198
+      }
+    ],
+    "root": "source"
+  }
+}

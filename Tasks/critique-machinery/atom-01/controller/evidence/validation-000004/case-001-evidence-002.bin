@@ -1,0 +1,39 @@
+{
+  "immutable_reopen": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/critique-machinery/scripts/critique.py",
+      "open",
+      "--page",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard/page.md",
+      "--payload",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard/state.json",
+      "--key",
+      "context.up.cd_s_002.measurement_framework",
+      "--work",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/btm-roadmap"
+    ],
+    "returncode": 2,
+    "stderr": "critique refused: run /private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/btm-roadmap already contains a different unit-manifest.json; choose a new work directory or reopen it with the original page and payload.\n",
+    "stdout": ""
+  },
+  "repo_guard": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/critique-machinery/scripts/critique.py",
+      "open",
+      "--page",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap/page.md",
+      "--payload",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap/state.json",
+      "--key",
+      "context.up.cd_s_002.tactical_roadmap",
+      "--work",
+      "/private/tmp/critique-machinery-outside-repo"
+    ],
+    "returncode": 2,
+    "stderr": "critique refused: work directory /private/tmp/critique-machinery-outside-repo is not nested inside a Git repository; choose Tasks/<task>/runs/<name> beneath the intended repository.\n",
+    "stdout": ""
+  },
+  "satisfied": true
+}

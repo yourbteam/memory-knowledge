@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "case_id": "btm-roadmap-wrong-payload",
+  "experiment_id": "development-probe-1b8447f9372e5df9ad7a",
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "recommendation_sha256": "aa55628eaaee048f4886fac310cb253cb02ebbdc4522246ae5a642bc14b0f515",
+  "schema_version": 1,
+  "status": "completed"
+}

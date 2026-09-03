@@ -1,0 +1,33 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py"
+  ],
+  "atomic_step_id": "critique-unit-enumeration",
+  "captured_cases": [
+    {
+      "case_id": "btm-roadmap",
+      "expected_outcome": "The authentic BTM Step 12 page opens.",
+      "kind": "success",
+      "sha256": "b8d29d78cdfc446ed5d165ccb6bfba89bb2b0e12696bc3ee81ab1b8c9cab6db8",
+      "source_ref": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap.tar"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "expected_outcome": "The authentic Vivacom Step 10 scorecard opens.",
+      "kind": "success",
+      "sha256": "faf056757b70468c5b6723f46831d898ae78134916c5d4701c0260b27d39c6e3",
+      "source_ref": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard.tar"
+    },
+    {
+      "case_id": "btm-roadmap-wrong-payload",
+      "expected_outcome": "The BTM roadmap paired with the real measurement payload refuses by name.",
+      "kind": "failure",
+      "sha256": "72445fcc17d9093970266ae4ffd35a1e2fb104ae44eae9ebc8ab2820bbb522e4",
+      "source_ref": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap-wrong-payload.tar"
+    }
+  ],
+  "outcome": "The open CLI freezes a complete, payload-grounded unit manifest for authentic page/payload pairs and refuses wrong pairings, non-repository work roots, and incompatible reopens.",
+  "practical_value": "A critic cannot silently omit page territory or judge a page against unrelated stored material.",
+  "schema_version": 1,
+  "stopping_condition": "All frozen cases pass through the assembled candidate and the promoted open CLI repeats them."
+}

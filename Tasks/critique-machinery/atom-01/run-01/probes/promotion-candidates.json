@@ -1,0 +1,22 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "approach_id": "rendered-sections",
+      "artifact": "unit-enumerator",
+      "bundle": "probes/unit-cut/cases/btm-roadmap/bundles/rendered-sections",
+      "bundle_sha256": "d420c38cb46b49b87065d641ca09fd6ffa1dc4aca837c58207f678e205dce297",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard",
+        "btm-roadmap-wrong-payload"
+      ],
+      "probe_id": "unit-cut",
+      "recommendation": "probes/unit-cut/recommendation.json"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "candidates-ready"
+}

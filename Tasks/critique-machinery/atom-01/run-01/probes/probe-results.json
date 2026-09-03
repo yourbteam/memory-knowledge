@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/unit-cut",
+      "probe_id": "unit-cut",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

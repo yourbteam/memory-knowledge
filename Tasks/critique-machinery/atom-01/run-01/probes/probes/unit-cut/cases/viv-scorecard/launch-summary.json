@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "case_id": "viv-scorecard",
+  "experiment_id": "development-probe-2ea86ffd101dc07690aa",
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "recommendation_sha256": "a9ecb6cf27297074a942b682c85b1ee2348b720d4fd71bc2524528d26df13ed2",
+  "schema_version": 1,
+  "status": "completed"
+}

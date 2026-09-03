@@ -1,0 +1,9 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py"
+  ],
+  "atomic_step_id": "critique-unit-enumeration",
+  "files": [],
+  "repository_root": "/private/tmp/memory-knowledge-critique-machinery-20260903",
+  "schema_version": 1
+}

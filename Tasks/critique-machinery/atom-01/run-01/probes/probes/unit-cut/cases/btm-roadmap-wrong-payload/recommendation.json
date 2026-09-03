@@ -1,0 +1,14 @@
+{
+  "approach_id": "payload-records",
+  "atomic_step_id": "critique-unit-enumeration",
+  "bundle": "bundles/payload-records",
+  "bundle_sha256": "69c8e8ce6282ae5c4dbd7d6dd4a0cfc73b82e6505d528097bc9703ce25bc9417",
+  "case_id": "btm-roadmap-wrong-payload",
+  "experiment_id": "development-probe-1b8447f9372e5df9ad7a",
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

@@ -1,0 +1,24 @@
+{
+  "actual": "refused",
+  "case_id": "btm-roadmap-wrong-payload",
+  "expected": "refused",
+  "first": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/critique-machinery/scripts/critique.py",
+      "open",
+      "--page",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap-wrong-payload/page.md",
+      "--payload",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap-wrong-payload/state.json",
+      "--key",
+      "context.up.cd_s_002.measurement_framework",
+      "--work",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/btm-roadmap-wrong-payload"
+    ],
+    "returncode": 2,
+    "stderr": "critique refused: page/payload mismatch for page /private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap-wrong-payload/page.md and key 'context.up.cd_s_002.measurement_framework': found 0 exact stored values but require 10. Supply the state file and exact key that rendered this page.\n",
+    "stdout": ""
+  },
+  "satisfied": true
+}

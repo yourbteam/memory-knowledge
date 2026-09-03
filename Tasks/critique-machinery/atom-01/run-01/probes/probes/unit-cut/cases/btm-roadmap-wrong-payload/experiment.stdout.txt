@@ -1,0 +1,152 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/evaluator.py",
+        "sha256": "7105af48418b44b236d8712097205f39039046ba6bc527ac8250a0469bf58888"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "territory-completeness"
+      },
+      {
+        "direction": "maximize",
+        "name": "judgeability"
+      },
+      {
+        "direction": "maximize",
+        "name": "payload-grounding"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-1b8447f9372e5df9ad7a",
+  "frozen_input_sha256": "72445fcc17d9093970266ae4ffd35a1e2fb104ae44eae9ebc8ab2820bbb522e4",
+  "hypothesis": "Every approach declared by mini-probe 'unit-cut' can run against captured case 'btm-roadmap-wrong-payload', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 1.0,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 1.0,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts",
+      "sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9"
+    }
+  },
+  "target_source_sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9",
+  "variants": [
+    {
+      "duration_ms": 97,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 1.0,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "outcome": {
+        "actual": "refused-page-payload-mismatch",
+        "case_id": "btm-roadmap-wrong-payload",
+        "correct": true,
+        "error": "page/payload mismatch for page /private/var/folders/mq/n8fb5xvn1lqgz14brfqm1mvh0000gn/T/tmp6mx3_fd0/page.md and key 'context.up.cd_s_002.measurement_framework': found 0 exact stored values but require 10. Supply the state file and exact key that rendered this page.",
+        "expected": "refused-page-payload-mismatch",
+        "judgeable_ratio": 1.0,
+        "judgeable_unit_count": 0,
+        "manifest_sha256": null,
+        "nonempty_unit_count": 0,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 0
+      },
+      "reported_metrics": {},
+      "result_sha256": "c507ac540c57f7c988af7f66fb1512226b96f43d7059e181d131632004a1d90a",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "9cc88bdd4af495d047ad4f1b8cdce83f9ffe8e66c738f6023e74034635603501",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 93,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "boundary-correctness": 1.0,
+        "judgeability": 1.0,
+        "payload-grounding": 1.0,
+        "territory-completeness": 1.0
+      },
+      "outcome": {
+        "actual": "refused-page-payload-mismatch",
+        "case_id": "btm-roadmap-wrong-payload",
+        "correct": true,
+        "error": "page/payload mismatch for page /private/var/folders/mq/n8fb5xvn1lqgz14brfqm1mvh0000gn/T/tmp2ze91wp0/page.md and key 'context.up.cd_s_002.measurement_framework': found 0 exact stored values but require 10. Supply the state file and exact key that rendered this page.",
+        "expected": "refused-page-payload-mismatch",
+        "judgeable_ratio": 1.0,
+        "judgeable_unit_count": 0,
+        "manifest_sha256": null,
+        "nonempty_unit_count": 0,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 0
+      },
+      "reported_metrics": {},
+      "result_sha256": "26636f99e9cfefbe0a3df67606c66f5152233377fc2872230a029a95d7a49ef3",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "f5798067b383abef972675dcad5a6065292af6acd6c8d3f07c84148ba7176fec",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

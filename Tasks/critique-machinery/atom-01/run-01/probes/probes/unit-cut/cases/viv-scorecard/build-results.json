@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "approach_id": "payload-records",
+      "bundle": "bundles/payload-records",
+      "bundle_sha256": "69c8e8ce6282ae5c4dbd7d6dd4a0cfc73b82e6505d528097bc9703ce25bc9417",
+      "candidate_sha256": "88868f4a1b8c9297bec2e240d3175262447c4cd699224c402d3e7ac1a0dce979",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard",
+        "btm-roadmap-wrong-payload"
+      ],
+      "error": null,
+      "probe_id": "unit-cut",
+      "status": "built"
+    },
+    {
+      "approach_id": "rendered-sections",
+      "bundle": "bundles/rendered-sections",
+      "bundle_sha256": "d420c38cb46b49b87065d641ca09fd6ffa1dc4aca837c58207f678e205dce297",
+      "candidate_sha256": "9db153add3d86564a4bcda7e7f86c64f6f53dbdd1113aced0e10db1ce99bb634",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard",
+        "btm-roadmap-wrong-payload"
+      ],
+      "error": null,
+      "probe_id": "unit-cut",
+      "status": "built"
+    }
+  ],
+  "schema_version": 1
+}

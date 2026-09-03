@@ -1,0 +1,14 @@
+{
+  "approach_id": "rendered-sections",
+  "atomic_step_id": "critique-unit-enumeration",
+  "bundle": "bundles/rendered-sections",
+  "bundle_sha256": "d420c38cb46b49b87065d641ca09fd6ffa1dc4aca837c58207f678e205dce297",
+  "case_id": "viv-scorecard",
+  "experiment_id": "development-probe-2ea86ffd101dc07690aa",
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "variation-2"
+}

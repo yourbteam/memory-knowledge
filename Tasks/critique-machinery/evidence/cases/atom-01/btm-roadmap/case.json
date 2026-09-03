@@ -1,0 +1,7 @@
+{
+  "case_id": "btm-roadmap",
+  "page": "page.md",
+  "payload": "state.json",
+  "payload_key": "context.up.cd_s_002.tactical_roadmap",
+  "expected_outcome": "opened"
+}

@@ -1,0 +1,30 @@
+{
+  "experiment_id": "development-probe-2ea86ffd101dc07690aa",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "payload-records",
+      "bundle": "bundles/payload-records",
+      "bundle_sha256": "69c8e8ce6282ae5c4dbd7d6dd4a0cfc73b82e6505d528097bc9703ce25bc9417",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard",
+        "btm-roadmap-wrong-payload"
+      ],
+      "probe_id": "unit-cut",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "rendered-sections",
+      "bundle": "bundles/rendered-sections",
+      "bundle_sha256": "d420c38cb46b49b87065d641ca09fd6ffa1dc4aca837c58207f678e205dce297",
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard",
+        "btm-roadmap-wrong-payload"
+      ],
+      "probe_id": "unit-cut",
+      "variant_id": "variation-2"
+    }
+  ]
+}

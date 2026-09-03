@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "atom_id": "critique-unit-enumeration",
+      "claim": "Rendered heading sections bound back to stored payload records produce more judgeable units than direct stored-record cuts on the captured BTM roadmap and Vivacom scorecard, without losing exact territory coverage or wrong-payload refusal.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-01/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/aggregated-summary.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases",
+      "metrics": {
+        "payload-records": {
+          "boundary-correctness": 3.0,
+          "judgeability": 0.753968253968254,
+          "payload-grounding": 1.0,
+          "territory-completeness": 3.0
+        },
+        "rendered-sections": {
+          "boundary-correctness": 3.0,
+          "judgeability": 0.9044444444444445,
+          "payload-grounding": 1.0,
+          "territory-completeness": 3.0
+        }
+      },
+      "operator_validation": "Tasks/critique-machinery/atom-01/operator-validation",
+      "status": "promoted"
+    }
+  ],
+  "schema_version": 1
+}

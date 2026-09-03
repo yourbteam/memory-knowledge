@@ -1,0 +1,58 @@
+{
+  "case_ids": [
+    "btm-roadmap",
+    "viv-scorecard",
+    "btm-roadmap-wrong-payload"
+  ],
+  "champion": "rendered-sections",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "method": "sum",
+        "name": "territory-completeness"
+      },
+      {
+        "direction": "maximize",
+        "method": "mean",
+        "name": "judgeability"
+      },
+      {
+        "direction": "maximize",
+        "method": "mean",
+        "name": "payload-grounding"
+      }
+    ]
+  },
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "boundary-correctness": 3.0,
+        "judgeability": 0.9044444444444445,
+        "payload-grounding": 1.0,
+        "territory-completeness": 3.0
+      },
+      "approach_id": "rendered-sections",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "boundary-correctness": 3.0,
+        "judgeability": 0.753968253968254,
+        "payload-grounding": 1.0,
+        "territory-completeness": 3.0
+      },
+      "approach_id": "payload-records",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

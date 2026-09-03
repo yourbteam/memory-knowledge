@@ -1,0 +1,94 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/viv-scorecard/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/viv-scorecard/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/viv-scorecard/experiment/variants/control/telemetry.jsonl",
+          "sha256": "4d59dfe685841f5fad36a1b55243644f2ebeb43f71eec7b8622bce7c3e558563"
+        }
+      ],
+      "outcome": {
+        "actual": "opened",
+        "case_id": "viv-scorecard",
+        "correct": true,
+        "error": null,
+        "expected": "opened",
+        "judgeable_ratio": 0.5,
+        "judgeable_unit_count": 1,
+        "manifest_sha256": "2067ba1774f4f08147f4134cee77ff22d8e7901b476ad19c1568b8ba5ccfefaa",
+        "nonempty_unit_count": 2,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 18
+      },
+      "result_sha256": "362c78fb2867846e66aecdca659a8b43c27b2e199adea183c982a6cd0bdb3738",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/viv-scorecard/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/viv-scorecard/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/viv-scorecard/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "860ad3fcc816172cd15fd078bbb0b47bf92d73819e0aa77c53c8b12e59a056df"
+        }
+      ],
+      "outcome": {
+        "actual": "opened",
+        "case_id": "viv-scorecard",
+        "correct": true,
+        "error": null,
+        "expected": "opened",
+        "judgeable_ratio": 0.8333333333333334,
+        "judgeable_unit_count": 10,
+        "manifest_sha256": "621ebdd2ee235f6821feb260e98f974ebd1a564d6a88bb86878d8ec4ce1082f8",
+        "nonempty_unit_count": 12,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 12
+      },
+      "result_sha256": "e8c362e0f65150b140018d759a1f7108855825504f89bcd76cac86e8a5f77f15",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-2ea86ffd101dc07690aa",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "boundary-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "territory-completeness"
+    },
+    {
+      "direction": "maximize",
+      "name": "judgeability"
+    },
+    {
+      "direction": "maximize",
+      "name": "payload-grounding"
+    }
+  ],
+  "schema_version": 1
+}

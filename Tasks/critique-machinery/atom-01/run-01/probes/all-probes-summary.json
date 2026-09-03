@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "probe_ids": [
+    "unit-cut"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "35e78f92ad1b4401d92a80db5221a142f84b0ae87ccbf4814aae6cc27097eb1e",
+  "schema_version": 1,
+  "status": "completed"
+}

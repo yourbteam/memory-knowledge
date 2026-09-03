@@ -1,0 +1,7 @@
+{
+  "case_id": "viv-scorecard",
+  "page": "page.md",
+  "payload": "state.json",
+  "payload_key": "context.up.cd_s_002.measurement_framework",
+  "expected_outcome": "opened"
+}

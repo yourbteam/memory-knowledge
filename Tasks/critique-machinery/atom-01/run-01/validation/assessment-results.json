@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "fd7959966ee665c56611615b1e469a0d99855a2d6ed7d35dea37dbf33a246f78",
+        "atomic_step_id": "critique-unit-enumeration",
+        "case_id": "btm-roadmap",
+        "evidence_pointers": [
+          "execution-result"
+        ],
+        "reason": "Observed 'opened' against expected 'opened'; territory_complete=True.",
+        "status": "satisfied"
+      },
+      "case_id": "btm-roadmap",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "fd7959966ee665c56611615b1e469a0d99855a2d6ed7d35dea37dbf33a246f78",
+        "atomic_step_id": "critique-unit-enumeration",
+        "case_id": "viv-scorecard",
+        "evidence_pointers": [
+          "execution-result"
+        ],
+        "reason": "Observed 'opened' against expected 'opened'; territory_complete=True.",
+        "status": "satisfied"
+      },
+      "case_id": "viv-scorecard",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "fd7959966ee665c56611615b1e469a0d99855a2d6ed7d35dea37dbf33a246f78",
+        "atomic_step_id": "critique-unit-enumeration",
+        "case_id": "btm-roadmap-wrong-payload",
+        "evidence_pointers": [
+          "execution-result"
+        ],
+        "reason": "Observed 'refused-page-payload-mismatch' against expected 'refused-page-payload-mismatch'; territory_complete=True.",
+        "status": "satisfied"
+      },
+      "case_id": "btm-roadmap-wrong-payload",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

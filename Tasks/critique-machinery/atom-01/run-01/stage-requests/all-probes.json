@@ -1,0 +1,10 @@
+{
+  "development_manifest": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/manifest.json",
+  "probe_requests": [
+    {
+      "probe_id": "unit-cut",
+      "request": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/cross-unit-cut.json"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,8 @@
+{
+  "case_id": "btm-roadmap-wrong-payload",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "Observed 'refused-page-payload-mismatch' against expected 'refused-page-payload-mismatch'; territory_complete=True.",
+  "verdict": "satisfied"
+}

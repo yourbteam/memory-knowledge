@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/assessment.py",
+      "sha256": "f46c515ee46f7c95dff97bfcc74ed469c286fcd7f1ff048afa2e95b298750827"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "critique-unit-enumeration",
+  "baseline": {
+    "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/baseline",
+    "sha256": "1abd0b9cee098feeb1ffc4a61d7a4a1e32956001f9862c486f53a7a45461153e"
+  },
+  "development_manifest": {
+    "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/manifest.json",
+    "sha256": "62be0f0f47a847c8a96ffe81c66e311b5ce7d855154c14da6a89d5bba8635360"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "unit-cut",
+      "request": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/cross-unit-cut.json",
+      "request_sha256": "717481854666ee2c3782daab66899996c68b1758eaad603c6efce66a3d492df2"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

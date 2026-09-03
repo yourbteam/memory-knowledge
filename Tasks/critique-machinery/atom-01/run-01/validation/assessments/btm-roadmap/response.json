@@ -1,0 +1,8 @@
+{
+  "case_id": "btm-roadmap",
+  "evidence_pointers": [
+    "execution-result"
+  ],
+  "reason": "Observed 'opened' against expected 'opened'; territory_complete=True.",
+  "verdict": "satisfied"
+}

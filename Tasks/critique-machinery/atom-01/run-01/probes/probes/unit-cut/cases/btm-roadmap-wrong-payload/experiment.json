@@ -1,0 +1,88 @@
+{
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/development/evaluator.py",
+        "sha256": "7105af48418b44b236d8712097205f39039046ba6bc527ac8250a0469bf58888"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "boundary-correctness"
+      },
+      {
+        "direction": "maximize",
+        "name": "territory-completeness"
+      },
+      {
+        "direction": "maximize",
+        "name": "judgeability"
+      },
+      {
+        "direction": "maximize",
+        "name": "payload-grounding"
+      }
+    ]
+  },
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-1b8447f9372e5df9ad7a",
+  "frozen_input": {
+    "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap-wrong-payload.tar",
+    "sha256": "72445fcc17d9093970266ae4ffd35a1e2fb104ae44eae9ebc8ab2820bbb522e4"
+  },
+  "hypothesis": "Every approach declared by mini-probe 'unit-cut' can run against captured case 'btm-roadmap-wrong-payload', and the declared metrics recommend one bundle.",
+  "schema_version": 4,
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts",
+      "sha256": "92ccbabafa38aeab680714d8c0b088b77760f980173dc6cd917603565e55c2c9"
+    }
+  },
+  "variants": [
+    {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "1b7bbef4373d828ffee5d6a7357d0e0a50b29691c9fa103742ffac83d82c7e43"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/bundles/payload-records"
+      ],
+      "configuration": {
+        "case_id": "btm-roadmap-wrong-payload"
+      },
+      "id": "control"
+    },
+    {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "1b7bbef4373d828ffee5d6a7357d0e0a50b29691c9fa103742ffac83d82c7e43"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/bundles/rendered-sections"
+      ],
+      "configuration": {
+        "case_id": "btm-roadmap-wrong-payload"
+      },
+      "id": "variation-2"
+    }
+  ]
+}

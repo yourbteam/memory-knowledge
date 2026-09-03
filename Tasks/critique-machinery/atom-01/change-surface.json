@@ -1,0 +1,16 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "baseline_sha256": "4cfd3ff60a2d933a113e0569a4cb2c2ce2216cebb71b742029264d9d8afc7ce4",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "e4aeebe8136384e396eb8fb92deef8709f32ec56536415e996418c28e972e397",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    }
+  ],
+  "repository_root": "/private/tmp/memory-knowledge-critique-machinery-20260903",
+  "schema_version": 1
+}

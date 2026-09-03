@@ -1,0 +1,94 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap/experiment/variants/control/telemetry.jsonl",
+          "sha256": "ebce545bbd84ab79c6f435a64bdc7cd8dbc629f7ccf120556372ae3ef8c211a0"
+        }
+      ],
+      "outcome": {
+        "actual": "opened",
+        "case_id": "btm-roadmap",
+        "correct": true,
+        "error": null,
+        "expected": "opened",
+        "judgeable_ratio": 0.7619047619047619,
+        "judgeable_unit_count": 16,
+        "manifest_sha256": "91170b0cec13f2d6ee9eea9b3221a80ce9c56c7214ff71ab83e929466ecb29bb",
+        "nonempty_unit_count": 21,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 41
+      },
+      "result_sha256": "791b490a8df0bea5583b9ebc05523849952bcac30d6f2fca834aaced70f6a167",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "582a570505837f66d929f2d90d9a82cc3865c570be2ccfbd835b3354b63bacb0"
+        }
+      ],
+      "outcome": {
+        "actual": "opened",
+        "case_id": "btm-roadmap",
+        "correct": true,
+        "error": null,
+        "expected": "opened",
+        "judgeable_ratio": 0.88,
+        "judgeable_unit_count": 22,
+        "manifest_sha256": "16ce20602b89c54b51947f4364ada6536e1a5e6ae64ff9e0239e8a080cd368e6",
+        "nonempty_unit_count": 25,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 25
+      },
+      "result_sha256": "b91891726232249b1783208d3c90e25ae7a10f284323459896ebd538c5af7d4d",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-f1968bfdefc34cb4cd85",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "boundary-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "territory-completeness"
+    },
+    {
+      "direction": "maximize",
+      "name": "judgeability"
+    },
+    {
+      "direction": "maximize",
+      "name": "payload-grounding"
+    }
+  ],
+  "schema_version": 1
+}

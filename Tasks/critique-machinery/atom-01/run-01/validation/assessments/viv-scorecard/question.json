@@ -1,0 +1,71 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "fd7959966ee665c56611615b1e469a0d99855a2d6ed7d35dea37dbf33a246f78",
+  "atomic_outcome": "The open CLI freezes a complete, payload-grounded unit manifest for authentic page/payload pairs and refuses wrong pairings, non-repository work roots, and incompatible reopens.",
+  "atomic_step_id": "critique-unit-enumeration",
+  "case_id": "viv-scorecard",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "execution-result",
+      "value": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "actual": "opened",
+          "case_id": "viv-scorecard",
+          "correct": true,
+          "error": null,
+          "expected": "opened",
+          "judgeable_ratio": 0.8333333333333334,
+          "judgeable_unit_count": 10,
+          "manifest_sha256": "5739dbb4296227226a8d8ea1e1972738c336a8575467e2f8f390cc440d1ab7bc",
+          "nonempty_unit_count": 12,
+          "payload_grounding_ratio": 1.0,
+          "territory_complete": true,
+          "unit_count": 12
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      }
+    }
+  ],
+  "execution_result": {
+    "error": null,
+    "metrics": {},
+    "outcome": {
+      "actual": "opened",
+      "case_id": "viv-scorecard",
+      "correct": true,
+      "error": null,
+      "expected": "opened",
+      "judgeable_ratio": 0.8333333333333334,
+      "judgeable_unit_count": 10,
+      "manifest_sha256": "5739dbb4296227226a8d8ea1e1972738c336a8575467e2f8f390cc440d1ab7bc",
+      "nonempty_unit_count": 12,
+      "payload_grounding_ratio": 1.0,
+      "territory_complete": true,
+      "unit_count": 12
+    },
+    "schema_version": 1,
+    "status": "completed",
+    "variant_id": "assembly"
+  },
+  "expected_outcome": "The authentic Vivacom Step 10 scorecard opens.",
+  "operator_path": "execute the selected critique.py against each frozen page/state archive",
+  "overall_criterion": "Every real case reports its declared outcome with exact territory coverage on opened pages.",
+  "schema_version": 1
+}

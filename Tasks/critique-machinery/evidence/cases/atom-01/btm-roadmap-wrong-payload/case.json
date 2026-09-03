@@ -1,0 +1,7 @@
+{
+  "case_id": "btm-roadmap-wrong-payload",
+  "page": "page.md",
+  "payload": "state.json",
+  "payload_key": "context.up.cd_s_002.measurement_framework",
+  "expected_outcome": "refused-page-payload-mismatch"
+}

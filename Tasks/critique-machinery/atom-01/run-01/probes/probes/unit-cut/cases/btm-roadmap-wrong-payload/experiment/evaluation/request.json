@@ -1,0 +1,94 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/experiment/variants/control/telemetry.jsonl",
+          "sha256": "9cc88bdd4af495d047ad4f1b8cdce83f9ffe8e66c738f6023e74034635603501"
+        }
+      ],
+      "outcome": {
+        "actual": "refused-page-payload-mismatch",
+        "case_id": "btm-roadmap-wrong-payload",
+        "correct": true,
+        "error": "page/payload mismatch for page /private/var/folders/mq/n8fb5xvn1lqgz14brfqm1mvh0000gn/T/tmp6mx3_fd0/page.md and key 'context.up.cd_s_002.measurement_framework': found 0 exact stored values but require 10. Supply the state file and exact key that rendered this page.",
+        "expected": "refused-page-payload-mismatch",
+        "judgeable_ratio": 1.0,
+        "judgeable_unit_count": 0,
+        "manifest_sha256": null,
+        "nonempty_unit_count": 0,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 0
+      },
+      "result_sha256": "c507ac540c57f7c988af7f66fb1512226b96f43d7059e181d131632004a1d90a",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/run-01/probes/probes/unit-cut/cases/btm-roadmap-wrong-payload/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "f5798067b383abef972675dcad5a6065292af6acd6c8d3f07c84148ba7176fec"
+        }
+      ],
+      "outcome": {
+        "actual": "refused-page-payload-mismatch",
+        "case_id": "btm-roadmap-wrong-payload",
+        "correct": true,
+        "error": "page/payload mismatch for page /private/var/folders/mq/n8fb5xvn1lqgz14brfqm1mvh0000gn/T/tmp2ze91wp0/page.md and key 'context.up.cd_s_002.measurement_framework': found 0 exact stored values but require 10. Supply the state file and exact key that rendered this page.",
+        "expected": "refused-page-payload-mismatch",
+        "judgeable_ratio": 1.0,
+        "judgeable_unit_count": 0,
+        "manifest_sha256": null,
+        "nonempty_unit_count": 0,
+        "payload_grounding_ratio": 1.0,
+        "territory_complete": true,
+        "unit_count": 0
+      },
+      "result_sha256": "26636f99e9cfefbe0a3df67606c66f5152233377fc2872230a029a95d7a49ef3",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-1b8447f9372e5df9ad7a",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "boundary-correctness"
+    },
+    {
+      "direction": "maximize",
+      "name": "territory-completeness"
+    },
+    {
+      "direction": "maximize",
+      "name": "judgeability"
+    },
+    {
+      "direction": "maximize",
+      "name": "payload-grounding"
+    }
+  ],
+  "schema_version": 1
+}

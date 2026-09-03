@@ -1,0 +1,36 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "c90b05ec7167cf760d5b574e36711f41591202af0fd24ae02b1896dbdbf48cfa"
+  },
+  "changed_paths": [
+    "skills/critique-machinery/scripts/critique.py"
+  ],
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "btm-roadmap",
+      "path": "run-01/validation/executions/btm-roadmap/result.json",
+      "sha256": "d1a2f784b62cc7746766049a287f8ce268be7c17d7c77c08f4f2064918792649"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "path": "run-01/validation/executions/viv-scorecard/result.json",
+      "sha256": "079cbb315a9d145adac9013da1d469b2c98fbc89747f513ff160335489d55eec"
+    },
+    {
+      "case_id": "btm-roadmap-wrong-payload",
+      "path": "run-01/validation/executions/btm-roadmap-wrong-payload/result.json",
+      "sha256": "91a6f71e7c2ea8c185d861ddb651e249c4817d967880ea849d992552f5cb7633"
+    }
+  ],
+  "experiment_assembly_sha256": "fd7959966ee665c56611615b1e469a0d99855a2d6ed7d35dea37dbf33a246f78",
+  "experiment_event_sha256": "076ef31d4ff74afa3c8a775793541457ea4b20903fb86176160c5ee0c7c51054",
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "134e7aa0044636f2eeb761f5f5f12342e0bc7b4fdca921cdc83e336d50149710"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

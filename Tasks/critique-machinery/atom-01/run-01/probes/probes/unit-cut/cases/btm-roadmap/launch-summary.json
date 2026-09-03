@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "case_id": "btm-roadmap",
+  "experiment_id": "development-probe-f1968bfdefc34cb4cd85",
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "recommendation_sha256": "613ebf9ac329cb969a39af2f118001418c1e1dc12f453ca2cabdbccb6ede5271",
+  "schema_version": 1,
+  "status": "completed"
+}

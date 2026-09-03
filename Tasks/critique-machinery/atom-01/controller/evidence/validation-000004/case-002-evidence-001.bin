@@ -1,0 +1,44 @@
+{
+  "actual": "opened",
+  "case_id": "viv-scorecard",
+  "expected": "opened",
+  "first": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/critique-machinery/scripts/critique.py",
+      "open",
+      "--page",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard/page.md",
+      "--payload",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard/state.json",
+      "--key",
+      "context.up.cd_s_002.measurement_framework",
+      "--work",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/viv-scorecard"
+    ],
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "{\"status\": \"opened\", \"units\": 12, \"work\": \"/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/viv-scorecard\"}\n"
+  },
+  "manifest_path": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/viv-scorecard/unit-manifest.json",
+  "manifest_sha256": "935881b736f30c5b48da72c7cdddf5ba06419341a29a0716113962501b69bc86",
+  "reopen": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/skills/critique-machinery/scripts/critique.py",
+      "open",
+      "--page",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard/page.md",
+      "--payload",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard/state.json",
+      "--key",
+      "context.up.cd_s_002.measurement_framework",
+      "--work",
+      "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/viv-scorecard"
+    ],
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "{\"status\": \"reopened\", \"units\": 12, \"work\": \"/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/atom-01/operator-validation/runs/viv-scorecard\"}\n"
+  },
+  "satisfied": true
+}

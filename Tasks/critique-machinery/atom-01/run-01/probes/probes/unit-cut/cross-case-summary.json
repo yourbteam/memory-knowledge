@@ -1,0 +1,14 @@
+{
+  "aggregated_summary_sha256": "be7817110afb1a675886df7895de792654205783d5ac7204b9ac7fa986c34f8f",
+  "atomic_step_id": "critique-unit-enumeration",
+  "case_ids": [
+    "btm-roadmap",
+    "viv-scorecard",
+    "btm-roadmap-wrong-payload"
+  ],
+  "probe_id": "unit-cut",
+  "promotion_applied": false,
+  "recommendation_sha256": "05cd1985e2139fa2f0c7a52c0cd4c3fdb781347d5426a97496bc00b6660f54f7",
+  "schema_version": 1,
+  "status": "completed"
+}

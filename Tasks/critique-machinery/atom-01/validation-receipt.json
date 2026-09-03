@@ -1,0 +1,49 @@
+{
+  "atomic_step_id": "critique-unit-enumeration",
+  "cases": [
+    {
+      "case_id": "btm-roadmap",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap",
+          "path": "operator-validation/btm-roadmap.json",
+          "sha256": "3f1ee1b94232469cb9073bb5d9341fbb75dfdc64c2831627a3e2af4389353297"
+        },
+        {
+          "case_id": "btm-roadmap",
+          "path": "operator-validation/guards.json",
+          "sha256": "fd6d81fc5d9a1071a824e708e34f75a7c853c6a52be530e1f31d4cef6288e7f1"
+        }
+      ],
+      "reason": "The actual CLI opened 25 units, reopened immutably, refused an outside-repository work path, and refused an incompatible reopen.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "viv-scorecard",
+      "evidence": [
+        {
+          "case_id": "viv-scorecard",
+          "path": "operator-validation/viv-scorecard.json",
+          "sha256": "4219a4717aa016ad94c46fac178c816644c330c9de15b719766ed4adb23fea58"
+        }
+      ],
+      "reason": "The actual CLI opened the authentic scorecard and reproduced the identical manifest on reopen.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-roadmap-wrong-payload",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap-wrong-payload",
+          "path": "operator-validation/btm-roadmap-wrong-payload.json",
+          "sha256": "9399c662dd0ec5c47e33e0bd44e3ddbb6250ff753f3915589794c7526f0ee76f"
+        }
+      ],
+      "reason": "The actual CLI refused the wrong real payload by name and stated the matching evidence required.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "cbb6275e1eea80e2aaa02cf54b9e9d3ec91ecb477438c04f1b84a6aded22fe9f",
+  "schema_version": 1,
+  "status": "completed"
+}

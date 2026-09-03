@@ -1,0 +1,134 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The authentic BTM Step 12 page opens.",
+        "id": "btm-roadmap",
+        "kind": "success",
+        "sha256": "b8d29d78cdfc446ed5d165ccb6bfba89bb2b0e12696bc3ee81ab1b8c9cab6db8",
+        "source": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap.tar"
+      },
+      {
+        "expected_outcome": "The authentic Vivacom Step 10 scorecard opens.",
+        "id": "viv-scorecard",
+        "kind": "success",
+        "sha256": "faf056757b70468c5b6723f46831d898ae78134916c5d4701c0260b27d39c6e3",
+        "source": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/viv-scorecard.tar"
+      },
+      {
+        "expected_outcome": "The BTM roadmap paired with the real measurement payload refuses by name.",
+        "id": "btm-roadmap-wrong-payload",
+        "kind": "failure",
+        "sha256": "72445fcc17d9093970266ae4ffd35a1e2fb104ae44eae9ebc8ab2820bbb522e4",
+        "source": "/private/tmp/memory-knowledge-critique-machinery-20260903/Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap-wrong-payload.tar"
+      }
+    ],
+    "id": "critique-unit-enumeration",
+    "outcome": "The open CLI freezes a complete, payload-grounded unit manifest for authentic page/payload pairs and refuses wrong pairings, non-repository work roots, and incompatible reopens.",
+    "practical_value": "A critic cannot silently omit page territory or judge a page against unrelated stored material.",
+    "stopping_condition": "All frozen cases pass through the assembled candidate and the promoted open CLI repeats them."
+  },
+  "composition": {
+    "assembly_contract": "Use the selected unit enumerator unchanged as the critique open boundary.",
+    "consumes": [
+      {
+        "artifact": "unit-enumerator",
+        "probe_id": "unit-cut"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "btm-roadmap",
+        "viv-scorecard",
+        "btm-roadmap-wrong-payload"
+      ],
+      "failure_criterion": "Any case reports a different outcome or incomplete territory.",
+      "operator_path": "execute the selected critique.py against each frozen page/state archive",
+      "success_criterion": "Every real case reports its declared outcome with exact territory coverage on opened pages."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Stored record boundaries produce units closest to the objects a person can judge alone.",
+          "id": "payload-records",
+          "implementation": "Enumerate top-level stored objects and list records, then assign rendered blocks by word overlap.",
+          "predicted_tradeoff": "Strong payload identity with possible empty units when a stored record is omitted from this rendered page."
+        },
+        {
+          "hypothesis": "Rendered heading boundaries preserve the page's visible reading structure while payload binding supplies provenance.",
+          "id": "rendered-sections",
+          "implementation": "Enumerate heading sections, then bind each section to its strongest stored record by word overlap.",
+          "predicted_tradeoff": "Complete visible sections, but a long table under one heading may be too coarse to judge alone."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "boundary-correctness"
+          },
+          {
+            "method": "sum",
+            "name": "territory-completeness"
+          },
+          {
+            "method": "mean",
+            "name": "judgeability"
+          },
+          {
+            "method": "mean",
+            "name": "payload-grounding"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "boundary-correctness"
+          },
+          {
+            "direction": "maximize",
+            "name": "territory-completeness"
+          },
+          {
+            "direction": "maximize",
+            "name": "judgeability"
+          },
+          {
+            "direction": "maximize",
+            "name": "payload-grounding"
+          }
+        ]
+      },
+      "goal": "Cut authentic delivered pages into complete, judgeable territories bound to stored payload records.",
+      "id": "unit-cut",
+      "inputs": [
+        {
+          "case_id": "btm-roadmap"
+        },
+        {
+          "case_id": "viv-scorecard"
+        },
+        {
+          "case_id": "btm-roadmap-wrong-payload"
+        }
+      ],
+      "practical_value": "A critic cannot silently omit page territory or judge a page against unrelated stored material.",
+      "proof": {
+        "failure_criterion": "Any expected outcome differs or any rendered block is omitted or multiply assigned.",
+        "success_criterion": "Both authentic pairs open, the mismatched pair refuses, and every rendered block is assigned exactly once."
+      },
+      "winner_output": {
+        "artifact": "unit-enumerator",
+        "description": "The tested page/payload identity guard and complete unit-cut implementation."
+      },
+      "work_type": "code",
+      "work_type_reason": "Payload traversal, identity evidence, and exact territory accounting are deterministic code boundaries."
+    }
+  ],
+  "schema_version": 1
+}
