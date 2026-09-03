@@ -126,6 +126,17 @@ Record it:
 python3 scripts/atom_controller.py record-validation <atom-run> <validation-receipt.json>
 ```
 
+Before appending the validation event, the controller copies the validated receipt and every
+evidence file into an event-specific directory under `<atom-run>/evidence/`. The ledger records
+only those run-owned snapshots, so later changes to caller-owned live files cannot poison the
+history; every snapshot remains rehashed on resume and any snapshot drift fails closed.
+
+Runs created before this snapshot boundary may contain external evidence on a failed validation.
+If—and only if—that failure is followed by a later experiment in the same valid hash chain, a
+changed evidence hash is reported in `legacy_validation_evidence_drift` and does not block the
+newer lifecycle. Missing or linked files, malformed records, changed receipts, current failures,
+passed validations, and all run-owned snapshots remain strict.
+
 Any result other than `satisfied` preserves the evidence and routes the atom back to Experiment
 Machinery as PDI's required capability. Each nested evidence entry must name its enclosing
 captured case. Code rehashes every recorded evidence file during record and resume. Only

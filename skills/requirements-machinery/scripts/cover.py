@@ -20,6 +20,8 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 HERE = Path(__file__).resolve().parent
+PARTIAL_SPLIT_POLICY = "atomic-conservation-v1"
+CORRECT_OWNER_POLICY = "dedicated-correct-owner-v1"
 
 
 def _load(name):
@@ -1091,6 +1093,24 @@ def _owner_queue(state, target):
                                    f"marked with this page", "pages": [pid],
                       "why": why, "relevance_verdict": relevance_verdict,
                       "choices": ["admit", "dismiss"]})
+    final_state = (state.get("document_preparation", {}).get(target, {})
+                   .get("final_semantic", {}))
+    active_signature = final_state.get("active_signature")
+    final_record = final_state.get(active_signature, {}) if active_signature else {}
+    if final_record and _normalize_final_semantic_record(final_record, rulings):
+        work = state.get("_work")
+        if work:
+            _write(work, state)
+    for pair in final_record.get("owner_pairs", []):
+        queue.append({
+            "id": pair["id"], "kind": "final-overlap",
+            "question": "Do these final owner-materialized statements state the same requirement?",
+            "a": pair["a"], "b": pair["b"],
+            "statement": f"A: {pair['a']}\nB: {pair['b']}",
+            "pages": pair.get("pages") or [],
+            "why": "the final blind readers split, or the texts share a rule across a scale gap",
+            "choices": ["merge", "keep-separate"],
+        })
     open_queue = [q for q in queue if q["id"] not in rulings]
     # Auto re-queue: a recorded ruling a later ruling invalidated comes back as pending, with
     # its prior answer attached, so the ordinary answer path can accept the owner's correction.
@@ -1159,18 +1179,31 @@ def _owner_queue(state, target):
     return open_queue
 
 
-ASSESS_ASK = (
-    "You are assessing one decision for the owner of a requirements list for {target}.\n\n"
-    "THE ITEM\n{item}\n\n"
-    "ITS VERBATIM SOURCE MATERIAL\n{material}\n\n"
-    "THE OWNER'S RULINGS SO FAR (his own words)\n{prior}\n\n"
-    "Write exactly three lines:\n"
-    "CONSEQUENCE-{c0}: what the list looks like after choosing {c0}, one sentence.\n"
-    "CONSEQUENCE-{c1}: what the list looks like after choosing {c1}, one sentence.\n"
-    "RECOMMEND: {c0} or {c1}, one sentence of grounds from the material above, and the single "
-    "fact that would flip it.\n\n"
-    "This is a data-extraction request, not a task report. Do not begin with any status line, "
-    "anchor or preamble. The first characters of your reply must be CONSEQUENCE-.")
+ASSESSMENT_POLICY = "dynamic-lines-v1"
+
+
+def _assessment_prompt(target, item, material, prior, choices):
+    if not isinstance(choices, list) or not 1 <= len(choices) <= 3 or any(
+            not isinstance(choice, str) or not choice for choice in choices):
+        raise ValueError(
+            f"assessment choices must contain one, two, or three nonempty strings; got {choices!r}"
+        )
+    consequence_lines = "\n".join(
+        f"CONSEQUENCE-{choice}: what the list looks like after choosing {choice}, one sentence."
+        for choice in choices
+    )
+    offered = " or ".join(choices)
+    return (
+        f"You are assessing one decision for the owner of a requirements list for {target}.\n\n"
+        f"THE ITEM\n{item}\n\n"
+        f"ITS VERBATIM SOURCE MATERIAL\n{material}\n\n"
+        f"THE OWNER'S RULINGS SO FAR (his own words)\n{prior}\n\n"
+        f"Write exactly {len(choices) + 1} lines:\n{consequence_lines}\n"
+        f"RECOMMEND: {offered}, one sentence of grounds from the material above, and the single "
+        "fact that would flip it.\n\n"
+        "This is a data-extraction request, not a task report. Do not begin with any status line, "
+        "anchor or preamble. The first characters of your reply must be CONSEQUENCE-."
+    )
 
 
 def _assess(q, state, target, reader_command):
@@ -1184,18 +1217,22 @@ def _assess(q, state, target, reader_command):
                        for rid, r in sorted(state.get("owner_rulings", {})
                                             .get(target, {}).items())) or "(none yet)"
     material = "\n".join(q.get("anchors", []) or [q.get("a", ""), q.get("b", "")])
-    raw = interview_mod.ask_free(reader_command, stage="assess", question=ASSESS_ASK.format(
-        target=target[:120], item=json.dumps({k: q[k] for k in
-        ("kind", "question", "statement", "pages", "why") if k in q}, ensure_ascii=False),
-        material=material[:3000], prior=prior[:3000],
-        c0=q["choices"][0], c1=q["choices"][1]))
+    choices = q.get("choices")
+    prompt = _assessment_prompt(
+        target[:120],
+        json.dumps({k: q[k] for k in ("kind", "question", "statement", "pages", "why")
+                    if k in q}, ensure_ascii=False),
+        material[:3000], prior[:3000], choices,
+    )
+    raw = interview_mod.ask_free(reader_command, stage="assess", question=prompt)
     lines = [l.strip() for l in raw.split("\n") if l.strip()]
     out = {}
+    expected = [f"CONSEQUENCE-{choice}" for choice in choices] + ["RECOMMEND"]
     for l in lines:
-        for key in (f"CONSEQUENCE-{q['choices'][0]}", f"CONSEQUENCE-{q['choices'][1]}", "RECOMMEND"):
+        for key in expected:
             if l.upper().startswith(key.upper()):
                 out[key] = l.split(":", 1)[-1].strip()
-    return out if len(out) == 3 else {"raw": raw[:500]}
+    return out if list(out) == expected and all(out.values()) else {"raw": raw[:500]}
 
 
 def ask_owner(work, reader_command=None):
@@ -1294,7 +1331,8 @@ def _propose_spans(anchor, target, reader_command, interview_mod, decision_id):
     return agreed, record
 
 
-def _split_bundle(state, work, target, decision_id, match, choice, because, reader_command):
+def _split_bundle(state, work, target, decision_id, match, choice, because, reader_command,
+                  reopen_on_conservation_refusal=False):
     """Execute one split ruling on the stored state. Cuts are code's; judging is the readers';
     every child rides the same pen gate and checkability vote the whole list rode. State is
     written after the children land, so the interview resumes where it stood."""
@@ -1312,7 +1350,6 @@ def _split_bundle(state, work, target, decision_id, match, choice, because, read
             part = part.strip(" .;")
             if len(part) < 25:
                 continue
-            candidates.append((anchor, part))
             # A table cell's first duty arrives with the row label fused on ("What the AI
             # drafts Generates many candidate insights…"), and a blind reader fairly refuses
             # the label-bearing cut. A lowercase word followed by a Capitalised one mid-part
@@ -1320,18 +1357,27 @@ def _split_bundle(state, work, target, decision_id, match, choice, because, read
             # a verbatim substring, still code's choice, and the readers judge both.
             m = re.search(r"[a-z][),]?\s+(?=[A-Z][a-z])", part)
             if m and len(part) - m.end() >= 25:
-                candidates.append((anchor, part[m.end():]))
+                subcandidate = part[m.end():]
+                candidates.append({"anchor": anchor, "candidate": part,
+                                   "redundant_if_confirmed": subcandidate})
+                candidates.append({"anchor": anchor, "candidate": subcandidate,
+                                   "redundant_if_confirmed": None})
+            else:
+                candidates.append({"anchor": anchor, "candidate": part,
+                                   "redundant_if_confirmed": None})
     cut_by = "the source line's own semicolon seams"
     if len(candidates) < 2:
         # No punctuation seams: fall back to the meaning cut — reader-proposed, code-verified.
         interview_mod = _load("interview")
         proposals = []
+        candidates = []
         for anchor in parent.get("anchors") or []:
             agreed, record = _propose_spans(anchor, target, reader_command, interview_mod,
                                             decision_id)
             proposals.append((anchor, agreed, record))
             for span in agreed:
-                candidates.append((anchor, span))
+                candidates.append({"anchor": anchor, "candidate": span,
+                                   "redundant_if_confirmed": None})
         cut_by = "the two blind readers' agreed verbatim spans"
         if len(candidates) < 2:
             detail = "; ".join(
@@ -1345,7 +1391,9 @@ def _split_bundle(state, work, target, decision_id, match, choice, because, read
             return 3
     state.pop("_work", None)
     children, unconfirmed = [], []
-    for anchor, cand in candidates:
+    for candidate_spec in candidates:
+        anchor = candidate_spec["anchor"]
+        cand = candidate_spec["candidate"]
         answers = []
         for seat in (1, 2):
             a, _ = interview_mod.ask_choice(
@@ -1354,7 +1402,9 @@ def _split_bundle(state, work, target, decision_id, match, choice, because, read
                 ["YES", "NO"], stage="split", piece=decision_id, seat=seat)
             answers.append(a)
         if answers != ["YES", "YES"]:
-            unconfirmed.append({"candidate": cand, "answers": answers})
+            unconfirmed.append({"candidate": cand, "answers": answers,
+                                "redundant_if_confirmed":
+                                    candidate_spec["redundant_if_confirmed"]})
             continue
         statement, transcript = distill_mod.write_one([cand], reader_command,
                                                       stage="split", piece=decision_id)
@@ -1386,6 +1436,26 @@ def _split_bundle(state, work, target, decision_id, match, choice, because, read
     children = [c for c in children
                 if not any(o is not c and o["anchors"][0] != c["anchors"][0]
                            and o["anchors"][0] in c["anchors"][0] for o in children)]
+    confirmed_anchors = {child["anchors"][0] for child in children}
+    unresolved = [
+        item for item in unconfirmed
+        if not item.get("redundant_if_confirmed")
+        or item["redundant_if_confirmed"] not in confirmed_anchors
+    ]
+    if children and unresolved:
+        detail = "; ".join(
+            f"{item['candidate'][:50]!r}: seats answered {item['answers']}"
+            for item in unresolved
+        )
+        print(f"refused: {len(unresolved)} non-redundant candidate duty or duties remain "
+              f"unconfirmed — {detail}. A partial split cannot resolve the parent or discard "
+              "those source words.", file=sys.stderr)
+        if reopen_on_conservation_refusal:
+            _write(work, state)
+            print(f"reopened {decision_id}: the legacy partial split was removed and its parent "
+                  "is pending for an owner ruling")
+            return 0
+        return 3
     # A split into nothing is a silent drop wearing a split's name: on 2026-08-25 the
     # reputation-lens ruling cut four agreed spans, the confirmers rejected all four, and the
     # ruling recorded with zero children — the lens vanished from the list with no one choosing
@@ -1474,6 +1544,48 @@ def answer_owner(work, decision_id, choice, because, reader_command=None):
     return 0
 
 
+def correct_owner(work, decision_id, choice, because):
+    """Correct one recorded non-split owner ruling without reopening or hand-editing state."""
+    state = _read(work)
+    target = _last_target(state)
+    rulings = state.get("owner_rulings", {}).get(target, {})
+    prior = rulings.get(decision_id)
+    if prior is None:
+        print(f"'{decision_id}' is not a recorded owner ruling. correct-owner accepts only an "
+              "existing recorded non-split ruling; use answer-owner for a pending id.",
+              file=sys.stderr)
+        return 3
+    if prior.get("choice") == "split" or prior.get("split_graph") is not None:
+        print(f"'{decision_id}' is a recorded split ruling. correct-owner cannot change a split "
+              "graph or its children; use replay-owner-split for that exact split.",
+              file=sys.stderr)
+        return 3
+    item = prior.get("item") or {}
+    choices = item.get("choices") or []
+    if choice not in choices or choice == "split":
+        offered = ", ".join(c for c in choices if c != "split") or "none"
+        print(f"'{choice}' is not a permitted non-split correction for {decision_id}. Choose "
+              f"one of the ruling's originally offered non-split choices: {offered}.",
+              file=sys.stderr)
+        return 3
+    history = list(prior.get("history") or [])
+    history.append({key: value for key, value in prior.items() if key != "history"})
+    ruling = {
+        "item": item,
+        "choice": choice,
+        "because": because or "",
+        "assessment_shown": prior.get("assessment_shown"),
+        "at": time.time(),
+        "history": history,
+    }
+    rulings[decision_id] = ruling
+    _write(work, state)
+    print(f"corrected: {decision_id} -> {choice}" +
+          (f" ({because})" if because else "") +
+          f"; prior ruling preserved in history ({len(history)} entr{'y' if len(history) == 1 else 'ies'})")
+    return 0
+
+
 def replay_owner_split(work, decision_id, reader_command):
     """Rebuild one recorded terminal split without disturbing any other paid run state.
 
@@ -1513,31 +1625,289 @@ def replay_owner_split(work, decision_id, reader_command):
     parent.pop("split_into", None)
     del candidate["owner_rulings"][target][decision_id]
     return _split_bundle(candidate, work, target, decision_id, ruling["item"], "split",
-                         ruling.get("because", ""), reader_command)
+                         ruling.get("because", ""), reader_command,
+                         reopen_on_conservation_refusal=True)
 
 
-def _consolidate_kept_items(items, reflow_mod):
+FINAL_CONSOLIDATION_POLICY = "final-semantic-v1"
+
+
+def _merge_kept_item_lineage(prior, item):
+    prior["pages"] = sorted(set(prior.get("pages") or []) | set(item.get("pages") or []))
+    prior["anchors"] = list(dict.fromkeys(
+        (prior.get("anchors") or []) + (item.get("anchors") or [])
+    ))
+    notes = [note for note in (prior.get("_kept_by_owner"), item.get("_kept_by_owner"))
+             if note]
+    if notes:
+        prior["_kept_by_owner"] = "; ".join(dict.fromkeys(notes))
+    materialized = []
+    for candidate in (prior, item):
+        materialized.extend(candidate.get("_materialized_source_duties") or [])
+        if candidate.get("_materialized_source_duty"):
+            materialized.append(candidate["_materialized_source_duty"])
+    if materialized:
+        prior["_materialized_source_duties"] = list(dict.fromkeys(materialized))
+
+
+def _consolidate_kept_items(items, reflow_mod, same_rule_pairs=(), distinct_pairs=()):
     """Materialize an identical kept duty once while retaining all of its lineage."""
-    consolidated, by_statement = [], {}
+    consolidated, by_statement, by_single_anchor = [], {}, {}
+    same_rule_pairs = set(same_rule_pairs)
+    distinct_pairs = set(distinct_pairs)
     for item in items:
         if item.get("_drop") or item.get("how") == "refused" or not item.get("statement"):
             consolidated.append(item)
             continue
         identity = reflow_mod.flow(item["statement"])
         prior = by_statement.get(identity)
+        source_duty = item.get("_materialized_source_duty")
+        source_identity = reflow_mod.flow(source_duty) if source_duty else None
+        if prior is None and source_identity:
+            prior = by_single_anchor.get(source_identity)
+        if prior is None and source_identity:
+            for candidate in consolidated:
+                if candidate.get("_drop") or candidate.get("how") == "refused":
+                    continue
+                anchors = [reflow_mod.flow(anchor) for anchor in candidate.get("anchors") or []]
+                direct = any(
+                    frozenset((source_identity, anchor)) in same_rule_pairs
+                    and frozenset((source_identity, anchor)) not in distinct_pairs
+                    for anchor in anchors if anchor != source_identity
+                )
+                represented_inside_family = (
+                    source_identity in anchors
+                    and any(frozenset((source_identity, anchor)) in same_rule_pairs
+                            and frozenset((source_identity, anchor)) not in distinct_pairs
+                            for anchor in anchors if anchor != source_identity)
+                )
+                if direct or represented_inside_family:
+                    prior = candidate
+                    break
         if prior is None:
             by_statement[identity] = item
             consolidated.append(item)
+            anchors = item.get("anchors") or []
+            if len(anchors) == 1:
+                by_single_anchor.setdefault(reflow_mod.flow(anchors[0]), item)
             continue
-        prior["pages"] = sorted(set(prior.get("pages") or []) | set(item.get("pages") or []))
-        prior["anchors"] = list(dict.fromkeys(
-            (prior.get("anchors") or []) + (item.get("anchors") or [])
-        ))
-        notes = [note for note in (prior.get("_kept_by_owner"), item.get("_kept_by_owner"))
-                 if note]
-        if notes:
-            prior["_kept_by_owner"] = "; ".join(dict.fromkeys(notes))
+        _merge_kept_item_lineage(prior, item)
     return consolidated
+
+
+_FINAL_SEMANTIC_STOPWORDS = {
+    "about", "after", "again", "against", "along", "also", "because", "before", "being",
+    "between", "carry", "could", "every", "first", "from", "have", "into", "itself",
+    "never", "other", "rather", "should", "their", "there", "these", "they", "this",
+    "through", "under", "when", "where", "which", "while", "with", "without", "would",
+}
+
+
+def _final_semantic_tokens(text):
+    return {word for word in re.findall(r"[a-z0-9]+", text.lower())
+            if len(word) >= 5 and word not in _FINAL_SEMANTIC_STOPWORDS}
+
+
+def _has_materialized_lineage(item):
+    return bool(item.get("_materialized_source_duty")
+                or item.get("_materialized_source_duties"))
+
+
+def _canonical_final_pair(pair):
+    if (not isinstance(pair, (list, tuple)) or len(pair) != 2
+            or any(type(value) is not int or value < 1 for value in pair)
+            or pair[0] == pair[1]):
+        raise ValueError(f"invalid final semantic pair: {pair!r}")
+    return tuple(sorted(pair))
+
+
+def _final_pair_record(pair, left, right, pages):
+    pair = _canonical_final_pair(pair)
+    digest = hashlib.sha256((left + "||" + right).encode()).hexdigest()[:8]
+    return {
+        "id": f"final-pair-{digest}", "pair": list(pair), "a": left, "b": right,
+        "pages": sorted(set(pages)),
+    }
+
+
+def _normalize_final_semantic_record(record, rulings):
+    """Make unordered pair identity stable and let an owner gate override a merge."""
+    owner_by_pair, id_map = {}, {}
+    for stored in record.get("owner_pairs", []):
+        original = tuple(stored["pair"])
+        canonical = _canonical_final_pair(original)
+        left, right = stored["a"], stored["b"]
+        if original != canonical:
+            left, right = right, left
+        normalized = _final_pair_record(canonical, left, right, stored.get("pages") or [])
+        owner_by_pair.setdefault(canonical, normalized)
+        id_map[stored["id"]] = normalized["id"]
+    owner_pairs = set(owner_by_pair)
+    merged = sorted({_canonical_final_pair(pair) for pair in record.get("merged", [])}
+                    - owner_pairs)
+    normalized_owner = [owner_by_pair[pair] for pair in sorted(owner_by_pair)]
+    changed = (record.get("merged") != [list(pair) for pair in merged]
+               or record.get("owner_pairs") != normalized_owner)
+    record["merged"] = [list(pair) for pair in merged]
+    record["owner_pairs"] = normalized_owner
+    for old_id, new_id in id_map.items():
+        if old_id == new_id or old_id not in rulings:
+            continue
+        previous = rulings[old_id]
+        if new_id in rulings and rulings[new_id].get("choice") != previous.get("choice"):
+            raise ValueError(f"conflicting rulings for unordered final pair {new_id}")
+        if new_id not in rulings:
+            moved = dict(previous)
+            item = dict(moved.get("item") or {})
+            item["id"] = new_id
+            moved["item"] = item
+            rulings[new_id] = moved
+        del rulings[old_id]
+        changed = True
+    return changed
+
+
+def _is_recorded_distinct(left, right, distinct_pairs, reflow_mod):
+    left_anchors = [reflow_mod.flow(value) for value in left.get("anchors") or []]
+    right_anchors = [reflow_mod.flow(value) for value in right.get("anchors") or []]
+    return any(frozenset((a, b)) in distinct_pairs
+               for a in left_anchors for b in right_anchors if a != b)
+
+
+def _final_semantic_candidates(items, dedupe_mod, reflow_mod, distinct_pairs):
+    """Bound the final meaning pass to textual proof or owner-materialized, source-local pairs."""
+    kept = [item for item in items
+            if not item.get("_drop") and item.get("how") != "refused" and item.get("statement")]
+    automatic, reader = [], []
+    for left_number in range(1, len(kept) + 1):
+        for right_number in range(left_number + 1, len(kept) + 1):
+            left, right = kept[left_number - 1], kept[right_number - 1]
+            if _is_recorded_distinct(left, right, distinct_pairs, reflow_mod):
+                continue
+            if dedupe_mod.code_merges(left["statement"], right["statement"]):
+                automatic.append((left_number, right_number))
+                continue
+            source_local = bool(set(left.get("pages") or []) & set(right.get("pages") or []))
+            shared_terms = (_final_semantic_tokens(left["statement"])
+                            & _final_semantic_tokens(right["statement"]))
+            if ((_has_materialized_lineage(left) or _has_materialized_lineage(right))
+                    and source_local and len(shared_terms) >= 2):
+                reader.append((left_number, right_number))
+    return kept, automatic, reader
+
+
+def _read_final_semantic_pair(dedupe_mod, reader_command, left, right, pair):
+    votes = []
+    for _ in range(dedupe_mod.ASKS):
+        raw = dedupe_mod.interview.ask_free(
+            reader_command,
+            dedupe_mod.ASK.format(a=left, b=right),
+            stage="final-semantic-dedupe",
+            piece=f"{pair[0]}-{pair[1]}",
+        )
+        answer = next((re.sub(r"[^A-Z]", "", line.upper())
+                       for line in raw.split("\n")
+                       if re.sub(r"[^A-Z]", "", line.upper()) in ("YES", "NO")), None)
+        votes.append(answer)
+    return votes, dedupe_mod.verdict(votes, dedupe_mod.cover(left, right))
+
+
+def _final_semantic_consolidate(items, state, target, work, reader_command, reflow_mod,
+                                distinct_pairs):
+    """Run and persist the last meaning check after every owner ruling has materialized."""
+    dedupe_mod = _load("dedupe")
+    lineage_mod = _load("rule_lineage")
+    kept, automatic, reader_pairs = _final_semantic_candidates(
+        items, dedupe_mod, reflow_mod, distinct_pairs)
+    print(f"final semantic consolidation: {len(automatic)} code-proven pair(s), "
+          f"{len(reader_pairs)} bounded reader pair(s)", flush=True)
+    signature_payload = {
+        "policy": FINAL_CONSOLIDATION_POLICY,
+        "items": [{"statement": item["statement"], "pages": sorted(item.get("pages") or []),
+                   "anchors": item.get("anchors") or [],
+                   # Candidate eligibility depends only on whether owner-materialized lineage
+                   # exists. Its incidental representative text can vary with persisted mapping
+                   # order while statements, pairs, and every reader verdict remain identical.
+                   "materialized": _has_materialized_lineage(item)}
+                  for item in kept],
+        "automatic": automatic,
+        "reader_pairs": reader_pairs,
+    }
+    signature = _canonical_sha256(signature_payload)
+    prepared = (state.setdefault("document_preparation", {}).setdefault(target, {})
+                .setdefault("final_semantic", {}))
+    record = prepared.get(signature)
+    if record is None:
+        if reader_pairs and not reader_command:
+            print("cannot write the document: final semantic consolidation needs the configured "
+                  "blind reader", file=sys.stderr)
+            return None
+        merged = {_canonical_final_pair(pair) for pair in automatic}
+        owner, detail = set(), [
+            {"pair": list(pair), "by": "code", "verdict": "merge"}
+            for pair in automatic
+        ]
+        for pair in reader_pairs:
+            left, right = (kept[pair[0] - 1]["statement"], kept[pair[1] - 1]["statement"])
+            votes, verdict = _read_final_semantic_pair(
+                dedupe_mod, reader_command, left, right, pair)
+            if verdict == "merge":
+                merged.add(_canonical_final_pair(pair))
+            elif verdict == "owner":
+                owner.add(_canonical_final_pair(pair))
+            detail.append({"pair": list(pair), "by": "reader", "votes": votes,
+                           "cover": round(dedupe_mod.cover(left, right), 2),
+                           "verdict": verdict})
+        reduction = lineage_mod.reduce(
+            [{"text": item["statement"], "pages": item.get("pages") or []}
+             for item in kept], sorted(merged))
+        owner.update(_canonical_final_pair(pair) for pair in reduction["owner_pairs"])
+        safe_merged = sorted(merged - owner)
+        pair_records = []
+        for left_number, right_number in sorted(owner):
+            left, right = kept[left_number - 1], kept[right_number - 1]
+            pair_records.append(_final_pair_record(
+                (left_number, right_number), left["statement"], right["statement"],
+                set(left.get("pages") or []) | set(right.get("pages") or [])))
+        record = {"signature": signature, "merged": [list(pair) for pair in safe_merged],
+                  "owner_pairs": pair_records, "detail": detail, "policy": FINAL_CONSOLIDATION_POLICY,
+                  "at": time.time()}
+        prepared[signature] = record
+        prepared["active_signature"] = signature
+        _write(work, state)
+    elif prepared.get("active_signature") != signature:
+        prepared["active_signature"] = signature
+        _write(work, state)
+
+    rulings = state.get("owner_rulings", {}).get(target, {})
+    if _normalize_final_semantic_record(record, rulings):
+        _write(work, state)
+    unresolved = [pair for pair in record["owner_pairs"] if pair["id"] not in rulings]
+    if unresolved:
+        print(f"cannot write the document: {len(unresolved)} final semantic ruling(s) still "
+              "pending — run `cover.py ask-owner` and answer them first.", file=sys.stderr)
+        return None
+    merged = {_canonical_final_pair(pair) for pair in record["merged"]}
+    merged.update(_canonical_final_pair(pair["pair"]) for pair in record["owner_pairs"]
+                  if rulings[pair["id"]]["choice"] == "merge")
+    reduction = lineage_mod.reduce(
+        [{"text": item["statement"], "pages": item.get("pages") or []}
+         for item in kept], sorted(merged), ratio_limit=10 ** 9)
+    if reduction["owner_pairs"]:
+        print("cannot write the document: a final semantic merge still crosses a scale gap",
+              file=sys.stderr)
+        return None
+    survivors = []
+    for component in reduction["components"]:
+        keeper = kept[component["keeper_rule_id"] - 1]
+        for member_number in component["member_rule_ids"]:
+            member = kept[member_number - 1]
+            if member is not keeper:
+                _merge_kept_item_lineage(keeper, member)
+        survivors.append((min(component["member_rule_ids"]), keeper))
+    kept_ids = {id(item) for item in kept}
+    untouched = [item for item in items if id(item) not in kept_ids]
+    return untouched + [item for _, item in sorted(survivors)]
 
 
 def document(work, out_path, reader_command=None):
@@ -1620,6 +1990,7 @@ def document(work, out_path, reader_command=None):
             items.append({
                 "pages": [page_by_side[side]], "statement": r["item"][side],
                 "anchors": [r["item"][side]], "how": "verbatim", "checkable": True,
+                "_materialized_source_duty": r["item"][side],
                 "_kept_by_owner": f"selected by ruling {rid}: {r['because']}",
             })
     # keep-separate rulings resurrect a rule the merge had folded away, verbatim from the register
@@ -1673,7 +2044,8 @@ def document(work, out_path, reader_command=None):
                     prev["statement"] = side
                 continue
             resurrected[canonical] = {"pages": pages, "statement": side, "how": "verbatim",
-                                      "checkable": True, "_kept_by_owner": note}
+                                      "checkable": True, "_materialized_source_duty": side,
+                                      "_kept_by_owner": note}
     # A resurrected side is verbatim and can carry the page layout's damage ("Quality gate
     # (three Measurement gate: ..."). One pen pass cleans it: the gate blocks additions, and
     # removing a layout artifact is allowed. Verbatim stands when no reader command is given or
@@ -1725,7 +2097,28 @@ def document(work, out_path, reader_command=None):
     # One selected source duty becomes one requirement even when several owner rulings select it.
     # Consolidate only kept, identical statements: distinct wording remains distinct, while pages,
     # anchors, and every owner-selection note remain traceable on the surviving item.
-    items = _consolidate_kept_items(items, reflow_mod)
+    same_rule_pairs = {
+        frozenset((reflow_mod.flow(rule_texts[a_i - 1]),
+                   reflow_mod.flow(rule_texts[b_i - 1])))
+        for a_i, b_i in rj.get("merged", [])
+        if a_i <= len(rule_texts) and b_i <= len(rule_texts)
+    }
+    same_rule_pairs.update(
+        frozenset((reflow_mod.flow(r["item"]["a"]), reflow_mod.flow(r["item"]["b"])))
+        for r in rulings.values()
+        if r["item"].get("kind") == "overlap" and r.get("choice") == "merge"
+    )
+    distinct_pairs = {
+        frozenset((reflow_mod.flow(r["item"]["a"]), reflow_mod.flow(r["item"]["b"])))
+        for r in rulings.values()
+        if r["item"].get("kind") in ("overlap", "source-overlap")
+        and r.get("choice") == "keep-separate"
+    }
+    items = _consolidate_kept_items(items, reflow_mod, same_rule_pairs, distinct_pairs)
+    items = _final_semantic_consolidate(
+        items, state, target, work, reader_command, reflow_mod, distinct_pairs)
+    if items is None:
+        return 3
     lines = [f"# Requirements — {target}", "",
              f"Source of truth: {Path(state['source']).name}. Every",
              "requirement traces to the verbatim pages named beside it; statements were written by",
@@ -2002,6 +2395,9 @@ def build_parser():
     an = sub.add_parser("answer-owner"); an.add_argument("--work", required=True)
     an.add_argument("--id", required=True); an.add_argument("--choice", required=True)
     an.add_argument("--because", default=""); an.add_argument("--reader-command", default=None)
+    correction = sub.add_parser("correct-owner"); correction.add_argument("--work", required=True)
+    correction.add_argument("--id", required=True); correction.add_argument("--choice", required=True)
+    correction.add_argument("--because", default="")
     replay = sub.add_parser("replay-owner-split"); replay.add_argument("--work", required=True)
     replay.add_argument("--id", required=True); replay.add_argument("--reader-command", required=True)
     doc = sub.add_parser("document"); doc.add_argument("--work", required=True)
@@ -2096,6 +2492,8 @@ def _dispatch(args):
     if args.command == "answer-owner":
         return answer_owner(args.work, args.id, args.choice, args.because,
                             args.reader_command)
+    if args.command == "correct-owner":
+        return correct_owner(args.work, args.id, args.choice, args.because)
     if args.command == "replay-owner-split":
         return replay_owner_split(args.work, args.id, args.reader_command)
     if args.command == "document":

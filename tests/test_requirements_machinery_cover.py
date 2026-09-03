@@ -71,10 +71,49 @@ def test_published_command_surface_matches_real_cli() -> None:
 
     result = json.loads(completed.stdout)
     assert result["parity"] is True
-    assert result["documented"] == result["executable"] == 16
+    assert result["documented"] == result["executable"] == 17
     assert set(result["categories"].values()) == {
         "coverage", "extraction", "owner decision", "document assembly",
     }
+
+
+@pytest.mark.parametrize("choices", [
+    ["drop-both"],
+    ["merge", "keep-separate"],
+    ["keep-both", "select-a", "select-b"],
+])
+def test_owner_assessment_covers_every_offered_choice(monkeypatch, choices) -> None:
+    cover = load(f"requirements_cover_assessment_{len(choices)}", COVER)
+    prompts = []
+
+    class Interview:
+        @staticmethod
+        def ask_free(_reader, *, stage, question):
+            assert stage == "assess"
+            prompts.append(question)
+            return "\n".join(
+                [f"CONSEQUENCE-{choice}: Choosing {choice} changes the resulting list."
+                 for choice in choices]
+                + [f"RECOMMEND: {choices[0]}, because the source supports it; contrary evidence flips it."]
+            )
+
+    original_load = cover._load
+    monkeypatch.setattr(
+        cover, "_load", lambda name: Interview if name == "interview" else original_load(name)
+    )
+    item = {
+        "kind": "fixture", "question": "Which choice survives?", "statement": "A and B",
+        "pages": ["p-0001"], "why": "fixture", "anchors": ["captured source material"],
+        "choices": choices,
+    }
+    state = {"owner_rulings": {"target": {}}}
+
+    result = cover._assess(item, state, "target", ["codex"])
+
+    expected = [f"CONSEQUENCE-{choice}" for choice in choices] + ["RECOMMEND"]
+    assert list(result) == expected
+    assert all(choice in prompts[0] for choice in choices)
+    assert f"Write exactly {len(choices) + 1} lines" in prompts[0]
 
 
 def test_documented_answer_example_executes_its_state_transition() -> None:
@@ -713,6 +752,75 @@ def test_conflicting_source_selection_reopens_and_corrects_through_cli() -> None
         assert history["history"][0]["choice"] == "keep-separate"
 
 
+def test_correct_owner_preserves_prior_ruling_and_unrelated_state() -> None:
+    cover = load("requirements_cover_correct_owner", COVER)
+    target = "fixture requirements"
+    decision_id = "pair-73512698"
+    item = {
+        "id": decision_id, "kind": "overlap", "question": "Same rule?",
+        "a": "Vivacom rerun finding", "b": "B Team warmth condition",
+        "statement": "A and B", "pages": ["p-0001"],
+        "choices": ["merge", "keep-separate"],
+    }
+    prior = {
+        "item": item, "choice": "merge", "because": "prior answer",
+        "assessment_shown": {"recommendation": "merge"}, "at": 17,
+    }
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [{"id": "p-0001", "chars": 0, "sha256": ""}],
+            "answers": {}, "relevance": {"last": target},
+            "distilled": {target: {"items": []}},
+            "owner_rulings": {target: {
+                decision_id: prior,
+                "unrelated": {"choice": "keep", "because": "unchanged"},
+            }},
+            "unrelated": {"paid_reader_rounds": 29},
+        })
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
+
+        assert cover.correct_owner(run, decision_id, "keep-separate", "source checked") == 0
+        after = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
+        corrected = after["owner_rulings"][target][decision_id]
+        assert corrected["choice"] == "keep-separate"
+        assert corrected["because"] == "source checked"
+        assert corrected["assessment_shown"] == prior["assessment_shown"]
+        assert corrected["history"] == [prior]
+        comparison = copy.deepcopy(after)
+        comparison["owner_rulings"][target][decision_id] = prior
+        assert comparison == state
+
+
+def test_correct_owner_refuses_unknown_and_split_without_writing(capsys) -> None:
+    cover = load("requirements_cover_correct_owner_refusals", COVER)
+    target = "fixture requirements"
+    split_id = "check-27"
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [{"id": "p-0001", "chars": 0, "sha256": ""}],
+            "answers": {}, "relevance": {"last": target},
+            "distilled": {target: {"items": []}},
+            "owner_rulings": {target: {split_id: {
+                "item": {"id": split_id, "choices": ["keep", "drop", "split"]},
+                "choice": "keep", "split_graph": {}, "because": "prior", "at": 4,
+            }}},
+        })
+        path = run / "coverage.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        before = path.read_bytes()
+
+        assert cover.correct_owner(run, "missing-id", "keep", "no") == 3
+        assert "not a recorded owner ruling" in capsys.readouterr().err
+        assert path.read_bytes() == before
+        assert cover.correct_owner(run, split_id, "drop", "no") == 3
+        assert "use replay-owner-split" in capsys.readouterr().err
+        assert path.read_bytes() == before
+
+
 def test_reopened_selection_never_offers_an_alternate_dropped_side() -> None:
     target = "fixture requirements"
     side_a = "It applies from the first build and is checked at every gate. 1."
@@ -800,6 +908,89 @@ def test_identical_selected_duties_materialize_once_with_combined_lineage() -> N
     assert result[0]["anchors"] == ["source A", "source B"]
     assert "first ruling" in result[0]["_kept_by_owner"]
     assert "second ruling" in result[0]["_kept_by_owner"]
+
+
+def test_recorded_same_rule_materialization_merges_unless_owner_kept_distinct() -> None:
+    cover = load("requirements_cover_recorded_materialization", COVER)
+    reflow = load("requirements_reflow_recorded_materialization", MACHINERY / "scripts" / "reflow.py")
+    source_a = "Keep the strategic idea at the emotional altitude approved by the owner."
+    source_b = "Do not reduce the approved emotional idea to the nearest provable fact."
+    same_rule = frozenset((reflow.flow(source_a), reflow.flow(source_b)))
+
+    def selected_items():
+        return [
+            {"statement": "Preserve the approved idea through every concrete drafting step.",
+             "pages": ["p-0001"], "anchors": [source_a], "how": "pen",
+             "_materialized_source_duty": source_a, "_kept_by_owner": "first ruling"},
+            {"statement": source_b, "pages": ["p-0002"], "anchors": [source_b],
+             "how": "verbatim", "_materialized_source_duty": source_b,
+             "_kept_by_owner": "second ruling"},
+        ]
+
+    merged = cover._consolidate_kept_items(selected_items(), reflow, {same_rule})
+    distinct = cover._consolidate_kept_items(
+        selected_items(), reflow, {same_rule}, {same_rule})
+
+    assert len(merged) == 1
+    assert merged[0]["pages"] == ["p-0001", "p-0002"]
+    assert merged[0]["_materialized_source_duties"] == [source_a, source_b]
+    assert len(distinct) == 2
+
+
+def test_final_semantic_candidates_are_bounded_and_honor_distinct_evidence() -> None:
+    cover = load("requirements_cover_final_semantic_candidates", COVER)
+    reflow = load("requirements_reflow_final_semantic_candidates", MACHINERY / "scripts" / "reflow.py")
+
+    class Dedupe:
+        @staticmethod
+        def code_merges(_left, _right):
+            return False
+
+    left = "Retain an accountable human thread through the campaign."
+    right = "The accountable human thread must survive every campaign execution."
+    items = [
+        {"statement": left, "pages": ["p-0001"], "anchors": [left],
+         "how": "pen", "_materialized_source_duty": left},
+        {"statement": right, "pages": ["p-0001"], "anchors": [right], "how": "pen"},
+        {"statement": right, "pages": ["p-0002"], "anchors": [right], "how": "pen"},
+    ]
+
+    _, automatic, reader = cover._final_semantic_candidates(items, Dedupe(), reflow, set())
+    distinct = {frozenset((reflow.flow(left), reflow.flow(right)))}
+    _, _, reader_with_ruling = cover._final_semantic_candidates(
+        items, Dedupe(), reflow, distinct)
+
+    assert automatic == []
+    assert reader == [(1, 2)]
+    assert reader_with_ruling == []
+
+
+def test_final_semantic_record_canonicalizes_unordered_pairs_and_migrates_rulings() -> None:
+    cover = load("requirements_cover_final_semantic_normalization", COVER)
+    left = "Keep the architecture above the household proof point."
+    right = "The architecture collapsed back to the household."
+    canonical = cover._final_pair_record((2, 5), left, right, ["p-0001", "p-0002"])
+    reversed_id = "final-pair-reversed"
+    record = {
+        "merged": [[2, 5]],
+        "owner_pairs": [
+            {"id": reversed_id, "pair": [5, 2], "a": right, "b": left,
+             "pages": ["p-0002", "p-0001"]},
+            canonical,
+        ],
+    }
+    rulings = {
+        reversed_id: {"choice": "merge", "item": {"id": reversed_id}},
+    }
+
+    changed = cover._normalize_final_semantic_record(record, rulings)
+
+    assert changed is True
+    assert record["merged"] == []
+    assert record["owner_pairs"] == [canonical]
+    assert reversed_id not in rulings
+    assert rulings[canonical["id"]]["choice"] == "merge"
+    assert rulings[canonical["id"]]["item"]["id"] == canonical["id"]
 
 
 def test_run_identity_is_immutable_and_detects_artifact_drift(capsys) -> None:
@@ -1173,9 +1364,11 @@ def test_replay_owner_split_rebuilds_only_terminal_split(monkeypatch, capsys) ->
         persisted = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
         captured = {}
 
-        def capture(candidate, _work, _target, decision_id, item, choice, because, reader):
+        def capture(candidate, _work, _target, decision_id, item, choice, because, reader,
+                    reopen_on_conservation_refusal=False):
             captured.update({"state": candidate, "decision_id": decision_id, "item": item,
-                             "choice": choice, "because": because, "reader": reader})
+                             "choice": choice, "because": because, "reader": reader,
+                             "reopen": reopen_on_conservation_refusal})
             return 0
 
         monkeypatch.setattr(cover, "_split_bundle", capture)
@@ -1186,6 +1379,7 @@ def test_replay_owner_split_rebuilds_only_terminal_split(monkeypatch, capsys) ->
         assert "split_into" not in candidate_items[0]
         assert "check-1" not in captured["state"]["owner_rulings"][target]
         assert captured["because"] == "owner words"
+        assert captured["reopen"] is True
         assert json.loads((run / "coverage.json").read_text(encoding="utf-8")) == persisted
 
         nonterminal = copy.deepcopy(persisted)
@@ -1198,3 +1392,178 @@ def test_replay_owner_split_rebuilds_only_terminal_split(monkeypatch, capsys) ->
         assert cover.replay_owner_split(run, "check-1", "fixture-reader") == 3
         assert "not the terminal split" in capsys.readouterr().err
         assert (run / "coverage.json").read_bytes() == before
+
+
+def test_split_refuses_partial_nonredundant_candidates_without_writing(monkeypatch, capsys) -> None:
+    cover = load("requirements_cover_partial_split_conservation", COVER)
+    target = "target requirements"
+    anchor = (
+        "Its limits are reach and completeness, not quality: only one voice was heard, "
+        "the measurement expectation was not captured, and the founder’s own words were "
+        "mostly paraphrased away."
+    )
+    spans = [
+        "only one voice was heard",
+        "the measurement expectation was not captured",
+        "the founder’s own words were mostly paraphrased away",
+    ]
+    votes = {
+        spans[0]: ["YES", "NO"],
+        spans[1]: ["NO", "YES"],
+        spans[2]: ["YES", "YES"],
+    }
+
+    class Interview:
+        @staticmethod
+        def _match(raw, choices):
+            return next((choice for choice in choices if raw.strip() == choice), None)
+
+        @staticmethod
+        def ask_free(_reader, _question, **_context):
+            return "\n".join(spans)
+
+        @staticmethod
+        def ask_choice(_reader, question, _choices, **context):
+            if "--- CANDIDATE ---" in question:
+                candidate = question.split("--- CANDIDATE ---", 1)[1].split(
+                    "--- END CANDIDATE ---", 1
+                )[0].strip()
+                answer = votes[candidate][context["seat"] - 1]
+            else:
+                answer = "YES"
+            row = {"attempt": 1, "raw_first_line": answer, "accepted": answer}
+            if context.get("preserve_raw"):
+                row["raw_reply"] = answer
+            return answer, [row]
+
+    class Distill:
+        @staticmethod
+        def write_one(anchors, _reader, **_context):
+            return anchors[0], [{"statement": anchors[0], "ok": True, "refusal": None}]
+
+    original_load = cover._load
+    cover._load = lambda name: (
+        Interview() if name == "interview" else Distill() if name == "distill"
+        else original_load(name)
+    )
+    state = {
+        "distilled": {target: {"items": [{
+            "pages": ["p-0001"], "statement": anchor, "how": "pen",
+            "anchors": [anchor], "checkable": False,
+        }]}},
+        "owner_rulings": {target: {}},
+    }
+    before = copy.deepcopy(state)
+    writes = []
+    monkeypatch.setattr(cover, "_write", lambda *_args: writes.append(True))
+    match = {
+        "id": "check-1", "kind": "checkability", "statement": anchor,
+        "pages": ["p-0001"], "choices": ["keep", "drop", "split"],
+    }
+
+    assert cover._split_bundle(
+        state, ROOT / "Tasks", target, "check-1", match, "split", "owner words",
+        "fixture-reader",
+    ) == 3
+    assert state == before
+    assert writes == []
+    error = capsys.readouterr().err
+    assert "2 non-redundant candidate" in error
+    assert "partial split cannot resolve the parent" in error.lower()
+
+
+def test_replay_reopens_legacy_partial_split_and_preserves_unrelated_state(monkeypatch) -> None:
+    cover = load("requirements_cover_reopen_partial_split", COVER)
+    target = "target requirements"
+    anchor = (
+        "Its limits are reach and completeness, not quality: only one voice was heard, "
+        "the measurement expectation was not captured, and the founder’s own words were "
+        "mostly paraphrased away."
+    )
+    spans = [
+        "only one voice was heard",
+        "the measurement expectation was not captured",
+        "the founder’s own words were mostly paraphrased away",
+    ]
+    votes = {
+        spans[0]: ["YES", "NO"],
+        spans[1]: ["NO", "YES"],
+        spans[2]: ["YES", "YES"],
+    }
+
+    class Interview:
+        @staticmethod
+        def _match(raw, choices):
+            return next((choice for choice in choices if raw.strip() == choice), None)
+
+        @staticmethod
+        def ask_free(_reader, _question, **_context):
+            return "\n".join(spans)
+
+        @staticmethod
+        def ask_choice(_reader, question, _choices, **context):
+            if "--- CANDIDATE ---" in question:
+                candidate = question.split("--- CANDIDATE ---", 1)[1].split(
+                    "--- END CANDIDATE ---", 1
+                )[0].strip()
+                answer = votes[candidate][context["seat"] - 1]
+            else:
+                answer = "YES"
+            row = {"attempt": 1, "raw_first_line": answer, "accepted": answer}
+            if context.get("preserve_raw"):
+                row["raw_reply"] = answer
+            return answer, [row]
+
+    class Distill:
+        @staticmethod
+        def write_one(anchors, _reader, **_context):
+            return anchors[0], [{"statement": anchors[0], "ok": True, "refusal": None}]
+
+    original_load = cover._load
+    checkability = original_load("checkability")
+    record = checkability.build_binary(
+        [["YES"], ["YES"], ["YES"]], spans[2], target,
+        cover.SPLIT_CHECKABLE_ASK.format(target=target, statement=spans[2]),
+    )
+    match = {
+        "id": "check-1", "kind": "checkability", "statement": anchor,
+        "pages": ["p-0001"], "choices": ["keep", "drop", "split"],
+    }
+
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        items = [
+            {"pages": ["p-0001"], "statement": anchor, "how": "split",
+             "anchors": [anchor], "checkable": False, "split_into": [2]},
+            {"pages": ["p-0001"], "statement": "Unrelated retained rule", "how": "pen",
+             "anchors": ["Unrelated retained rule"], "checkable": True},
+            {"pages": ["p-0001"], "statement": spans[2], "how": "pen",
+             "anchors": [spans[2]], "checkable": True, "split_from": "check-1",
+             "checkability_record": record},
+        ]
+        graph = cover._build_split_graph(target, "check-1", 0, items, [2])
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [{"id": "p-0001", "chars": 0, "sha256": ""}],
+            "answers": {}, "relevance": {"last": target},
+            "distilled": {target: {"items": items}},
+            "owner_rulings": {target: {"check-1": {
+                "item": match, "choice": "split", "because": "owner words",
+                "children": 1, "unconfirmed": [], "split_graph": graph, "at": 0,
+            }}},
+        })
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
+        cover._load = lambda name: (
+            Interview() if name == "interview" else Distill() if name == "distill"
+            else original_load(name)
+        )
+
+        assert cover.replay_owner_split(run, "check-1", "fixture-reader") == 0
+        after = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
+        assert after["distilled"][target]["items"] == [
+            {"pages": ["p-0001"], "statement": anchor, "how": "pen",
+             "anchors": [anchor], "checkable": False},
+            {"pages": ["p-0001"], "statement": "Unrelated retained rule", "how": "pen",
+             "anchors": ["Unrelated retained rule"], "checkable": True},
+        ]
+        assert "check-1" not in after["owner_rulings"][target]

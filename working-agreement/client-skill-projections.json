@@ -16,15 +16,15 @@
       ]
     },
     "atom-building-machinery": {
-      "canonical_tree_sha256": "f00ad7892fa100cb419af9babfe073aa964038dfe66208a36b95c1c995f506c2",
+      "canonical_tree_sha256": "b108c839f90e4358541e0239410dd1c7ce353429e6f3a57ff470614d2859cffe",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "3e13f1546d3394ebdef4d194b60d60b8351fa6190ee39f73120cfbabac23f721",
-        "codex": "1a77543d4929ebeec049b14ace223a423000fdfdd3af9ec051a70ab2bd11a3bc"
+        "claude": "7a6d6351e85cd46139dd87a6f253968e564a99f9fde8521f9a65ff2214d78494",
+        "codex": "d20511bd41ff9afe2f818fa658d36880a7df64c2c37aa024f5652af9319f188e"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -208,15 +208,15 @@
       ]
     },
     "requirements-machinery": {
-      "canonical_tree_sha256": "660203460753f015a34cb9d0cf16cb620482f04d6e4c2b3c10fde663a86adee2",
+      "canonical_tree_sha256": "9e558a0ac0bc4ad1928df4f7dd1b9ed8a8d77544a1e4c067c7313fe4a603d04c",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the exact reader runtime policy while the coverage and requirements behavior remains shared.",
       "generator": "machinery-client-model-v2",
       "generator_sha256": "70fbf3155f75718fe10efd078becf87eaf593b84f0e310e181e6f7ad5fb30ffa",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "920d90db5d80c00f9c57e5bb26eccd3cd01896a77713777b6ae86296bb1ece74",
-        "codex": "53a8536d7203eac2e3fa672b13bed38e83156f0ee772e5cab68ee6649b506007"
+        "claude": "ea7098dd1942af88641c6a1aa5df65a8ac0aedadbbbdddba06a95d2b5f12a11d",
+        "codex": "4b3f405042280a97dab256ac4f93574fa9b0f3b60b046e34d2a6762951b867c9"
       },
       "scenario_groups": [
         "CAP-SHARED"

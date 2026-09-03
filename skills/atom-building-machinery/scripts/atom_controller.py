@@ -204,6 +204,7 @@ def _evidence(
     *,
     base: Path | None = None,
     required_case_id: str | None = None,
+    verify_hashes: bool = True,
 ) -> list[dict[str, str]]:
     if type(value) is not list or not value:
         raise AtomError(stage, f"{label} is {value!r}; provide one nonempty ordered evidence list")
@@ -228,7 +229,7 @@ def _evidence(
         if path.is_symlink() or not path.is_file():
             raise AtomError(stage, f"{label} is unavailable or linked at {path}; provide the recorded regular file")
         actual = _digest(path.read_bytes())
-        if actual != expected:
+        if verify_hashes and actual != expected:
             raise AtomError(stage, f"{label} has SHA-256 {actual} at {path}; require recorded {expected}")
         identity = (case_id, str(path))
         if identity in identities:
@@ -243,6 +244,8 @@ def _case_evidence(
     label: str,
     stage: str,
     declared_case_ids: list[str],
+    *,
+    verify_hashes: bool = True,
 ) -> list[dict[str, object]]:
     if type(value) is not list:
         raise AtomError(stage, f"{label} is not one ordered list")
@@ -262,6 +265,7 @@ def _case_evidence(
                     stage,
                     case_ids,
                     required_case_id=case_id,
+                    verify_hashes=verify_hashes,
                 ),
             }
         )
@@ -490,6 +494,44 @@ def _write_new(path: Path, payload: bytes) -> str:
     return _digest(payload)
 
 
+def _write_snapshot(path: Path, payload: bytes, stage: str) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if path.is_symlink() or not path.is_file():
+            raise AtomError(stage, f"validation snapshot is unavailable or linked at {path}")
+        actual = _digest(path.read_bytes())
+        expected = _digest(payload)
+        if actual != expected:
+            raise AtomError(stage, f"validation snapshot has SHA-256 {actual} at {path}; require {expected}")
+        return actual
+    return _write_new(path, payload)
+
+
+def _snapshot_validation(
+    run: Path,
+    receipt_path: Path,
+    case_evidence: list[dict[str, object]],
+) -> tuple[dict[str, str], list[dict[str, object]]]:
+    sequence = len(_read_ledger(run)[0]) + 1
+    root = run / "evidence" / f"validation-{sequence:06d}"
+    receipt_snapshot = root / "receipt.json"
+    receipt_sha256 = _write_snapshot(receipt_snapshot, receipt_path.read_bytes(), "record-validation")
+    snapshot_cases = []
+    for case_index, case in enumerate(case_evidence, start=1):
+        snapshot_evidence = []
+        for evidence_index, item in enumerate(case["evidence"], start=1):
+            source = Path(item["path"])
+            target = root / f"case-{case_index:03d}-evidence-{evidence_index:03d}.bin"
+            sha256 = _write_snapshot(target, source.read_bytes(), "record-validation")
+            snapshot_evidence.append({
+                "case_id": item["case_id"],
+                "path": str(target),
+                "sha256": sha256,
+            })
+        snapshot_cases.append({"case_id": case["case_id"], "evidence": snapshot_evidence})
+    return {"path": str(receipt_snapshot), "sha256": receipt_sha256}, snapshot_cases
+
+
 def _read_ledger(run: Path) -> tuple[list[dict[str, Any]], list[str]]:
     path = run / "ledger.jsonl"
     try:
@@ -580,7 +622,8 @@ def _state(run: Path) -> dict[str, Any]:
     required_capability = "experiment-machinery"
     current_experiment = None
     current_promotion = None
-    for record, event_sha256 in zip(records[1:], hashes[1:]):
+    legacy_validation_evidence_drift = []
+    for record_index, (record, event_sha256) in enumerate(zip(records[1:], hashes[1:]), start=1):
         if record["event"] == "experiment-recorded":
             if stage != "experiment":
                 raise AtomError("load-run", f"experiment-recorded appears during {stage!r}; restore the valid event order")
@@ -651,12 +694,34 @@ def _state(run: Path) -> dict[str, Any]:
                 raise AtomError("load-run", "validation receipt is not bound to the current promotion event")
             if payload["verdict"] not in {"passed", "failed"}:
                 raise AtomError("load-run", f"validation verdict is {payload['verdict']!r}; restore 'passed' or 'failed'")
-            _case_evidence(
-                payload["case_evidence"],
-                "recorded validation evidence",
-                "load-run",
-                [case["case_id"] for case in request["captured_cases"]],
-            )
+            try:
+                _case_evidence(
+                    payload["case_evidence"],
+                    "recorded validation evidence",
+                    "load-run",
+                    [case["case_id"] for case in request["captured_cases"]],
+                )
+            except AtomError as error:
+                superseded_legacy_failure = (
+                    payload["verdict"] == "failed"
+                    and any(item["event"] == "experiment-recorded"
+                            for item in records[record_index + 1:])
+                    and "has SHA-256" in str(error)
+                )
+                if not superseded_legacy_failure:
+                    raise
+                _case_evidence(
+                    payload["case_evidence"],
+                    "recorded validation evidence",
+                    "load-run",
+                    [case["case_id"] for case in request["captured_cases"]],
+                    verify_hashes=False,
+                )
+                legacy_validation_evidence_drift.append({
+                    "event_sha256": event_sha256,
+                    "verdict": "failed",
+                    "status": "superseded-external-evidence-drift",
+                })
             if payload["verdict"] == "passed":
                 stage = "complete"
                 next_skill = None
@@ -679,6 +744,7 @@ def _state(run: Path) -> dict[str, Any]:
         "latest_event_sha256": hashes[-1],
         "current_experiment": current_experiment,
         "current_promotion": current_promotion,
+        "legacy_validation_evidence_drift": legacy_validation_evidence_drift,
     }
 
 
@@ -1026,9 +1092,10 @@ def record_validation(run: Path, receipt_path: Path) -> dict[str, Any]:
     if problems:
         raise AtomError("record-validation", "; ".join(problems))
     verdict = "passed" if statuses and all(status == "satisfied" for status in statuses) else "failed"
+    receipt_snapshot, case_evidence = _snapshot_validation(run, receipt_path, case_evidence)
     payload = {
-        "receipt_path": str(receipt_path),
-        "receipt_sha256": _digest(receipt_path.read_bytes()),
+        "receipt_path": receipt_snapshot["path"],
+        "receipt_sha256": receipt_snapshot["sha256"],
         "promotion_event_sha256": promotion["event_sha256"],
         "verdict": verdict,
         "case_evidence": case_evidence,

@@ -55,6 +55,9 @@ python3 scripts/cover.py distill --work <dir> --reader-command '<command>'
 python3 scripts/cover.py ask-owner --work <dir>
 python3 scripts/cover.py answer-owner --work <dir> --id <decision-id> \
                                       --choice <offered-choice> --because "<owner's words>"
+python3 scripts/cover.py correct-owner --work <dir> --id <recorded-decision-id> \
+                                       --choice <offered-non-split-choice> \
+                                       --because "<owner's corrected words>"
 python3 scripts/cover.py replay-owner-split --work <dir> --id <decision-id> \
                                            --reader-command '<command>'
 python3 scripts/cover.py run --work <dir> --target "<the document being built>" \
@@ -102,6 +105,12 @@ and each child's statement and checkability-record hashes. A malformed seat is o
 rather than an implied NO. Every resumed command replays all split-child records and reconciles
 the graph before it can spend a reader; a missing graph, unlinked parent or child, missing legacy
 record, altered evidence, or derived-flag drift refuses with the affected ruling or child named.
+A split never records while any non-redundant candidate duty is unconfirmed. A label-bearing
+candidate is redundant only when the code-generated label-free subcandidate is confirmed; no
+reader may silently classify another source duty as redundant. A new partial split leaves the
+parent and owner queue unchanged. Replaying a terminal legacy partial split removes only that
+ruling and its children, reopens the parent as pending, and preserves every unrelated item and
+ruling.
 Replay validates the exact persisted JSON shape before rebuilding it, so nulls, scalars, lists,
 missing seats, malformed aggregates, and wrong field types become named controlled refusals rather
 than internal exceptions.
@@ -117,9 +126,15 @@ newest integrity-bound split whose children form the terminal item suffix, rebui
 from the owner's recorded words, and leaves every unrelated item and ruling untouched. It is not a
 general rollback and never starts a new requirements run.
 
+`correct-owner` is the governed correction path for one recorded non-split owner ruling. It accepts
+only a decision id already present in the active target's ruling map and one of that item's
+originally offered non-split choices. Every guard runs before the single state write; the complete
+prior ruling is appended to `history`, and every unrelated state value remains unchanged. A recorded
+split is refused with `replay-owner-split` named as the required graph-and-children repair path.
+
 ## Public command surface
 
-The entry point has sixteen public commands. The table is both the human contract and the input to
+The entry point has seventeen public commands. The table is both the human contract and the input to
 `scripts/contract_surface.py`; publication fails if its inventory differs from `cover.py`.
 
 <!-- BEGIN PUBLIC COMMAND SURFACE -->
@@ -138,6 +153,7 @@ The entry point has sixteen public commands. The table is both the human contrac
 | `distill` | extraction | Produces the checkable requirement candidates presented for final decisions. |
 | `ask-owner` | owner decision | Presents only decisions the machinery is not allowed to cast. |
 | `answer-owner` | owner decision | Persists one offered choice in the owner's own words. |
+| `correct-owner` | owner decision | Corrects one recorded non-split ruling while preserving its complete prior ruling in history. |
 | `replay-owner-split` | owner decision | Rebuilds only the newest integrity-bound owner split while preserving every unrelated ruling and item. |
 | `run` | document assembly | Derives and advances every automatic stage, stopping only for one owner ruling or the completed document. |
 | `document` | document assembly | Applies completed owner rulings and writes the requirements document. |

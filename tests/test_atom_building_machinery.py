@@ -284,7 +284,7 @@ def test_missing_or_mismatched_promotion_evidence_cannot_advance(
     assert "evidence has SHA-256" in mismatched.stderr
 
 
-def test_tampered_case_evidence_blocks_completed_run_resume(
+def test_validation_snapshots_survive_caller_evidence_change_and_refuse_snapshot_tamper(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
     run = start(tmp_path, assembly_fixture)
@@ -299,7 +299,13 @@ def test_tampered_case_evidence_blocks_completed_run_resume(
     assert invoke("record-validation", run, validation_path).returncode == 0
 
     receipt = json.loads(validation_path.read_text())
-    Path(receipt["cases"][0]["evidence"][0]["path"]).write_text("changed\n")
+    Path(receipt["cases"][0]["evidence"][0]["path"]).write_text("changed caller evidence\n")
+    assert invoke("authorize-next", run).returncode == 0
+
+    recorded = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    snapshot = Path(recorded["case_evidence"][0]["evidence"][0]["path"])
+    assert snapshot.is_relative_to(run / "evidence")
+    snapshot.write_text("tampered snapshot\n")
     result = invoke("authorize-next", run)
     assert result.returncode == 2
     assert "recorded validation evidence" in result.stderr
@@ -394,6 +400,72 @@ def test_failed_real_path_routes_back_to_experiment(
     assert state["required_capability"] == "experiment-machinery"
 
 
+def test_superseded_legacy_failed_evidence_drift_is_reported_and_recoverable(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    first_experiment = tmp_path / "first-experiment"
+    experiment(first_experiment, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, first_experiment).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    state = json.loads(invoke("record-promotion", run, promotion_path).stdout)
+    validation_path = tmp_path / "failed-validation.json"
+    validation_receipt(validation_path, state, "not-satisfied")
+    assert invoke("record-validation", run, validation_path).returncode == 0
+
+    recorded = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    legacy_evidence = recorded["case_evidence"][0]["evidence"][0]
+    original_snapshot = Path(legacy_evidence["path"])
+    external_path = tmp_path / "legacy-external-evidence.json"
+    shutil.copyfile(original_snapshot, external_path)
+    legacy_evidence["path"] = str(external_path)
+    records = [json.loads(line) for line in (run / "ledger.jsonl").read_text().splitlines()]
+    records[-1]["payload"]["case_evidence"][0]["evidence"][0] = legacy_evidence
+    previous = None
+    lines = []
+    for index, record in enumerate(records, start=1):
+        record["sequence"] = index
+        record["previous_event_sha256"] = previous
+        line = json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n"
+        lines.append(line)
+        previous = hashlib.sha256(line.encode()).hexdigest()
+    (run / "ledger.jsonl").write_text("".join(lines))
+
+    second_experiment = tmp_path / "second-experiment"
+    experiment(second_experiment, assembly_fixture)
+    assert invoke("record-experiment", run, second_experiment).returncode == 0
+    external_path.write_text("changed superseded evidence\n")
+
+    result = invoke("status", run)
+    assert result.returncode == 0, result.stderr
+    state = json.loads(result.stdout)
+    assert state["stage"] == "promotion"
+    assert len(state["legacy_validation_evidence_drift"]) == 1
+    assert state["legacy_validation_evidence_drift"][0]["status"] == "superseded-external-evidence-drift"
+
+
+def test_current_legacy_failed_evidence_drift_remains_strict(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    state = json.loads(invoke("record-promotion", run, promotion_path).stdout)
+    validation_path = tmp_path / "failed-validation.json"
+    validation_receipt(validation_path, state, "not-satisfied")
+    assert invoke("record-validation", run, validation_path).returncode == 0
+
+    recorded = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    Path(recorded["case_evidence"][0]["evidence"][0]["path"]).write_text("changed\n")
+    result = invoke("status", run)
+    assert result.returncode == 2
+    assert "recorded validation evidence" in result.stderr
+
+
 def test_tampered_ledger_is_refused(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
@@ -405,7 +477,7 @@ def test_tampered_ledger_is_refused(
     assert f"require preserved request identity '{ATOM_ID}'" in result.stderr
 
 
-def test_overwritten_receipt_blocks_completed_run_resume(
+def test_validation_receipt_snapshot_survives_caller_change_and_remains_strict(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:
     run = start(tmp_path, assembly_fixture)
@@ -420,6 +492,10 @@ def test_overwritten_receipt_blocks_completed_run_resume(
     assert invoke("record-validation", run, validation_path).returncode == 0
 
     validation_path.write_text("{}\n")
+    assert invoke("authorize-next", run).returncode == 0
+
+    recorded = json.loads((run / "ledger.jsonl").read_text().splitlines()[-1])["payload"]
+    Path(recorded["receipt_path"]).write_text("{}\n")
     result = invoke("authorize-next", run)
     assert result.returncode == 2
     assert "recorded validation receipt has SHA-256" in result.stderr
