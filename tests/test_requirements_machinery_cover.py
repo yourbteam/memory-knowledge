@@ -71,7 +71,7 @@ def test_published_command_surface_matches_real_cli() -> None:
 
     result = json.loads(completed.stdout)
     assert result["parity"] is True
-    assert result["documented"] == result["executable"] == 15
+    assert result["documented"] == result["executable"] == 16
     assert set(result["categories"].values()) == {
         "coverage", "extraction", "owner decision", "document assembly",
     }
@@ -979,6 +979,7 @@ def test_split_children_replay_full_checkability_and_refuse_tampering(capsys) ->
             "strategy": "fixture", "opened_at": 0,
             "pieces": [{"id": "p-0001", "chars": 0, "sha256": ""}],
             "answers": {},
+            "relevance": {"last": target},
             "distilled": {target: {"items": [{
                 "pages": ["p-0001"], "statement": anchor, "how": "pen",
                 "anchors": [anchor], "checkable": False,
@@ -1090,3 +1091,110 @@ def test_split_children_replay_full_checkability_and_refuse_tampering(capsys) ->
     assert "every full raw attempt" in contract
     assert "Every resumed command replays all split-child" in contract
     assert "the graph before it can spend a reader" in contract
+
+
+def test_distill_semantic_fidelity_rejects_role_reversal_and_retries(monkeypatch) -> None:
+    distill = load("requirements_distill_semantic_fidelity", MACHINERY / "scripts" / "distill.py")
+    anchor = (
+        "The machine regenerated the Big Idea from scratch and overwrote the recorded human "
+        "choice with a system string"
+    )
+    replies = iter([
+        "The machine overwrote the system string with the recorded human choice.",
+        anchor,
+    ])
+    semantic_calls = []
+
+    monkeypatch.setattr(distill.interview, "ask_free", lambda *_args, **_kwargs: next(replies))
+
+    def changed(_reader, question, choices, **context):
+        semantic_calls.append((question, choices, context))
+        return "CHANGED", [{"attempt": 1, "raw_first_line": "CHANGED",
+                            "accepted": "CHANGED", "raw_reply": "CHANGED"}]
+
+    monkeypatch.setattr(distill.interview, "ask_choice", changed)
+    statement, transcript = distill.write_one([anchor], "fixture-reader", attempts=2)
+
+    assert statement == anchor
+    assert len(semantic_calls) == 2
+    assert transcript[0]["ok"] is False
+    assert "did not preserve the anchors' meaning" in transcript[0]["refusal"]
+    assert transcript[0]["semantic_fidelity"]["verdicts"] == ["CHANGED", "CHANGED"]
+    assert transcript[1]["ok"] is True
+    assert transcript[1]["semantic_fidelity"]["method"] == "normalized-verbatim"
+
+
+def test_replay_owner_split_rebuilds_only_terminal_split(monkeypatch, capsys) -> None:
+    cover = load("requirements_cover_targeted_split_replay", COVER)
+    target = "target requirements"
+    anchor = (
+        "The document must name one accountable owner for delivery; "
+        "The document must state one measurable acceptance threshold"
+    )
+
+    class Interview:
+        @staticmethod
+        def ask_choice(_reader, _question, _choices, **context):
+            row = {"attempt": 1, "raw_first_line": "YES", "accepted": "YES"}
+            if context.get("preserve_raw"):
+                row["raw_reply"] = "YES"
+            return "YES", [row]
+
+    class Distill:
+        @staticmethod
+        def write_one(anchors, _reader, **_context):
+            return anchors[0], [{"statement": anchors[0], "ok": True, "refusal": None}]
+
+    original_load = cover._load
+    cover._load = lambda name: (
+        Interview() if name == "interview" else Distill() if name == "distill"
+        else original_load(name)
+    )
+    match = {
+        "id": "check-1", "kind": "checkability", "statement": anchor,
+        "pages": ["p-0001"], "choices": ["keep", "drop", "split"],
+    }
+
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        state = bind_run_identity(run, {
+            "strategy": "fixture", "opened_at": 0,
+            "pieces": [{"id": "p-0001", "chars": 0, "sha256": ""}],
+            "answers": {},
+            "relevance": {"last": target},
+            "distilled": {target: {"items": [{
+                "pages": ["p-0001"], "statement": anchor, "how": "pen",
+                "anchors": [anchor], "checkable": False,
+            }]}},
+        })
+        assert cover._split_bundle(
+            state, run, target, "check-1", match, "split", "owner words", "fixture-reader"
+        ) == 0
+        persisted = json.loads((run / "coverage.json").read_text(encoding="utf-8"))
+        captured = {}
+
+        def capture(candidate, _work, _target, decision_id, item, choice, because, reader):
+            captured.update({"state": candidate, "decision_id": decision_id, "item": item,
+                             "choice": choice, "because": because, "reader": reader})
+            return 0
+
+        monkeypatch.setattr(cover, "_split_bundle", capture)
+        assert cover.replay_owner_split(run, "check-1", "fixture-reader") == 0
+        candidate_items = captured["state"]["distilled"][target]["items"]
+        assert len(candidate_items) == 1
+        assert candidate_items[0]["how"] == "pen"
+        assert "split_into" not in candidate_items[0]
+        assert "check-1" not in captured["state"]["owner_rulings"][target]
+        assert captured["because"] == "owner words"
+        assert json.loads((run / "coverage.json").read_text(encoding="utf-8")) == persisted
+
+        nonterminal = copy.deepcopy(persisted)
+        nonterminal["distilled"][target]["items"].append({
+            "pages": ["p-0001"], "statement": "Unrelated later item", "how": "pen",
+            "anchors": ["Unrelated later item"], "checkable": True,
+        })
+        (run / "coverage.json").write_text(json.dumps(nonterminal), encoding="utf-8")
+        before = (run / "coverage.json").read_bytes()
+        assert cover.replay_owner_split(run, "check-1", "fixture-reader") == 3
+        assert "not the terminal split" in capsys.readouterr().err
+        assert (run / "coverage.json").read_bytes() == before

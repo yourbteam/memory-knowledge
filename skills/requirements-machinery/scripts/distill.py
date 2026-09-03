@@ -35,6 +35,15 @@ ASK = ("Below are {n} wordings of the same rule, taken verbatim from one methodo
        "anchor or preamble. The first character of your reply must be the first character of the "
        "statement.")
 
+SEMANTIC_FIDELITY_ASK = (
+    "Compare one proposed requirement statement with its verbatim source anchor or anchors. "
+    "Judge meaning, not shared vocabulary. FAITHFUL means the statement preserves who did what "
+    "to whom, polarity, direction, causality, permission, obligation, and scope. CHANGED means "
+    "any of those relationships is reversed, denied, added, removed, or materially altered.\n\n"
+    "--- VERBATIM ANCHORS ---\n{anchors}\n--- END ANCHORS ---\n\n"
+    "--- PROPOSED STATEMENT ---\n{statement}\n--- END STATEMENT ---"
+)
+
 
 def _stems(text):
     out = {}
@@ -58,6 +67,38 @@ def gate(statement, anchors):
     return False, (f"the statement uses {', '.join(repr(p) for p in problems)} which appear in "
                    f"none of its {len(anchors)} verbatim anchors — restate using only the "
                    f"anchors' own words, or drop the addition")
+
+
+def _meaning_surface(text):
+    return " ".join(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def semantic_fidelity(statement, anchors, reader_command, **labels):
+    """Accept only a meaning-preserving rewrite; identical meaning surfaces need no reader."""
+    if _meaning_surface(statement) == _meaning_surface(" ".join(anchors)):
+        return True, None, {"method": "normalized-verbatim", "verdicts": []}
+    prompt = SEMANTIC_FIDELITY_ASK.format(
+        anchors="\n".join(f"{index}. {anchor}" for index, anchor in enumerate(anchors, 1)),
+        statement=statement,
+    )
+    verdicts, transcripts = [], []
+    for seat in (1, 2):
+        verdict, transcript = interview.ask_choice(
+            reader_command, prompt, ["FAITHFUL", "CHANGED"],
+            stage=labels.get("stage", "distill"), piece=labels.get("piece"), seat=seat,
+            preserve_raw=True,
+        )
+        verdicts.append(verdict)
+        transcripts.append(transcript)
+    record = {"method": "two-blind-readers", "verdicts": verdicts,
+              "transcripts": transcripts}
+    if verdicts == ["FAITHFUL", "FAITHFUL"]:
+        return True, None, record
+    return False, (
+        "the statement did not preserve the anchors' meaning according to both blind readers "
+        f"(verdicts: {verdicts}) — restate without reversing or changing who did what, "
+        "polarity, direction, causality, permission, obligation, or scope"
+    ), record
 
 
 def write_one(anchors, reader_command, attempts=3, **labels):
@@ -93,7 +134,14 @@ def write_one(anchors, reader_command, attempts=3, **labels):
             refusal = ("the rewrite adds only grammar words to the refused fragment — its "
                        "content words are unchanged; state the whole rule, including what it "
                        "obliges and of what, or the family stays refused")
-        transcript.append({"statement": statement[:200], "ok": ok, "refusal": refusal})
+        fidelity = None
+        if ok:
+            ok, refusal, fidelity = semantic_fidelity(
+                statement, anchors, reader_command, **labels)
+        row = {"statement": statement[:200], "ok": ok, "refusal": refusal}
+        if fidelity is not None:
+            row["semantic_fidelity"] = fidelity
+        transcript.append(row)
         if ok:
             return statement, transcript
         prompt = (ASK.format(n=len(anchors), numbered=numbered)

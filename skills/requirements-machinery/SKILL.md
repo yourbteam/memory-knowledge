@@ -55,6 +55,8 @@ python3 scripts/cover.py distill --work <dir> --reader-command '<command>'
 python3 scripts/cover.py ask-owner --work <dir>
 python3 scripts/cover.py answer-owner --work <dir> --id <decision-id> \
                                       --choice <offered-choice> --because "<owner's words>"
+python3 scripts/cover.py replay-owner-split --work <dir> --id <decision-id> \
+                                           --reader-command '<command>'
 python3 scripts/cover.py run --work <dir> --target "<the document being built>" \
                              --out <requirements.md> --reader-command '<command>'
 python3 scripts/cover.py document --work <dir> --out <requirements.md>
@@ -104,9 +106,20 @@ Replay validates the exact persisted JSON shape before rebuilding it, so nulls, 
 missing seats, malformed aggregates, and wrong field types become named controlled refusals rather
 than internal exceptions.
 
+Before accepting a pen rewrite, the lexical provenance gate is followed by a semantic-fidelity
+gate. Punctuation-only or directly composed anchor wording passes deterministically. Any other
+rewrite is accepted only when two blind readers both confirm that actor, action, object, polarity,
+direction, causality, permission, obligation, and scope remain faithful to the verbatim anchors.
+One changed or malformed verdict refuses the rewrite with an actionable reason.
+
+`replay-owner-split` is the governed repair path for an already-recorded split. It accepts only the
+newest integrity-bound split whose children form the terminal item suffix, rebuilds that one split
+from the owner's recorded words, and leaves every unrelated item and ruling untouched. It is not a
+general rollback and never starts a new requirements run.
+
 ## Public command surface
 
-The entry point has fourteen public commands. The table is both the human contract and the input to
+The entry point has sixteen public commands. The table is both the human contract and the input to
 `scripts/contract_surface.py`; publication fails if its inventory differs from `cover.py`.
 
 <!-- BEGIN PUBLIC COMMAND SURFACE -->
@@ -125,6 +138,7 @@ The entry point has fourteen public commands. The table is both the human contra
 | `distill` | extraction | Produces the checkable requirement candidates presented for final decisions. |
 | `ask-owner` | owner decision | Presents only decisions the machinery is not allowed to cast. |
 | `answer-owner` | owner decision | Persists one offered choice in the owner's own words. |
+| `replay-owner-split` | owner decision | Rebuilds only the newest integrity-bound owner split while preserving every unrelated ruling and item. |
 | `run` | document assembly | Derives and advances every automatic stage, stopping only for one owner ruling or the completed document. |
 | `document` | document assembly | Applies completed owner rulings and writes the requirements document. |
 <!-- END PUBLIC COMMAND SURFACE -->

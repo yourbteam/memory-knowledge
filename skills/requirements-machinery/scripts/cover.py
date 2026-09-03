@@ -1474,6 +1474,48 @@ def answer_owner(work, decision_id, choice, because, reader_command=None):
     return 0
 
 
+def replay_owner_split(work, decision_id, reader_command):
+    """Rebuild one recorded terminal split without disturbing any other paid run state.
+
+    Replay is intentionally narrower than correction: only the newest split may be replayed,
+    and its graph must identify a contiguous suffix. That makes every removed child attributable
+    to the one ruling and avoids reindexing unrelated split graphs.
+    """
+    state = _read(work)
+    target = _last_target(state)
+    ruling = state.get("owner_rulings", {}).get(target, {}).get(decision_id)
+    if not isinstance(ruling, dict) or ruling.get("choice") != "split":
+        print(f"refused: {decision_id} is not one recorded split ruling", file=sys.stderr)
+        return 3
+    graph = ruling.get("split_graph")
+    if not isinstance(graph, dict) or graph.get("decision_id") != decision_id:
+        print(f"refused: {decision_id} has no matching integrity-bound split graph",
+              file=sys.stderr)
+        return 3
+    items = state["distilled"][target]["items"]
+    child_indexes = graph.get("child_indexes")
+    parent_index = graph.get("parent_index")
+    if (not isinstance(child_indexes, list) or not child_indexes
+            or child_indexes != list(range(len(items) - len(child_indexes), len(items)))):
+        print(f"refused: {decision_id} is not the terminal split; replay would move unrelated "
+              "item indexes", file=sys.stderr)
+        return 3
+    if (not isinstance(parent_index, int) or parent_index < 0 or parent_index >= len(items)
+            or any(items[index].get("split_from") != decision_id for index in child_indexes)):
+        print(f"refused: {decision_id} split graph does not identify its exact parent and children",
+              file=sys.stderr)
+        return 3
+    candidate = json.loads(json.dumps(state))
+    candidate_items = candidate["distilled"][target]["items"]
+    del candidate_items[child_indexes[0]:]
+    parent = candidate_items[parent_index]
+    parent["how"] = "pen"
+    parent.pop("split_into", None)
+    del candidate["owner_rulings"][target][decision_id]
+    return _split_bundle(candidate, work, target, decision_id, ruling["item"], "split",
+                         ruling.get("because", ""), reader_command)
+
+
 def _consolidate_kept_items(items, reflow_mod):
     """Materialize an identical kept duty once while retaining all of its lineage."""
     consolidated, by_statement = [], {}
@@ -1960,6 +2002,8 @@ def build_parser():
     an = sub.add_parser("answer-owner"); an.add_argument("--work", required=True)
     an.add_argument("--id", required=True); an.add_argument("--choice", required=True)
     an.add_argument("--because", default=""); an.add_argument("--reader-command", default=None)
+    replay = sub.add_parser("replay-owner-split"); replay.add_argument("--work", required=True)
+    replay.add_argument("--id", required=True); replay.add_argument("--reader-command", required=True)
     doc = sub.add_parser("document"); doc.add_argument("--work", required=True)
     doc.add_argument("--out", required=True); doc.add_argument("--reader-command", default=None)
     b = sub.add_parser("bearing"); b.add_argument("--work", required=True)
@@ -2052,6 +2096,8 @@ def _dispatch(args):
     if args.command == "answer-owner":
         return answer_owner(args.work, args.id, args.choice, args.because,
                             args.reader_command)
+    if args.command == "replay-owner-split":
+        return replay_owner_split(args.work, args.id, args.reader_command)
     if args.command == "document":
         return document(args.work, args.out, args.reader_command)
     if args.command == "run":
