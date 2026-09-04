@@ -84,3 +84,23 @@ The atom controller authorized the next atom at proof event
 
 **Cost.** Six Development-Probe cycles, two approaches × four captured cases: 48 Codex model calls.
 All cases were unchanged real artifacts; no synthetic evaluation case was introduced.
+
+## Atom 4 — blind reader separation — 2026-09-04
+
+**Outcome.** Every cell now owns two fixed reader seats. The code retains each grounded response
+and exposes five distinct outcomes: agreement on a defect, agreement on clear, disagreement,
+no-answer, and defect-without-words. Only the two agreement outcomes complete a cell.
+
+**Experiment.** `atom-04/experiment/` compares first-reader-wins with blind-separated on the
+unchanged stale-door red/green pair. On the stale page, two independent Codex calls quoted the
+same sentence but returned `revise` and `clear`; first-reader-wins hid that conflict, while the
+selected contract retained it and kept the cell unresolved. On the corrected page, both readers
+independently returned clear with separate exact quotations.
+
+**Promotion and real operator path.** The verified assembly SHA-256 is
+`f9cd748c521745c92f0230e47cbaa1d7371be73fcb356d4f5b87295794cbf471`.
+`atom-04/operator-validation/` records the actual `read-cell` route and separate reader evidence
+directories. The controller authorized the next atom at proof event
+`e472431afe1fb0d1478cc112a1ba47228aaff243ccc8cf44203da65f3e145abc`.
+
+**Cost.** Six Codex model calls: two per stale-door page and two on the approved Vivacom scorecard.

@@ -1,0 +1,56 @@
+{
+  "cases": {
+    "stale-door-green": {
+      "outcome": "pending",
+      "readers": {},
+      "status": "unjudged"
+    },
+    "stale-door-red": {
+      "outcome": "disagreement",
+      "readers": {
+        "reader-1": {
+          "quote": "**No approach has been chosen.** The options are below with their evaluation; the choice belongs to a person and no owner is recorded.",
+          "quote_sha256": "e1e359ed463ef7bc06bcb6113d1b59960853df35c42808ef6a02a2a407c603fa",
+          "status": "answered",
+          "verdict": "revise",
+          "verdict_strategy": "action-grounded"
+        },
+        "reader-2": {
+          "quote": "**No approach has been chosen.** The options are below with their evaluation; the choice belongs to a person and no owner is recorded.",
+          "quote_sha256": "e1e359ed463ef7bc06bcb6113d1b59960853df35c42808ef6a02a2a407c603fa",
+          "status": "answered",
+          "verdict": "clear",
+          "verdict_strategy": "action-grounded"
+        }
+      },
+      "status": "unresolved"
+    }
+  },
+  "champion": "blind-separated",
+  "criteria_frozen_at": "spec.md",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "approach_id": "blind-separated",
+      "metrics": {
+        "completion-safety": 2,
+        "disagreement-preservation": 1,
+        "outcome-separation": 5,
+        "reader-identities": 4
+      },
+      "rank": 1
+    },
+    {
+      "approach_id": "first-reader-wins",
+      "metrics": {
+        "completion-safety": 1,
+        "disagreement-preservation": 0,
+        "outcome-separation": 2,
+        "reader-identities": 2
+      },
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

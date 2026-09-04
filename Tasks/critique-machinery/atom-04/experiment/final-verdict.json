@@ -1,0 +1,26 @@
+{
+  "assembly_sha256": "f9cd748c521745c92f0230e47cbaa1d7371be73fcb356d4f5b87295794cbf471",
+  "atomic_step_id": "critique-blind-reader-separation",
+  "cases": [
+    {
+      "case_id": "stale-door-red",
+      "evidence_pointers": [
+        "operator-validation/stale-door-red/matrix.json"
+      ],
+      "reason": "Two independent readers disagreed on the unchanged stale unit and the cell remained unresolved.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "stale-door-green",
+      "evidence_pointers": [
+        "operator-validation/stale-door-green/matrix.json"
+      ],
+      "reason": "Two independent readers agreed clear on the corrected unit with separate exact quotations.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

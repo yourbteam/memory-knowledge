@@ -1,0 +1,76 @@
+{
+  "baseline_sha256": "8b2e4c978ec2561d811c1e533d6dfec85590ab8be79353abb07918103f16be1d",
+  "candidates": [
+    {
+      "approach_id": "blind-separated",
+      "artifact": "blind-reader-contract",
+      "bundle_sha256": "1e25d26c0a58af1ca17b629095cae27b43dd628efc0763f44b03c74393aa8d7d",
+      "probe_id": "reader-separation"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-blind-reader-separation",
+    "development_manifest_sha256": "40d1e4b6d524c96bc2d6f243f46859603a97b07b4d7f0ce832f7353b8725c8d8"
+  },
+  "inputs": [
+    {
+      "case_id": "stale-door-red",
+      "path": "stale-door-red.input",
+      "sha256": "959b0437e41c1da875ab6961e3253bb8e8e30d4f58f8d61c4151f559ff178ea4",
+      "size": 5294080
+    },
+    {
+      "case_id": "stale-door-green",
+      "path": "stale-door-green.input",
+      "sha256": "dec550f254567164e55398f1147e0cfe52732e0c73aa80031c53bc4cf051aa93",
+      "size": 5300736
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "reader-separation"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "e5817c691f04af214000673d413cc259ac9f22e01810320b786c0aa196f31330",
+      "size": 35554
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "reader-separation"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "72b5bcf5243fdb76c9afc17c30e0b11e76be105101d4f4d2e14a70594dd51afb",
+      "size": 6309
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "e5817c691f04af214000673d413cc259ac9f22e01810320b786c0aa196f31330",
+        "size": 35554
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "72b5bcf5243fdb76c9afc17c30e0b11e76be105101d4f4d2e14a70594dd51afb",
+        "size": 6309
+      }
+    ],
+    "root": "source",
+    "sha256": "d09b4bea3fad219a2fcc2afaad1d6e5c2185aad57c3a59df5ef51940bfaba1f6"
+  },
+  "status": "assembled"
+}

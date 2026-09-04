@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "atomic_step_id": "critique-blind-reader-separation",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "1d8efd9084838a86c33edca6c56c196cf50b0261b76dd06c39514f263aa8af69",
+      "size": 31569
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "4f5b97e1a274dd3b8a05c9fc2b41f2815a2ba329b62d78cf4983d4beb246377a",
+      "size": 3470
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

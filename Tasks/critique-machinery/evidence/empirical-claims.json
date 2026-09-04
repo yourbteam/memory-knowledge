@@ -70,6 +70,29 @@
       },
       "operator_validation": "Tasks/critique-machinery/atom-03/operator-validation",
       "status": "promoted"
+    },
+    {
+      "atom_id": "critique-blind-reader-separation",
+      "claim": "Keeping two blind reader seats preserves a real disagreement that first-reader-wins collapses, while still recognizing independently corroborated clear readings.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-04/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-04/experiment/comparison.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-04/experiment/comparison.json",
+      "metrics": {
+        "first-reader-wins": {
+          "completion-safety": 1,
+          "disagreement-preservation": 0,
+          "outcome-separation": 2,
+          "reader-identities": 2
+        },
+        "blind-separated": {
+          "completion-safety": 2,
+          "disagreement-preservation": 1,
+          "outcome-separation": 5,
+          "reader-identities": 4
+        }
+      },
+      "operator_validation": "Tasks/critique-machinery/atom-04/operator-validation",
+      "status": "promoted"
     }
   ],
   "schema_version": 1

@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "3430f68fe645b92d4977c924ffb8aee31c62e4d2237c7c8425450c12a3b4dbd2",
+  "atom_run_id": "0462f824cfebcf32a34d5018f76dbe75c61bdbc5cdb2ce3fa2dec717652a44d9",
+  "atomic_step_id": "critique-blind-reader-separation",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441"
+}

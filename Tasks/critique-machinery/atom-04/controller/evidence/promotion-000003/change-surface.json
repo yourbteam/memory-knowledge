@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "critique-blind-reader-separation",
+  "baseline_sha256": "368c664e55c12f9e697d403189ffe94bb604e75056c89268974fad3ff940af0f",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "e5817c691f04af214000673d413cc259ac9f22e01810320b786c0aa196f31330",
+      "before_mode": 420,
+      "before_sha256": "1d8efd9084838a86c33edca6c56c196cf50b0261b76dd06c39514f263aa8af69",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "72b5bcf5243fdb76c9afc17c30e0b11e76be105101d4f4d2e14a70594dd51afb",
+      "before_mode": 420,
+      "before_sha256": "4f5b97e1a274dd3b8a05c9fc2b41f2815a2ba329b62d78cf4983d4beb246377a",
+      "kind": "changed",
+      "path": "tests/test_critique_machinery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

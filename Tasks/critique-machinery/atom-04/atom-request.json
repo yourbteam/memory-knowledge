@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "critique-blind-reader-separation",
+  "outcome": "Every matrix cell preserves two independent reader seats and exposes agreement, disagreement, no-answer, and ungrounded-defect outcomes without averaging them.",
+  "practical_value": "A repeated model opinion cannot masquerade as corroboration, and uncertainty remains visible for owner resolution.",
+  "stopping_condition": "Two real page cases run through distinct reader evidence roots, all five outcome classes remain distinguishable, and unresolved outcomes cannot complete the matrix.",
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "stale-door-red",
+      "source_ref": "Tasks/critique-machinery/atom-03/cases/stale-door-red.tar",
+      "sha256": "959b0437e41c1da875ab6961e3253bb8e8e30d4f58f8d61c4151f559ff178ea4",
+      "kind": "failure",
+      "expected_outcome": "Two blind readers retain separately grounded responses and any divergence stays unresolved."
+    },
+    {
+      "case_id": "stale-door-green",
+      "source_ref": "Tasks/critique-machinery/atom-03/cases/stale-door-green.tar",
+      "sha256": "dec550f254567164e55398f1147e0cfe52732e0c73aa80031c53bc4cf051aa93",
+      "kind": "success",
+      "expected_outcome": "Two blind readers retain separately grounded responses and agreement is explicit."
+    }
+  ]
+}

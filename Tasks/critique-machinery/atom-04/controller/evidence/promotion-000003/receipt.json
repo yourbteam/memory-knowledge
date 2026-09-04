@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "critique-blind-reader-separation",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "3ea1e96cea44f0d2ddb29aea85e2dc438e6ff51e6e43648885a7e4f50c8e8613",
+  "experiment_assembly_sha256": "f9cd748c521745c92f0230e47cbaa1d7371be73fcb356d4f5b87295794cbf471",
+  "changed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "1a9ac8d9ec5df4e72b0635beae24d76966d118e0da344f689e5171e3b207c10b"
+  },
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "871e849f2693153e2b260b5c762d8cc822c963be696664df030fb6fc9916bd42"
+  },
+  "evidence": [
+    {
+      "case_id": "stale-door-red",
+      "path": "operator-validation/stale-door-red/matrix.json",
+      "sha256": "c2315028a914ec9331a6d54fee0174ac24e79c6bdb81661e6e660660e5789a17"
+    },
+    {
+      "case_id": "stale-door-green",
+      "path": "operator-validation/stale-door-green/matrix.json",
+      "sha256": "6c69dca1b117adf535448ffe786ed8e256ca30ffee2fb2fbe4f92a8f07a90224"
+    }
+  ]
+}

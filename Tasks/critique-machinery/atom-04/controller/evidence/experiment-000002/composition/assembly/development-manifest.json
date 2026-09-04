@@ -1,0 +1,125 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "Two blind readers retain separately grounded responses and any divergence stays unresolved.",
+        "id": "stale-door-red",
+        "kind": "failure",
+        "sha256": "959b0437e41c1da875ab6961e3253bb8e8e30d4f58f8d61c4151f559ff178ea4",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/stale-door-red.tar"
+      },
+      {
+        "expected_outcome": "Two blind readers retain separately grounded responses and agreement is explicit.",
+        "id": "stale-door-green",
+        "kind": "success",
+        "sha256": "dec550f254567164e55398f1147e0cfe52732e0c73aa80031c53bc4cf051aa93",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/stale-door-green.tar"
+      }
+    ],
+    "id": "critique-blind-reader-separation",
+    "outcome": "Every matrix cell preserves two independent reader seats and exposes agreement, disagreement, no-answer, and ungrounded-defect outcomes without averaging them.",
+    "practical_value": "A repeated model opinion cannot masquerade as corroboration, and uncertainty remains visible for owner resolution.",
+    "stopping_condition": "Two real page cases run through distinct reader evidence roots, all five outcome classes remain distinguishable, and unresolved outcomes cannot complete the matrix."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use the blind-separated reader state and reducer unchanged.",
+    "consumes": [
+      {
+        "artifact": "blind-reader-contract",
+        "probe_id": "reader-separation"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "stale-door-red",
+        "stale-door-green"
+      ],
+      "failure_criterion": "Reader identity is lost or the stale-page disagreement is reported as complete.",
+      "operator_path": "Open each unchanged page and run read-cell, which launches two isolated Codex processes.",
+      "success_criterion": "The corrected page agrees clear and the stale page exposes its observed disagreement as unresolved."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "One accepted reader response is sufficient for a stable critique cell.",
+          "id": "first-reader-wins",
+          "implementation": "Keep the first response as the cell verdict and discard the second identity.",
+          "predicted_tradeoff": "Smaller state, but disagreement becomes invisible."
+        },
+        {
+          "hypothesis": "Two isolated seats plus a fixed reducer preserve agreement and uncertainty safely.",
+          "id": "blind-separated",
+          "implementation": "Launch separate readers, retain both grounded responses, and expose five terminal outcomes.",
+          "predicted_tradeoff": "Two model calls per cell, with inspectable corroboration and owner-bound uncertainty."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "reader-identities"
+          },
+          {
+            "method": "sum",
+            "name": "disagreement-preservation"
+          },
+          {
+            "method": "sum",
+            "name": "outcome-separation"
+          },
+          {
+            "method": "sum",
+            "name": "completion-safety"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "reader-identities"
+          },
+          {
+            "direction": "maximize",
+            "name": "disagreement-preservation"
+          },
+          {
+            "direction": "maximize",
+            "name": "outcome-separation"
+          },
+          {
+            "direction": "maximize",
+            "name": "completion-safety"
+          }
+        ]
+      },
+      "goal": "Preserve independent readings and their uncertainty instead of collapsing them.",
+      "id": "reader-separation",
+      "inputs": [
+        {
+          "case_id": "stale-door-red"
+        },
+        {
+          "case_id": "stale-door-green"
+        }
+      ],
+      "practical_value": "A repeated model opinion cannot masquerade as corroboration, and uncertainty remains visible for owner resolution.",
+      "proof": {
+        "failure_criterion": "Either response is overwritten, disagreement completes the matrix, or an outcome collapses into another.",
+        "success_criterion": "Both real responses retain identity, disagreement stays unresolved, and all five outcomes remain distinct."
+      },
+      "winner_output": {
+        "artifact": "blind-reader-contract",
+        "description": "Separate reader state, fixed outcome reducer, and independent model launch path."
+      },
+      "work_type": "hybrid",
+      "work_type_reason": "Models read independently; code owns seat identity, outcome reduction, and completion safety."
+    }
+  ],
+  "schema_version": 2
+}

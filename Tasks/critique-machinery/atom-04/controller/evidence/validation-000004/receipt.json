@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-blind-reader-separation",
+  "promotion_event_sha256": "0975c31fb2929fd5137d2423a9e399829174eb373797c2abe856ac9395c4a991",
+  "cases": [
+    {
+      "case_id": "stale-door-red",
+      "verdict": "satisfied",
+      "reason": "The promoted read-cell path retained both independent grounded responses and left their disagreement unresolved.",
+      "evidence": [
+        {
+          "case_id": "stale-door-red",
+          "path": "operator-validation/stale-door-red/matrix.json",
+          "sha256": "c2315028a914ec9331a6d54fee0174ac24e79c6bdb81661e6e660660e5789a17"
+        }
+      ]
+    },
+    {
+      "case_id": "stale-door-green",
+      "verdict": "satisfied",
+      "reason": "The promoted read-cell path retained two separately grounded clear responses and exposed agreement explicitly.",
+      "evidence": [
+        {
+          "case_id": "stale-door-green",
+          "path": "operator-validation/stale-door-green/matrix.json",
+          "sha256": "6c69dca1b117adf535448ffe786ed8e256ca30ffee2fb2fbe4f92a8f07a90224"
+        }
+      ]
+    }
+  ]
+}
