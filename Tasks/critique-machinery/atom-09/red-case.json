@@ -1,0 +1,17 @@
+{
+  "applicable_cell_count": 150,
+  "benchmark_not_applicable_count": 25,
+  "judged_count": 0,
+  "matrix_sha256": "64b28589ebee1a0e25be0a4af92debdc6e98f222059141035be9cb1bf4fc67e7",
+  "one_seat_cell_count": 5,
+  "read_run_log_sha256": "3b5c65de6bda41dc479ffd1824f8f5d09314beb5a9590f544f01cc97387cfabb",
+  "reader_evidence_file_count": 200,
+  "reader_evidence_listing_sha256": "7d66262462d64c18561c01251a63e287eaa4c5bc890c27209cf7e72dbdcbc41d",
+  "reader_stdout_count": 50,
+  "source_count": 6,
+  "source_run": "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-v2",
+  "sources_sha256": "f952d9342ffaa25e9151b45cc7242b2dc1f8fd0134d331e2aba567683f792b6e",
+  "status": "frozen",
+  "unit_manifest_sha256": "72df294a2ab750b82eca2af02b9ffc6febff40dd430c775c6f6e0480387d841d",
+  "unjudged_count": 145
+}

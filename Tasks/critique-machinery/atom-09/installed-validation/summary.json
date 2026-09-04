@@ -1,0 +1,26 @@
+{
+  "clients": {
+    "claude": {
+      "installed_tree_sha256": "3ef987dd2baaa17c82ef398c28d55a35747e8bcf6ac1b074fcd874eb32049abf",
+      "matrix_sha256": "5d4f2b375f20e2498c12ad03cd7bf49779cdb5df6caaecbdd5b965e6ab1f0786",
+      "policy": {
+        "fail_closed": true,
+        "required_runtime": "claude -p"
+      },
+      "unit_manifest_sha256": "c7fd2a685a069d9f7fd34cd9a50907401742e125d9e8d52dd14973fc0373d808"
+    },
+    "codex": {
+      "installed_tree_sha256": "cc571cbf9a8aa93e2a07c2ba6d9cde5e39b7e784f47ec6fb582c5777e1d56729",
+      "matrix_sha256": "5d4f2b375f20e2498c12ad03cd7bf49779cdb5df6caaecbdd5b965e6ab1f0786",
+      "policy": {
+        "fail_closed": true,
+        "required_runtime": "codex exec"
+      },
+      "unit_manifest_sha256": "c7fd2a685a069d9f7fd34cd9a50907401742e125d9e8d52dd14973fc0373d808"
+    }
+  },
+  "model_calls": 0,
+  "operator_observation": "Each installed script opened the same 25-unit page with all six producer sources frozen at open, retained 25 benchmark cells as not applicable, and exposed the same 150 applicable cells without launching a reader.",
+  "schema_version": 1,
+  "status": "passed"
+}

@@ -1,0 +1,135 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The exact six-source run remains immutable evidence of an upstream refusal that left five sibling cells holding one seat.",
+        "id": "claude-v2-upstream-red",
+        "kind": "failure",
+        "sha256": "64b28589ebee1a0e25be0a4af92debdc6e98f222059141035be9cb1bf4fc67e7",
+        "source_ref": "Tasks/critique-machinery/atom-09/frozen-red/matrix.json"
+      },
+      {
+        "expected_outcome": "All 50 captured seat responses replay into 150 terminal applicable cells with zero one-seat cells; source-cited claims record and ungroundable claims become visible per-cell refusals.",
+        "id": "claude-v2-atomic-replay-green",
+        "kind": "success",
+        "sha256": "f952d9342ffaa25e9151b45cc7242b2dc1f8fd0134d331e2aba567683f792b6e",
+        "source_ref": "Tasks/critique-machinery/atom-09/frozen-red/sources.json"
+      }
+    ],
+    "id": "critique-upstream-declaration-atomic-recording",
+    "outcome": "Open freezes registered producer sources or a no-upstream reason; seats can cite exact named producer words; batch recording is atomic per cell and continues after visible refusals.",
+    "practical_value": "Completed seat work is never stranded by one ungroundable upstream claim, and no upstream defect enters the critique without inspectable producer evidence.",
+    "stopping_condition": "The frozen v2 run is unchanged; its 50 captured responses replay with zero model calls into 150 terminal applicable cells and no one-seat cells; no-upstream and source-cited paths pass; both managed installs match."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use source-cited-cell-transaction unchanged.",
+    "consumes": [
+      {
+        "artifact": "declared-source-atomic-recorder",
+        "probe_id": "upstream-recording-boundary"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "claude-v2-upstream-red",
+        "claude-v2-atomic-replay-green"
+      ],
+      "failure_criterion": "Any red byte changes, any reader launches, any cell has one seat, or any unsupported upstream defect enters state.",
+      "operator_path": "Replay all frozen v2 reader responses into a fresh declared-source run without launching a model.",
+      "success_criterion": "The red bytes stay unchanged; all 150 applicable cells record both seats; unsupported claims remain visible non-defect refusals."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A source-cited schema plus one transaction per cell preserves every sibling and makes unsupported claims terminal evidence instead of a run-level failure.",
+          "id": "source-cited-cell-transaction",
+          "implementation": "Freeze upstream mode at open, show numbered registered sources to seats, require exact source spans for defect claims, and write both seat outcomes or one two-claim refusal atomically.",
+          "predicted_tradeoff": "Larger response schema and per-cell reducer logic in exchange for grounded defects and no stranded completed work."
+        },
+        {
+          "hypothesis": "Adding producer text to the existing prompt while retaining sequential whole-batch recording is sufficient.",
+          "id": "prompt-only-whole-batch",
+          "implementation": "Keep late source registration and sequential seat writes; retry or stop when an upstream claim lacks evidence.",
+          "predicted_tradeoff": "Smaller code change, but one refusal can still strand siblings and require repeated model spend."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "open-time-upstream-declaration"
+          },
+          {
+            "method": "sum",
+            "name": "exact-named-producer-grounding"
+          },
+          {
+            "method": "sum",
+            "name": "zero-one-seat-cells"
+          },
+          {
+            "method": "sum",
+            "name": "visible-per-cell-refusal"
+          },
+          {
+            "method": "sum",
+            "name": "zero-new-model-calls"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "open-time-upstream-declaration"
+          },
+          {
+            "direction": "maximize",
+            "name": "exact-named-producer-grounding"
+          },
+          {
+            "direction": "maximize",
+            "name": "zero-one-seat-cells"
+          },
+          {
+            "direction": "maximize",
+            "name": "visible-per-cell-refusal"
+          },
+          {
+            "direction": "maximize",
+            "name": "zero-new-model-calls"
+          }
+        ]
+      },
+      "goal": "Declare producer material before reading and contain an ungroundable claim to one fully recorded cell.",
+      "id": "upstream-recording-boundary",
+      "inputs": [
+        {
+          "case_id": "claude-v2-upstream-red"
+        },
+        {
+          "case_id": "claude-v2-atomic-replay-green"
+        }
+      ],
+      "practical_value": "Completed seat work is never stranded by one ungroundable upstream claim, and no upstream defect enters the critique without inspectable producer evidence.",
+      "proof": {
+        "failure_criterion": "Any cell holds one seat, any applicable cell remains unread, or an upstream defect records without exact registered-source words.",
+        "success_criterion": "All 150 applicable cells hold two seats; unsupported upstream claims are visible refusals; exact named producer words are required for defects."
+      },
+      "winner_output": {
+        "artifact": "declared-source-atomic-recorder",
+        "description": "Open-time upstream declaration, source-cited defects, and per-cell atomic writes."
+      },
+      "work_type": "code",
+      "work_type_reason": "The declaration, reader schema, exact-source check, and cell transaction are executable boundaries."
+    }
+  ],
+  "schema_version": 2
+}

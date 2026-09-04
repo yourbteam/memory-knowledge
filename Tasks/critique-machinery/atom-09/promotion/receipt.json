@@ -1,0 +1,34 @@
+{
+  "atomic_step_id": "critique-upstream-declaration-atomic-recording",
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "40b97699eafa6cbe7341916212ad18c257f42c87b727096e72a05cac5679f797"
+  },
+  "changed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "claude-v2-upstream-red",
+      "path": "../frozen-red/matrix.json",
+      "sha256": "64b28589ebee1a0e25be0a4af92debdc6e98f222059141035be9cb1bf4fc67e7"
+    },
+    {
+      "case_id": "claude-v2-atomic-replay-green",
+      "path": "../operator-validation/result.json",
+      "sha256": "ddf3254e85e1cf6d760dcb764391ea74d2a030b7ad077f9b63c5c3751dd8aaff"
+    }
+  ],
+  "experiment_assembly_sha256": "50a611cc92fa08f77f7bd99080ecb9679a2f475feccf81c622e43a011493d401",
+  "experiment_event_sha256": "995ed4f1a4bfdc81b7e9223e47b44fe0181a60edbbf3033adeee7e5a3a6b15f2",
+  "review": {
+    "path": "review.json",
+    "sha256": "ca75962f96691e85673a7b07a7ede2054cf61c9ab1477ef922732c9797309fd4"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

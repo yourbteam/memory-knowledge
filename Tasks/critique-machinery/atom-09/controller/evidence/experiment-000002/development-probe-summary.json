@@ -1,0 +1,46 @@
+{
+  "atomic_step_id": "critique-upstream-declaration-atomic-recording",
+  "final_verdict_sha256": "98b5e49dff77efa6d183796936716ea02ce52ab5de2f44ba050a08f217e720f1",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "stages": [
+    {
+      "evidence": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "evidence_sha256": "1ad7816bc573355262a410f13c777be16a1060177447157d033448996a68ab92",
+      "exit_code": 0,
+      "output": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "promotion_applied": false,
+      "result": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "result_sha256": "1ad7816bc573355262a410f13c777be16a1060177447157d033448996a68ab92",
+      "schema_version": 1,
+      "stage": "run-probes",
+      "status": "completed"
+    },
+    {
+      "evidence": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "evidence_sha256": "1ad7816bc573355262a410f13c777be16a1060177447157d033448996a68ab92",
+      "exit_code": 0,
+      "output": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "promotion_applied": false,
+      "result": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "result_sha256": "1ad7816bc573355262a410f13c777be16a1060177447157d033448996a68ab92",
+      "schema_version": 1,
+      "stage": "compose-winners",
+      "status": "completed"
+    },
+    {
+      "evidence": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "evidence_sha256": "1ad7816bc573355262a410f13c777be16a1060177447157d033448996a68ab92",
+      "exit_code": 0,
+      "output": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "promotion_applied": false,
+      "result": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-09/experiment/comparison.json",
+      "result_sha256": "1ad7816bc573355262a410f13c777be16a1060177447157d033448996a68ab92",
+      "schema_version": 1,
+      "stage": "final-validation",
+      "status": "completed"
+    }
+  ],
+  "status": "completed",
+  "verdict": "passed"
+}

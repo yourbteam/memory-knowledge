@@ -1,0 +1,50 @@
+{
+  "approaches": [
+    {
+      "evidence": [
+        "../frozen-red/matrix.json",
+        "../frozen-red/read-run.log"
+      ],
+      "id": "prompt-only-whole-batch",
+      "observations": {
+        "exact-named-producer-grounding": 0,
+        "open-time-upstream-declaration": 0,
+        "visible-per-cell-refusal": 0,
+        "zero-new-model-calls": 1,
+        "zero-one-seat-cells": 0
+      },
+      "score": 1
+    },
+    {
+      "evidence": [
+        "../operator-validation/result.json",
+        "../operator-validation/run/matrix.json",
+        "../../../tests/test_critique_machinery.py"
+      ],
+      "id": "source-cited-cell-transaction",
+      "observations": {
+        "exact-named-producer-grounding": 1,
+        "open-time-upstream-declaration": 1,
+        "visible-per-cell-refusal": 1,
+        "zero-new-model-calls": 1,
+        "zero-one-seat-cells": 1
+      },
+      "score": 5
+    }
+  ],
+  "captured_response_files": 50,
+  "captured_seat_judgments": 300,
+  "criteria": [
+    "open-time-upstream-declaration",
+    "exact-named-producer-grounding",
+    "zero-one-seat-cells",
+    "visible-per-cell-refusal",
+    "zero-new-model-calls"
+  ],
+  "deciding_observation": "The control stopped at the first unsupported upstream claim and left five one-seat cells. The candidate replayed the same 300 captured judgments into all 150 applicable cells, retained both seats everywhere, and represented eight unsupported upstream claims as visible non-defect refusals without a model call.",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "selected": "source-cited-cell-transaction",
+  "source_run": "claude-seat-s12-btm-v2",
+  "status": "completed"
+}

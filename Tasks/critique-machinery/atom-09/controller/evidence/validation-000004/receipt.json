@@ -1,0 +1,37 @@
+{
+  "atomic_step_id": "critique-upstream-declaration-atomic-recording",
+  "cases": [
+    {
+      "case_id": "claude-v2-upstream-red",
+      "evidence": [
+        {
+          "case_id": "claude-v2-upstream-red",
+          "path": "../frozen-red/matrix.json",
+          "sha256": "64b28589ebee1a0e25be0a4af92debdc6e98f222059141035be9cb1bf4fc67e7"
+        }
+      ],
+      "reason": "The original v2 matrix remains byte-identical with 25 benchmark cells not applicable, 145 unjudged cells, and five one-seat cells preserved as the recorded failure.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v2-atomic-replay-green",
+      "evidence": [
+        {
+          "case_id": "claude-v2-atomic-replay-green",
+          "path": "../operator-validation/result.json",
+          "sha256": "ddf3254e85e1cf6d760dcb764391ea74d2a030b7ad077f9b63c5c3751dd8aaff"
+        },
+        {
+          "case_id": "claude-v2-atomic-replay-green",
+          "path": "../installed-validation/summary.json",
+          "sha256": "3ebe7fd91e06ed351e70ac99df66cc527391d9ceab77c8f423552046a0edf005"
+        }
+      ],
+      "reason": "All 300 frozen seat judgments recorded into 150 applicable cells with two seats each, eight unsupported upstream claims became visible refusals, no model ran, and both managed client installs opened the six-source contract with their own fail-closed policy.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "cca98e828f319711bcb03fb3f744c5997d7f9cc32bbd16ec00d6ebaa18df7dda",
+  "schema_version": 1,
+  "status": "completed"
+}

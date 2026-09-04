@@ -1,0 +1,29 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-upstream-declaration-atomic-recording",
+  "captured_cases": [
+    {
+      "case_id": "claude-v2-upstream-red",
+      "expected_outcome": "The exact six-source run remains immutable evidence of an upstream refusal that left five sibling cells holding one seat.",
+      "kind": "failure",
+      "sha256": "64b28589ebee1a0e25be0a4af92debdc6e98f222059141035be9cb1bf4fc67e7",
+      "source_ref": "Tasks/critique-machinery/atom-09/frozen-red/matrix.json"
+    },
+    {
+      "case_id": "claude-v2-atomic-replay-green",
+      "expected_outcome": "All 50 captured seat responses replay into 150 terminal applicable cells with zero one-seat cells; source-cited claims record and ungroundable claims become visible per-cell refusals.",
+      "kind": "success",
+      "sha256": "f952d9342ffaa25e9151b45cc7242b2dc1f8fd0134d331e2aba567683f792b6e",
+      "source_ref": "Tasks/critique-machinery/atom-09/frozen-red/sources.json"
+    }
+  ],
+  "outcome": "Open freezes registered producer sources or a no-upstream reason; seats can cite exact named producer words; batch recording is atomic per cell and continues after visible refusals.",
+  "practical_value": "Completed seat work is never stranded by one ungroundable upstream claim, and no upstream defect enters the critique without inspectable producer evidence.",
+  "schema_version": 1,
+  "stopping_condition": "The frozen v2 run is unchanged; its 50 captured responses replay with zero model calls into 150 terminal applicable cells and no one-seat cells; no-upstream and source-cited paths pass; both managed installs match."
+}

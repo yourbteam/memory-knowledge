@@ -1,0 +1,2 @@
+critique refused: cell 'u-001-67522c23::upstream-trace' claims an upstream defect but has no producer evidence; register the source and attach an exact trace before recording this verdict.
+exit=2

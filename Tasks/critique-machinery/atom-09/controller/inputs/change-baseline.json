@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-upstream-declaration-atomic-recording",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "339ac202a27f3ca4ec0e44d8f523f991512987412b5b405e021e02935bf3b856",
+      "size": 3218
+    },
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "a4a69a19115a8fe222aae8499dedf46ff7d5a1b1953683b3824563c27f9089ef",
+      "size": 64500
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "3e91cd596eddf7cb9a61c89d107097ef399f0c1bdd517b0e05722bf8074f849b",
+      "size": 18294
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "6b95523821e8f16cddd0ea1105a7e30127f081eb0897e9c6627512eab298e970",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

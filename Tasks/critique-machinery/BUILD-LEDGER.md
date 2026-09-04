@@ -279,3 +279,42 @@ at proof event `51007bac1f14da7502618a785304caf18c7467d65bb43990ce5c6d3c24aae17e
 **Cost.** Two local approaches on one frozen real run, one exact replay of 300 existing reader
 records, two no-reader installed-path validations, 70 passing tests plus 11 passing subtests, and
 zero new model calls.
+
+## Correction Atom 9 — upstream declaration and atomic recording — 2026-09-04
+
+**Outcome — 2 found, 2 fixed.** `open` now requires exactly one immutable upstream declaration:
+one or more producer state records, or a non-empty `--no-upstream` reason. A no-upstream run keeps
+its 25 upstream cells visible as not applicable and never sends them to a seat. With registered
+producers, both seats receive numbered source material; an upstream defect records only with exact
+words from a named source. `read-cell` and `read-run` now commit both seats per cell. A claim that
+cannot satisfy its evidence contract becomes a visible non-defect recording refusal, and every
+sibling cell continues.
+
+**Red case.** `atom-09/frozen-red/` preserves the complete real Claude v2 run evidence: the
+unit manifest, six-source registry, parked matrix, refusal log, and all 50 raw seat-response
+directories. The source matrix remains SHA-256
+`64b28589ebee1a0e25be0a4af92debdc6e98f222059141035be9cb1bf4fc67e7`: 25 benchmark cells not
+applicable, 145 unjudged cells, five one-seat cells, and zero judged cells. The source run was not
+migrated or modified.
+
+**Experiment.** `atom-09/experiment/comparison.json` compares the recorded
+`prompt-only-whole-batch` control with `source-cited-cell-transaction` under five criteria fixed in
+the spec. The control scored 1/5 and stopped at the first unsupported claim. The selected approach
+scored 5/5: open-time declaration, exact named-source enforcement, zero one-seat cells, visible
+per-cell refusals, and zero new model calls. Its isolated assembly SHA-256 is
+`50a611cc92fa08f77f7bd99080ecb9679a2f475feccf81c622e43a011493d401`.
+
+**Promotion and real operator path.** `atom-09/replay_v2.py` replayed all 50 captured Claude
+responses and all 300 seat judgments into a fresh six-source run. All 150 applicable cells record
+both seats; 140 are judged, two authentic disagreements remain owner questions with both seats,
+and eight old upstream defect claims that contain no source citation are retained as visible
+recording refusals rather than being invented, erased, or allowed to wedge the run. No applicable
+cell is unjudged or half-recorded. Both managed installs opened the same six-source contract and
+retain their own fail-closed policies: `codex exec` and `claude -p`. The atom controller closed at
+proof event `99fd9e842ad9d6194870198dc71ecf9f3b57ce77d7cab68c8cb0b00a2cb90d9c`.
+
+**Cost.** One frozen real run, two compared approaches, one exact replay of 300 existing seat
+judgments, two no-reader installed-path validations, and zero model calls. The focused and client
+projection suites pass 76 tests plus 11 subtests. The elevated repository suite passes 2,251 tests
+plus 41 subtests and skips one; its sole failure is the pre-existing absolute-checkout prevention
+contract byte-stability test, whose exact assertion passes in the canonical checkout.

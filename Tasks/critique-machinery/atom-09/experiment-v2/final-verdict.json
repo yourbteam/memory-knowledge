@@ -1,0 +1,28 @@
+{
+  "assembly_sha256": "50a611cc92fa08f77f7bd99080ecb9679a2f475feccf81c622e43a011493d401",
+  "atomic_step_id": "critique-upstream-declaration-atomic-recording",
+  "cases": [
+    {
+      "case_id": "claude-v2-upstream-red",
+      "evidence_pointers": [
+        "frozen-red/matrix.json",
+        "frozen-red/read-run.log"
+      ],
+      "reason": "The exact parked v2 matrix remains unchanged with its five one-seat cells and first upstream refusal.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v2-atomic-replay-green",
+      "evidence_pointers": [
+        "operator-validation/result.json",
+        "operator-validation/run/matrix.json"
+      ],
+      "reason": "The same 50 captured responses recorded all 150 applicable cells with two seats, eight visible source-grounding refusals, and zero model calls.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}
