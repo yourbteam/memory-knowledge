@@ -23,6 +23,25 @@ def load_module():
     return module
 
 
+def fake_valid_result(module, lenses, judgments, evidence_root):
+    batch_id = evidence_root.parents[1].name
+    seat = evidence_root.parent.name
+    intake = {
+        "schema_version": 1,
+        "request_id": f"{batch_id}::{seat}",
+        "batch_id": batch_id,
+        "seat": seat,
+        "attempt": 1,
+        "outcome": "valid",
+        "lenses": list(lenses),
+        "evidence_path": str(evidence_root),
+        "reply_bytes": 1,
+        "reply_sha256": "test-double",
+        "exit_code": 0,
+    }
+    return {"outcome": "valid", "judgments": judgments, "intake": intake}
+
+
 def test_real_pages_build_exact_fixed_lens_matrix(tmp_path: Path) -> None:
     module = load_module()
     repo = tmp_path / "repo"
@@ -152,9 +171,13 @@ def test_read_cell_runs_two_separate_blind_calls(tmp_path: Path, monkeypatch: py
     quote = module.collapsed(unit["text"])[5:90]
     evidence_roots = []
 
-    def fake_reader(root, source_context, focus, selected, lenses, evidence_root=None, upstream_sources=None):
+    def fake_reader(
+        root, source_context, focus, selected, lenses, evidence_root=None, upstream_sources=None,
+        batch_id=None, seat=None, attempt=1,
+    ):
         evidence_roots.append(evidence_root)
-        return [{"lens": lenses[0], "verdict": "clear", "quote": quote}]
+        judgments = [{"lens": lenses[0], "verdict": "clear", "quote": quote}]
+        return fake_valid_result(module, lenses, judgments, evidence_root)
 
     monkeypatch.setattr(module, "_reader_judgments", fake_reader)
     result = module.read_cell(work, cell_id)
@@ -315,10 +338,14 @@ def test_read_run_batches_each_unit_and_blind_seat_then_completes(tmp_path: Path
     )
     calls = []
 
-    def fake_reader(root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None):
+    def fake_reader(
+        root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
+        batch_id=None, seat=None, attempt=1,
+    ):
         calls.append((unit["unit_id"], tuple(lenses), evidence_root))
         quote = module.collapsed(unit["text"])[:120]
-        return [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
+        judgments = [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
+        return fake_valid_result(module, lenses, judgments, evidence_root)
 
     monkeypatch.setattr(module, "_reader_judgments", fake_reader)
     result = module.read_run(work)
@@ -408,10 +435,14 @@ def test_no_upstream_is_visible_terminal_state_and_never_launched(
 
     calls = []
 
-    def fake_reader(root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None):
+    def fake_reader(
+        root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
+        batch_id=None, seat=None, attempt=1,
+    ):
         calls.append(tuple(lenses))
         quote = module.collapsed(unit["text"])[:120]
-        return [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
+        judgments = [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
+        return fake_valid_result(module, lenses, judgments, evidence_root)
 
     monkeypatch.setattr(module, "_reader_judgments", fake_reader)
     result = module.read_run(work)
@@ -546,7 +577,10 @@ def test_read_run_continues_after_one_atomic_cell_refusal(
     )
     first_unit = manifest["units"][0]["unit_id"]
 
-    def fake_reader(root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None):
+    def fake_reader(
+        root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
+        batch_id=None, seat=None, attempt=1,
+    ):
         assert upstream_sources and upstream_sources[0]["source_id"] == "roadmap"
         quote = module.collapsed(unit["text"])[:120]
         judgments = []
@@ -555,11 +589,11 @@ def test_read_run_continues_after_one_atomic_cell_refusal(
                 "revise"
                 if unit["unit_id"] == first_unit
                 and lens == "upstream-trace"
-                and evidence_root.name == "reader-1"
+                and evidence_root.parent.name == "reader-1"
                 else "clear"
             )
             judgments.append({"lens": lens, "verdict": verdict, "quote": quote})
-        return judgments
+        return fake_valid_result(module, lenses, judgments, evidence_root)
 
     monkeypatch.setattr(module, "_reader_judgments", fake_reader)
     result = module.read_run(work)
@@ -601,10 +635,14 @@ def test_no_reference_is_visible_terminal_state_and_documented(tmp_path: Path, m
     assert opening["benchmark_no_reference_reason"] == reason
     calls = []
 
-    def fake_reader(root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None):
+    def fake_reader(
+        root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
+        batch_id=None, seat=None, attempt=1,
+    ):
         calls.append(tuple(lenses))
         quote = module.collapsed(unit["text"])[:120]
-        return [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
+        judgments = [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
+        return fake_valid_result(module, lenses, judgments, evidence_root)
 
     monkeypatch.setattr(module, "_reader_judgments", fake_reader)
     result = module.read_run(work)
@@ -652,3 +690,166 @@ def test_frozen_atom_09_red_run_remains_readable_and_unchanged() -> None:
         name: module.digest_file(work / name)
         for name in before
     }
+
+
+def test_reply_intake_has_five_exclusive_actionable_outcomes() -> None:
+    module = load_module()
+    lenses = ["buyer-read"]
+    schema = module.reader_schema(lenses)
+    valid = json.dumps({
+        "judgments": [{
+            "lens": "buyer-read", "verdict": "clear", "start_line": 1, "end_line": 1,
+        }]
+    })
+    cases = [
+        (valid, None, "valid"),
+        (f"```json\n{valid}\n```", None, "malformed"),
+        ("", None, "empty"),
+        (b"", "timeout", "timeout"),
+        (b"", "nonzero-exit", "nonzero-exit"),
+    ]
+    observed = []
+    for index, (raw, forced, expected) in enumerate(cases, 1):
+        result = module.classify_reader_reply(
+            raw,
+            schema,
+            lenses,
+            batch_id=f"batch-{index}",
+            seat="reader-1",
+            attempt=1,
+            evidence_path=f"attempt-{index}",
+            forced_outcome=forced,
+            process_detail=f"observed {expected}",
+            exit_code=7 if forced == "nonzero-exit" else 0,
+        )
+        observed.append(result["outcome"])
+        assert result["outcome"] == expected
+        if expected != "valid":
+            assert f"batch 'batch-{index}', seat 'reader-1'" in result["intake"]["refusal"]
+            assert "Return exactly one JSON object" in result["intake"]["refusal"]
+    assert observed == list(module.READER_REPLY_OUTCOMES)
+
+
+def test_each_client_argv_enforces_its_input_envelope() -> None:
+    module = load_module()
+    schema = module.reader_schema(["buyer-read"])
+    codex = module.build_reader_argv(
+        ["codex", "exec"], "/bin/codex", schema, Path("/tmp/schema"), Path("/tmp/reply"),
+        Path("/tmp/empty"), "system",
+    )
+    claude = module.build_reader_argv(
+        ["claude", "-p"], "/bin/claude", schema, Path("/tmp/schema"), Path("/tmp/reply"),
+        Path("/tmp/empty"), "system",
+    )
+    assert all(flag in codex for flag in (
+        "--ignore-user-config", "--ignore-rules", "--ephemeral", "--sandbox", "--output-schema",
+    ))
+    assert all(flag in claude for flag in (
+        "--setting-sources", "--tools", "--system-prompt", "--json-schema",
+        "--strict-mcp-config", "--no-session-persistence",
+    ))
+    assert claude[claude.index("--setting-sources") + 1] == ""
+    assert claude[claude.index("--tools") + 1] == ""
+
+
+def test_failed_seat_gets_one_retry_and_preserves_both_attempts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = load_module()
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+    work = repo / "Tasks/run"
+    _, manifest = module.open_run(
+        CASES / "btm-roadmap/page.md",
+        CASES / "btm-roadmap/state.json",
+        "context.up.cd_s_002.tactical_roadmap",
+        work,
+        no_reference="No benchmark exists",
+        no_upstream="No producer source exists",
+    )
+    unit = manifest["units"][0]
+    cell_id = f"{unit['unit_id']}::buyer-read"
+    lenses = ["buyer-read"]
+    attempt_one = work / "reader-evidence" / f"batch-{unit['unit_id']}" / "reader-1" / "attempt-001"
+    attempt_one.mkdir(parents=True)
+    failed = module.classify_reader_reply(
+        "", module.reader_schema(lenses), lenses, batch_id=f"batch-{unit['unit_id']}",
+        seat="reader-1", attempt=1, evidence_path=str(attempt_one),
+    )
+    quote = module.collapsed(unit["text"])[:120]
+    module.record_cell_readers(
+        work,
+        cell_id,
+        {
+            "reader-1": module._claims_from_reader_result(failed, lenses)["buyer-read"],
+            "reader-2": {"verdict": "clear", "quote": quote},
+        },
+    )
+    calls = []
+
+    def timeout_again(
+        root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
+        batch_id=None, seat=None, attempt=1,
+    ):
+        calls.append((batch_id, seat, attempt))
+        evidence_root.mkdir(parents=True)
+        (evidence_root / "reader-intake.json").write_text("{}")
+        return module.classify_reader_reply(
+            b"", module.reader_schema(lenses), lenses, batch_id=batch_id, seat=seat,
+            attempt=attempt, evidence_path=str(evidence_root), forced_outcome="timeout",
+            process_detail="test process reached its bound", exit_code=None,
+        )
+
+    monkeypatch.setattr(module, "_reader_judgments", timeout_again)
+    first = module.retry_failed(work)
+    second = module.retry_failed(work)
+    assert first["reader_calls"] == 1
+    assert second["reader_calls"] == 0
+    assert calls == [(f"batch-{unit['unit_id']}", "reader-1", 2)]
+    assert module.matrix_status(work)["retry_exhausted_seat_count"] == 1
+    assert attempt_one.is_dir()
+    assert (attempt_one.parent / "attempt-002").is_dir()
+
+
+def test_frozen_v3_replies_classify_47_valid_and_3_malformed_without_normalization() -> None:
+    module = load_module()
+    frozen = ROOT / "Tasks/critique-machinery/atom-10/frozen-red"
+    before = module.digest_file(frozen / "matrix.json")
+    matrix = json.loads((frozen / "matrix.json").read_text())
+    lenses_by_unit = {
+        unit_id: [
+            cell["lens"] for cell in matrix["cells"]
+            if cell["unit_id"] == unit_id and cell["status"] != "not-applicable"
+        ]
+        for unit_id in {cell["unit_id"] for cell in matrix["cells"]}
+    }
+    outcomes = []
+    failures = {}
+    paths = sorted(frozen.glob("reader-evidence/batch-*/reader-*/reader.stdout.txt"))
+    for path in paths:
+        result_events = [
+            event.get("result")
+            for event in map(json.loads, path.read_text().splitlines())
+            if event.get("type") == "result"
+        ]
+        assert len(result_events) == 1
+        batch_id = path.parents[1].name
+        unit_id = batch_id.removeprefix("batch-")
+        seat = path.parent.name
+        result = module.classify_reader_reply(
+            result_events[0], module.reader_schema(lenses_by_unit[unit_id]), lenses_by_unit[unit_id],
+            batch_id=batch_id, seat=seat, attempt=1, evidence_path=str(path.parent),
+        )
+        outcomes.append(result["outcome"])
+        if result["outcome"] == "malformed":
+            failures[f"{unit_id}/{seat}"] = result["intake"]["refusal"]
+    assert len(paths) == 50
+    assert outcomes.count("valid") == 47
+    assert outcomes.count("malformed") == 3
+    assert set(failures) == {
+        "u-001-67522c23/reader-2", "u-024-14772212/reader-1", "u-024-14772212/reader-2",
+    }
+    assert "byte 0" in failures["u-001-67522c23/reader-2"]
+    assert "byte 442" in failures["u-024-14772212/reader-1"]
+    assert "byte 0" in failures["u-024-14772212/reader-2"]
+    assert module.digest_file(frozen / "matrix.json") == before

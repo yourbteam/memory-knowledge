@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "criteria_frozen_before_implementation": true,
+  "cases": [
+    "claude-v3-run-killing-red",
+    "claude-v3-valid-reply",
+    "claude-v3-fenced-reply",
+    "claude-v3-truncated-reply",
+    "claude-v3-injected-prefix-reply"
+  ],
+  "probes": [
+    {
+      "id": "seat-input-envelope",
+      "criteria": [
+        "code-owns-complete-instruction",
+        "schema-pinned-in-prompt-and-client",
+        "operator-settings-and-repository-context-excluded",
+        "no-seat-tools-or-session-persistence"
+      ],
+      "approaches": [
+        {
+          "id": "isolated-client-envelope",
+          "hypothesis": "An empty working directory plus the strongest client-supported settings, tool, session, MCP, and prompt controls prevents operator material from entering the seat instruction.",
+          "implementation": "Build the whole instruction and schema in code; launch from a fresh empty directory; disable settings, tools, commands, MCP additions, persistence, and user configuration where each client permits.",
+          "predicted_tradeoff": "More explicit client arguments, with a smaller and inspectable input surface."
+        },
+        {
+          "id": "prompt-only-current-client",
+          "hypothesis": "Telling the seat to return JSON is sufficient while it runs in the operator repository with normal settings.",
+          "implementation": "Retain the v3 launch environment and add stronger wording to the prompt.",
+          "predicted_tradeoff": "Fewer arguments, while operator hooks and repository instructions can still enter the seat."
+        }
+      ]
+    },
+    {
+      "id": "seat-reply-intake",
+      "criteria": [
+        "five-exclusive-coded-outcomes",
+        "strict-schema-no-normalization",
+        "all-cells-recorded-after-one-failure",
+        "actionable-seat-specific-diagnostics",
+        "retry-only-failed-seat-once",
+        "zero-model-call-replay"
+      ],
+      "approaches": [
+        {
+          "id": "typed-intake-cell-commit",
+          "hypothesis": "Classifying the process and reply before semantic use, then committing each cell from both seat outcomes, contains every variance without weakening the schema.",
+          "implementation": "Persist one typed outcome per attempt, turn failures into visible no-answer claims, record every cell independently, and allow one immutable retry for unique failed seats.",
+          "predicted_tradeoff": "Additional evidence records and state transitions in exchange for deterministic recovery."
+        },
+        {
+          "id": "wrapper-normalization-whole-batch-retry",
+          "hypothesis": "Removing fences or preambles and rerunning the whole batch on parse errors is sufficient.",
+          "implementation": "Search reply text for JSON, normalize known wrappers, and preserve the current exception-driven batch reducer.",
+          "predicted_tradeoff": "Less state machinery, but silently accepts undeclared shapes and respends completed calls."
+        }
+      ]
+    }
+  ]
+}

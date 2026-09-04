@@ -1,0 +1,49 @@
+{
+  "atomic_step_id": "critique-code-enforced-seat-envelopes",
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "12ee679d558c827bde349b22673712daf8ae52120852af651c85448ba6a4789b"
+  },
+  "changed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "claude-v3-run-killing-red",
+      "path": "../frozen-red/matrix.json",
+      "sha256": "a4355e11f7b535e94f4f39a3d89fa310663b67e15ee86bfbf0aebb080e7a96de"
+    },
+    {
+      "case_id": "claude-v3-valid-reply",
+      "path": "../frozen-red/reader-evidence/batch-u-001-67522c23/reader-1/reader.stdout.txt",
+      "sha256": "e459df24a45521754a83c614dd4c7b9af68039cad12094670c0fc36c959e2725"
+    },
+    {
+      "case_id": "claude-v3-fenced-reply",
+      "path": "../frozen-red/reader-evidence/batch-u-001-67522c23/reader-2/reader.stdout.txt",
+      "sha256": "a7e4c795101133a1eb9a78a8a2900e4e6a68bcaef3fe43f348cec224ff3a4894"
+    },
+    {
+      "case_id": "claude-v3-truncated-reply",
+      "path": "../frozen-red/reader-evidence/batch-u-024-14772212/reader-1/reader.stdout.txt",
+      "sha256": "27b6eb9b18d59884bcdb88065aa816b26158e2552016c38a2e7389f6316526a1"
+    },
+    {
+      "case_id": "claude-v3-injected-prefix-reply",
+      "path": "../frozen-red/reader-evidence/batch-u-024-14772212/reader-2/reader.stdout.txt",
+      "sha256": "319228648700a71505ea03accb985ed1cea8a3d34a0e38883a7e84eb32fe10d7"
+    }
+  ],
+  "experiment_assembly_sha256": "ca7a6d25788109b9b13ce79db230a0e08f8b892dc4b3a79655f39c1b284b0453",
+  "experiment_event_sha256": "16c4e571c48d0e66d5b9bc6bc56dc2dd7a84ad7d07e66e4caf1380179b5c8c09",
+  "review": {
+    "path": "review.json",
+    "sha256": "c71a38c698451ec236dec645c521fd1ebebe3929cafeec41edaa01b579b1832c"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

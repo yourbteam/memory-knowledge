@@ -1,0 +1,17 @@
+{
+  "atom_regressions": 0,
+  "command": "scripts/run_pytest.sh -q",
+  "environment": "unrestricted local repository path",
+  "exit_code": 1,
+  "known_checkout_bound_failure": {
+    "canonical_checkout_command": "scripts/run_pytest.sh tests/prevention/test_owner_contract_materialization.py::test_materialized_executable_contracts_are_byte_stable_and_complete -q",
+    "canonical_checkout_result": "1 passed in 0.25s",
+    "failure": "tests/prevention/test_owner_contract_materialization.py::test_materialized_executable_contracts_are_byte_stable_and_complete",
+    "reason": "The generated prevention contract resolves its source from the absolute canonical checkout, which is on another revision; the exact assertion passes in that checkout."
+  },
+  "passed": 2255,
+  "schema_version": 1,
+  "skipped": 1,
+  "subtests_passed": 41,
+  "warnings": 31
+}

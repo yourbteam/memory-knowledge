@@ -1,0 +1,270 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The exact v3 matrix remains immutable evidence of 50 completed seat calls followed by zero recorded applicable cells.",
+        "id": "claude-v3-run-killing-red",
+        "kind": "failure",
+        "sha256": "a4355e11f7b535e94f4f39a3d89fa310663b67e15ee86bfbf0aebb080e7a96de",
+        "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/matrix.json"
+      },
+      {
+        "expected_outcome": "A schema-shaped captured result is classified valid and its six judgments become recordable claims.",
+        "id": "claude-v3-valid-reply",
+        "kind": "success",
+        "sha256": "e459df24a45521754a83c614dd4c7b9af68039cad12094670c0fc36c959e2725",
+        "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-001-67522c23/reader-1/reader.stdout.txt"
+      },
+      {
+        "expected_outcome": "The fenced captured result is classified malformed at its first byte and is never unwrapped into a judgment.",
+        "id": "claude-v3-fenced-reply",
+        "kind": "failure",
+        "sha256": "a7e4c795101133a1eb9a78a8a2900e4e6a68bcaef3fe43f348cec224ff3a4894",
+        "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-001-67522c23/reader-2/reader.stdout.txt"
+      },
+      {
+        "expected_outcome": "The truncated captured result is classified malformed with its exact parse position and never aborts sibling recording.",
+        "id": "claude-v3-truncated-reply",
+        "kind": "failure",
+        "sha256": "27b6eb9b18d59884bcdb88065aa816b26158e2552016c38a2e7389f6316526a1",
+        "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-024-14772212/reader-1/reader.stdout.txt"
+      },
+      {
+        "expected_outcome": "The directive-prefixed captured result is classified malformed rather than searched for embedded JSON.",
+        "id": "claude-v3-injected-prefix-reply",
+        "kind": "failure",
+        "sha256": "319228648700a71505ea03accb985ed1cea8a3d34a0e38883a7e84eb32fe10d7",
+        "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-024-14772212/reader-2/reader.stdout.txt"
+      }
+    ],
+    "id": "critique-code-enforced-seat-envelopes",
+    "outcome": "Code owns the complete isolated seat instruction and classifies every seat reply as valid, malformed, empty, timeout, or nonzero-exit before per-cell recording; only failed seats may retry once without erasing their first attempt.",
+    "practical_value": "A model reply can be wrong or fail without breaking the critique run, losing another seat, or hiding why an owner decision is needed.",
+    "stopping_condition": "The frozen v3 run is unchanged; all 50 captured replies replay with zero model calls into 150 fully recorded applicable cells; the three malformed seats are visible and exclusively retryable; both managed installs enforce their strongest isolated launch policy."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use isolated-client-envelope and typed-intake-cell-commit together unchanged.",
+    "consumes": [
+      {
+        "artifact": "seat-input-envelope-winner",
+        "probe_id": "seat-input-envelope"
+      },
+      {
+        "artifact": "seat-reply-intake-winner",
+        "probe_id": "seat-reply-intake"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "claude-v3-run-killing-red",
+        "claude-v3-valid-reply",
+        "claude-v3-fenced-reply",
+        "claude-v3-truncated-reply",
+        "claude-v3-injected-prefix-reply"
+      ],
+      "failure_criterion": "Any frozen byte changes, any replay reader launches, any cell has one seat, or any malformed reply reaches semantic judgment.",
+      "operator_path": "Replay all frozen v3 reader responses through canonical reply intake, then retry only failed seats once.",
+      "success_criterion": "The frozen v3 run is unchanged; all 50 captured replies replay with zero model calls into 150 fully recorded applicable cells; the three malformed seats are visible and exclusively retryable; both managed installs enforce their strongest isolated launch policy."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "An empty working directory plus the strongest client-supported settings, tool, session, MCP, and prompt controls prevents operator material from entering the seat instruction.",
+          "id": "isolated-client-envelope",
+          "implementation": "Build the whole instruction and schema in code; launch from a fresh empty directory; disable settings, tools, commands, MCP additions, persistence, and user configuration where each client permits.",
+          "predicted_tradeoff": "More explicit client arguments, with a smaller and inspectable input surface."
+        },
+        {
+          "hypothesis": "Telling the seat to return JSON is sufficient while it runs in the operator repository with normal settings.",
+          "id": "prompt-only-current-client",
+          "implementation": "Retain the v3 launch environment and add stronger wording to the prompt.",
+          "predicted_tradeoff": "Fewer arguments, while operator hooks and repository instructions can still enter the seat."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "code-owns-complete-instruction"
+          },
+          {
+            "method": "sum",
+            "name": "schema-pinned-in-prompt-and-client"
+          },
+          {
+            "method": "sum",
+            "name": "operator-settings-and-repository-context-excluded"
+          },
+          {
+            "method": "sum",
+            "name": "no-seat-tools-or-session-persistence"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "code-owns-complete-instruction"
+          },
+          {
+            "direction": "maximize",
+            "name": "schema-pinned-in-prompt-and-client"
+          },
+          {
+            "direction": "maximize",
+            "name": "operator-settings-and-repository-context-excluded"
+          },
+          {
+            "direction": "maximize",
+            "name": "no-seat-tools-or-session-persistence"
+          }
+        ]
+      },
+      "goal": "Exclude operator material from each seat instruction.",
+      "id": "seat-input-envelope",
+      "inputs": [
+        {
+          "case_id": "claude-v3-run-killing-red"
+        },
+        {
+          "case_id": "claude-v3-valid-reply"
+        },
+        {
+          "case_id": "claude-v3-fenced-reply"
+        },
+        {
+          "case_id": "claude-v3-truncated-reply"
+        },
+        {
+          "case_id": "claude-v3-injected-prefix-reply"
+        }
+      ],
+      "practical_value": "A model reply can be wrong or fail without breaking the critique run, losing another seat, or hiding why an owner decision is needed.",
+      "proof": {
+        "failure_criterion": "Any reply variance aborts the run, is normalized into acceptance, loses a sibling, or can be retried more than once.",
+        "success_criterion": "The frozen v3 run is unchanged; all 50 captured replies replay with zero model calls into 150 fully recorded applicable cells; the three malformed seats are visible and exclusively retryable; both managed installs enforce their strongest isolated launch policy."
+      },
+      "winner_output": {
+        "artifact": "seat-input-envelope-winner",
+        "description": "Selected code boundary for seat-input-envelope."
+      },
+      "work_type": "code",
+      "work_type_reason": "Client launch, schema validation, recording, and retry are deterministic code boundaries."
+    },
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Classifying the process and reply before semantic use, then committing each cell from both seat outcomes, contains every variance without weakening the schema.",
+          "id": "typed-intake-cell-commit",
+          "implementation": "Persist one typed outcome per attempt, turn failures into visible no-answer claims, record every cell independently, and allow one immutable retry for unique failed seats.",
+          "predicted_tradeoff": "Additional evidence records and state transitions in exchange for deterministic recovery."
+        },
+        {
+          "hypothesis": "Removing fences or preambles and rerunning the whole batch on parse errors is sufficient.",
+          "id": "wrapper-normalization-whole-batch-retry",
+          "implementation": "Search reply text for JSON, normalize known wrappers, and preserve the current exception-driven batch reducer.",
+          "predicted_tradeoff": "Less state machinery, but silently accepts undeclared shapes and respends completed calls."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "five-exclusive-coded-outcomes"
+          },
+          {
+            "method": "sum",
+            "name": "strict-schema-no-normalization"
+          },
+          {
+            "method": "sum",
+            "name": "all-cells-recorded-after-one-failure"
+          },
+          {
+            "method": "sum",
+            "name": "actionable-seat-specific-diagnostics"
+          },
+          {
+            "method": "sum",
+            "name": "retry-only-failed-seat-once"
+          },
+          {
+            "method": "sum",
+            "name": "zero-model-call-replay"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "five-exclusive-coded-outcomes"
+          },
+          {
+            "direction": "maximize",
+            "name": "strict-schema-no-normalization"
+          },
+          {
+            "direction": "maximize",
+            "name": "all-cells-recorded-after-one-failure"
+          },
+          {
+            "direction": "maximize",
+            "name": "actionable-seat-specific-diagnostics"
+          },
+          {
+            "direction": "maximize",
+            "name": "retry-only-failed-seat-once"
+          },
+          {
+            "direction": "maximize",
+            "name": "zero-model-call-replay"
+          }
+        ]
+      },
+      "goal": "Classify every reply and contain failures to their exact cells.",
+      "id": "seat-reply-intake",
+      "inputs": [
+        {
+          "case_id": "claude-v3-run-killing-red"
+        },
+        {
+          "case_id": "claude-v3-valid-reply"
+        },
+        {
+          "case_id": "claude-v3-fenced-reply"
+        },
+        {
+          "case_id": "claude-v3-truncated-reply"
+        },
+        {
+          "case_id": "claude-v3-injected-prefix-reply"
+        }
+      ],
+      "practical_value": "A model reply can be wrong or fail without breaking the critique run, losing another seat, or hiding why an owner decision is needed.",
+      "proof": {
+        "failure_criterion": "Any reply variance aborts the run, is normalized into acceptance, loses a sibling, or can be retried more than once.",
+        "success_criterion": "The frozen v3 run is unchanged; all 50 captured replies replay with zero model calls into 150 fully recorded applicable cells; the three malformed seats are visible and exclusively retryable; both managed installs enforce their strongest isolated launch policy."
+      },
+      "winner_output": {
+        "artifact": "seat-reply-intake-winner",
+        "description": "Selected code boundary for seat-reply-intake."
+      },
+      "work_type": "code",
+      "work_type_reason": "Client launch, schema validation, recording, and retry are deterministic code boundaries."
+    }
+  ],
+  "schema_version": 2
+}

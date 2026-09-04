@@ -1,0 +1,3 @@
+directives=working-agreement/DIRECTIVES.md@2026-08-03; mode=Review; controller=critique-machinery; envelope=n/a; ask=none; words=0; scope=one-unit blind reading through six lenses; exceptions=none; proof=n/a; why=return the required JSON judgment; serves=critique-machinery lens pass for this unit
+
+{"judgments":[{"lens":"buyer-read","verdict":"clear","start_line":1,"end_line":4},{"lens":"cfo","verdict":"clear","start_line":1,"end_line":4},{"lens":"journalist","verdict":"clear","start_line":3,"end_line":4},{"lens":"employee-insider","verdict":"clear","start_line":1,"end_line":4},{"lens":"competitor-counter-position","verdict":"clear","start_line":1,"end_line":4},{"lens":"upstream-trace","verdict":"clear","start_line":1,"end_line":4}]}

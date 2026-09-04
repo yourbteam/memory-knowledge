@@ -1,0 +1,98 @@
+{
+  "atomic_step_id": "critique-code-enforced-seat-envelopes",
+  "cases": [
+    {
+      "case_id": "claude-v3-run-killing-red",
+      "evidence": [
+        {
+          "case_id": "claude-v3-run-killing-red",
+          "path": "../frozen-red/matrix.json",
+          "sha256": "a4355e11f7b535e94f4f39a3d89fa310663b67e15ee86bfbf0aebb080e7a96de"
+        },
+        {
+          "case_id": "claude-v3-run-killing-red",
+          "path": "../operator-validation/pre-retry-result.json",
+          "sha256": "c0ed3c7857871f5113419858d9eead32aad32149aea59e0e38ba33f2938a7441"
+        }
+      ],
+      "reason": "The immutable red matrix still has zero recorded applicable cells. Replaying its 50 captured replies through the promoted intake records all 150 applicable cells, retains all three malformed seats as visible no-answers, and leaves no cell unjudged or half-recorded without launching a model.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-valid-reply",
+      "evidence": [
+        {
+          "case_id": "claude-v3-valid-reply",
+          "path": "../frozen-red/reader-evidence/batch-u-001-67522c23/reader-1/reader.stdout.txt",
+          "sha256": "e459df24a45521754a83c614dd4c7b9af68039cad12094670c0fc36c959e2725"
+        },
+        {
+          "case_id": "claude-v3-valid-reply",
+          "path": "../operator-validation/pre-retry-result.json",
+          "sha256": "c0ed3c7857871f5113419858d9eead32aad32149aea59e0e38ba33f2938a7441"
+        }
+      ],
+      "reason": "The exact valid captured reply is one of 47 replies accepted without normalization and its six claims enter the fully recorded matrix.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-fenced-reply",
+      "evidence": [
+        {
+          "case_id": "claude-v3-fenced-reply",
+          "path": "../frozen-red/reader-evidence/batch-u-001-67522c23/reader-2/reader.stdout.txt",
+          "sha256": "a7e4c795101133a1eb9a78a8a2900e4e6a68bcaef3fe43f348cec224ff3a4894"
+        },
+        {
+          "case_id": "claude-v3-fenced-reply",
+          "path": "../operator-validation/post-retry-result.json",
+          "sha256": "bb8ea0a603c6779d15e33720507457f7c96d91e14aad711f51be9e6c0751a9ae"
+        }
+      ],
+      "reason": "The fenced reply is refused as malformed at byte zero. Only its failed seat is retried through the installed code interview, the second attempt is valid, and both attempt directories remain present.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-truncated-reply",
+      "evidence": [
+        {
+          "case_id": "claude-v3-truncated-reply",
+          "path": "../frozen-red/reader-evidence/batch-u-024-14772212/reader-1/reader.stdout.txt",
+          "sha256": "27b6eb9b18d59884bcdb88065aa816b26158e2552016c38a2e7389f6316526a1"
+        },
+        {
+          "case_id": "claude-v3-truncated-reply",
+          "path": "../operator-validation/post-retry-result.json",
+          "sha256": "bb8ea0a603c6779d15e33720507457f7c96d91e14aad711f51be9e6c0751a9ae"
+        }
+      ],
+      "reason": "The truncated reply is refused as malformed at byte 442 without aborting its sibling cells. Its sole bounded retry succeeds through the installed code interview and no third attempt exists.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-injected-prefix-reply",
+      "evidence": [
+        {
+          "case_id": "claude-v3-injected-prefix-reply",
+          "path": "../frozen-red/reader-evidence/batch-u-024-14772212/reader-2/reader.stdout.txt",
+          "sha256": "319228648700a71505ea03accb985ed1cea8a3d34a0e38883a7e84eb32fe10d7"
+        },
+        {
+          "case_id": "claude-v3-injected-prefix-reply",
+          "path": "../operator-validation/post-retry-result.json",
+          "sha256": "bb8ea0a603c6779d15e33720507457f7c96d91e14aad711f51be9e6c0751a9ae"
+        },
+        {
+          "case_id": "claude-v3-injected-prefix-reply",
+          "path": "../installed-validation/summary.json",
+          "sha256": "8bcf5ee7f285933c75ea2dff44e6e6e2fd2472fff7565a713d5f375adb40113f"
+        }
+      ],
+      "reason": "The prefixed reply is refused as malformed at byte zero rather than searched for embedded JSON. Its retry succeeds through the installed Claude projection, while both installed client trees exactly match their fail-closed generated projections.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "453a564cd1d81bddd9ded3d6b712f97ad05b86be1b802783fd753ba60b7b1b06",
+  "schema_version": 1,
+  "status": "completed"
+}

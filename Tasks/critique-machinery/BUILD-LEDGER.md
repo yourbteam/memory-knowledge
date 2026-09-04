@@ -318,3 +318,47 @@ judgments, two no-reader installed-path validations, and zero model calls. The f
 projection suites pass 76 tests plus 11 subtests. The elevated repository suite passes 2,251 tests
 plus 41 subtests and skips one; its sole failure is the pre-existing absolute-checkout prevention
 contract byte-stability test, whose exact assertion passes in the canonical checkout.
+
+## Correction Atom 10 — code-enforced seat envelopes and reply intake — 2026-09-04
+
+**Outcome — 2 found, 2 fixed.** Code now owns both sides of every model seat interview. For input,
+it supplies the complete question and exact schema in an isolated client process with ambient
+settings, repository rules, tools, and persistence excluded to the extent each client supports.
+For output, it validates one exact JSON object before recording and classifies every reply as
+`valid`, `malformed`, `empty`, `timeout`, or `nonzero-exit`. A failed seat becomes a visible
+no-answer across its cells without aborting the batch. Only failed first attempts can be retried,
+once, into `attempt-002`; the first evidence is preserved and no third attempt exists.
+
+**Red case.** `atom-10/frozen-red/` preserves the complete real Claude v3 run: 50 seat transcripts,
+zero recorded applicable cells, and 150 unjudged cells after the first malformed reply killed
+`read-run`. Its matrix remains SHA-256
+`a4355e11f7b535e94f4f39a3d89fa310663b67e15ee86bfbf0aebb080e7a96de`. The three real variances
+remain a fenced reply, a reply truncated at byte 442, and an operator directive before the JSON.
+The source run was not modified.
+
+**Experiment.** `atom-10/experiment/comparison.json` compares two input-envelope approaches and two
+reply-intake approaches under criteria fixed in the spec. The isolated client envelope scored 4/4
+against the prompt-only control's 1/4. Typed intake with per-cell commit scored 6/6 against wrapper
+normalization with whole-batch retry's 0/6. No fence or embedded JSON was repaired. The accepted
+controller assembly is
+`ca7a6d25788109b9b13ce79db230a0e08f8b892dc4b3a79655f39c1b284b0453`.
+
+**Promotion and real operator path.** `atom-10/replay_v3.py` replayed all 50 captured replies through
+the canonical code interview intake with zero model calls: 47 recorded as valid, three as malformed,
+all 150 applicable cells recorded, and no cell remained unjudged or half-recorded. From the managed
+Claude install, `retry-failed` launched exactly those three failed seats; all three second attempts
+were valid, their original attempts remained present, and no failed seat or third attempt remained.
+The matrix still accounts for all 150 applicable cells; authentic disagreements and one grounded-
+claim refusal remain visible for owner handling rather than being cleared by the machinery. The
+three live prompt transcripts retain their exact input whitespace under the same filename-local
+Git policy used for Atom A raw evidence; source code and every other artifact keep normal checks.
+The Codex and Claude installed trees exactly match their generated projections at
+`02958f273b792a377865e7005671f386365f42aae1a24ddfe41121064df138af` and
+`450f8c69955c58316b6d2bb7b0034016e7359957b7280dca77f3bb7e8b35d2e6`. The controller closed at
+proof event `e2e9762dd28da5f5ea6d1aba19910d95488aa10ac75eacc21b190d40a1bd8020`.
+
+**Cost.** Two isolated approaches per envelope, one exact 50-reply replay, and three live Claude
+model calls through the installed code-owned interview. The focused critique and projection suites
+pass 48 tests. The unrestricted repository suite passes 2,255 tests plus 41 subtests and skips one;
+its sole failure is the pre-existing absolute-checkout prevention contract byte-stability check,
+whose exact assertion passes 1/1 in `/Users/kamenkamenov/memory-knowledge`.

@@ -29,6 +29,9 @@ VERDICTS = ("reject", "revise", "clear")
 QUOTE_REQUIRED = True
 READER_STRATEGY = "blind-separated"
 READER_SEATS = ("reader-1", "reader-2")
+READER_REPLY_OUTCOMES = ("valid", "malformed", "empty", "timeout", "nonzero-exit")
+READER_TIMEOUT_SECONDS = 900
+READER_MAX_ATTEMPTS = 2
 TRACE_STRATEGY = "registered-source-exact-quote"
 BENCHMARK_STRATEGY = "paired-exact-evidence"
 NO_REFERENCE_STRATEGY = "declared-no-reference"
@@ -846,6 +849,7 @@ def _apply_reader_claim(
     quote: str | None,
     source_id: str | None = None,
     source_quote: str | None = None,
+    intake: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     cell_id = cell["cell_id"]
     if cell.get("status") == "not-applicable":
@@ -857,7 +861,12 @@ def _apply_reader_claim(
             f"cell {cell_id!r} already has a response from {seat!r}; open a new run instead of replacing evidence."
         )
     if verdict == "no-answer":
-        cell["readers"][seat] = {"status": "no-answer", "verdict": None, "quote": None}
+        cell["readers"][seat] = {
+            "status": "no-answer",
+            "verdict": None,
+            "quote": None,
+            **({"intake": copy.deepcopy(intake)} if intake else {}),
+        }
         cell["outcome"] = _reader_outcome(cell)
         cell["status"] = "unresolved"
         return cell
@@ -911,6 +920,7 @@ def _apply_reader_claim(
         "quote": grounded_quote or None,
         "quote_sha256": digest_bytes(grounded_quote.encode()) if grounded_quote else None,
         "verdict_strategy": VERDICT_STRATEGY,
+        **({"intake": copy.deepcopy(intake)} if intake else {}),
     }
     if trace:
         reader["upstream_trace"] = trace
@@ -929,13 +939,14 @@ def record_reader(
     *,
     source_id: str | None = None,
     source_quote: str | None = None,
+    intake: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     manifest, matrix = load_matrix(work)
     cells = [cell for cell in matrix["cells"] if cell["cell_id"] == cell_id]
     if not cells:
         raise Refusal(f"cell {cell_id!r} does not exist; choose one of the cell ids shown by status.")
     cell = cells[0]
-    _apply_reader_claim(work, manifest, cell, seat, verdict, quote, source_id, source_quote)
+    _apply_reader_claim(work, manifest, cell, seat, verdict, quote, source_id, source_quote, intake)
     (work / "matrix.json").write_bytes(canonical(matrix))
     return cell
 
@@ -968,6 +979,7 @@ def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, An
                 claim.get("quote"),
                 claim.get("source_id"),
                 claim.get("source_quote"),
+                claim.get("intake"),
             )
         except Refusal as exc:
             failures.append({"seat": seat, "reason": str(exc)})
@@ -979,6 +991,7 @@ def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, An
                 "quote": collapsed(claims[seat].get("quote") or "") or None,
                 "source_id": claims[seat].get("source_id"),
                 "source_quote": collapsed(claims[seat].get("source_quote") or "") or None,
+                **({"intake": copy.deepcopy(claims[seat]["intake"])} if claims[seat].get("intake") else {}),
             }
             for seat in READER_SEATS
         }
@@ -1011,6 +1024,244 @@ LENS_QUESTIONS = {
 }
 
 
+def reader_schema(lenses: list[str]) -> dict[str, Any]:
+    properties: dict[str, Any] = {
+        "lens": {"type": "string", "enum": lenses},
+        "verdict": {"type": "string", "enum": list(VERDICTS)},
+    }
+    required = ["lens", "verdict"]
+    if QUOTE_REQUIRED:
+        properties["start_line"] = {"type": "integer"}
+        properties["end_line"] = {"type": "integer"}
+        required.extend(("start_line", "end_line"))
+    if "upstream-trace" in lenses:
+        properties["source_id"] = {"type": "string"}
+        properties["source_start_line"] = {"type": "integer"}
+        properties["source_end_line"] = {"type": "integer"}
+    return {
+        "type": "object",
+        "properties": {
+            "judgments": {
+                "type": "array",
+                "minItems": len(lenses),
+                "maxItems": len(lenses),
+                "items": {
+                    "type": "object",
+                    "properties": properties,
+                    "required": required,
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["judgments"],
+        "additionalProperties": False,
+    }
+
+
+def _schema_problems(schema: dict[str, Any], value: Any, path: str = "$") -> list[str]:
+    problems: list[str] = []
+    kind = schema.get("type")
+    kinds = {"object": dict, "array": list, "string": str}
+    if kind == "integer" and (type(value) is not int):
+        return [f"{path} expected integer, received {type(value).__name__}"]
+    if kind in kinds and not isinstance(value, kinds[kind]):
+        return [f"{path} expected {kind}, received {type(value).__name__}"]
+    if "enum" in schema and value not in schema["enum"]:
+        problems.append(f"{path} received {value!r}; expected one of {schema['enum']!r}")
+    if isinstance(value, dict):
+        properties = schema.get("properties", {})
+        for key in schema.get("required", []):
+            if key not in value:
+                problems.append(f"{path}.{key} is missing")
+        if schema.get("additionalProperties") is False:
+            for key in sorted(set(value) - set(properties)):
+                problems.append(f"{path}.{key} is not allowed")
+        for key, child_schema in properties.items():
+            if key in value:
+                problems.extend(_schema_problems(child_schema, value[key], f"{path}.{key}"))
+    if isinstance(value, list):
+        minimum = schema.get("minItems")
+        maximum = schema.get("maxItems")
+        if type(minimum) is int and len(value) < minimum:
+            problems.append(f"{path} contains {len(value)} items; expected at least {minimum}")
+        if type(maximum) is int and len(value) > maximum:
+            problems.append(f"{path} contains {len(value)} items; expected at most {maximum}")
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                problems.extend(_schema_problems(item_schema, item, f"{path}[{index}]"))
+    return problems
+
+
+def classify_reader_reply(
+    raw_reply: str | bytes,
+    schema: dict[str, Any],
+    lenses: list[str],
+    *,
+    batch_id: str,
+    seat: str,
+    attempt: int,
+    evidence_path: str,
+    forced_outcome: str | None = None,
+    process_detail: str | None = None,
+    exit_code: int | None = 0,
+) -> dict[str, Any]:
+    raw = raw_reply if isinstance(raw_reply, bytes) else raw_reply.encode("utf-8")
+    if forced_outcome is not None and forced_outcome not in READER_REPLY_OUTCOMES:
+        raise Refusal(
+            f"batch {batch_id!r}, seat {seat!r} has unknown intake outcome {forced_outcome!r}; "
+            f"choose exactly one of {list(READER_REPLY_OUTCOMES)}."
+        )
+    outcome = forced_outcome
+    value: Any = None
+    failure_detail = process_detail
+    if outcome is None:
+        if not raw.strip():
+            outcome = "empty"
+            failure_detail = f"zero semantic reply bytes were returned from {len(raw)} transport bytes"
+        else:
+            try:
+                value = json.loads(raw.decode("utf-8"))
+            except UnicodeDecodeError as exc:
+                outcome = "malformed"
+                failure_detail = f"UTF-8 decoding broke at byte {exc.start}: {exc.reason}"
+            except json.JSONDecodeError as exc:
+                outcome = "malformed"
+                byte_offset = len(exc.doc[: exc.pos].encode("utf-8"))
+                failure_detail = (
+                    f"JSON parsing broke at byte {byte_offset}, character {exc.pos}, "
+                    f"line {exc.lineno}, column {exc.colno}: {exc.msg}"
+                )
+            else:
+                problems = _schema_problems(schema, value)
+                judgments = value.get("judgments", []) if isinstance(value, dict) else []
+                received_lenses = [item.get("lens") for item in judgments if isinstance(item, dict)]
+                if received_lenses != lenses:
+                    problems.append(
+                        f"$.judgments lens order was {received_lenses!r}; expected exactly {lenses!r}"
+                    )
+                if problems:
+                    outcome = "malformed"
+                    failure_detail = "; ".join(problems)
+                else:
+                    outcome = "valid"
+    intake = {
+        "schema_version": 1,
+        "request_id": f"{batch_id}::{seat}",
+        "batch_id": batch_id,
+        "seat": seat,
+        "attempt": attempt,
+        "outcome": outcome,
+        "lenses": list(lenses),
+        "evidence_path": evidence_path,
+        "reply_bytes": len(raw),
+        "reply_sha256": digest_bytes(raw) if raw else None,
+        "exit_code": exit_code,
+    }
+    if outcome != "valid":
+        observed = failure_detail or f"{outcome} after {len(raw)} reply bytes"
+        intake["refusal"] = (
+            f"batch {batch_id!r}, seat {seat!r}, attempt {attempt} returned {outcome}: {observed}. "
+            f"Return exactly one JSON object matching reader-schema.json with judgments for "
+            f"{lenses!r} in that order and nothing before or after it."
+        )
+    return {
+        "outcome": outcome,
+        "judgments": value["judgments"] if outcome == "valid" else [],
+        "intake": intake,
+    }
+
+
+def _claims_from_reader_result(result: dict[str, Any], lenses: list[str]) -> dict[str, dict[str, Any]]:
+    intake = result["intake"]
+    if result["outcome"] == "valid":
+        return {
+            item["lens"]: {**item, "intake": copy.deepcopy(intake)}
+            for item in result["judgments"]
+        }
+    return {
+        lens: {"verdict": "no-answer", "quote": None, "intake": copy.deepcopy(intake)}
+        for lens in lenses
+    }
+
+
+def ground_reader_result(
+    result: dict[str, Any],
+    unit: dict[str, Any],
+    upstream_sources: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    if result["outcome"] != "valid":
+        return result
+    unit_lines = unit["text"].splitlines()
+    source_lines = {
+        source["source_id"]: source["text"].splitlines()
+        for source in upstream_sources or []
+    }
+    for item in result["judgments"]:
+        if not QUOTE_REQUIRED:
+            continue
+        start = item.get("start_line")
+        end = item.get("end_line")
+        if type(start) is not int or type(end) is not int or start < 1 or end < start or end > len(unit_lines):
+            item["quote"] = None
+            item["claim_error"] = (
+                f"reader selected invalid unit line span {start!r}-{end!r}; choose 1 through "
+                f"{len(unit_lines)} with start not after end."
+            )
+        else:
+            item["quote"] = "\n".join(unit_lines[start - 1 : end])
+        if item.get("lens") == "upstream-trace" and item.get("verdict") in {"reject", "revise"}:
+            source_id = item.get("source_id")
+            source_start = item.get("source_start_line")
+            source_end = item.get("source_end_line")
+            lines = source_lines.get(source_id, [])
+            if (
+                not source_id
+                or type(source_start) is not int
+                or type(source_end) is not int
+                or source_start < 1
+                or source_end < source_start
+                or source_end > len(lines)
+            ):
+                item["source_quote"] = None
+                item["claim_error"] = (
+                    f"reader selected invalid producer source/span {source_id!r} "
+                    f"{source_start!r}-{source_end!r}; choose a registered source and its numbered lines."
+                )
+            else:
+                item["source_quote"] = "\n".join(lines[source_start - 1 : source_end])
+    return result
+
+
+def build_reader_argv(
+    runtime_parts: list[str],
+    executable: str,
+    schema: dict[str, Any],
+    schema_path: Path,
+    raw_reply_path: Path,
+    isolated: Path,
+    system_prompt: str,
+) -> list[str]:
+    if runtime_parts == ["codex", "exec"]:
+        return [
+            executable, "exec", "--ephemeral", "--sandbox", "read-only", "--ignore-user-config",
+            "--ignore-rules", "--skip-git-repo-check", "--color", "never", "--cd", str(isolated),
+            "--output-schema", str(schema_path), "--output-last-message", str(raw_reply_path), "-",
+        ]
+    if runtime_parts == ["claude", "-p"]:
+        return [
+            executable, "-p", "--output-format", "json", "--json-schema",
+            json.dumps(schema, ensure_ascii=False, sort_keys=True),
+            "--permission-mode", "default", "--disable-slash-commands", "--strict-mcp-config",
+            "--mcp-config", '{"mcpServers":{}}', "--no-session-persistence",
+            "--setting-sources", "", "--tools", "", "--system-prompt", system_prompt,
+        ]
+    raise Refusal(
+        f"reader runtime {runtime_parts!r} cannot enforce an input envelope; "
+        "install a projection requiring one supported managed reader runtime."
+    )
+
+
 def _selected_unit(manifest: dict[str, Any], case: dict[str, Any]) -> dict[str, Any]:
     if case["pair_id"] == "stale-door":
         needles = (
@@ -1036,7 +1287,10 @@ def _reader_judgments(
     lenses: list[str],
     evidence_root: Path | None = None,
     upstream_sources: list[dict[str, Any]] | None = None,
-) -> list[dict[str, Any]]:
+    batch_id: str | None = None,
+    seat: str | None = None,
+    attempt: int = 1,
+) -> dict[str, Any]:
     policy_path = Path(__file__).resolve().parents[1] / "client-model-policy.json"
     if not policy_path.is_file():
         raise Refusal(
@@ -1053,34 +1307,16 @@ def _reader_judgments(
     executable = shutil.which(client)
     if not executable:
         raise Refusal(f"model reader unavailable: install the {client} client so the command resolves to {runtime}.")
-    properties: dict[str, Any] = {
-        "lens": {"type": "string", "enum": lenses},
-        "verdict": {"type": "string", "enum": list(VERDICTS)},
-    }
-    required = ["lens", "verdict"]
-    if QUOTE_REQUIRED:
-        properties["start_line"] = {"type": "integer"}
-        properties["end_line"] = {"type": "integer"}
-        required.extend(("start_line", "end_line"))
-    if "upstream-trace" in lenses:
-        properties["source_id"] = {"type": "string"}
-        properties["source_start_line"] = {"type": "integer"}
-        properties["source_end_line"] = {"type": "integer"}
-    schema = {
-        "type": "object",
-        "properties": {
-            "judgments": {
-                "type": "array",
-                "items": {"type": "object", "properties": properties, "required": required, "additionalProperties": False},
-            }
-        },
-        "required": ["judgments"],
-        "additionalProperties": False,
-    }
+    schema = reader_schema(lenses)
     evidence_root = evidence_root or Path(os.environ["EXPERIMENT_RESULT_PATH"]).parent
-    evidence_root.mkdir(parents=True, exist_ok=True)
+    if evidence_root.exists():
+        raise Refusal(
+            f"batch {batch_id!r}, seat {seat!r}, attempt {attempt} already has evidence at "
+            f"{evidence_root}; preserve it and use the next bounded attempt."
+        )
+    evidence_root.mkdir(parents=True)
     schema_path = evidence_root / "reader-schema.json"
-    result_path = evidence_root / "reader-response.json"
+    raw_reply_path = evidence_root / "reader.reply.txt"
     schema_path.write_bytes(canonical(schema))
     lens_lines = "\n".join(f"- {lens}: {LENS_QUESTIONS[lens]}" for lens in lenses)
     unit_lines = unit["text"].splitlines()
@@ -1132,71 +1368,98 @@ LENSES
 
 NUMBERED UNIT LINES
 {numbered_unit}
+
+EXACT REPLY SCHEMA
+{json.dumps(schema, ensure_ascii=False, sort_keys=True)}
+
+Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or after it.
 """
-    if runtime_parts == ["codex", "exec"]:
-        argv = [
-            executable, "exec", "--ephemeral", "--sandbox", "read-only", "--ignore-user-config",
-            "--skip-git-repo-check", "--color", "never", "--cd", str(root),
-            "--output-schema", str(schema_path), "--output-last-message", str(result_path), "-",
-        ]
-    else:
-        prompt += f"\nReturn only JSON matching this schema exactly:\n{json.dumps(schema, sort_keys=True)}\n"
-        argv = [
-            executable, "-p", "--output-format", "stream-json", "--verbose",
-            "--permission-mode", "acceptEdits", "--disable-slash-commands", "--strict-mcp-config",
-            "--mcp-config", '{"mcpServers":{}}', "--no-session-persistence",
-        ]
-    completed = subprocess.run(argv, input=prompt, text=True, capture_output=True, timeout=900)
-    (evidence_root / "reader.stdout.txt").write_text(completed.stdout, encoding="utf-8")
-    (evidence_root / "reader.stderr.txt").write_text(completed.stderr, encoding="utf-8")
-    if runtime == "claude -p" and completed.returncode == 0:
-        events = [json.loads(line) for line in completed.stdout.splitlines() if line.strip()]
-        results = [event.get("result") for event in events if event.get("type") == "result" and event.get("result")]
-        if results:
-            result_path.write_bytes(canonical(json.loads(results[-1])))
-    if completed.returncode != 0 or not result_path.is_file():
-        raise Refusal(
-            f"{runtime} reader failed with exit {completed.returncode}; inspect reader.stderr.txt and rerun this case."
+    batch_id = batch_id or unit["unit_id"]
+    seat = seat or evidence_root.parent.name
+    relative_evidence = str(evidence_root)
+    (evidence_root / "reader-prompt.txt").write_text(prompt, encoding="utf-8")
+    system_prompt = (
+        "You are one blind critique seat. Use only the code-supplied user instruction. "
+        "Return exactly the requested JSON object and no other text."
+    )
+    with tempfile.TemporaryDirectory(prefix="critique-seat-") as isolated_raw:
+        isolated = Path(isolated_raw)
+        argv = build_reader_argv(
+            runtime_parts, executable, schema, schema_path, raw_reply_path, isolated, system_prompt
         )
-    value = json.loads(result_path.read_text(encoding="utf-8"))
-    judgments = value.get("judgments", [])
-    if [item.get("lens") for item in judgments] != lenses:
-        raise Refusal(
-            f"reader returned lenses {[item.get('lens') for item in judgments]!r}; expected exactly {lenses!r} in order."
-        )
-    if QUOTE_REQUIRED:
-        for item in judgments:
-            start = item.get("start_line")
-            end = item.get("end_line")
-            if type(start) is not int or type(end) is not int or start < 1 or end < start or end > len(unit_lines):
-                item["quote"] = None
-                item["claim_error"] = (
-                    f"reader selected invalid unit line span {start!r}-{end!r}; choose 1 through "
-                    f"{len(unit_lines)} with start not after end."
+        envelope = {
+            "schema_version": 1,
+            "batch_id": batch_id,
+            "seat": seat,
+            "attempt": attempt,
+            "client": client,
+            "instruction_sha256": digest_bytes(prompt.encode("utf-8")),
+            "schema_sha256": digest_file(schema_path),
+            "isolated_working_directory": True,
+            "client_controls": argv[1:],
+        }
+        (evidence_root / "reader-input-envelope.json").write_bytes(canonical(envelope))
+        try:
+            completed = subprocess.run(
+                argv,
+                input=prompt,
+                text=True,
+                capture_output=True,
+                timeout=READER_TIMEOUT_SECONDS,
+                cwd=isolated,
+            )
+        except subprocess.TimeoutExpired as exc:
+            stdout = exc.stdout.decode("utf-8", "replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+            stderr = exc.stderr.decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+            (evidence_root / "reader.stdout.txt").write_text(stdout, encoding="utf-8")
+            (evidence_root / "reader.stderr.txt").write_text(stderr, encoding="utf-8")
+            result = classify_reader_reply(
+                b"", schema, lenses, batch_id=batch_id, seat=seat, attempt=attempt,
+                evidence_path=relative_evidence, forced_outcome="timeout",
+                process_detail=f"the {runtime} process exceeded {READER_TIMEOUT_SECONDS} seconds",
+                exit_code=None,
+            )
+        else:
+            (evidence_root / "reader.stdout.txt").write_text(completed.stdout, encoding="utf-8")
+            (evidence_root / "reader.stderr.txt").write_text(completed.stderr, encoding="utf-8")
+            if completed.returncode != 0:
+                result = classify_reader_reply(
+                    b"", schema, lenses, batch_id=batch_id, seat=seat, attempt=attempt,
+                    evidence_path=relative_evidence, forced_outcome="nonzero-exit",
+                    process_detail=(
+                        f"the {runtime} process exited {completed.returncode} with "
+                        f"{len(completed.stdout.encode('utf-8'))} stdout bytes and "
+                        f"{len(completed.stderr.encode('utf-8'))} stderr bytes"
+                    ),
+                    exit_code=completed.returncode,
                 )
             else:
-                item["quote"] = "\n".join(unit_lines[start - 1 : end])
-            if item.get("lens") == "upstream-trace" and item.get("verdict") in {"reject", "revise"}:
-                source_id = item.get("source_id")
-                source_start = item.get("source_start_line")
-                source_end = item.get("source_end_line")
-                lines = source_lines.get(source_id, [])
-                if (
-                    not source_id
-                    or type(source_start) is not int
-                    or type(source_end) is not int
-                    or source_start < 1
-                    or source_end < source_start
-                    or source_end > len(lines)
-                ):
-                    item["source_quote"] = None
-                    item["claim_error"] = (
-                        f"reader selected invalid producer source/span {source_id!r} "
-                        f"{source_start!r}-{source_end!r}; choose a registered source and its numbered lines."
-                    )
-                else:
-                    item["source_quote"] = "\n".join(lines[source_start - 1 : source_end])
-    return judgments
+                if runtime_parts == ["claude", "-p"]:
+                    try:
+                        transport = json.loads(completed.stdout)
+                    except json.JSONDecodeError:
+                        raw_reply = completed.stdout
+                    else:
+                        candidate = transport.get("structured_output") if isinstance(transport, dict) else None
+                        if candidate is None and isinstance(transport, dict):
+                            candidate = transport.get("result")
+                        raw_reply = (
+                            candidate if isinstance(candidate, str)
+                            else json.dumps(candidate, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                            if isinstance(candidate, dict)
+                            else ""
+                        )
+                    raw_reply_path.write_text(raw_reply, encoding="utf-8")
+                raw_reply = raw_reply_path.read_bytes() if raw_reply_path.is_file() else b""
+                result = classify_reader_reply(
+                    raw_reply, schema, lenses, batch_id=batch_id, seat=seat, attempt=attempt,
+                    evidence_path=relative_evidence, exit_code=completed.returncode,
+                )
+    (evidence_root / "reader-intake.json").write_bytes(canonical(result["intake"]))
+    if result["outcome"] != "valid":
+        return result
+    (evidence_root / "reader-response.json").write_bytes(canonical({"judgments": result["judgments"]}))
+    return ground_reader_result(result, unit, upstream_sources)
 
 
 def upstream_sources_for_run(work: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1236,12 +1499,12 @@ def read_cell(work: Path, cell_id: str) -> dict[str, Any]:
     sources = upstream_sources_for_run(work, manifest)
     claims = {}
     for seat in READER_SEATS:
-        evidence_root = work / "reader-evidence" / digest_bytes(cell_id.encode())[:16] / seat
-        judgments = _reader_judgments(
+        evidence_root = work / "reader-evidence" / digest_bytes(cell_id.encode())[:16] / seat / "attempt-001"
+        result = _reader_judgments(
             repo_for(work), source_context, focus, unit, [cell["lens"]], evidence_root=evidence_root,
-            upstream_sources=sources,
+            upstream_sources=sources, batch_id=cell_id, seat=seat, attempt=1,
         )
-        claims[seat] = judgments[0]
+        claims[seat] = _claims_from_reader_result(result, [cell["lens"]])[cell["lens"]]
     return record_cell_readers(work, cell_id, claims)
 
 
@@ -1262,10 +1525,12 @@ def read_run(work: Path) -> dict[str, Any]:
 
     def launch(job):
         unit, seat, lenses = job
-        evidence_root = work / "reader-evidence" / f"batch-{unit['unit_id']}" / seat
+        batch_id = f"batch-{unit['unit_id']}"
+        evidence_root = work / "reader-evidence" / batch_id / seat / "attempt-001"
         return job, _reader_judgments(
             repo_for(work), source_context, "Judge every listed lens for this unit.",
             unit, lenses, evidence_root=evidence_root, upstream_sources=sources,
+            batch_id=batch_id, seat=seat, attempt=1,
         )
 
     launched = []
@@ -1274,17 +1539,191 @@ def read_run(work: Path) -> dict[str, Any]:
         for future in concurrent.futures.as_completed(futures):
             launched.append(future.result())
     claims_by_cell: dict[str, dict[str, dict[str, Any]]] = {}
-    for (unit, seat, _), judgments in sorted(launched, key=lambda item: (item[0][0]["unit_id"], item[0][1])):
-        for judgment in judgments:
-            cell_id = f"{unit['unit_id']}::{judgment['lens']}"
-            claims_by_cell.setdefault(cell_id, {})[seat] = judgment
+    reply_outcomes = []
+    for (unit, seat, lenses), result in sorted(launched, key=lambda item: (item[0][0]["unit_id"], item[0][1])):
+        reply_outcomes.append(result["intake"])
+        claims = _claims_from_reader_result(result, lenses)
+        for lens in lenses:
+            cell_id = f"{unit['unit_id']}::{lens}"
+            claims_by_cell.setdefault(cell_id, {})[seat] = claims[lens]
     refused = []
     for cell_id, claims in claims_by_cell.items():
         recorded = record_cell_readers(work, cell_id, claims)
         if recorded.get("status") == "refused":
             refused.append(cell_id)
+    queue = owner_queue(work)
     status = matrix_status(work)
-    return {"status": status["status"], "reader_calls": len(jobs), "recording_refusals": refused, **status}
+    return {
+        "status": status["status"],
+        "reader_calls": len(jobs),
+        "reply_outcomes": {name: sum(item["outcome"] == name for item in reply_outcomes) for name in READER_REPLY_OUTCOMES},
+        "recording_refusals": refused,
+        "owner_queue_count": queue["open_count"],
+        **status,
+    }
+
+
+def _failed_reader_groups(matrix: dict[str, Any]) -> list[dict[str, Any]]:
+    groups: dict[str, dict[str, Any]] = {}
+    for cell in matrix["cells"]:
+        for seat, reader in cell.get("readers", {}).items():
+            intake = reader.get("intake")
+            if (
+                reader.get("status") != "no-answer"
+                or not isinstance(intake, dict)
+                or intake.get("outcome") not in set(READER_REPLY_OUTCOMES) - {"valid"}
+            ):
+                continue
+            request_id = intake.get("request_id")
+            if not isinstance(request_id, str) or not request_id:
+                raise Refusal(
+                    f"cell {cell['cell_id']!r}, seat {seat!r} has a failed intake without request_id; "
+                    "preserve this run and open a new one under the current reply contract."
+                )
+            existing = groups.setdefault(
+                request_id,
+                {
+                    "request_id": request_id,
+                    "batch_id": intake.get("batch_id"),
+                    "unit_id": cell["unit_id"],
+                    "seat": seat,
+                    "attempt": intake.get("attempt"),
+                    "outcome": intake.get("outcome"),
+                    "lenses": list(intake.get("lenses", [])),
+                    "evidence_path": intake.get("evidence_path"),
+                    "refusal": intake.get("refusal"),
+                    "cell_ids": [],
+                },
+            )
+            identity = (existing["batch_id"], existing["seat"], existing["attempt"], existing["evidence_path"])
+            observed = (intake.get("batch_id"), seat, intake.get("attempt"), intake.get("evidence_path"))
+            if identity != observed:
+                raise Refusal(
+                    f"failed reply {request_id!r} has conflicting persisted identities {identity!r} and {observed!r}; "
+                    "do not retry until the run record is repaired from immutable evidence."
+                )
+            existing["cell_ids"].append(cell["cell_id"])
+    for group in groups.values():
+        observed_lenses = [cell_id.split("::", 1)[1] for cell_id in group["cell_ids"]]
+        if observed_lenses != group["lenses"]:
+            raise Refusal(
+                f"failed reply {group['request_id']!r} covers lenses {observed_lenses!r}; "
+                f"its intake declared {group['lenses']!r}. Preserve the evidence and open a new run."
+            )
+    return [groups[key] for key in sorted(groups)]
+
+
+def _replace_failed_reader(
+    work: Path,
+    cell_id: str,
+    seat: str,
+    claim: dict[str, Any],
+) -> dict[str, Any]:
+    manifest, matrix = load_matrix(work)
+    matches = [cell for cell in matrix["cells"] if cell["cell_id"] == cell_id]
+    if len(matches) != 1:
+        raise Refusal(f"retry cell {cell_id!r} was found {len(matches)} times; preserve this run and open a new one.")
+    cell = matches[0]
+    previous = copy.deepcopy(cell.get("readers", {}).get(seat))
+    prior_intake = previous.get("intake") if isinstance(previous, dict) else None
+    if (
+        not isinstance(previous, dict)
+        or previous.get("status") != "no-answer"
+        or not isinstance(prior_intake, dict)
+        or prior_intake.get("outcome") == "valid"
+        or prior_intake.get("attempt") != 1
+    ):
+        raise Refusal(
+            f"retry for cell {cell_id!r}, seat {seat!r} requires one failed first attempt; "
+            f"the persisted reader is {previous!r}."
+        )
+    candidate = copy.deepcopy(cell)
+    candidate["readers"].pop(seat)
+    try:
+        _apply_reader_claim(
+            work,
+            manifest,
+            candidate,
+            seat,
+            claim.get("verdict"),
+            claim.get("quote"),
+            claim.get("source_id"),
+            claim.get("source_quote"),
+            claim.get("intake"),
+        )
+    except Refusal as exc:
+        current = {
+            "status": "recording-refused",
+            "verdict": claim.get("verdict"),
+            "quote": collapsed(claim.get("quote") or "") or None,
+            "source_id": claim.get("source_id"),
+            "source_quote": collapsed(claim.get("source_quote") or "") or None,
+            "intake": copy.deepcopy(claim.get("intake")),
+            "attempt_history": [previous],
+        }
+        cell["readers"][seat] = current
+        cell["status"] = "refused"
+        cell["outcome"] = "recording-refusal"
+        cell["recording_refusal"] = {
+            "failures": [{"seat": seat, "reason": str(exc)}],
+            "repair": "The intake succeeded but the claim failed its evidence contract; open a new run after correcting the source boundary.",
+        }
+    else:
+        current = candidate["readers"][seat]
+        current["attempt_history"] = [previous]
+        cell.clear()
+        cell.update(candidate)
+    (work / "matrix.json").write_bytes(canonical(matrix))
+    return cell
+
+
+def retry_failed(work: Path) -> dict[str, Any]:
+    manifest, matrix = load_matrix(work)
+    groups = _failed_reader_groups(matrix)
+    retryable = [group for group in groups if group["attempt"] == 1]
+    sources = upstream_sources_for_run(work, manifest)
+    source_context = "No external source is available for this blind reading. Judge only the immutable unit."
+    units = {unit["unit_id"]: unit for unit in manifest["units"]}
+    outcomes = []
+    for group in retryable:
+        evidence_path = group.get("evidence_path")
+        if not isinstance(evidence_path, str) or not evidence_path:
+            raise Refusal(
+                f"failed reply {group['request_id']!r} has no evidence path; preserve the run and open a new one."
+            )
+        previous_root = Path(evidence_path)
+        evidence_root = previous_root.parent / "attempt-002"
+        result = _reader_judgments(
+            repo_for(work),
+            source_context,
+            "Judge every listed lens for this unit.",
+            units[group["unit_id"]],
+            group["lenses"],
+            evidence_root=evidence_root,
+            upstream_sources=sources,
+            batch_id=group["batch_id"],
+            seat=group["seat"],
+            attempt=2,
+        )
+        outcomes.append(result["intake"])
+        claims = _claims_from_reader_result(result, group["lenses"])
+        for lens in group["lenses"]:
+            _replace_failed_reader(
+                work,
+                f"{group['unit_id']}::{lens}",
+                group["seat"],
+                claims[lens],
+            )
+    queue = owner_queue(work)
+    status = matrix_status(work)
+    return {
+        "status": status["status"],
+        "reader_calls": len(retryable),
+        "retried_seats": [group["request_id"] for group in retryable],
+        "reply_outcomes": {name: sum(item["outcome"] == name for item in outcomes) for name in READER_REPLY_OUTCOMES},
+        "owner_queue_count": queue["open_count"],
+        **status,
+    }
 
 
 def completeness_refusal(matrix: dict[str, Any], route: str) -> None:
@@ -1297,6 +1736,28 @@ def completeness_refusal(matrix: dict[str, Any], route: str) -> None:
             f"{route} refused: {len(missing)} matrix cells are unjudged: {preview}{remainder}. "
             "Judge every named unit/lens cell before requesting critique results."
         )
+
+
+def _reply_attempt_records(matrix: dict[str, Any]) -> list[dict[str, Any]]:
+    records: dict[tuple[str, int], dict[str, Any]] = {}
+    for cell in matrix["cells"]:
+        for reader in cell.get("readers", {}).values():
+            candidates = [reader, *reader.get("attempt_history", [])]
+            for candidate in candidates:
+                intake = candidate.get("intake") if isinstance(candidate, dict) else None
+                if not isinstance(intake, dict):
+                    continue
+                request_id = intake.get("request_id")
+                attempt = intake.get("attempt")
+                if isinstance(request_id, str) and type(attempt) is int:
+                    key = (request_id, attempt)
+                    if key in records and records[key] != intake:
+                        raise Refusal(
+                            f"reply attempt {request_id!r}/{attempt} differs across cells; "
+                            "preserve this run and open a new one under the current intake contract."
+                        )
+                    records[key] = intake
+    return [records[key] for key in sorted(records)]
 
 
 def matrix_status(work: Path) -> dict[str, Any]:
@@ -1312,6 +1773,8 @@ def matrix_status(work: Path) -> dict[str, Any]:
     ]
     declaration = manifest.get("benchmark_reference")
     upstream = manifest.get("upstream_sources")
+    reply_attempts = _reply_attempt_records(matrix)
+    failed_groups = _failed_reader_groups(matrix)
     return {
         "status": "partial" if missing or unresolved else "complete",
         "recording_status": "partial" if missing or half_recorded else "complete",
@@ -1343,6 +1806,22 @@ def matrix_status(work: Path) -> dict[str, Any]:
         "unjudged_count": len(missing),
         "unjudged_cells": missing,
         "owner_queue_count": len(unresolved),
+        "reply_attempt_count": len(reply_attempts),
+        "reply_outcomes": {
+            name: sum(item.get("outcome") == name for item in reply_attempts)
+            for name in READER_REPLY_OUTCOMES
+        },
+        "retryable_failed_seat_count": sum(group["attempt"] == 1 for group in failed_groups),
+        "retry_exhausted_seat_count": sum(group["attempt"] == READER_MAX_ATTEMPTS for group in failed_groups),
+        "failed_seats": [
+            {
+                "request_id": group["request_id"],
+                "outcome": group["outcome"],
+                "attempt": group["attempt"],
+                "refusal": group["refusal"],
+            }
+            for group in failed_groups
+        ],
     }
 
 
@@ -1616,6 +2095,8 @@ def main(argv: list[str] | None = None) -> int:
     read_parser.add_argument("--id", required=True)
     read_run_parser = sub.add_parser("read-run", help="resume blind readers across every unread matrix cell")
     read_run_parser.add_argument("--work", required=True)
+    retry_parser = sub.add_parser("retry-failed", help="retry each failed seat exactly once without replacing its first evidence")
+    retry_parser.add_argument("--work", required=True)
     ask_parser = sub.add_parser("ask-owner", help="show the next unresolved reader outcome without casting it")
     ask_parser.add_argument("--work", required=True)
     answer_parser = sub.add_parser("answer-owner", help="record one offered verdict in the owner's exact words")
@@ -1683,6 +2164,8 @@ def main(argv: list[str] | None = None) -> int:
             result = read_cell(Path(args.work), args.id)
         elif args.command == "read-run":
             result = read_run(Path(args.work))
+        elif args.command == "retry-failed":
+            result = retry_failed(Path(args.work))
         elif args.command == "ask-owner":
             result = owner_queue(Path(args.work))
         elif args.command == "answer-owner":

@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "f53d5544ec895df2315a04fe11d7f436c357a54d28e3a885a2cd1b309bbf7700",
+  "atom_run_id": "5d156d28c42bb531e5f7ec154283101fa3e6df81b24f26b86403bb86c1b02918",
+  "atomic_step_id": "critique-code-enforced-seat-envelopes",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441"
+}

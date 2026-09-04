@@ -1,0 +1,55 @@
+{
+  "assembly_sha256": "ca7a6d25788109b9b13ce79db230a0e08f8b892dc4b3a79655f39c1b284b0453",
+  "atomic_step_id": "critique-code-enforced-seat-envelopes",
+  "cases": [
+    {
+      "case_id": "claude-v3-run-killing-red",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-10/frozen-red/matrix.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The exact v3 matrix remains immutable evidence of 50 completed seat calls followed by zero recorded applicable cells.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-valid-reply",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-001-67522c23/reader-1/reader.stdout.txt",
+        "experiment/probe-result.json"
+      ],
+      "reason": "A schema-shaped captured result is classified valid and its six judgments become recordable claims.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-fenced-reply",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-001-67522c23/reader-2/reader.stdout.txt",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The fenced captured result is classified malformed at its first byte and is never unwrapped into a judgment.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-truncated-reply",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-024-14772212/reader-1/reader.stdout.txt",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The truncated captured result is classified malformed with its exact parse position and never aborts sibling recording.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "claude-v3-injected-prefix-reply",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-024-14772212/reader-2/reader.stdout.txt",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The directive-prefixed captured result is classified malformed rather than searched for embedded JSON.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

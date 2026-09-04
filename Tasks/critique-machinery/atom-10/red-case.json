@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source_run": "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-v3",
+  "copied_file_count": 201,
+  "source_run_file_count": 200,
+  "matrix_sha256": "a4355e11f7b535e94f4f39a3d89fa310663b67e15ee86bfbf0aebb080e7a96de",
+  "unit_manifest_sha256": "6b31f4e2efb1504051199703a9f2d1bc83dfc7653e84f388d26b9ed6b97099f1",
+  "sources_sha256": "f952d9342ffaa25e9151b45cc7242b2dc1f8fd0134d331e2aba567683f792b6e",
+  "read_run_log_sha256": "a712dda0ce18905f4760cd1b15d49cc94f60cc43793b47695d5e45f76f4cc45c",
+  "status": {
+    "not_applicable": 25,
+    "unjudged": 150,
+    "judged": 0,
+    "cells_with_readers": 0
+  },
+  "captured_replies": {
+    "valid": 47,
+    "malformed": 3,
+    "total": 50
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "criteria_source": "../experiment-plan.json",
+  "promotion_applied": false,
+  "probes": [
+    {
+      "probe_id": "seat-input-envelope",
+      "winner": "isolated-client-envelope",
+      "approaches": [
+        {
+          "id": "isolated-client-envelope",
+          "score": 4,
+          "maximum": 4,
+          "criteria": {
+            "code-owns-complete-instruction": true,
+            "schema-pinned-in-prompt-and-client": true,
+            "operator-settings-and-repository-context-excluded": true,
+            "no-seat-tools-or-session-persistence": true
+          },
+          "evidence": [
+            "candidate/critique.py",
+            "probe-result.json"
+          ]
+        },
+        {
+          "id": "prompt-only-current-client",
+          "score": 1,
+          "maximum": 4,
+          "criteria": {
+            "code-owns-complete-instruction": false,
+            "schema-pinned-in-prompt-and-client": false,
+            "operator-settings-and-repository-context-excluded": false,
+            "no-seat-tools-or-session-persistence": true
+          },
+          "evidence": [
+            "../frozen-red/reader-evidence/batch-u-001-67522c23/reader-2/reader.stdout.txt",
+            "../frozen-red/reader-evidence/batch-u-024-14772212/reader-2/reader.stdout.txt"
+          ]
+        }
+      ]
+    },
+    {
+      "probe_id": "seat-reply-intake",
+      "winner": "typed-intake-cell-commit",
+      "approaches": [
+        {
+          "id": "typed-intake-cell-commit",
+          "score": 6,
+          "maximum": 6,
+          "criteria": {
+            "five-exclusive-coded-outcomes": true,
+            "strict-schema-no-normalization": true,
+            "all-cells-recorded-after-one-failure": true,
+            "actionable-seat-specific-diagnostics": true,
+            "retry-only-failed-seat-once": true,
+            "zero-model-call-replay": true
+          },
+          "evidence": [
+            "probe-result.json",
+            "candidate/critique.py"
+          ]
+        },
+        {
+          "id": "wrapper-normalization-whole-batch-retry",
+          "score": 0,
+          "maximum": 6,
+          "criteria": {
+            "five-exclusive-coded-outcomes": false,
+            "strict-schema-no-normalization": false,
+            "all-cells-recorded-after-one-failure": false,
+            "actionable-seat-specific-diagnostics": false,
+            "retry-only-failed-seat-once": false,
+            "zero-model-call-replay": false
+          },
+          "evidence": [
+            "../frozen-red/read-run.log",
+            "../frozen-red/matrix.json"
+          ]
+        }
+      ]
+    }
+  ],
+  "final_observation": {
+    "captured_replies": 50,
+    "valid": 47,
+    "malformed": 3,
+    "applicable_cells_recorded": 150,
+    "unjudged_cells": 0,
+    "half_recorded_cells": 0,
+    "retryable_failed_seats": 3,
+    "new_model_calls": 0
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-code-enforced-seat-envelopes",
+  "captured_cases": [
+    {
+      "case_id": "claude-v3-run-killing-red",
+      "expected_outcome": "The exact v3 matrix remains immutable evidence of 50 completed seat calls followed by zero recorded applicable cells.",
+      "kind": "failure",
+      "sha256": "a4355e11f7b535e94f4f39a3d89fa310663b67e15ee86bfbf0aebb080e7a96de",
+      "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/matrix.json"
+    },
+    {
+      "case_id": "claude-v3-valid-reply",
+      "expected_outcome": "A schema-shaped captured result is classified valid and its six judgments become recordable claims.",
+      "kind": "success",
+      "sha256": "e459df24a45521754a83c614dd4c7b9af68039cad12094670c0fc36c959e2725",
+      "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-001-67522c23/reader-1/reader.stdout.txt"
+    },
+    {
+      "case_id": "claude-v3-fenced-reply",
+      "expected_outcome": "The fenced captured result is classified malformed at its first byte and is never unwrapped into a judgment.",
+      "kind": "failure",
+      "sha256": "a7e4c795101133a1eb9a78a8a2900e4e6a68bcaef3fe43f348cec224ff3a4894",
+      "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-001-67522c23/reader-2/reader.stdout.txt"
+    },
+    {
+      "case_id": "claude-v3-truncated-reply",
+      "expected_outcome": "The truncated captured result is classified malformed with its exact parse position and never aborts sibling recording.",
+      "kind": "failure",
+      "sha256": "27b6eb9b18d59884bcdb88065aa816b26158e2552016c38a2e7389f6316526a1",
+      "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-024-14772212/reader-1/reader.stdout.txt"
+    },
+    {
+      "case_id": "claude-v3-injected-prefix-reply",
+      "expected_outcome": "The directive-prefixed captured result is classified malformed rather than searched for embedded JSON.",
+      "kind": "failure",
+      "sha256": "319228648700a71505ea03accb985ed1cea8a3d34a0e38883a7e84eb32fe10d7",
+      "source_ref": "Tasks/critique-machinery/atom-10/frozen-red/reader-evidence/batch-u-024-14772212/reader-2/reader.stdout.txt"
+    }
+  ],
+  "outcome": "Code owns the complete isolated seat instruction and classifies every seat reply as valid, malformed, empty, timeout, or nonzero-exit before per-cell recording; only failed seats may retry once without erasing their first attempt.",
+  "practical_value": "A model reply can be wrong or fail without breaking the critique run, losing another seat, or hiding why an owner decision is needed.",
+  "schema_version": 1,
+  "stopping_condition": "The frozen v3 run is unchanged; all 50 captured replies replay with zero model calls into 150 fully recorded applicable cells; the three malformed seats are visible and exclusively retryable; both managed installs enforce their strongest isolated launch policy."
+}

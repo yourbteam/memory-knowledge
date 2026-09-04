@@ -1,0 +1,17 @@
+{
+  "blocking_findings": [],
+  "integration_correction": {
+    "found": 1,
+    "fixed": 1,
+    "reason": "The candidate refusal named both client runtimes in canonical code; promotion made that requirement client-neutral before projection."
+  },
+  "reviewed_outcomes": [
+    "Both managed client invocations enforce isolated code-owned input envelopes.",
+    "Every seat reply is classified into one of five terminal intake outcomes before recording.",
+    "A failed seat records no-answer for every sibling cell and cannot abort the batch.",
+    "Only failed first attempts are retried, once, with both attempt directories preserved.",
+    "The frozen v3 replies replay as 47 valid and 3 malformed without normalization or model calls."
+  ],
+  "schema_version": 1,
+  "status": "passed"
+}
