@@ -1,0 +1,11 @@
+{
+  "status": "partial",
+  "unit_count": 25,
+  "lens_count": 7,
+  "cell_count": 175,
+  "judged_count": 0,
+  "unjudged_count": 175,
+  "owner_queue_count": 0,
+  "matrix_sha256": "b5c4985934af2bbe59515a55fb88c3ef22d531399c2c885b28d22420be5fd636",
+  "unit_manifest_sha256": "d8f29883b1f268274546779fac253644a2bf649befc4d2677179aaaf5da2c3dd"
+}

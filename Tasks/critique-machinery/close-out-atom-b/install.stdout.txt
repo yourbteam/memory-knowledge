@@ -1,0 +1,4 @@
+unmanaged preserved in /Users/kamenkamenov/.codex/skills: .system
+unmanaged preserved in /Users/kamenkamenov/.claude/skills: direction-check, grounded-drive-report
+installed critique-machinery -> /Users/kamenkamenov/.codex/skills/critique-machinery 584aecc12cd709d117891d992dcff4d2f15678b4c2b262e47729ecdb71b1038e
+installed critique-machinery -> /Users/kamenkamenov/.claude/skills/critique-machinery 953d6ae1837473010c1906398ce6e6d7d7ea94a44c6658c7ca1031be3fc1f23d

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-04",
+  "source_revision": "ec1f1c868540c9361f0465254dc8a1567513c183",
+  "clients": [
+    {
+      "client": "codex",
+      "installed_script": "/Users/kamenkamenov/.codex/skills/critique-machinery/scripts/critique.py",
+      "path_existed": false,
+      "invocation_exit": 2,
+      "parity_state": "MISSING",
+      "projected_tree_sha256": "584aecc12cd709d117891d992dcff4d2f15678b4c2b262e47729ecdb71b1038e"
+    },
+    {
+      "client": "claude",
+      "installed_script": "/Users/kamenkamenov/.claude/skills/critique-machinery/scripts/critique.py",
+      "path_existed": false,
+      "invocation_exit": 2,
+      "parity_state": "MISSING",
+      "projected_tree_sha256": "953d6ae1837473010c1906398ce6e6d7d7ea94a44c6658c7ca1031be3fc1f23d"
+    }
+  ]
+}

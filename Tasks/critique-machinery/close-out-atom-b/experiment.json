@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "promotion_applied": false,
+  "frozen_source_revision": "ec1f1c868540c9361f0465254dc8a1567513c183",
+  "hypothesis": "One cross-client transaction is the managed route that installs the exact generated projection for both clients while keeping the two client policies distinct.",
+  "fixed_metrics": [
+    {"name": "client_projection_matches", "direction": "maximize"},
+    {"name": "correct_fail_closed_policies", "direction": "maximize"},
+    {"name": "transactions", "direction": "minimize"}
+  ],
+  "approaches": [
+    {
+      "id": "dual-client-transaction",
+      "mechanism": "One managed installer invocation with target both, cross-client acknowledgement, reconciliation manifest, and only critique-machinery selected.",
+      "client_projection_matches": 2,
+      "correct_fail_closed_policies": 2,
+      "transactions": 1,
+      "codex_tree_sha256": "584aecc12cd709d117891d992dcff4d2f15678b4c2b262e47729ecdb71b1038e",
+      "claude_tree_sha256": "953d6ae1837473010c1906398ce6e6d7d7ea94a44c6658c7ca1031be3fc1f23d",
+      "journals_cleaned": true
+    },
+    {
+      "id": "separate-client-transactions",
+      "mechanism": "Two managed installer invocations, one for Codex and one for Claude, each reconciled and limited to critique-machinery.",
+      "client_projection_matches": 2,
+      "correct_fail_closed_policies": 2,
+      "transactions": 2,
+      "codex_tree_sha256": "584aecc12cd709d117891d992dcff4d2f15678b4c2b262e47729ecdb71b1038e",
+      "claude_tree_sha256": "953d6ae1837473010c1906398ce6e6d7d7ea94a44c6658c7ca1031be3fc1f23d",
+      "journals_cleaned": true
+    }
+  ],
+  "winner": "dual-client-transaction",
+  "reason": "Both routes produced the exact client projections, but the selected route binds both replacements to one recoverable transaction and therefore minimizes the interval in which only one client is installed.",
+  "model_calls": 0
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "captured_case": "atom-01-btm-roadmap",
+  "clients": [
+    {
+      "client": "codex",
+      "installed_directory": "/Users/kamenkamenov/.codex/skills/critique-machinery",
+      "open_exit": 0,
+      "status_exit": 0,
+      "document_exit": 2,
+      "document_refusal_named_unjudged_cells": true,
+      "reader_evidence_directories": 0,
+      "model_calls": 0
+    },
+    {
+      "client": "claude",
+      "installed_directory": "/Users/kamenkamenov/.claude/skills/critique-machinery",
+      "open_exit": 0,
+      "status_exit": 0,
+      "document_exit": 2,
+      "document_refusal_named_unjudged_cells": true,
+      "reader_evidence_directories": 0,
+      "model_calls": 0
+    }
+  ],
+  "identical_run_evidence": {
+    "matrix_sha256": "b5c4985934af2bbe59515a55fb88c3ef22d531399c2c885b28d22420be5fd636",
+    "unit_manifest_sha256": "d8f29883b1f268274546779fac253644a2bf649befc4d2677179aaaf5da2c3dd"
+  },
+  "canonical_skill_edited": false,
+  "model_calls": 0
+}

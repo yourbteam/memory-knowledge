@@ -1,0 +1,7 @@
+{
+  "client": "claude",
+  "fail_closed": true,
+  "forbidden_runtime": "codex exec",
+  "required_runtime": "claude -p",
+  "schema_version": 1
+}

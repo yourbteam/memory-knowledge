@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "installed",
+  "source_revision": "ec1f1c868540c9361f0465254dc8a1567513c183",
+  "installer": "working-agreement/install_skills.py",
+  "target": "both",
+  "selected_managed_skills": ["critique-machinery"],
+  "reconciliation": "working-agreement/client-skill-projections.json",
+  "clients": [
+    {
+      "client": "codex",
+      "destination": "/Users/kamenkamenov/.codex/skills/critique-machinery",
+      "installed_tree_sha256": "584aecc12cd709d117891d992dcff4d2f15678b4c2b262e47729ecdb71b1038e",
+      "projected_tree_sha256": "584aecc12cd709d117891d992dcff4d2f15678b4c2b262e47729ecdb71b1038e",
+      "parity_state": "MATCH",
+      "required_runtime": "codex exec",
+      "forbidden_runtime": "claude",
+      "fail_closed": true
+    },
+    {
+      "client": "claude",
+      "destination": "/Users/kamenkamenov/.claude/skills/critique-machinery",
+      "installed_tree_sha256": "953d6ae1837473010c1906398ce6e6d7d7ea94a44c6658c7ca1031be3fc1f23d",
+      "projected_tree_sha256": "953d6ae1837473010c1906398ce6e6d7d7ea94a44c6658c7ca1031be3fc1f23d",
+      "parity_state": "MATCH",
+      "required_runtime": "claude -p",
+      "forbidden_runtime": "codex exec",
+      "fail_closed": true
+    }
+  ],
+  "unmanaged_preserved": [
+    "/Users/kamenkamenov/.codex/skills/.system",
+    "/Users/kamenkamenov/.claude/skills/direction-check",
+    "/Users/kamenkamenov/.claude/skills/grounded-drive-report"
+  ],
+  "canonical_skill_edited": false
+}

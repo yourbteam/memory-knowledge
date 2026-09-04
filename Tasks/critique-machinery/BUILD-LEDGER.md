@@ -218,3 +218,30 @@ paths remain `atom-07/live-probe/reader-evidence/`, `atom-07/operator-validation
 **Cost.** Two local publication approaches, one exact 175-cell replay, zero reader launches, and
 zero model calls. The preserved missing evidence totals 503,128 bytes; the largest file is 88,824
 bytes.
+
+## Close-out Atom B — managed dual-client installation — 2026-09-04
+
+**Outcome.** The critique machinery is installed through the repository's managed transactional
+installer at both client entry points. Codex carries a fail-closed `codex exec` policy and Claude
+carries a fail-closed `claude -p` policy. Both installed trees exactly match their generated client
+projections; the canonical `skills/critique-machinery/` tree was not edited.
+
+**Red case.** Before installation, invoking `critique.py` from either installed-skill path exited
+2 because neither path existed. The client-projection checker independently recorded
+`critique-machinery` as `MISSING` for both clients.
+
+**Experiment.** `close-out-atom-b/experiment.json` compares one cross-client managed transaction
+with two separate managed transactions using the exact revision and projection manifest later used
+for installation. Both approaches produced the expected client-specific tree hashes and policies.
+The single transaction won because it provides the same exact outputs with one recoverable journal,
+minimizing the interval in which only one client is installed.
+
+**Promotion and real operator path.** The selected managed installer replaced only
+`critique-machinery` in both client roots and preserved every unrelated skill. From each installed
+skill directory, the public CLI opened the unchanged Atom 1 BTM roadmap into a repository-nested
+work directory, reported 25 units × seven lenses = 175 unjudged cells, and refused `document` while
+naming concrete unjudged cells. Both runs produced identical matrix and unit-manifest hashes. No
+reader command was invoked and no reader-evidence directory exists.
+
+**Cost.** Two isolated installation approaches, one selected dual-client installation, two
+no-reader operator validations, and zero model calls.
