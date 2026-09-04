@@ -1,0 +1,36 @@
+{
+  "benchmark_read_cell": {
+    "benchmark_state": {
+      "reason": "UP supplies no roadmap-shaped benchmark",
+      "state": "no-reference",
+      "strategy": "declared-no-reference"
+    },
+    "cell_id": "u-001-67522c23::benchmark-vs-reference",
+    "lens": "benchmark-vs-reference",
+    "outcome": "not-applicable",
+    "reader_strategy": "blind-separated",
+    "readers": {},
+    "status": "not-applicable",
+    "unit_id": "u-001-67522c23"
+  },
+  "client": "codex",
+  "document_refusal": "critique refused: document refused: 150 matrix cells are unjudged: u-001-67522c23::buyer-read, u-001-67522c23::cfo, u-001-67522c23::journalist, u-001-67522c23::employee-insider, u-001-67522c23::competitor-counter-position, u-001-67522c23::upstream-trace, u-002-43fbd923::buyer-read, u-002-43fbd923::cfo and 142 more. Judge every named unit/lens cell before requesting critique results.",
+  "fail_closed": true,
+  "installed_path": "/Users/kamenkamenov/.codex/skills/critique-machinery",
+  "installed_tree_sha256": "a34cee3a2901a06e07f81a83a48fa23753ca9cd66da154708660ab5611416b58",
+  "opened": {
+    "benchmark_reference": {
+      "reason": "UP supplies no roadmap-shaped benchmark",
+      "state": "none",
+      "strategy": "declared-no-reference"
+    },
+    "status": "opened",
+    "units": 25,
+    "work": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-08/installed-validation/codex/run"
+  },
+  "parity_state": "MATCH",
+  "projected_tree_sha256": "a34cee3a2901a06e07f81a83a48fa23753ca9cd66da154708660ab5611416b58",
+  "reader_evidence_exists": false,
+  "required_runtime": "codex exec",
+  "status": "passed"
+}

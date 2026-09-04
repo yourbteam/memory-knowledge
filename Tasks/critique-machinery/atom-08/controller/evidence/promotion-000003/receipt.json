@@ -1,0 +1,34 @@
+{
+  "atomic_step_id": "critique-reference-declaration",
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "517a3e92b1733a4b78bdc94c8848d02bfd0cb3915d44ab8bed3301a085147c8a"
+  },
+  "changed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "claude-seat-no-reference-red",
+      "path": "frozen-red/matrix.json",
+      "sha256": "8df126821571b941144f8425b5ef465e27c8168eff1ffd87b832ca0a88819214"
+    },
+    {
+      "case_id": "btm-no-reference-green",
+      "path": "operator-validation/summary.json",
+      "sha256": "fba0ce1419b8b9df370eaeccf808e8e3559ae7ef6abf7aaed5f012e39f344828"
+    }
+  ],
+  "experiment_assembly_sha256": "c990eecfc6da273570189726d8c1c1b731d7b0118d55ef0ae6b6cbf714b230b4",
+  "experiment_event_sha256": "ab0aed22ba6e96622dfb9fc8b3ee7c955bafb83230ea439d1d334f9305fde327",
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "b179185cfe1ac8bc37972843b2f4259ea3cb600fda995697d25a7d4c4f72e2ee"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

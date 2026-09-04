@@ -1,0 +1,28 @@
+{
+  "assembly_sha256": "c990eecfc6da273570189726d8c1c1b731d7b0118d55ef0ae6b6cbf714b230b4",
+  "atomic_step_id": "critique-reference-declaration",
+  "cases": [
+    {
+      "case_id": "claude-seat-no-reference-red",
+      "evidence_pointers": [
+        "frozen-red/matrix.json",
+        "frozen-red/read-run.log"
+      ],
+      "reason": "The original 7-of-175 run and refusal remain byte-identical and readable without migration.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-no-reference-green",
+      "evidence_pointers": [
+        "operator-validation/summary.json",
+        "operator-validation/located-defects.md"
+      ],
+      "reason": "The same page and payload completed with 150 real replayed judgments and 25 visible no-reference cells.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

@@ -1,0 +1,104 @@
+{
+  "baseline_sha256": "69458afbfce5c7ec04d0bda670d75eca66738f0b10aebdc1bcc37dacc6d7e51e",
+  "candidates": [
+    {
+      "approach_id": "open-terminal-state",
+      "artifact": "reference-applicability-contract",
+      "bundle_sha256": "57425d6182876cc8b8cdde49b67fe6fcc8dc9b8dcbb1c1be57ebe074cf2256c6",
+      "probe_id": "reference-applicability-boundary"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-reference-declaration",
+    "development_manifest_sha256": "1d9283795431506f444ed729c8e359f5d8b58b447eca3cea6d7232a01781af25"
+  },
+  "inputs": [
+    {
+      "case_id": "claude-seat-no-reference-red",
+      "path": "claude-seat-no-reference-red.input",
+      "sha256": "8df126821571b941144f8425b5ef465e27c8168eff1ffd87b832ca0a88819214",
+      "size": 37058
+    },
+    {
+      "case_id": "btm-no-reference-green",
+      "path": "btm-no-reference-green.input",
+      "sha256": "9e082caaeb0e67bbef5184677fd2abfa690cb8c2347a35e037ef13d1f7d3c4fb",
+      "size": 47811
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "reference-applicability-boundary"
+      ],
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "339ac202a27f3ca4ec0e44d8f523f991512987412b5b405e021e02935bf3b856",
+      "size": 3218
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "reference-applicability-boundary"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "a4a69a19115a8fe222aae8499dedf46ff7d5a1b1953683b3824563c27f9089ef",
+      "size": 64500
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "reference-applicability-boundary"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "3e91cd596eddf7cb9a61c89d107097ef399f0c1bdd517b0e05722bf8074f849b",
+      "size": 18294
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "reference-applicability-boundary"
+      ],
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "6b95523821e8f16cddd0ea1105a7e30127f081eb0897e9c6627512eab298e970",
+      "size": 11941
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/SKILL.md",
+        "sha256": "339ac202a27f3ca4ec0e44d8f523f991512987412b5b405e021e02935bf3b856",
+        "size": 3218
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "a4a69a19115a8fe222aae8499dedf46ff7d5a1b1953683b3824563c27f9089ef",
+        "size": 64500
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "3e91cd596eddf7cb9a61c89d107097ef399f0c1bdd517b0e05722bf8074f849b",
+        "size": 18294
+      },
+      {
+        "path": "working-agreement/client-skill-projections.json",
+        "sha256": "6b95523821e8f16cddd0ea1105a7e30127f081eb0897e9c6627512eab298e970",
+        "size": 11941
+      }
+    ],
+    "root": "source",
+    "sha256": "29df9c306d0887721e9c86e42cd3368229bc3cf4d5a2247429abc0c44a25ca05"
+  },
+  "status": "assembled"
+}

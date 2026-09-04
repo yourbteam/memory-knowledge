@@ -1,0 +1,37 @@
+{
+  "atomic_step_id": "critique-reference-declaration",
+  "cases": [
+    {
+      "case_id": "claude-seat-no-reference-red",
+      "evidence": [
+        {
+          "case_id": "claude-seat-no-reference-red",
+          "path": "frozen-red/matrix.json",
+          "sha256": "8df126821571b941144f8425b5ef465e27c8168eff1ffd87b832ca0a88819214"
+        }
+      ],
+      "reason": "The original 7-of-175 matrix and its refusal remain byte-identical and readable; no migration or repair touched the failed run.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-no-reference-green",
+      "evidence": [
+        {
+          "case_id": "btm-no-reference-green",
+          "path": "operator-validation/summary.json",
+          "sha256": "fba0ce1419b8b9df370eaeccf808e8e3559ae7ef6abf7aaed5f012e39f344828"
+        },
+        {
+          "case_id": "btm-no-reference-green",
+          "path": "installed-validation/summary.json",
+          "sha256": "1ada458c0fedd1ad87742f54b6fc6c6c775aa04d61f3186053eb2f30a6adb59f"
+        }
+      ],
+      "reason": "The same page and payload completed through the promoted public path with 150 replayed real nonbenchmark judgments and 25 visible no-reference cells; both managed installs independently opened the same 175-cell state without launching a reader.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "6a652e44281b2c9d3f387f532f92b1f81bbb8ccb8b34cf13a345a18c663c6b2f",
+  "schema_version": 1,
+  "status": "completed"
+}

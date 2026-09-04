@@ -1,0 +1,29 @@
+{
+  "approaches": [
+    {
+      "id": "open-terminal-state",
+      "hypothesis": "Freezing applicability at open prevents an absent benchmark from ever reaching a seat.",
+      "implementation": "Require the benchmark-source choice at open and pre-record no-reference benchmark cells as terminal not-applicable state.",
+      "predicted_tradeoff": "One explicit opening argument in exchange for immutable applicability and no reader wedge."
+    },
+    {
+      "id": "reader-time-sentinel",
+      "hypothesis": "A late read-run check can bypass benchmark cells without changing the opening contract.",
+      "implementation": "Allow an undeclared open and decide whether to bypass benchmark cells only when read-run starts.",
+      "predicted_tradeoff": "Fewer opening arguments, but the reason arrives after readers may have run and existing state must be rewritten."
+    }
+  ],
+  "cases": [
+    "claude-seat-no-reference-red",
+    "btm-no-reference-green"
+  ],
+  "criteria": [
+    "immutable-declaration",
+    "zero-benchmark-reader-dispatches",
+    "visible-status-and-document-state",
+    "legacy-run-immutability",
+    "declared-reference-contract-preserved"
+  ],
+  "criteria_frozen_before_implementation": true,
+  "schema_version": 1
+}

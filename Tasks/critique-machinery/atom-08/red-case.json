@@ -1,0 +1,11 @@
+{
+  "cell_count": 175,
+  "first_refused_cell": "u-001-67522c23::benchmark-vs-reference",
+  "judged_count": 7,
+  "matrix_sha256": "8df126821571b941144f8425b5ef465e27c8168eff1ffd87b832ca0a88819214",
+  "read_run_log_sha256": "a63585f4fae2fa8a5409f4f46b48a0840271ecec1d290b94bb5d693b38b73b84",
+  "remaining_unreachable_cells": 168,
+  "source_run": "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm",
+  "status": "frozen",
+  "unit_manifest_sha256": "9e082caaeb0e67bbef5184677fd2abfa690cb8c2347a35e037ef13d1f7d3c4fb"
+}

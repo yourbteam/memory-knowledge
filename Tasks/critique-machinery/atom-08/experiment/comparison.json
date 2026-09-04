@@ -1,0 +1,50 @@
+{
+  "champion": "open-terminal-state",
+  "criteria_frozen_at": "Tasks/critique-machinery/atom-08/spec.md",
+  "deciding_observation": "The late sentinel encountered one real benchmark reader record and had to rewrite an existing run; open-terminal-state had zero benchmark reader records and froze the reason at open.",
+  "model_calls": 0,
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "approach_id": "open-terminal-state",
+      "metrics": {
+        "declared-reference-contract-preserved": 1,
+        "immutable-declaration": 1,
+        "legacy-run-immutability": 1,
+        "visible-status-and-document-state": 1,
+        "zero-benchmark-reader-dispatches": 1
+      },
+      "observations": {
+        "benchmark_cells_not_applicable": 25,
+        "benchmark_reader_records_before_dispatch": 0,
+        "declaration_present_at_open": true,
+        "existing_run_mutated": false,
+        "status_reason_visible": true
+      },
+      "rank": 1,
+      "score": 5
+    },
+    {
+      "approach_id": "reader-time-sentinel",
+      "metrics": {
+        "declared-reference-contract-preserved": 1,
+        "immutable-declaration": 0,
+        "legacy-run-immutability": 0,
+        "visible-status-and-document-state": 1,
+        "zero-benchmark-reader-dispatches": 0
+      },
+      "observations": {
+        "benchmark_cells_not_applicable": 25,
+        "benchmark_reader_records_before_dispatch": 1,
+        "declaration_present_at_open": false,
+        "existing_run_mutated": true,
+        "status_reason_visible": true
+      },
+      "rank": 2,
+      "score": 2
+    }
+  ],
+  "real_case": "Tasks/critique-machinery/atom-08/frozen-red",
+  "schema_version": 1,
+  "status": "completed"
+}

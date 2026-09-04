@@ -1,0 +1,26 @@
+{
+  "clients": [
+    {
+      "client": "codex",
+      "destination": "/Users/kamenkamenov/.codex/skills/critique-machinery",
+      "fail_closed": true,
+      "installed_tree_sha256": "a34cee3a2901a06e07f81a83a48fa23753ca9cd66da154708660ab5611416b58",
+      "required_runtime": "codex exec"
+    },
+    {
+      "client": "claude",
+      "destination": "/Users/kamenkamenov/.claude/skills/critique-machinery",
+      "fail_closed": true,
+      "installed_tree_sha256": "77a81b89f9ac752f09a0d9ec20d5006abc1f11a46f9a0c80be2ab925d558072d",
+      "required_runtime": "claude -p"
+    }
+  ],
+  "installer": "working-agreement/install_skills.py",
+  "model_calls": 0,
+  "schema_version": 1,
+  "selected_managed_skills": [
+    "critique-machinery"
+  ],
+  "status": "installed",
+  "target": "both"
+}

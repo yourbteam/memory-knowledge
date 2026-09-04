@@ -245,3 +245,37 @@ reader command was invoked and no reader-evidence directory exists.
 
 **Cost.** Two isolated installation approaches, one selected dual-client installation, two
 no-reader operator validations, and zero model calls.
+
+## Correction Atom 8 — reference declaration and visible no-reference — 2026-09-04
+
+**Outcome.** `open` now requires exactly one immutable benchmark-source declaration: a reference
+id plus page, or a non-empty `--no-reference` reason. A no-reference run retains all 175 cells but
+marks its 25 benchmark cells `not-applicable`; `status` counts and names that state, `read-cell`
+returns it without a model launch, `read-run` excludes the lens, direct judgment refuses, and the
+finished findings document prints the exact reason. The seat prompt no longer tells readers to
+clear a lens whose evidence does not exist. Declared-reference runs retain the registered-reference
+and paired-exact-evidence contracts.
+
+**Red case.** `atom-08/frozen-red/` preserves the exact Claude-seat matrix, unit manifest, and
+adjacent refusal log. Their hashes remain `8df126821571b941144f8425b5ef465e27c8168eff1ffd87b832ca0a88819214`,
+`9e082caaeb0e67bbef5184677fd2abfa690cb8c2347a35e037ef13d1f7d3c4fb`, and
+`a63585f4fae2fa8a5409f4f46b48a0840271ecec1d290b94bb5d693b38b73b84`; the original run remains
+unmodified at seven judged and 168 unreachable cells.
+
+**Experiment.** `atom-08/experiment/comparison.json` executes both approaches on the frozen real
+BTM bytes. `open-terminal-state` scored 5/5. `reader-time-sentinel` scored 2/5 because the real run
+had already sent one benchmark cell to a seat and the late approach had to rewrite existing state.
+The accepted controller assembly is
+`c990eecfc6da273570189726d8c1c1b731d7b0118d55ef0ae6b6cbf714b230b4`.
+
+**Promotion and real operator path.** `atom-08/operator-validation/` replays 300 previously recorded
+nonbenchmark seat results through the public CLI, with zero new model calls: 150 applicable cells
+complete, 25 benchmark cells remain visibly not applicable, prior real owner rulings resolve, the
+findings document includes `UP supplies no roadmap-shaped benchmark`, and no benchmark cell is
+submitted. Both managed installs match their generated projections and retain their fail-closed
+`codex exec` and `claude -p` policies under `atom-08/installed-validation/`. The controller closed
+at proof event `51007bac1f14da7502618a785304caf18c7467d65bb43990ce5c6d3c24aae17e`.
+
+**Cost.** Two local approaches on one frozen real run, one exact replay of 300 existing reader
+records, two no-reader installed-path validations, 70 passing tests plus 11 passing subtests, and
+zero new model calls.

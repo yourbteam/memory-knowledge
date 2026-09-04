@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-reference-declaration",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "dad0cba45cb7089dc9d32681a811cd52893cf3fc1abe9cf16f90e7a912590f62",
+      "size": 2631
+    },
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "b3138652999bc71cb0f38e6bccca2b3fa4390481452eed3204cca2a0b3339475",
+      "size": 58586
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "b980358adc0ce282734636f337a9de020bb559fa2cd6c6ef61a1ed029656b7f4",
+      "size": 14101
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "df634ca838eae85d2bdb841e135178450ed86ff5232abe6d3475b654d4ffe8a6",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

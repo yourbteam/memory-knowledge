@@ -1,0 +1,135 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The exact parked run remains immutable evidence of the undeclared-reference wedge.",
+        "id": "claude-seat-no-reference-red",
+        "kind": "failure",
+        "sha256": "8df126821571b941144f8425b5ef465e27c8168eff1ffd87b832ca0a88819214",
+        "source_ref": "Tasks/critique-machinery/atom-08/frozen-red/matrix.json"
+      },
+      {
+        "expected_outcome": "The same page and payload open with an explicit reason; benchmark cells terminate visibly without reader dispatch and all other lenses proceed.",
+        "id": "btm-no-reference-green",
+        "kind": "success",
+        "sha256": "9e082caaeb0e67bbef5184677fd2abfa690cb8c2347a35e037ef13d1f7d3c4fb",
+        "source_ref": "Tasks/critique-machinery/atom-08/frozen-red/unit-manifest.json"
+      }
+    ],
+    "id": "critique-reference-declaration",
+    "outcome": "Open requires a frozen reference id and page or a recorded no-reference reason; no-reference benchmark cells are terminal, visible, never read, and documented as not applicable.",
+    "practical_value": "A missing real benchmark can no longer wedge a live critique or be disguised as a clear judgment.",
+    "stopping_condition": "The frozen red run is unchanged; the same page and payload pass the no-reference operator path beyond unit one; declared-reference behavior remains intact; both managed client installs match the canonical correction."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use open-terminal-state unchanged.",
+    "consumes": [
+      {
+        "artifact": "reference-applicability-contract",
+        "probe_id": "reference-applicability-boundary"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "claude-seat-no-reference-red",
+        "btm-no-reference-green"
+      ],
+      "failure_criterion": "Any benchmark cell is judged, any applicable cell is unreachable, or the document omits the reason.",
+      "operator_path": "Open the unchanged BTM page with the recorded no-reference reason, replay only prior real nonbenchmark seat records, resolve prior real owner rulings, and produce the public findings document.",
+      "success_criterion": "The red bytes remain unchanged and the new run completes with 150 judged plus 25 visible not-applicable cells."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Freezing applicability at open prevents an absent benchmark from ever reaching a seat.",
+          "id": "open-terminal-state",
+          "implementation": "Require the benchmark-source choice at open and pre-record no-reference benchmark cells as terminal not-applicable state.",
+          "predicted_tradeoff": "One explicit opening argument in exchange for immutable applicability and no reader wedge."
+        },
+        {
+          "hypothesis": "A late read-run check can bypass benchmark cells without changing the opening contract.",
+          "id": "reader-time-sentinel",
+          "implementation": "Allow an undeclared open and decide whether to bypass benchmark cells only when read-run starts.",
+          "predicted_tradeoff": "Fewer opening arguments, but the reason arrives after readers may have run and existing state must be rewritten."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "immutable-declaration"
+          },
+          {
+            "method": "sum",
+            "name": "zero-benchmark-reader-dispatches"
+          },
+          {
+            "method": "sum",
+            "name": "visible-status-and-document-state"
+          },
+          {
+            "method": "sum",
+            "name": "legacy-run-immutability"
+          },
+          {
+            "method": "sum",
+            "name": "declared-reference-contract-preserved"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "immutable-declaration"
+          },
+          {
+            "direction": "maximize",
+            "name": "zero-benchmark-reader-dispatches"
+          },
+          {
+            "direction": "maximize",
+            "name": "visible-status-and-document-state"
+          },
+          {
+            "direction": "maximize",
+            "name": "legacy-run-immutability"
+          },
+          {
+            "direction": "maximize",
+            "name": "declared-reference-contract-preserved"
+          }
+        ]
+      },
+      "goal": "Prevent an absent benchmark from reaching a reader while preserving it as visible state.",
+      "id": "reference-applicability-boundary",
+      "inputs": [
+        {
+          "case_id": "claude-seat-no-reference-red"
+        },
+        {
+          "case_id": "btm-no-reference-green"
+        }
+      ],
+      "practical_value": "A missing real benchmark can no longer wedge a live critique or be disguised as a clear judgment.",
+      "proof": {
+        "failure_criterion": "Applicability is decided after opening, a benchmark cell reaches a seat, the reason is hidden, or an existing run is rewritten.",
+        "success_criterion": "The reason is frozen at open, all 25 benchmark cells are terminal and visible, no benchmark seat record exists, and the existing red run remains byte-identical."
+      },
+      "winner_output": {
+        "artifact": "reference-applicability-contract",
+        "description": "Open-time declaration plus visible terminal no-reference cells."
+      },
+      "work_type": "code",
+      "work_type_reason": "The immutable run contract and reader dispatch gate are executable code boundaries."
+    }
+  ],
+  "schema_version": 2
+}
