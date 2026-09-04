@@ -1,0 +1,1 @@
+{"judgments":[{"end_line":10,"lens":"journalist","start_line":1,"verdict":"revise"}]}

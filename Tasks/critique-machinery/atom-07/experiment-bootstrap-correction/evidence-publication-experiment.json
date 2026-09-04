@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "critique-build-evidence-reproduction",
+  "spec_source": "Kamen Kamenov's Critique Machinery close-out handover dated 2026-09-04",
+  "outcome": "Every Atom 7 evidence path cited by the build ledger exists in origin/main and the exact operator replay succeeds from committed bytes alone.",
+  "direction_check": {
+    "sound_approach": "The critique machinery produced and receipted the real evidence; Git ownership is the remaining publication-boundary defect.",
+    "wrong_approach": "If the committed-only replay still needs caller-owned or untracked bytes, the evidence model is not reproducible and must be redesigned.",
+    "verdict": "sound-approach-bounded-publication-defect",
+    "verdict_flip": "A replay from the exact prospective Git tree depends on any byte outside that tree."
+  },
+  "frozen_real_cases": [
+    {
+      "case_id": "origin-main-red",
+      "git_tree": "8073543a7183b60341f88891957deca542ebeb63",
+      "command": "git ls-tree -r origin/main -- Tasks/critique-machinery/atom-07/live-probe/reader-evidence",
+      "stdout_stderr_transcript_paths": [],
+      "bootstrap_correction_paths": [],
+      "status": "failed-evidence-completeness"
+    },
+    {
+      "case_id": "prospective-committed-tree-green",
+      "git_tree": "0eda3c1bc9c3f2876d39e257137f69ee29f47d56",
+      "stdout_stderr_transcript_count": 128,
+      "bootstrap_correction_file_count": 8,
+      "unexpected_paths": 0,
+      "git_diff_check": "passed",
+      "operator_replay": {
+        "status": "passed",
+        "cells": 175,
+        "owner_rulings": 5
+      }
+    }
+  ],
+  "inventory": {
+    "missing_evidence_files_found": 136,
+    "missing_evidence_files_selected": 136,
+    "total_bytes": 503128,
+    "largest_file_bytes": 88824,
+    "symbolic_links": 0,
+    "credential_pattern_matches": 0,
+    "bootstrap_content_aggregate_sha256": "c36016a635b7b4790b7c4a94682adebc678ebde55a5a502f17b35a2da0366611",
+    "transcript_content_aggregate_sha256": "da0f3c26bd8eff60f9c4939643740da808235d98ee456e8b2ef18609fb464e80"
+  },
+  "approaches": [
+    {
+      "rank": 1,
+      "approach_id": "exact-evidence-with-path-policy",
+      "evidence_completeness": "136/136",
+      "byte_preservation": "exact",
+      "operator_replay": "passed"
+    },
+    {
+      "rank": 2,
+      "approach_id": "tracked-only-control",
+      "evidence_completeness": "0/136",
+      "byte_preservation": "not-applicable",
+      "operator_replay": "not-eligible"
+    }
+  ],
+  "champion": "exact-evidence-with-path-policy",
+  "promotion_applied": false,
+  "cost": {
+    "model_calls": 0,
+    "operator_replays": 1,
+    "approaches": 2
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "baseline_sha256": "555c1eb1cc98732d749f4f9c32682b2401d606db66edc1e02347929890137f79",
+  "candidates": [
+    {
+      "approach_id": "registered-count",
+      "artifact": "bootstrap-count-expectation",
+      "bundle_sha256": "8490c1ea5f2d332da26130537f84ce18678c202b4356f0635ef00f592edf024f",
+      "probe_id": "registered-count"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-managed-skill-count-correction",
+    "development_manifest_sha256": "6c672e76249ab99df0280cb65ff3993d353c6eb4833b3bc5b30104e1c88af11d"
+  },
+  "inputs": [
+    {
+      "case_id": "registered-critique-bootstrap-count",
+      "path": "registered-critique-bootstrap-count.input",
+      "sha256": "fc8d88c9ba405147122af29b66e6f8e786f341c1a7cb1e58145fe8ff807712c3",
+      "size": 456
+    },
+    {
+      "case_id": "registered-critique-client-parity",
+      "path": "registered-critique-client-parity.input",
+      "sha256": "df634ca838eae85d2bdb841e135178450ed86ff5232abe6d3475b654d4ffe8a6",
+      "size": 11941
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "registered-count"
+      ],
+      "path": "tests/test_codex_office_bootstrap.py",
+      "sha256": "032a281d11ccf3558ca114ebd18268e5587eb4ac90ab2aaa840a17c42e6189b8",
+      "size": 5698
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "tests/test_codex_office_bootstrap.py",
+    "files": [
+      {
+        "path": "tests/test_codex_office_bootstrap.py",
+        "sha256": "032a281d11ccf3558ca114ebd18268e5587eb4ac90ab2aaa840a17c42e6189b8",
+        "size": 5698
+      }
+    ],
+    "root": "source",
+    "sha256": "7c3e4d76699ca5633d39add24a8669614bad54fe6ec1473960483bb31dd1d7a6"
+  },
+  "status": "assembled"
+}

@@ -1,0 +1,26 @@
+{
+  "assembly_sha256": "763447832ba959ea0ba14eacc48d7094ea46900e38f30cff81ba7712eb222d65",
+  "atomic_step_id": "critique-managed-skill-count-correction",
+  "cases": [
+    {
+      "case_id": "registered-critique-bootstrap-count",
+      "evidence_pointers": [
+        "comparison.json"
+      ],
+      "reason": "The empty-root bootstrap integration test accepts all 21 registered skills and still proves exact parity.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "registered-critique-client-parity",
+      "evidence_pointers": [
+        "comparison.json"
+      ],
+      "reason": "The generated projection remains byte-exact for both supported clients after installing all 21 managed skills.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

@@ -188,3 +188,33 @@ only failure is the prevention owner-contract byte-stability check in this isola
 contract intentionally verifies sources under the absolute canonical checkout, which is currently
 on another revision. The same exact check passes 1/1 in `/Users/kamenkamenov/memory-knowledge`;
 the generated contract was therefore not rewritten from the isolated worktree.
+
+## Close-out Atom A — committed build evidence — 2026-09-04
+
+**Outcome.** The build ledger's Atom 7 proof is reproducible from Git-owned bytes. All 136 evidence
+files found outside `origin/main` are selected unchanged: eight bootstrap-correction experiment
+files and 128 raw reader stdout/stderr transcripts. The transcript directory carries a path-local
+Git whitespace policy so the normal publication gate can inspect the raw files without rewriting
+their diagnostic whitespace.
+
+**Red case.** At `origin/main` revision `8073543a7183b60341f88891957deca542ebeb63`, the required
+`git ls-tree` listing contains zero raw stdout/stderr transcripts and zero files from
+`atom-07/experiment-bootstrap-correction/`.
+
+**Experiment.** `atom-07/experiment-bootstrap-correction/evidence-publication-experiment.json`
+compares the tracked-only control with the exact-evidence candidate on the frozen current tree.
+The control owns 0/136 required files. The selected candidate owns 136/136, changes no transcript
+or experiment byte, introduces no unexpected path, contains no link or credential-pattern match,
+and passes the repository's staged-diff check.
+
+**Promotion and real operator path.** The prospective Git tree
+`0eda3c1bc9c3f2876d39e257137f69ee29f47d56` was materialized as a local committed checkout before
+publication. From that checkout, `atom-07/validate_operator.py` replayed the public CLI against the
+unchanged Atom 1 BTM roadmap and the exact recorded responses: all 175 cells landed, five owner
+rulings resolved the authentic disagreements, and the operator result passed. The durable source
+paths remain `atom-07/live-probe/reader-evidence/`, `atom-07/operator-validation/`, and
+`atom-07/experiment-bootstrap-correction/`.
+
+**Cost.** Two local publication approaches, one exact 175-cell replay, zero reader launches, and
+zero model calls. The preserved missing evidence totals 503,128 bytes; the largest file is 88,824
+bytes.
