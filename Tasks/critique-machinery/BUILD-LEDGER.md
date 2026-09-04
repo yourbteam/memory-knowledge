@@ -124,3 +124,23 @@ The controller authorized the next atom at proof event
 
 **Cost.** Two unchanged real cases and no additional model calls; the operator path reuses the
 already grounded reader judgments so this atom isolates the upstream-evidence contract.
+
+## Atom 6 — paired benchmark — 2026-09-04
+
+**Outcome.** A benchmark criticism now carries immutable reference identity plus exact passages
+from both the delivered unit and the reference. A reject or revise verdict under the benchmark lens
+is refused until the pair exists, and invented reference language cannot enter the critique state.
+
+**Experiment.** `atom-06/experiment/` compares reference-label-only with paired-exact-evidence on
+the unchanged incomplete and corrected calendar pair. A label scored zero because it proves neither
+text. The selected contract retained identity and both passages, refused the invented reference
+quote, and exposed a specific visible gap in both cases.
+
+**Promotion and real operator path.** The verified assembly SHA-256 is
+`cab2eab37cc5dbc89e8f3208586a624f70063a2f83b3f4007233a8e0aa7e7654`.
+`atom-06/operator-validation/` records the public open, register-reference, benchmark, and two-reader
+route. The controller authorized the final atom at proof event
+`9efbe1e9ed01c12ff5cf7955ea3443c05ebb5c6338f29731fcd3d28dfea679f7`.
+
+**Cost.** Two unchanged real cases and no additional model calls; the isolated atom evaluates the
+reference-evidence boundary rather than repeating semantic judgment work already proven in Atom 3.

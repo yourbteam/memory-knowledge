@@ -1,0 +1,125 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The incomplete calendar is compared against the exact Month 11 row present in the complete reference.",
+        "id": "calendar-red",
+        "kind": "failure",
+        "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-red.tar"
+      },
+      {
+        "expected_outcome": "The corrected calendar demonstrates exact Month 11 evidence on both sides of the comparison.",
+        "id": "calendar-green",
+        "kind": "success",
+        "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-green.tar"
+      }
+    ],
+    "id": "critique-paired-benchmark",
+    "outcome": "A benchmark criticism carries immutable reference identity plus exact quotations from both the delivered unit and the registered reference.",
+    "practical_value": "The operator can see the concrete quality gap instead of receiving an unsupported claim that the work is below standard.",
+    "stopping_condition": "The unchanged incomplete and corrected calendar cases both retain paired exact evidence, invented reference words refuse, and a benchmark defect cannot complete without the pair."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use paired-exact-evidence unchanged.",
+    "consumes": [
+      {
+        "artifact": "paired-benchmark-contract",
+        "probe_id": "paired-benchmark"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "calendar-red",
+        "calendar-green"
+      ],
+      "failure_criterion": "Either side is absent, invented, or detached from immutable identity.",
+      "operator_path": "Open each unchanged page, register the complete calendar reference, attach both exact passages, then record both readers.",
+      "success_criterion": "The incomplete and corrected calendars both expose the exact professional comparison."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Naming a standard is sufficient evidence of the quality gap.",
+          "id": "reference-label-only",
+          "implementation": "Store the verdict with a reference label but no paired words.",
+          "predicted_tradeoff": "Compact, but neither side of the comparison is independently checkable."
+        },
+        {
+          "hypothesis": "Frozen identity plus exact words from both texts makes the gap inspectable.",
+          "id": "paired-exact-evidence",
+          "implementation": "Register the reference and attach exact delivered and reference quotations.",
+          "predicted_tradeoff": "Two copied passages in exchange for a concrete standard and repair target."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "reference-identity"
+          },
+          {
+            "method": "sum",
+            "name": "two-sided-grounding"
+          },
+          {
+            "method": "sum",
+            "name": "invented-quote-refusal"
+          },
+          {
+            "method": "sum",
+            "name": "visible-gap-specificity"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "reference-identity"
+          },
+          {
+            "direction": "maximize",
+            "name": "two-sided-grounding"
+          },
+          {
+            "direction": "maximize",
+            "name": "invented-quote-refusal"
+          },
+          {
+            "direction": "maximize",
+            "name": "visible-gap-specificity"
+          }
+        ]
+      },
+      "goal": "Make a professional comparison inspectable on both sides.",
+      "id": "paired-benchmark",
+      "inputs": [
+        {
+          "case_id": "calendar-red"
+        },
+        {
+          "case_id": "calendar-green"
+        }
+      ],
+      "practical_value": "The operator can see the concrete quality gap instead of receiving an unsupported claim that the work is below standard.",
+      "proof": {
+        "failure_criterion": "A defect completes with only a label, either passage is ungrounded, or reference identity can be replaced.",
+        "success_criterion": "Both cases retain the immutable reference and exact words from each side, while invented reference words refuse."
+      },
+      "winner_output": {
+        "artifact": "paired-benchmark-contract",
+        "description": "Immutable reference registration, exact two-sided quotations, and a defect gate."
+      },
+      "work_type": "code",
+      "work_type_reason": "Code freezes reference identity and verifies both exact passages before accepting a defect."
+    }
+  ],
+  "schema_version": 2
+}

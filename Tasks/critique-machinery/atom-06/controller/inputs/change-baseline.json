@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "atomic_step_id": "critique-paired-benchmark",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "295dd0d491c170e590f2210d057e57e833b17af8a10800fdf96cfe6b42dc1e4e",
+      "size": 40211
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "23a6d8c36abe801f8ad1e07e83fa494f1969e4ffb0c05d55f627b2b31033d354",
+      "size": 8289
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

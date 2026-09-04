@@ -1,0 +1,76 @@
+{
+  "baseline_sha256": "0f2e8066ff239748a93c7205f94a4333cd2dbab6a69f913336207072333e9b02",
+  "candidates": [
+    {
+      "approach_id": "paired-exact-evidence",
+      "artifact": "paired-benchmark-contract",
+      "bundle_sha256": "986daa68210eca2f6ee0fb3bb51380129d5e43aa75de5698e74d478644dcfa93",
+      "probe_id": "paired-benchmark"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-paired-benchmark",
+    "development_manifest_sha256": "2b5e4ae66de55328fb88f3dd83c83b22453ba7a79ab86c48b400e4898afc5100"
+  },
+  "inputs": [
+    {
+      "case_id": "calendar-red",
+      "path": "calendar-red.input",
+      "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+      "size": 3553792
+    },
+    {
+      "case_id": "calendar-green",
+      "path": "calendar-green.input",
+      "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+      "size": 5398528
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "paired-benchmark"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "f8dbc4ca645e2db683bf51426ccccdb2c59a393b300e6b13608445c234346b91",
+      "size": 45374
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "paired-benchmark"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "ee3b58b493082772d17f652293a5b118ebb77848961ff5bcb08e29f61f42037c",
+      "size": 10403
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "f8dbc4ca645e2db683bf51426ccccdb2c59a393b300e6b13608445c234346b91",
+        "size": 45374
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "ee3b58b493082772d17f652293a5b118ebb77848961ff5bcb08e29f61f42037c",
+        "size": 10403
+      }
+    ],
+    "root": "source",
+    "sha256": "910ca9ec0fb08acb7af3b39ac7a9f0f4f97a31eb91f2354165bf9e24c0c6a0ff"
+  },
+  "status": "assembled"
+}

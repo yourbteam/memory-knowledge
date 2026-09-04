@@ -1,0 +1,63 @@
+{
+  "cases": {
+    "calendar-green": {
+      "benchmark": {
+        "delivered_quote": "| Month 12 | Amplify | Executive, communications, service and stakeholder teams | Year-close scorecard and next-cycle recalibration, with the Conversation Management loop running as the always-on baseline. | The Invisible Thread works when proof is visible. | Needs: Key-Message Table (KMT) | Owned and executive reporting | Executive scorecard completed with paid, earned, shared, owned, service and reputation measures. |",
+        "delivered_quote_sha256": "ecd3e8e2a0f2dcdb1082c97bc01595e878d74cf5d3dbd37cf0755ccce6432f33",
+        "reference_id": "complete-calendar",
+        "reference_page_sha256": "8b75299e2279b6749542b2f5e848507d799e4119b08a6f1071717ce36d8f18c6",
+        "reference_quote": "| Month 11 | Amplify | Parent-group stakeholders, media and professional influencers | Credible third-party amplification, with The Observatory newsroom running as the always-on baseline. | Useful relationships are stronger than broad claims about size. | Needs: 30-second pitch | Earned, stakeholder briefings and shared | Influencer use of approved language, earned quality and absence of do-not-say breaches. |",
+        "reference_quote_sha256": "c446ca22482cbd7898f3b11b59f81e439f9bc55218d14851869c6a6a1e57c04b",
+        "strategy": "paired-exact-evidence"
+      },
+      "case_id": "calendar-green",
+      "cell_id": "u-008-eb8c85bd::benchmark-vs-reference",
+      "invalid_reference_refusal": "critique refused: reference benchmark quote for cell 'u-008-eb8c85bd::benchmark-vs-reference' is not an exact 25-character passage; copy its words from the immutable reference text.",
+      "outcome": "agreement-clear",
+      "status": "satisfied"
+    },
+    "calendar-red": {
+      "benchmark": {
+        "delivered_quote": "| Month 12 | Amplify | Leadership, media, customers and employees | Proof-year recap and recalibration | The company people already rely on is becoming more useful, modern and personally relevant. | Press release | Earned media, owned recap hub, social and internal cascade | Reputation pull-through, proof believability, sentiment quality, content reuse and next-cycle decisions |",
+        "delivered_quote_sha256": "d2462da13c16e5d41aad1172a8af79c2783ed948a70328e8a724092f9957762b",
+        "reference_id": "complete-calendar",
+        "reference_page_sha256": "8b75299e2279b6749542b2f5e848507d799e4119b08a6f1071717ce36d8f18c6",
+        "reference_quote": "| Month 11 | Amplify | Parent-group stakeholders, media and professional influencers | Credible third-party amplification, with The Observatory newsroom running as the always-on baseline. | Useful relationships are stronger than broad claims about size. | Needs: 30-second pitch | Earned, stakeholder briefings and shared | Influencer use of approved language, earned quality and absence of do-not-say breaches. |",
+        "reference_quote_sha256": "c446ca22482cbd7898f3b11b59f81e439f9bc55218d14851869c6a6a1e57c04b",
+        "strategy": "paired-exact-evidence"
+      },
+      "case_id": "calendar-red",
+      "cell_id": "u-008-2a91bbf4::benchmark-vs-reference",
+      "invalid_reference_refusal": "critique refused: reference benchmark quote for cell 'u-008-2a91bbf4::benchmark-vs-reference' is not an exact 25-character passage; copy its words from the immutable reference text.",
+      "outcome": "agreement-defect",
+      "status": "satisfied"
+    }
+  },
+  "champion": "paired-exact-evidence",
+  "criteria_frozen_at": "spec.md",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "approach_id": "paired-exact-evidence",
+      "metrics": {
+        "invented-quote-refusal": 2,
+        "reference-identity": 2,
+        "two-sided-grounding": 2,
+        "visible-gap-specificity": 2
+      },
+      "rank": 1
+    },
+    {
+      "approach_id": "reference-label-only",
+      "metrics": {
+        "invented-quote-refusal": 0,
+        "reference-identity": 0,
+        "two-sided-grounding": 0,
+        "visible-gap-specificity": 0
+      },
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

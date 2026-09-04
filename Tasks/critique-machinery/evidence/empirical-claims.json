@@ -116,6 +116,29 @@
       },
       "operator_validation": "Tasks/critique-machinery/atom-05/operator-validation",
       "status": "promoted"
+    },
+    {
+      "atom_id": "critique-paired-benchmark",
+      "claim": "Registering an immutable reference and requiring exact words from both the delivered unit and that reference makes the quality gap inspectable; a reference label alone proves neither side.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-06/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-06/experiment/comparison.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-06/experiment/comparison.json",
+      "metrics": {
+        "reference-label-only": {
+          "reference-identity": 0,
+          "two-sided-grounding": 0,
+          "invented-quote-refusal": 0,
+          "visible-gap-specificity": 0
+        },
+        "paired-exact-evidence": {
+          "reference-identity": 2,
+          "two-sided-grounding": 2,
+          "invented-quote-refusal": 2,
+          "visible-gap-specificity": 2
+        }
+      },
+      "operator_validation": "Tasks/critique-machinery/atom-06/operator-validation",
+      "status": "promoted"
     }
   ],
   "schema_version": 1

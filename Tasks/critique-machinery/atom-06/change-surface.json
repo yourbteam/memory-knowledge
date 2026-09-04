@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "critique-paired-benchmark",
+  "baseline_sha256": "b1f5f155f5641d5ccdce7817d10fc10f6158e53078f251172aff671f90b56212",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "f8dbc4ca645e2db683bf51426ccccdb2c59a393b300e6b13608445c234346b91",
+      "before_mode": 420,
+      "before_sha256": "295dd0d491c170e590f2210d057e57e833b17af8a10800fdf96cfe6b42dc1e4e",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "ee3b58b493082772d17f652293a5b118ebb77848961ff5bcb08e29f61f42037c",
+      "before_mode": 420,
+      "before_sha256": "23a6d8c36abe801f8ad1e07e83fa494f1969e4ffb0c05d55f627b2b31033d354",
+      "kind": "changed",
+      "path": "tests/test_critique_machinery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

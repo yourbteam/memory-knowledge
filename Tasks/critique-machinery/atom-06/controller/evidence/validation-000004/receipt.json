@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-paired-benchmark",
+  "promotion_event_sha256": "bdd30446fdc6b563ea7d2db92c17a7c0ffee7253928b129d2d29c69cf6757aec",
+  "cases": [
+    {
+      "case_id": "calendar-red",
+      "verdict": "satisfied",
+      "reason": "The promoted CLI retained the incomplete calendar's exact Month 12 words beside the complete reference's exact Month 11 words and refused an invented reference passage.",
+      "evidence": [
+        {
+          "case_id": "calendar-red",
+          "path": "operator-validation/calendar-red.json",
+          "sha256": "9471ebedcf1070cd15d638ae5c451bcfa51c249845ecd890bf8405378bdb9363"
+        }
+      ]
+    },
+    {
+      "case_id": "calendar-green",
+      "verdict": "satisfied",
+      "reason": "The promoted CLI retained exact delivered and reference passages on the corrected calendar and refused an invented reference passage.",
+      "evidence": [
+        {
+          "case_id": "calendar-green",
+          "path": "operator-validation/calendar-green.json",
+          "sha256": "c6a0c5a523ca800578c97c0e7f22bf4a49779348ee465ef053a141a6a6735ad0"
+        }
+      ]
+    }
+  ]
+}

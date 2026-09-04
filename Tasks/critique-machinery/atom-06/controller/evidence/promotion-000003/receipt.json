@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "critique-paired-benchmark",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "0be08b1cfefa2e812d81e4b7b63209a8318565609cbbbad9a536202b54ea8171",
+  "experiment_assembly_sha256": "cab2eab37cc5dbc89e8f3208586a624f70063a2f83b3f4007233a8e0aa7e7654",
+  "changed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "901dd757621f10101ae3357bd2f0e8f02ab70a49967f746bcd26d248313c0dad"
+  },
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "699b79246d055a9805fc849594275c747ccf8a70f76e87c9fe9ad981413bc2c6"
+  },
+  "evidence": [
+    {
+      "case_id": "calendar-red",
+      "path": "operator-validation/calendar-red.json",
+      "sha256": "9471ebedcf1070cd15d638ae5c451bcfa51c249845ecd890bf8405378bdb9363"
+    },
+    {
+      "case_id": "calendar-green",
+      "path": "operator-validation/calendar-green.json",
+      "sha256": "c6a0c5a523ca800578c97c0e7f22bf4a49779348ee465ef053a141a6a6735ad0"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "critique-paired-benchmark",
+  "outcome": "A benchmark criticism carries immutable reference identity plus exact quotations from both the delivered unit and the registered reference.",
+  "practical_value": "The operator can see the concrete quality gap instead of receiving an unsupported claim that the work is below standard.",
+  "stopping_condition": "The unchanged incomplete and corrected calendar cases both retain paired exact evidence, invented reference words refuse, and a benchmark defect cannot complete without the pair.",
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "calendar-red",
+      "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-red.tar",
+      "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+      "kind": "failure",
+      "expected_outcome": "The incomplete calendar is compared against the exact Month 11 row present in the complete reference."
+    },
+    {
+      "case_id": "calendar-green",
+      "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-green.tar",
+      "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+      "kind": "success",
+      "expected_outcome": "The corrected calendar demonstrates exact Month 11 evidence on both sides of the comparison."
+    }
+  ]
+}
