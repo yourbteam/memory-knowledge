@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "s12-approve-door",
+  "promotion_event_sha256": "3feb40ab863ba95128dd7c150360d866e492a83f87094851694d3ee8518332b2",
+  "cases": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "verdict": "satisfied",
+      "reason": "the canonical contract accepts and renders the corrected real pack",
+      "evidence": [{
+        "case_id": "case-btm-v2-unapproved",
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/accepted-receipts/validation-evidence-2/case-btm-v2-unapproved.json",
+        "sha256": "13ce93002be99704310756ab04b37e20c129de2f988541026662c79aa0023596"
+      }]
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "verdict": "satisfied",
+      "reason": "the canonical contract accepts and renders the corrected real pack",
+      "evidence": [{
+        "case_id": "case-btm-v2-approved-later",
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/accepted-receipts/validation-evidence-2/case-btm-v2-approved-later.json",
+        "sha256": "eabc9dfc1041a4a5f62125f9b2bfa9c6f891bd999815c74334cee93e1fbcd4b7"
+      }]
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "verdict": "satisfied",
+      "reason": "the canonical contract accepts and renders the corrected real pack",
+      "evidence": [{
+        "case_id": "case-btm-v2-no-decider",
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/accepted-receipts/validation-evidence-2/case-btm-v2-no-decider.json",
+        "sha256": "9e26b51e20906d854b170f65f34e0e687e64dd159ff79aff42c9797b3bfd07da"
+      }]
+    },
+    {
+      "case_id": "case-btm-v2-half-record",
+      "verdict": "satisfied",
+      "reason": "the canonical contract refuses by name",
+      "evidence": [{
+        "case_id": "case-btm-v2-half-record",
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/accepted-receipts/validation-evidence-2/case-btm-v2-half-record.json",
+        "sha256": "3caafc8bf4785f6f60301ed24bdc3bb71dbaa875fe1ff95f48ccb5affa2f45f0"
+      }]
+    }
+  ]
+}

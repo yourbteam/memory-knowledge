@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "cd65c7f74dda56214197ae0da126b21465eb3f9d6b73969f1be72abe13bc98d0",
+  "assessment_adapter_sha256": "74bead08f3afcf0af8442c33b6f0b89fcb7c4e9ff061f14635a15cbe2bf8d585",
+  "atomic_step_id": "s12-approve-door",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

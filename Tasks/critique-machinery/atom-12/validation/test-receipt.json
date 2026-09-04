@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "command": ".venv/bin/python -m pytest tests/test_atom_building_machinery.py tests/test_client_skill_projections.py tests/test_install_skills.py tests/test_validate_skills.py -q",
+  "result": "75 passed, 11 subtests passed",
+  "duration_seconds": 12.79,
+  "full_repository": {
+    "command": ".venv/bin/python -m pytest -q",
+    "result": "2262 passed, 41 subtests passed, 1 skipped, 1 failed",
+    "duration_seconds": 254.32,
+    "known_failure": "tests/prevention/test_owner_contract_materialization.py::test_materialized_executable_contracts_are_byte_stable_and_complete",
+    "cause": "The prevention contract materializer intentionally resolves the absolute canonical checkout, so its byte-stability assertion differs inside this isolated worktree.",
+    "canonical_checkout_confirmation": "1 passed in 0.22s"
+  },
+  "new_model_calls": 0
+}

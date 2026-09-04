@@ -1,0 +1,59 @@
+{
+  "case_ids": [
+    "case-btm-v2-unapproved",
+    "case-btm-v2-approved-later",
+    "case-btm-v2-no-decider",
+    "case-btm-v2-half-record"
+  ],
+  "champion": "door-from-lock",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "render-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "prose-untouched"
+      }
+    ]
+  },
+  "probe_id": "s12-approve-door-contract",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "prose-untouched": 1.0,
+        "refusal-actionable": 0.0,
+        "render-correct": 1.0,
+        "verdict-correct": 0.0
+      },
+      "approach_id": "door-from-lock",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "prose-untouched": 1.0,
+        "refusal-actionable": 0.0,
+        "render-correct": 0.0,
+        "verdict-correct": 0.0
+      },
+      "approach_id": "no-door",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

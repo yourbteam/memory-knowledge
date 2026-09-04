@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "criteria_source": "../experiment-plan.json",
+  "promotion_applied": false,
+  "new_model_calls": 0,
+  "winner": "carried-earliest-baseline",
+  "approaches": [
+    {
+      "id": "carried-earliest-baseline",
+      "score": 6,
+      "maximum": 6,
+      "criteria": {
+        "all-four-recorded-experiments-replay": true,
+        "final-surface-is-nonempty": true,
+        "final-paths-equal-recorded-first-baseline-to-promotion-diff": true,
+        "status-names-four-run-chain": true,
+        "authorization-records-chain-closure": true,
+        "mismatched-complete-and-tampered-predecessors-refuse": true
+      },
+      "evidence": [
+        "probe-result.json",
+        "selected-chain/change-surface.json",
+        "selected-chain/atom-s12-approve-door/ledger.jsonl",
+        "../candidates/carried-earliest-baseline/atom_controller.py"
+      ]
+    },
+    {
+      "id": "fresh-baseline-each-rebuild",
+      "score": 1,
+      "maximum": 2,
+      "criteria": {
+        "same-final-replay-refuses-on-empty-surface": true,
+        "no-transcript-only-ordering-requirement": false
+      },
+      "evidence": [
+        "control/change-surface.json",
+        "control/record-promotion.stderr.txt",
+        "../frozen-red/attempt-3/change-surface.json",
+        "../candidates/fresh-baseline-each-rebuild/atom_controller.py"
+      ]
+    }
+  ],
+  "final_observation": {
+    "frozen_empty_paths": 0,
+    "control_empty_paths": 0,
+    "selected_accumulated_paths": 3,
+    "supersession_chain_runs": 4,
+    "chain_closed_by_authorize_next": true,
+    "new_model_calls": 0
+  }
+}

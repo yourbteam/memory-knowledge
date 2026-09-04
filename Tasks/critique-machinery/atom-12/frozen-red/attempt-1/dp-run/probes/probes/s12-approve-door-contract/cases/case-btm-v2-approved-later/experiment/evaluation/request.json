@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/cases/case-btm-v2-approved-later/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/cases/case-btm-v2-approved-later/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/cases/case-btm-v2-approved-later/experiment/variants/control/telemetry.jsonl",
+          "sha256": "a7fcfb56b230f3f70d09a0c11efa5d65a36a28a21667a4408f112991c8e78910"
+        }
+      ],
+      "execution": {
+        "duration_ms": 116,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "6fb93db8c6e7566e092e6f989485150094c637b64d6af3c5e5634a62e1de7de3",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/cases/case-btm-v2-approved-later/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/cases/case-btm-v2-approved-later/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/cases/case-btm-v2-approved-later/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "f992ce755b559da3aef9059633442715e9b34aa192f9f7bc638d9e39292ba3e0"
+        }
+      ],
+      "execution": {
+        "duration_ms": 112,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "5472c1f52110453e02e9d55c9bf65f77513d22a6353c9d7bdd743d33fe3d7f7e",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-28575740082e9e10a109",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "verdict-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "refusal-actionable"
+    },
+    {
+      "direction": "maximize",
+      "name": "render-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "prose-untouched"
+    }
+  ],
+  "schema_version": 1
+}

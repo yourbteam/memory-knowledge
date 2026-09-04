@@ -1,0 +1,39 @@
+{
+ "schema_version": 1,
+ "status": "promoted",
+ "atomic_step_id": "s12-approve-door",
+ "controller": "prototype-driven-implementation",
+ "experiment_event_sha256": "757a4883b04120a2c0dfcdae3e30055d1c92c4dcc6fadf0a714a64eec061f372",
+ "experiment_assembly_sha256": "60a346bb79aad1e6bb2235971bb37fb6b8698c29cf16f02119ce774dc22e2104",
+ "changed_paths": [],
+ "change_surface": {
+  "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/change-surface.json",
+  "sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0"
+ },
+ "review": {
+  "path": "/Users/kamenkamenov/united-partners/atom-receipts/s12-approve-door/review.json",
+  "sha256": "a7a60e90f6e30976c242fff5b17a2295389a8ecd66125d8a75fb276077071ede"
+ },
+ "evidence": [
+  {
+   "case_id": "case-btm-v2-unapproved",
+   "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-unapproved.json",
+   "sha256": "ef9b81baa0b1f8673e62b5b7ccc0fde59669f74504c374768fb6918da04ed957"
+  },
+  {
+   "case_id": "case-btm-v2-approved-later",
+   "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-approved-later.json",
+   "sha256": "ce27e71abc55fc3de3b4ba2f5b2f9352407a2867018c5e31550d45f3abe0ee2c"
+  },
+  {
+   "case_id": "case-btm-v2-no-decider",
+   "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-no-decider.json",
+   "sha256": "a02eb09a784685cb61b56e6cbdfcbc798c29085de3ceab39930ebf93d930986f"
+  },
+  {
+   "case_id": "case-btm-v2-half-record",
+   "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-half-record.json",
+   "sha256": "f966d07d03785274b7b2004cccf887012122455bec751eca533f4fc2e877d0a6"
+  }
+ ]
+}

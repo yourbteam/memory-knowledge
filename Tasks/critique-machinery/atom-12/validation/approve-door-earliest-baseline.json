@@ -1,0 +1,14 @@
+{
+  "case_id": "approve-door-earliest-baseline",
+  "verdict": "satisfied",
+  "attempt_1_baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+  "final_carried_baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+  "selected_chain_length": 4,
+  "recorded_experiment_verdicts": [
+    "passed",
+    "failed",
+    "passed",
+    "passed"
+  ],
+  "evidence": "Tasks/critique-machinery/atom-12/experiment/probe-result.json"
+}

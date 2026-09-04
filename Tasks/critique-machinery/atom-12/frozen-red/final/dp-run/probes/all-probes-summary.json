@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "probe_ids": [
+    "s12-approve-door-contract"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "f87cc2f92474557e95cfed71770c57b8365e40c3631c87660be03a45e03910e4",
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "ffdd5388ceed86232b4d2b67de7891cc7d6af36f81bea445b213a8601fd09625",
+  "atomic_outcome": "When the roadmap's approval record is empty, the open-items block carries one door read from the record \u2014 'Approve the owners and the calendar \u2014 <platform decider> before Month <first calendar month>' \u2014 and none once an approval is recorded; a roadmap with no recorded decider refuses by name rather than inventing an approver.",
+  "atomic_step_id": "s12-approve-door",
+  "case_id": "case-btm-v2-approved-later",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-approved-later/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-approved-later/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-approved-later/telemetry.jsonl",
+      "sha256": "b0e3b7fb46497b045e81fb91b834bba75a21270faefe84a51c21276e0a0a347d"
+    }
+  ],
+  "expected_outcome": "a recorded approval closes the door",
+  "operator_path": "probe_entry.py on the composed tree over each captured case",
+  "overall_criterion": "Door with decider and month on the real pack; no door once approved; refusal without a decider.",
+  "schema_version": 1
+}

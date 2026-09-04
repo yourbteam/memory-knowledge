@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "approach_id": "door-from-lock",
+      "bundle": "../../bundles/door-from-lock",
+      "bundle_sha256": "6d935c101fe48a9a2e4f7f1f1b7867198f78eb4f4c852883aafa9dde817ba661",
+      "candidate_sha256": "5bbce0ee804c9bf34e2f1057bd16e7b2d7399460237198abb1663658546c3f85",
+      "case_ids": [
+        "case-btm-v2-unapproved",
+        "case-btm-v2-approved-later",
+        "case-btm-v2-no-decider",
+        "case-btm-v2-half-record"
+      ],
+      "error": null,
+      "probe_id": "s12-approve-door-contract",
+      "status": "reused"
+    },
+    {
+      "approach_id": "no-door",
+      "bundle": "../../bundles/no-door",
+      "bundle_sha256": "887faf837e23bca765a6cd2921f3306e71b8118b8b5487981639fa6d5a935255",
+      "candidate_sha256": "a40b2c99874828e1e2a8818cfb23669c67129a14a2a9beec051a67c383090302",
+      "case_ids": [
+        "case-btm-v2-unapproved",
+        "case-btm-v2-approved-later",
+        "case-btm-v2-no-decider",
+        "case-btm-v2-half-record"
+      ],
+      "error": null,
+      "probe_id": "s12-approve-door-contract",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

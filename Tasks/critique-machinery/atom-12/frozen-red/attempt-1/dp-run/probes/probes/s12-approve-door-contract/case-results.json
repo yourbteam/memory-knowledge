@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "output": "cases/case-btm-v2-unapproved",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "output": "cases/case-btm-v2-approved-later",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "output": "cases/case-btm-v2-no-decider",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

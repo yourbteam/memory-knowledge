@@ -1,0 +1,11 @@
+{
+  "only_relocated_field": "ledger[1].payload.experiment_path",
+  "replay_evidence_sha256": "44752a935efccaab53c56fe1acdb52fc0ffc2052601adb55dd5f271a3ebec5d3",
+  "replay_experiment_path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/replay-source/atom-s12-approve-door-attempt-1/evidence/experiment-000002",
+  "replay_latest_event_sha256": "9879b7afae5ddf3ac2b5a60e45e1671d4ca91edb06237017aa39fb7fc184c2cb",
+  "replay_run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/replay-source/atom-s12-approve-door-attempt-1",
+  "schema_version": 1,
+  "source_evidence_sha256": "44752a935efccaab53c56fe1acdb52fc0ffc2052601adb55dd5f271a3ebec5d3",
+  "source_experiment_path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/controller-run/evidence/experiment-000002",
+  "source_run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/attempt-1/controller-run"
+}

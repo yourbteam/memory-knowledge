@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "c04598c229edc8daee80be0a21fcbd4d3f831955e019daec7a387ae09666095f",
+  "experiment_assembly_sha256": "0f13eb943b9ccc1c7ac18d30fcca99ffcbd2f2d4cc5c47755bcf55b3151facd7",
+  "changed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/promotion/change-surface-v3.json",
+    "sha256": "71dda7170e5a35974e4c31c70cc5101764b4394bddd12224126570c4d4c45749"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/promotion/review.json",
+    "sha256": "be62d8bd682c75eedd9be6c80969c46020e7b6ffc902a1ec6660cf5d80d152dc"
+  },
+  "evidence": [
+    {
+      "case_id": "approve-door-empty-third-surface",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/attempt-3/change-surface.json",
+      "sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0"
+    },
+    {
+      "case_id": "approve-door-earliest-baseline",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/attempt-1/controller-run/inputs/change-baseline.json",
+      "sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b"
+    },
+    {
+      "case_id": "approve-door-accepted-final-surface",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/final/change-surface.json",
+      "sha256": "bda57e390780ec54da8a23f9eee271d235ea91d0d384224685f6c95896d38508"
+    }
+  ]
+}

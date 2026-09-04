@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "f72d27b18abbae0bea55313e116e36284688d23bea9c0d112eeaf1253748fc8f",
+  "atom_run_id": "37ed4a6d636a3a4b94992644f6d742c794361339324efc8bdccf7d6238f72172",
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441"
+}

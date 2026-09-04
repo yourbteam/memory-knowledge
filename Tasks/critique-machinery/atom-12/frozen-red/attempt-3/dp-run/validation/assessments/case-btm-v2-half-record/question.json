@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "60a346bb79aad1e6bb2235971bb37fb6b8698c29cf16f02119ce774dc22e2104",
+  "atomic_outcome": "When the roadmap's approval record is empty, the open-items block carries one door read from the record \u2014 'Approve the owners and the calendar \u2014 <platform decider> before Month <first calendar month>' \u2014 and none once an approval is recorded; a roadmap with no recorded decider refuses by name rather than inventing an approver.",
+  "atomic_step_id": "s12-approve-door",
+  "case_id": "case-btm-v2-half-record",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-half-record/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-half-record/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-half-record/telemetry.jsonl",
+      "sha256": "d0521dea96900043d2a12c15d91effb2aa63118eed02924bd83fd06a8770973c"
+    }
+  ],
+  "expected_outcome": "a half-filled approval record refuses by name before any door",
+  "operator_path": "probe_entry.py on the composed tree over each captured case",
+  "overall_criterion": "No door on the unapproved real pack, or an invented approver.",
+  "schema_version": 1
+}

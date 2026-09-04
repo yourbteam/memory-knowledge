@@ -1,0 +1,30 @@
+{
+  "experiment_id": "development-probe-7e5c73ab24f628b74dea",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "door-from-lock",
+      "bundle": "../../bundles/door-from-lock",
+      "bundle_sha256": "2391f637ff94c38faf425848d859ef89789c92ddc8e506ebfaefaecde41122dd",
+      "case_ids": [
+        "case-btm-v2-unapproved",
+        "case-btm-v2-approved-later",
+        "case-btm-v2-no-decider"
+      ],
+      "probe_id": "s12-approve-door-contract",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "no-door",
+      "bundle": "../../bundles/no-door",
+      "bundle_sha256": "3f0e3e85e28596bf4ad78f7e07c6aa65df0adeb9ae1760f2998dde7e0d5d1da4",
+      "case_ids": [
+        "case-btm-v2-unapproved",
+        "case-btm-v2-approved-later",
+        "case-btm-v2-no-decider"
+      ],
+      "probe_id": "s12-approve-door-contract",
+      "variant_id": "variation-2"
+    }
+  ]
+}

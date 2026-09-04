@@ -1,0 +1,10 @@
+{
+  "case_id": "approve-door-empty-third-surface",
+  "verdict": "satisfied",
+  "frozen_surface_sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0",
+  "frozen_changed_paths": [],
+  "control_changed_paths": [],
+  "control_record_promotion_exit": 2,
+  "control_refusal": "Atom Building Machinery refused at record-promotion: changed_paths is []; provide one nonempty ordered list of strings",
+  "evidence": "Tasks/critique-machinery/atom-12/experiment/probe-result.json"
+}

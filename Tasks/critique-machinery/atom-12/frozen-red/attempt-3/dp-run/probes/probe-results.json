@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/s12-approve-door-contract",
+      "probe_id": "s12-approve-door-contract",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

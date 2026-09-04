@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "e02381da6b3020310789aa4102fb7c506b46af2ed904ea83df8fde0e05f71cca",
+      "size": 8319
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "806c9557176266699a779c989c7156207f439f5f90f4d700e06e47ab0c18c1c4",
+      "size": 61286
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "daa37198d0ab07eea4cc3217abd3fd16a9ccc5f9c07b76ecf90927cc44a06dee",
+      "size": 29988
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "f805677439afbd2856ccf29b5a17a8ccd831b1e4ae3aca8d915098c37b2c35f2",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

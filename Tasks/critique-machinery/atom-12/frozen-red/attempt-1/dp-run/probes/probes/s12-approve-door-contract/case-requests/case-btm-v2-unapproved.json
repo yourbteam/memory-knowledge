@@ -1,0 +1,30 @@
+{
+  "approach_bundles": [
+    {
+      "approach_id": "door-from-lock",
+      "bundle": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/bundles/door-from-lock",
+      "bundle_sha256": "2391f637ff94c38faf425848d859ef89789c92ddc8e506ebfaefaecde41122dd"
+    },
+    {
+      "approach_id": "no-door",
+      "bundle": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/probes/probes/s12-approve-door-contract/bundles/no-door",
+      "bundle_sha256": "3f0e3e85e28596bf4ad78f7e07c6aa65df0adeb9ae1760f2998dde7e0d5d1da4"
+    }
+  ],
+  "case_id": "case-btm-v2-unapproved",
+  "development_manifest": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/development-manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/evaluator_adapter.py",
+      "sha256": "552a5e5bc729a620e9ced08f30b906400f41a700598502d404831f7d2483bfb3"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "s12-approve-door-contract",
+  "schema_version": 1
+}

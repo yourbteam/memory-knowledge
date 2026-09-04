@@ -1,0 +1,13 @@
+{
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "chain": [
+    {
+      "baseline_sha256": "a5b4e0c49903cc64d114ba5103ebd9e12e36f2207fb5d487345dcea75e2abcab",
+      "latest_event_sha256": "a67c698afa0ba85a3906cbad818ba1181c84b5d154481f21cf631c33090b7e8c",
+      "request_sha256": "f72d27b18abbae0bea55313e116e36284688d23bea9c0d112eeaf1253748fc8f",
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/controller"
+    }
+  ],
+  "previous_run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/controller",
+  "schema_version": 1
+}

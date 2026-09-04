@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "criteria_frozen_before_implementation": true,
+  "model_calls": 0,
+  "real_chain": [
+    "atom-s12-approve-door-attempt-1",
+    "atom-s12-approve-door-attempt-2",
+    "atom-s12-approve-door-attempt-3",
+    "atom-s12-approve-door"
+  ],
+  "approaches": [
+    {
+      "id": "carried-earliest-baseline",
+      "hypothesis": "A hash-bound supersession chain preserves the atom's full surface across fresh immutable runs.",
+      "implementation": "Record a verified predecessor chain at start and copy its earliest baseline into the successor run.",
+      "predicted_tradeoff": "Adds one explicit start flag and one immutable sidecar while keeping ordinary starts unchanged.",
+      "criteria": [
+        "all-four-recorded-experiments-replay",
+        "final-surface-is-nonempty",
+        "final-paths-equal-recorded-first-baseline-to-promotion-diff",
+        "status-names-four-run-chain",
+        "authorization-records-chain-closure",
+        "mismatched-complete-and-tampered-predecessors-refuse"
+      ]
+    },
+    {
+      "id": "fresh-baseline-each-rebuild",
+      "hypothesis": "The existing fresh-start contract is sufficient if operators order edits after the final rebuild.",
+      "implementation": "Keep capturing the current tree on every start and rely on operators to delay canonical edits.",
+      "predicted_tradeoff": "No controller change, but the correct edit order remains outside code and rebuilds can erase the surface.",
+      "criteria": [
+        "same-final-replay-refuses-on-empty-surface",
+        "no-transcript-only-ordering-requirement"
+      ]
+    }
+  ]
+}

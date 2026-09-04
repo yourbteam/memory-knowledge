@@ -1,0 +1,36 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "captured_cases": [
+    {
+      "case_id": "approve-door-empty-third-surface",
+      "expected_outcome": "The unchanged fresh-baseline control reproduces an empty derived surface and record-promotion refuses the nonempty changed_paths contract.",
+      "kind": "failure",
+      "sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0",
+      "source_ref": "Tasks/critique-machinery/atom-12/frozen-red/attempt-3/change-surface.json"
+    },
+    {
+      "case_id": "approve-door-earliest-baseline",
+      "expected_outcome": "Every successor carries these exact earliest baseline records after verifying the entire predecessor chain.",
+      "kind": "success",
+      "sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+      "source_ref": "Tasks/critique-machinery/atom-12/frozen-red/attempt-1/controller-run/inputs/change-baseline.json"
+    },
+    {
+      "case_id": "approve-door-accepted-final-surface",
+      "expected_outcome": "The final chained run derives the full path diff from attempt 1 through the recorded promotion, including changes made before later rebuilds.",
+      "kind": "success",
+      "sha256": "bda57e390780ec54da8a23f9eee271d235ea91d0d384224685f6c95896d38508",
+      "source_ref": "Tasks/critique-machinery/atom-12/frozen-red/final/change-surface.json"
+    }
+  ],
+  "outcome": "A rebuilt atom keeps the earliest verified change baseline across an explicit supersession chain, so promotion sees the atom's real accumulated surface.",
+  "practical_value": "Operators can rebuild honestly on new evidence without hiding already-landed canonical changes or relying on a transcript-only edit order.",
+  "schema_version": 1,
+  "stopping_condition": "The four real s12-approve-door experiments replay with a three-path final accumulated surface; the no-supersession control reproduces the empty-surface refusal; chain integrity refusals, status, closure, focused tests, and both client projections pass with zero model calls; the BUILD-LEDGER names every proof artifact."
+}

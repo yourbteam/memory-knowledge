@@ -1,0 +1,14 @@
+{
+  "case_id": "approve-door-accepted-final-surface",
+  "verdict": "satisfied",
+  "selected_changed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit/__pycache__/test_tactical_roadmap.cpython-314-pytest-9.1.1.pyc",
+    "tests/unit/test_tactical_roadmap.py"
+  ],
+  "promotion_recorded": true,
+  "validation_replayed": true,
+  "chain_closed": true,
+  "authorization_idempotent_event_count": 5,
+  "evidence": "Tasks/critique-machinery/atom-12/experiment/probe-result.json"
+}

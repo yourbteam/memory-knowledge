@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "case_id": "case-btm-v2-half-record",
+  "experiment_id": "development-probe-b7ddf068190f9c6449d6",
+  "probe_id": "s12-approve-door-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "dadd7ceca2dc35b2bebee86c5c2d8c47678fa10620a4056feee0732f4b7c327c",
+  "schema_version": 1,
+  "status": "completed"
+}

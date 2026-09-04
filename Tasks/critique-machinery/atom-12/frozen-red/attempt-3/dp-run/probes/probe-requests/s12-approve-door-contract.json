@@ -1,0 +1,27 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "door-from-lock",
+      "request": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/requests/build-door-from-lock.json"
+    },
+    {
+      "approach_id": "no-door",
+      "request": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/requests/build-no-door.json"
+    }
+  ],
+  "development_manifest": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/development-manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/evaluator_adapter.py",
+      "sha256": "552a5e5bc729a620e9ced08f30b906400f41a700598502d404831f7d2483bfb3"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "s12-approve-door-contract",
+  "schema_version": 1
+}

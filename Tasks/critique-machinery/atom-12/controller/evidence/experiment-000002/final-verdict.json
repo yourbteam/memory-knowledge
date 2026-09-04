@@ -1,0 +1,37 @@
+{
+  "assembly_sha256": "c4474d422e40af675bda1fb504d6a74adcb75a76ef3086cc54d20a12ec9b8390",
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "cases": [
+    {
+      "case_id": "approve-door-empty-third-surface",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-12/frozen-red/attempt-3/change-surface.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The unchanged fresh-baseline control reproduces an empty derived surface and record-promotion refuses the nonempty changed_paths contract.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "approve-door-earliest-baseline",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-12/frozen-red/attempt-1/controller-run/inputs/change-baseline.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "Every successor carries these exact earliest baseline records after verifying the entire predecessor chain.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "approve-door-accepted-final-surface",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-12/frozen-red/final/change-surface.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The final chained run derives the full path diff from attempt 1 through the recorded promotion, including changes made before later rebuilds.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "installed",
+  "installer": "working-agreement/install_skills.py",
+  "selected_managed_skills": [
+    "atom-building-machinery"
+  ],
+  "target": "both",
+  "reconciliation": "working-agreement/client-skill-projections.json",
+  "clients": [
+    {
+      "client": "codex",
+      "destination": "/Users/kamenkamenov/.codex/skills/atom-building-machinery",
+      "installed_tree_sha256": "4b1dd23f761e56bd18e3981835ebb8a664187163bad4ee85fbcb1d101dce7136",
+      "projected_tree_sha256": "4b1dd23f761e56bd18e3981835ebb8a664187163bad4ee85fbcb1d101dce7136",
+      "parity_state": "MATCH",
+      "required_runtime": "codex exec",
+      "forbidden_runtime": "claude",
+      "fail_closed": true
+    },
+    {
+      "client": "claude",
+      "destination": "/Users/kamenkamenov/.claude/skills/atom-building-machinery",
+      "installed_tree_sha256": "e472927426f934aacf94cea3fe7b858ef98a0c2515034319a77cf69eff9cffee",
+      "projected_tree_sha256": "e472927426f934aacf94cea3fe7b858ef98a0c2515034319a77cf69eff9cffee",
+      "parity_state": "MATCH",
+      "required_runtime": "claude -p",
+      "forbidden_runtime": "codex exec",
+      "fail_closed": true
+    }
+  ],
+  "unmanaged_preserved": [
+    "/Users/kamenkamenov/.codex/skills/.system",
+    "/Users/kamenkamenov/.claude/skills/direction-check",
+    "/Users/kamenkamenov/.claude/skills/grounded-drive-report"
+  ],
+  "known_out_of_scope": {
+    "id": "CM-D2",
+    "observation": "Direct status invocation from either installed skill directory exits 1 because the projection does not include the repository-level scripts package.",
+    "error": "ModuleNotFoundError: No module named 'scripts'",
+    "scope_reason": "The handover explicitly leaves install-time dependency closure as a standing item; Atom B requires projection refresh and parity, not a CM-D2 fix."
+  },
+  "new_model_calls": 0
+}

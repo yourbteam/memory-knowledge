@@ -1,0 +1,167 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/evaluator_adapter.py",
+        "sha256": "552a5e5bc729a620e9ced08f30b906400f41a700598502d404831f7d2483bfb3"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "name": "render-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "prose-untouched"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-b7ddf068190f9c6449d6",
+  "frozen_input_sha256": "f966d07d03785274b7b2004cccf887012122455bec751eca533f4fc2e877d0a6",
+  "hypothesis": "Every approach declared by mini-probe 's12-approve-door-contract' can run against captured case 'case-btm-v2-half-record', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "prose-untouched": 1.0,
+        "refusal-actionable": 1.0,
+        "render-correct": 1.0,
+        "verdict-correct": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "prose-untouched": 1.0,
+        "refusal-actionable": 0.0,
+        "render-correct": 1.0,
+        "verdict-correct": 0.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.claude/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 96,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "prose-untouched": 1.0,
+        "refusal-actionable": 1.0,
+        "render-correct": 1.0,
+        "verdict-correct": 1.0
+      },
+      "outcome": {
+        "metrics": {
+          "prose-untouched": 1,
+          "refusal-actionable": 1,
+          "render-correct": 1,
+          "verdict-correct": 1
+        },
+        "refusal": "tactical_roadmap_approval_record_invalid: approval carries approved_by='Kamen Kamenov' and approved_at=None -- a roadmap approval names both the person and the date, or neither; fix the stored approval record.",
+        "rendered_head": ""
+      },
+      "reported_metrics": {
+        "prose-untouched": 1,
+        "refusal-actionable": 1,
+        "render-correct": 1,
+        "verdict-correct": 1
+      },
+      "result_sha256": "74a347ac141b7016d9c1f0e2443e7669c88660bb47da2ca8903e9bf20a124c52",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "b4f266ce959e3b861a70b1af86f80bc2b31359d115e41cc4bf1a918059a0ca3c",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 93,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "prose-untouched": 1.0,
+        "refusal-actionable": 0.0,
+        "render-correct": 1.0,
+        "verdict-correct": 0.0
+      },
+      "outcome": {
+        "metrics": {
+          "prose-untouched": 1,
+          "refusal-actionable": 0,
+          "render-correct": 1,
+          "verdict-correct": 0
+        },
+        "pack_keys": [
+          "activation_cards",
+          "approval",
+          "calendar",
+          "global_local",
+          "hero_hub_hygiene_balance",
+          "markets_period",
+          "ownership",
+          "phases",
+          "platform_approval",
+          "proof_building_order",
+          "rollout"
+        ],
+        "refusal": "",
+        "rendered_head": ""
+      },
+      "reported_metrics": {
+        "prose-untouched": 1,
+        "refusal-actionable": 0,
+        "render-correct": 1,
+        "verdict-correct": 0
+      },
+      "result_sha256": "2f022ca2032331a493076657a61264abad869dafc889981dd84b98e89b0f8e7e",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "e743eca8ede46875532e23e6fc1538ce3ab46049a9fffa3b247b275940266631",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/assessment_adapter.py",
+      "sha256": "74bead08f3afcf0af8442c33b6f0b89fcb7c4e9ff061f14635a15cbe2bf8d585"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "s12-approve-door",
+  "baseline": {
+    "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/baseline",
+    "sha256": "94255399a55424212e9cff89c60a784b0bfe1032666ee05f1bc2905e2b7d91b3"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/development-manifest.json",
+    "sha256": "7384ece0367b65a8dc7999699500d20c6c9da17b78bb31df410cc462b7229969"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "s12-approve-door-contract",
+      "request": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/requests/cross-case.json",
+      "request_sha256": "ef54a60c9f0ef5fccab6fbaa9b86217a55a732651a7269c441dea525d893aeb1"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

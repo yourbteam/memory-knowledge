@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "case_id": "case-btm-v2-no-decider",
+  "experiment_id": "development-probe-9689273e7e1430e07c3f",
+  "probe_id": "s12-approve-door-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "a9fa0b1c265314b124b6b2f3cfa42608b9ce904ca088c43be95f8502bea051bd",
+  "schema_version": 1,
+  "status": "completed"
+}

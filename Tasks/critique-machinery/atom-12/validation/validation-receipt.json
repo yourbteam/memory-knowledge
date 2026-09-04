@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "promotion_event_sha256": "2188104d5b13c8f71b7627323df341e99320e87a541c57ab5aae7e41a6a732b6",
+  "cases": [
+    {
+      "case_id": "approve-door-empty-third-surface",
+      "verdict": "satisfied",
+      "reason": "The fresh-baseline control reproduces the exact empty-surface promotion refusal.",
+      "evidence": [
+        {
+          "case_id": "approve-door-empty-third-surface",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/validation/approve-door-empty-third-surface.json",
+          "sha256": "50cc4426deca1f1783f01bde3a88fffe497904451a5790b6643d6d8e0bb2a125"
+        }
+      ]
+    },
+    {
+      "case_id": "approve-door-earliest-baseline",
+      "verdict": "satisfied",
+      "reason": "Every successor carries the exact attempt-1 baseline after verifying its predecessor chain.",
+      "evidence": [
+        {
+          "case_id": "approve-door-earliest-baseline",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/validation/approve-door-earliest-baseline.json",
+          "sha256": "2da67fb106c55483c6d886e1c4530a14a312c7035f75d9cb73d095855dc9fb97"
+        }
+      ]
+    },
+    {
+      "case_id": "approve-door-accepted-final-surface",
+      "verdict": "satisfied",
+      "reason": "The final chained run exposes the three paths changed since attempt 1 and closes exactly once.",
+      "evidence": [
+        {
+          "case_id": "approve-door-accepted-final-surface",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/validation/approve-door-accepted-final-surface.json",
+          "sha256": "74f130bbaff3c86c3767604379ff7bf1ffde3063100ee8b6d949e66a1a85bc40"
+        }
+      ]
+    }
+  ]
+}

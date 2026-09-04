@@ -1,0 +1,84 @@
+{
+  "baseline_sha256": "6fec908d70c647434b36029d0e64f6397805d6220cbbf30e79e1e5ed26ed9899",
+  "candidates": [
+    {
+      "approach_id": "carried-earliest-baseline",
+      "artifact": "surface-baseline-ownership-winner",
+      "bundle_sha256": "9741614e778b945aee0bb1a6ec7bad6134523b76c92f5ed631428a158eacdbf0",
+      "probe_id": "surface-baseline-ownership"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "--help"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "atom-rebuild-preserves-change-surface",
+    "development_manifest_sha256": "ddd2d6ffbbf8066de7233c4222004974ef85fde950a91a7f871bfaa0819c6e67"
+  },
+  "inputs": [
+    {
+      "case_id": "approve-door-empty-third-surface",
+      "path": "approve-door-empty-third-surface.input",
+      "sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0",
+      "size": 232
+    },
+    {
+      "case_id": "approve-door-earliest-baseline",
+      "path": "approve-door-earliest-baseline.input",
+      "sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+      "size": 129043
+    },
+    {
+      "case_id": "approve-door-accepted-final-surface",
+      "path": "approve-door-accepted-final-surface.input",
+      "sha256": "bda57e390780ec54da8a23f9eee271d235ea91d0d384224685f6c95896d38508",
+      "size": 555
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "surface-baseline-ownership"
+      ],
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "5d30e7043c7db33b941af7a5b48a8170e97799cf26b19d73c0b4e43bc33da6a0",
+      "size": 70973
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/atom-building-machinery/scripts/atom_controller.py",
+    "files": [
+      {
+        "path": "skills/atom-building-machinery/SKILL.md",
+        "sha256": "e02381da6b3020310789aa4102fb7c506b46af2ed904ea83df8fde0e05f71cca",
+        "size": 8319
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+        "sha256": "5d30e7043c7db33b941af7a5b48a8170e97799cf26b19d73c0b4e43bc33da6a0",
+        "size": 70973
+      },
+      {
+        "path": "tests/test_atom_building_machinery.py",
+        "sha256": "daa37198d0ab07eea4cc3217abd3fd16a9ccc5f9c07b76ecf90927cc44a06dee",
+        "size": 29988
+      },
+      {
+        "path": "working-agreement/client-skill-projections.json",
+        "sha256": "f805677439afbd2856ccf29b5a17a8ccd831b1e4ae3aca8d915098c37b2c35f2",
+        "size": 11941
+      }
+    ],
+    "root": "source",
+    "sha256": "f4fabf6b20d74a6d42a6eaff642b20393ed2b5f96c502a36cefc3d8642efb02d"
+  },
+  "status": "assembled"
+}

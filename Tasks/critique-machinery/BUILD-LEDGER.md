@@ -408,3 +408,56 @@ failure is the pre-existing absolute-checkout prevention-contract byte-stability
 passes 1/1 in `/Users/kamenkamenov/memory-knowledge`. Global parity also reports unrelated existing
 description-machinery drift in both clients and requirements-machinery drift in Claude; the
 critique-machinery projections themselves match exactly.
+
+## Upgrade Atom B — atom rebuild preserves change surface — 2026-09-04
+
+**Outcome.** `start --supersedes <previous-run>` now creates a hash-bound supersession record and
+carries the chain's earliest verified change baseline into the successor. Start refuses a different
+atomic-step id, a completed predecessor, or any predecessor chain whose request, ledger tip, or
+baseline bytes no longer match its recorded hashes. `change-surface` and `record-promotion` therefore
+measure the atom from its first start. `status` exposes the ordered chain and its closure state;
+`authorize-next` closes the final chain once and returns the existing closure proof on repetition.
+The fixed contract and cases are in `atom-12/spec.md`; the evidence-led direction choice is in
+`atom-12/direction-check.md`.
+
+**Red case.** `atom-12/frozen-red/` preserves the four real `s12-approve-door` controller runs and
+the accepted receipts without modifying their source runs. Attempt 3's frozen change surface has
+SHA-256 `8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0` and an empty
+`changed_paths`; the unchanged fresh-baseline control reproduces exit 2 with the exact refusal
+`changed_paths is []; provide one nonempty ordered list of strings`. The source relocation needed
+to replay attempt 1 changes only its stale absolute experiment path and preserves the evidence hash,
+as recorded in `atom-12/experiment/replay-source/relocation-receipt.json`.
+
+**Experiment.** `atom-12/experiment/probe-result.json` and `comparison.json` replay all four real
+experiment records with zero model calls. The fresh-baseline control scores 1/2 and again loses the
+surface. The selected carried-earliest-baseline approach scores 6/6: its final baseline equals
+attempt 1 at SHA-256 `c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b`,
+its four-run status remains visible, all three integrity refusals fire, and the final accumulated
+surface contains exactly `src/up_harness/tactical_roadmap.py`, the recorded unit-test bytecode path,
+and `tests/unit/test_tactical_roadmap.py`. The promoted assembly SHA-256 is
+`0f13eb943b9ccc1c7ac18d30fcca99ffcbd2f2d4cc5c47755bcf55b3151facd7`.
+
+**Promotion and real operator path.** The canonical machinery self-hosted two further rebuilds as
+`atom-12/controller` → `controller-v2` → `controller-v3`, retaining the original Atom 12 baseline
+and exposing the four-file product surface in `atom-12/promotion/change-surface-v3.json`. Promotion
+and all three captured-case validations are immutable under `controller-v3/evidence/`; the readable
+receipts are in `atom-12/promotion/` and `atom-12/validation/`. The first authorization appended
+proof event `c2d485b320a3e2ca0c4928e02939e874a1fbda72c0119e1cb9bf55026b9eb375`; the second returned
+the same proof with the ledger still at five events, as recorded in
+`atom-12/validation/authorization-receipt.json`.
+
+**Client installation and boundary.** The managed transactional installer refreshed only
+`atom-building-machinery` for Codex and Claude. `atom-12/validation/installation-receipt.json`
+records exact projection parity at
+`4b1dd23f761e56bd18e3981835ebb8a664187163bad4ee85fbcb1d101dce7136` for Codex and
+`e472927426f934aacf94cea3fe7b858ef98a0c2515034319a77cf69eff9cffee` for Claude, with their
+respective fail-closed runtimes. Direct execution from either installed directory still reproduces
+the declared out-of-scope CM-D2 missing `scripts` package; this atom does not claim to close that
+standing item.
+
+**Cost and repository verification.** Two deterministic approaches, one four-run real replay, one
+three-run self-hosted canonical chain, two managed client projections, and zero model calls. The
+focused controller, projection, installer, and skill-validation suites pass 75 tests plus 11
+subtests. The broader suite passes 2,262 tests plus 41 subtests and skips one; its sole failure is
+the pre-existing absolute-checkout prevention-contract byte assertion, which passes 1/1 in the
+canonical checkout. Exact commands and counts are in `atom-12/validation/test-receipt.json`.

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "s12-approve-door",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "b132bd0e1bf1fe2c7eb0b8c9d04b0e1475b63914fd83131342df6a515dcdbae0",
+  "experiment_assembly_sha256": "60a346bb79aad1e6bb2235971bb37fb6b8698c29cf16f02119ce774dc22e2104",
+  "changed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit/__pycache__/test_tactical_roadmap.cpython-314-pytest-9.1.1.pyc",
+    "tests/unit/test_tactical_roadmap.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/selected-chain/change-surface.json",
+    "sha256": "395557a508dcf95875c0d476de5dd48d5a09ca3bd64f43dcafd23d0230faab30"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/selected-chain/review.json",
+    "sha256": "d9632272b154e3c51c1ba1baa68ff5ab8122cd636eeb7cfaaa25c32453b5256e"
+  },
+  "evidence": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/final/dp-run/composition/assembly/inputs/case-btm-v2-unapproved.input",
+      "sha256": "ef9b81baa0b1f8673e62b5b7ccc0fde59669f74504c374768fb6918da04ed957"
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/final/dp-run/composition/assembly/inputs/case-btm-v2-approved-later.input",
+      "sha256": "ce27e71abc55fc3de3b4ba2f5b2f9352407a2867018c5e31550d45f3abe0ee2c"
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/final/dp-run/composition/assembly/inputs/case-btm-v2-no-decider.input",
+      "sha256": "a02eb09a784685cb61b56e6cbdfcbc798c29085de3ceab39930ebf93d930986f"
+    },
+    {
+      "case_id": "case-btm-v2-half-record",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/frozen-red/final/dp-run/composition/assembly/inputs/case-btm-v2-half-record.input",
+      "sha256": "f966d07d03785274b7b2004cccf887012122455bec751eca533f4fc2e877d0a6"
+    }
+  ]
+}

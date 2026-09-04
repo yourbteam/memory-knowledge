@@ -1,0 +1,22 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "approach_id": "door-from-lock",
+      "artifact": "s12-approve-door-scripts",
+      "bundle": "probes/s12-approve-door-contract/bundles/door-from-lock",
+      "bundle_sha256": "2391f637ff94c38faf425848d859ef89789c92ddc8e506ebfaefaecde41122dd",
+      "case_ids": [
+        "case-btm-v2-unapproved",
+        "case-btm-v2-approved-later",
+        "case-btm-v2-no-decider"
+      ],
+      "probe_id": "s12-approve-door-contract",
+      "recommendation": "probes/s12-approve-door-contract/recommendation.json"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "candidates-ready"
+}

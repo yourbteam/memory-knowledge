@@ -1,0 +1,16 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "baseline_sha256": "65ce6cc964f41aadac61d69280c977d3b11cd5190b5e6971091c419555daab08",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "e2c2c24bd3088a1d187f4791f2f5fa1ae55cdd3ab189849c7fa79faa66688403",
+      "before_mode": 420,
+      "before_sha256": "02d7be33ad32b007368ae7b8e98f3761e58b8831deb08c3cefc036eaa0a96871",
+      "kind": "changed",
+      "path": "src/up_harness/tactical_roadmap.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

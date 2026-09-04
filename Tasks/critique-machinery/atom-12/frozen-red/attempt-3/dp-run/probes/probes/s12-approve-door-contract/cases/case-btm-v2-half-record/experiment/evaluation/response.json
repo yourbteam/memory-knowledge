@@ -1,0 +1,1 @@
+{"schema_version": 1, "scores": [{"variant_id": "control", "metrics": {"verdict-correct": 1.0, "refusal-actionable": 1.0, "render-correct": 1.0, "prose-untouched": 1.0}}, {"variant_id": "variation-2", "metrics": {"verdict-correct": 0.0, "refusal-actionable": 0.0, "render-correct": 1.0, "prose-untouched": 1.0}}]}

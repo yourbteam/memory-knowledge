@@ -1,0 +1,1 @@
+{"approach_id": "door-from-lock", "atomic_step_id": "s12-approve-door", "bundle_sha256": "2391f637ff94c38faf425848d859ef89789c92ddc8e506ebfaefaecde41122dd", "probe_id": "s12-approve-door-contract", "status": "verified"}

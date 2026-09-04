@@ -1,0 +1,14 @@
+{
+  "approach_id": "door-from-lock",
+  "atomic_step_id": "s12-approve-door",
+  "bundle": "../../bundles/door-from-lock",
+  "bundle_sha256": "6d935c101fe48a9a2e4f7f1f1b7867198f78eb4f4c852883aafa9dde817ba661",
+  "case_id": "case-btm-v2-approved-later",
+  "experiment_id": "development-probe-8ac0e250abec1401f50f",
+  "probe_id": "s12-approve-door-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

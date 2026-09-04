@@ -1,0 +1,231 @@
+{
+  "completion_order": [
+    "case-btm-v2-half-record",
+    "case-btm-v2-no-decider",
+    "case-btm-v2-approved-later",
+    "case-btm-v2-unapproved"
+  ],
+  "results": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-unapproved/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-unapproved/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-unapproved/telemetry.jsonl",
+          "sha256": "e54ff16a47e1d1672b286736dbacb89a141cd3f1bf9e60aa5882d046c87beb1d"
+        }
+      ],
+      "output": "executions/case-btm-v2-unapproved",
+      "result": {
+        "error": null,
+        "metrics": {
+          "prose-untouched": 1,
+          "refusal-actionable": 1,
+          "render-correct": 1,
+          "verdict-correct": 1
+        },
+        "outcome": {
+          "metrics": {
+            "prose-untouched": 1,
+            "refusal-actionable": 1,
+            "render-correct": 1,
+            "verdict-correct": 1
+          },
+          "pack_keys": [
+            "activation_cards",
+            "approval",
+            "calendar",
+            "global_local",
+            "hero_hub_hygiene_balance",
+            "markets_period",
+            "ownership",
+            "phases",
+            "platform_approval",
+            "proof_building_order",
+            "rollout"
+          ],
+          "rendered_head": "- **Approve the owners and the calendar** \u2014 Kamen Kamenov before Month 1"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-approved-later/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-approved-later/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-approved-later/telemetry.jsonl",
+          "sha256": "a5b38d8b84923e0e3dff293ff6a96791680c041f144b5e8ec8b909e35d06c571"
+        }
+      ],
+      "output": "executions/case-btm-v2-approved-later",
+      "result": {
+        "error": null,
+        "metrics": {
+          "prose-untouched": 1,
+          "refusal-actionable": 1,
+          "render-correct": 1,
+          "verdict-correct": 1
+        },
+        "outcome": {
+          "metrics": {
+            "prose-untouched": 1,
+            "refusal-actionable": 1,
+            "render-correct": 1,
+            "verdict-correct": 1
+          },
+          "pack_keys": [
+            "activation_cards",
+            "approval",
+            "calendar",
+            "global_local",
+            "hero_hub_hygiene_balance",
+            "markets_period",
+            "ownership",
+            "phases",
+            "platform_approval",
+            "proof_building_order",
+            "rollout"
+          ],
+          "rendered_head": ""
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-no-decider/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-no-decider/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-no-decider/telemetry.jsonl",
+          "sha256": "5cb0443e2af8f2e3742a4c5fab2a8548e9006b66e21b06b670f83d73e3e2f6ec"
+        }
+      ],
+      "output": "executions/case-btm-v2-no-decider",
+      "result": {
+        "error": null,
+        "metrics": {
+          "prose-untouched": 1,
+          "refusal-actionable": 1,
+          "render-correct": 1,
+          "verdict-correct": 1
+        },
+        "outcome": {
+          "metrics": {
+            "prose-untouched": 1,
+            "refusal-actionable": 1,
+            "render-correct": 1,
+            "verdict-correct": 1
+          },
+          "pack_keys": [
+            "activation_cards",
+            "approval",
+            "calendar",
+            "global_local",
+            "hero_hub_hygiene_balance",
+            "markets_period",
+            "ownership",
+            "phases",
+            "platform_approval",
+            "proof_building_order",
+            "rollout"
+          ],
+          "rendered_head": "- **Approve the owners and the calendar** \u2014 waits on the platform decision; no decider is recorded"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "case-btm-v2-half-record",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-half-record/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-half-record/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/dp-run/validation/executions/case-btm-v2-half-record/telemetry.jsonl",
+          "sha256": "ccb53c45a78481b13c0a81aac93998d53725d91d3633c358559267cf705c38d1"
+        }
+      ],
+      "output": "executions/case-btm-v2-half-record",
+      "result": {
+        "error": null,
+        "metrics": {
+          "prose-untouched": 1,
+          "refusal-actionable": 1,
+          "render-correct": 1,
+          "verdict-correct": 1
+        },
+        "outcome": {
+          "metrics": {
+            "prose-untouched": 1,
+            "refusal-actionable": 1,
+            "render-correct": 1,
+            "verdict-correct": 1
+          },
+          "refusal": "tactical_roadmap_approval_record_invalid: approval carries approved_by='Kamen Kamenov' and approved_at=None -- a roadmap approval names both the person and the date, or neither; fix the stored approval record.",
+          "rendered_head": ""
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

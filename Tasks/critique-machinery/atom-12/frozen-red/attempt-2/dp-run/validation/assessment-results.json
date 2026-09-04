@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "ffdd5388ceed86232b4d2b67de7891cc7d6af36f81bea445b213a8601fd09625",
+        "atomic_step_id": "s12-approve-door",
+        "case_id": "case-btm-v2-unapproved",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "the case passed and rendered the declared fragments in order",
+        "status": "satisfied"
+      },
+      "case_id": "case-btm-v2-unapproved",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "ffdd5388ceed86232b4d2b67de7891cc7d6af36f81bea445b213a8601fd09625",
+        "atomic_step_id": "s12-approve-door",
+        "case_id": "case-btm-v2-approved-later",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "the case passed and rendered the declared fragments in order",
+        "status": "satisfied"
+      },
+      "case_id": "case-btm-v2-approved-later",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "ffdd5388ceed86232b4d2b67de7891cc7d6af36f81bea445b213a8601fd09625",
+        "atomic_step_id": "s12-approve-door",
+        "case_id": "case-btm-v2-no-decider",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "the case passed and rendered the declared fragments in order",
+        "status": "satisfied"
+      },
+      "case_id": "case-btm-v2-no-decider",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "ffdd5388ceed86232b4d2b67de7891cc7d6af36f81bea445b213a8601fd09625",
+        "atomic_step_id": "s12-approve-door",
+        "case_id": "case-btm-v2-half-record",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "the contract accepted what the case expects refused, or refused what it expects accepted; the refusal misses a marker the retry needs",
+        "status": "not-satisfied"
+      },
+      "case_id": "case-btm-v2-half-record",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

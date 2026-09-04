@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed",
+  "new_model_calls": 0,
+  "frozen_attempt_3_surface": {
+    "path": "../frozen-red/attempt-3/change-surface.json",
+    "sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0",
+    "changed_paths": []
+  },
+  "control": {
+    "surface": "control/change-surface.json",
+    "surface_sha256": "98862c4072fdc244ecfe5cdd983ca047b0dc40a2c564fa93d9c71cf6495679cc",
+    "changed_paths": [],
+    "record_promotion_exit": 2,
+    "record_promotion_stderr": "Atom Building Machinery refused at record-promotion: changed_paths is []; provide one nonempty ordered list of strings"
+  },
+  "selected": {
+    "attempt_1_baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+    "final_carried_baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+    "surface": "selected-chain/change-surface.json",
+    "surface_sha256": "395557a508dcf95875c0d476de5dd48d5a09ca3bd64f43dcafd23d0230faab30",
+    "changed_paths": [
+      "src/up_harness/tactical_roadmap.py",
+      "tests/unit/__pycache__/test_tactical_roadmap.cpython-314-pytest-9.1.1.pyc",
+      "tests/unit/test_tactical_roadmap.py"
+    ],
+    "chain_length": 4,
+    "recorded_experiment_verdicts": ["passed", "failed", "passed", "passed"],
+    "promotion_recorded": true,
+    "validation_replayed": true,
+    "chain_closed": true,
+    "authorization_idempotent_event_count": 5
+  },
+  "refusals": {
+    "different_atomic_step_id": "previous run atomic_step_id is 's12-approve-door'; require 's12-loop-advocates-named'",
+    "complete_previous_run": "previous run /Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/controller-run is complete and cannot be superseded",
+    "tampered_chain_baseline": "recorded change baseline has SHA-256 1a33c3d19c49daa3d7bdf2c87b7c88393a49656e91afd4d5cc912f1b426ec846; require recorded c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b"
+  },
+  "source_relocation": {
+    "receipt": "replay-source/relocation-receipt.json",
+    "only_changed_field": "ledger[1].payload.experiment_path",
+    "source_and_replay_evidence_sha256": "44752a935efccaab53c56fe1acdb52fc0ffc2052601adb55dd5f271a3ebec5d3"
+  }
+}

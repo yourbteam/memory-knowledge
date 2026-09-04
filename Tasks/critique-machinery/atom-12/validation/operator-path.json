@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "operator_path": "start --supersedes, record-experiment, change-surface, record-promotion, record-validation, authorize-next",
+  "real_case_replay": "Tasks/critique-machinery/atom-12/experiment/probe-result.json",
+  "observations": {
+    "control_empty_surface_refused": true,
+    "selected_chain_length": 4,
+    "selected_final_surface_paths": [
+      "src/up_harness/tactical_roadmap.py",
+      "tests/unit/__pycache__/test_tactical_roadmap.cpython-314-pytest-9.1.1.pyc",
+      "tests/unit/test_tactical_roadmap.py"
+    ],
+    "earliest_baseline_preserved": true,
+    "different_atomic_step_refused": true,
+    "complete_predecessor_refused": true,
+    "tampered_chain_baseline_refused": true,
+    "chain_closed_by_authorize_next": true,
+    "repeat_authorization_idempotent": true
+  },
+  "self_hosted_atom_chain": [
+    "Tasks/critique-machinery/atom-12/controller",
+    "Tasks/critique-machinery/atom-12/controller-v2",
+    "Tasks/critique-machinery/atom-12/controller-v3"
+  ],
+  "self_hosted_surface_sha256": "71dda7170e5a35974e4c31c70cc5101764b4394bddd12224126570c4d4c45749",
+  "new_model_calls": 0
+}

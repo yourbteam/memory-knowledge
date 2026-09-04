@@ -1,0 +1,1 @@
+{"approach_id": "no-door", "atomic_step_id": "s12-approve-door", "bundle_sha256": "3f0e3e85e28596bf4ad78f7e07c6aa65df0adeb9ae1760f2998dde7e0d5d1da4", "probe_id": "s12-approve-door-contract", "status": "verified"}

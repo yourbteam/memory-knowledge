@@ -1,0 +1,9 @@
+{
+  "case_id": "case-btm-v2-half-record",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "the case refused actionably with the prose untouched",
+  "verdict": "satisfied"
+}

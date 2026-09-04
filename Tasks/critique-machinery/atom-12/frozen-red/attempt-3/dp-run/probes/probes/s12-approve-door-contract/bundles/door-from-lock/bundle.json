@@ -1,0 +1,80 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "name": "render-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "prose-untouched"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "door-from-lock",
+    "atomic_step_id": "s12-approve-door",
+    "development_manifest_sha256": "3abe89f8a7fb41e7da9c922a8d3aa7e20dc95563f4d5fee265bca69778bebbb0",
+    "probe_id": "s12-approve-door-contract"
+  },
+  "inputs": {
+    "case_ids": [
+      "case-btm-v2-unapproved",
+      "case-btm-v2-approved-later",
+      "case-btm-v2-no-decider",
+      "case-btm-v2-half-record"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "920236ed16827a80c5633f5b13597f2eb3da5eaad3133bc02af2bad29ee5e4d0",
+        "size": 6122
+      },
+      {
+        "path": "scripts/atom_check.py",
+        "sha256": "5e2701fd6da8647e3df9cb8c22165a98e8faf0fbf4f8da9014dfaa0a825c6c17",
+        "size": 150
+      }
+    ],
+    "baseline_sha256": "94255399a55424212e9cff89c60a784b0bfe1032666ee05f1bc2905e2b7d91b3",
+    "candidate_sha256": "5ee43e170e845ae1130249904e186c33cac0377911761773766f46b92e5c13b0",
+    "changed_paths": [
+      "scripts/atom_check.py"
+    ],
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "920236ed16827a80c5633f5b13597f2eb3da5eaad3133bc02af2bad29ee5e4d0",
+        "size": 6122
+      },
+      {
+        "path": "scripts/atom_check.py",
+        "sha256": "7ff904d1c7605035e95fad3542149f1fa1e7114d6561f8ded9c0e4f8a510b8ca",
+        "size": 1268
+      }
+    ],
+    "root": "source"
+  }
+}

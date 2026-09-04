@@ -1,0 +1,9 @@
+{
+  "case_id": "case-btm-v2-unapproved",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "the case passed and rendered the declared fragments in order",
+  "verdict": "satisfied"
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "case-btm-v2-half-record",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "the contract accepted what the case expects refused, or refused what it expects accepted; the refusal misses a marker the retry needs",
+  "verdict": "not-satisfied"
+}

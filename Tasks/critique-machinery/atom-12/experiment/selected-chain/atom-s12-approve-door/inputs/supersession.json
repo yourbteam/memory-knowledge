@@ -1,0 +1,25 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "chain": [
+    {
+      "baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+      "latest_event_sha256": "9879b7afae5ddf3ac2b5a60e45e1671d4ca91edb06237017aa39fb7fc184c2cb",
+      "request_sha256": "87157a11654dd23eaebb9485f52bd736dc3c72f2c5a0eba96cb4ac84f597a5c0",
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/replay-source/atom-s12-approve-door-attempt-1"
+    },
+    {
+      "baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+      "latest_event_sha256": "00a25a854af133a18d6d7f53fd0a6a4b0baeafe65427649bf5578dd626573762",
+      "request_sha256": "0492df5568b037844cb2ed9398b424042947f7bbdfd15426c0b3a9613e122aa7",
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/selected-chain/atom-s12-approve-door-attempt-2"
+    },
+    {
+      "baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+      "latest_event_sha256": "aed6373e2f38117ada2681a3fbb8745496a284cde87fcdec29f8c52e782d068e",
+      "request_sha256": "0492df5568b037844cb2ed9398b424042947f7bbdfd15426c0b3a9613e122aa7",
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/selected-chain/atom-s12-approve-door-attempt-3"
+    }
+  ],
+  "previous_run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/selected-chain/atom-s12-approve-door-attempt-3",
+  "schema_version": 1
+}

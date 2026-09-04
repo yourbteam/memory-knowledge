@@ -1,0 +1,34 @@
+{
+  "allowed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit"
+  ],
+  "atomic_step_id": "s12-approve-door",
+  "captured_cases": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "expected_outcome": "the real v2 pack opens the approve door from its lock",
+      "kind": "success",
+      "sha256": "ef9b81baa0b1f8673e62b5b7ccc0fde59669f74504c374768fb6918da04ed957",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-unapproved.json"
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "expected_outcome": "a recorded approval closes the door",
+      "kind": "success",
+      "sha256": "ce27e71abc55fc3de3b4ba2f5b2f9352407a2867018c5e31550d45f3abe0ee2c",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-approved-later.json"
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "expected_outcome": "no recorded decider refuses by name",
+      "kind": "failure",
+      "sha256": "a7a6b55d641b3c5858def4a8ed73d43439001fab238a335457901d20ab81fab9",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-approve-door/cases/case-btm-v2-no-decider.json"
+    }
+  ],
+  "outcome": "When the roadmap's approval record is empty, the open-items block carries one door read from the record \u2014 'Approve the owners and the calendar \u2014 <platform decider> before Month <first calendar month>' \u2014 and none once an approval is recorded; a roadmap with no recorded decider refuses by name rather than inventing an approver.",
+  "practical_value": "One located cell (critique run claude-seat-s12-btm-page-v2, unit u-001, CFO seat): the version 2 page says what is not approved and opens no door for it.",
+  "schema_version": 1,
+  "stopping_condition": "The real v2 pack renders the approve door naming its decider and Month 1; the same pack approved renders none; a pack with no decider refuses by name."
+}

@@ -1,0 +1,154 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The unchanged fresh-baseline control reproduces an empty derived surface and record-promotion refuses the nonempty changed_paths contract.",
+        "id": "approve-door-empty-third-surface",
+        "kind": "failure",
+        "sha256": "8ec63111b2e0f140119961843b09a9520d74c64bb76158eca16f92949a1ad6e0",
+        "source_ref": "Tasks/critique-machinery/atom-12/frozen-red/attempt-3/change-surface.json"
+      },
+      {
+        "expected_outcome": "Every successor carries these exact earliest baseline records after verifying the entire predecessor chain.",
+        "id": "approve-door-earliest-baseline",
+        "kind": "success",
+        "sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+        "source_ref": "Tasks/critique-machinery/atom-12/frozen-red/attempt-1/controller-run/inputs/change-baseline.json"
+      },
+      {
+        "expected_outcome": "The final chained run derives the full path diff from attempt 1 through the recorded promotion, including changes made before later rebuilds.",
+        "id": "approve-door-accepted-final-surface",
+        "kind": "success",
+        "sha256": "bda57e390780ec54da8a23f9eee271d235ea91d0d384224685f6c95896d38508",
+        "source_ref": "Tasks/critique-machinery/atom-12/frozen-red/final/change-surface.json"
+      }
+    ],
+    "id": "atom-rebuild-preserves-change-surface",
+    "outcome": "A rebuilt atom keeps the earliest verified change baseline across an explicit supersession chain, so promotion sees the atom's real accumulated surface.",
+    "practical_value": "Operators can rebuild honestly on new evidence without hiding already-landed canonical changes or relying on a transcript-only edit order.",
+    "stopping_condition": "The four real s12-approve-door experiments replay with a three-path final accumulated surface; the no-supersession control reproduces the empty-surface refusal; chain integrity refusals, status, closure, focused tests, and both client projections pass with zero model calls; the BUILD-LEDGER names every proof artifact."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use one supersession boundary without changing ordinary atom lifecycle behavior.",
+    "consumes": [
+      {
+        "artifact": "surface-baseline-ownership-winner",
+        "probe_id": "surface-baseline-ownership"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "approve-door-empty-third-surface",
+        "approve-door-earliest-baseline",
+        "approve-door-accepted-final-surface"
+      ],
+      "failure_criterion": "The final carried surface is empty or differs from the first-baseline-to-current path diff.",
+      "operator_path": "Replay the four preserved s12-approve-door controller records and authorize the final chain.",
+      "success_criterion": "The four real s12-approve-door experiments replay with a three-path final accumulated surface; the no-supersession control reproduces the empty-surface refusal; chain integrity refusals, status, closure, focused tests, and both client projections pass with zero model calls; the BUILD-LEDGER names every proof artifact."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/atom-building-machinery/SKILL.md",
+        "skills/atom-building-machinery/scripts/atom_controller.py",
+        "tests/test_atom_building_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A hash-bound supersession chain preserves the atom's full surface across fresh immutable runs.",
+          "id": "carried-earliest-baseline",
+          "implementation": "Record a verified predecessor chain at start and copy its earliest baseline into the successor run.",
+          "predicted_tradeoff": "Adds one explicit start flag and one immutable sidecar while keeping ordinary starts unchanged."
+        },
+        {
+          "hypothesis": "The existing fresh-start contract is sufficient if operators order edits after the final rebuild.",
+          "id": "fresh-baseline-each-rebuild",
+          "implementation": "Keep capturing the current tree on every start and rely on operators to delay canonical edits.",
+          "predicted_tradeoff": "No controller change, but the correct edit order remains outside code and rebuilds can erase the surface."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "all-four-recorded-experiments-replay"
+          },
+          {
+            "method": "sum",
+            "name": "final-surface-is-nonempty"
+          },
+          {
+            "method": "sum",
+            "name": "final-paths-equal-recorded-first-baseline-to-promotion-diff"
+          },
+          {
+            "method": "sum",
+            "name": "status-names-four-run-chain"
+          },
+          {
+            "method": "sum",
+            "name": "authorization-records-chain-closure"
+          },
+          {
+            "method": "sum",
+            "name": "mismatched-complete-and-tampered-predecessors-refuse"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "all-four-recorded-experiments-replay"
+          },
+          {
+            "direction": "maximize",
+            "name": "final-surface-is-nonempty"
+          },
+          {
+            "direction": "maximize",
+            "name": "final-paths-equal-recorded-first-baseline-to-promotion-diff"
+          },
+          {
+            "direction": "maximize",
+            "name": "status-names-four-run-chain"
+          },
+          {
+            "direction": "maximize",
+            "name": "authorization-records-chain-closure"
+          },
+          {
+            "direction": "maximize",
+            "name": "mismatched-complete-and-tampered-predecessors-refuse"
+          }
+        ]
+      },
+      "goal": "Preserve the earliest verified surface baseline through immutable atom rebuilds.",
+      "id": "surface-baseline-ownership",
+      "inputs": [
+        {
+          "case_id": "approve-door-empty-third-surface"
+        },
+        {
+          "case_id": "approve-door-earliest-baseline"
+        },
+        {
+          "case_id": "approve-door-accepted-final-surface"
+        }
+      ],
+      "practical_value": "Operators can rebuild honestly on new evidence without hiding already-landed canonical changes or relying on a transcript-only edit order.",
+      "proof": {
+        "failure_criterion": "Any real replay loses the first baseline, hides the chain, accepts a damaged predecessor, or produces an empty final surface.",
+        "success_criterion": "The four real s12-approve-door experiments replay with a three-path final accumulated surface; the no-supersession control reproduces the empty-surface refusal; chain integrity refusals, status, closure, focused tests, and both client projections pass with zero model calls; the BUILD-LEDGER names every proof artifact."
+      },
+      "winner_output": {
+        "artifact": "surface-baseline-ownership-winner",
+        "description": "The selected hash-bound supersession controller."
+      },
+      "work_type": "code",
+      "work_type_reason": "Start, surface derivation, status, and closure are deterministic controller boundaries."
+    }
+  ],
+  "schema_version": 2
+}

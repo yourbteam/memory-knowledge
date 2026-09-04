@@ -1,0 +1,15 @@
+{
+  "aggregated_summary_sha256": "ca1174537b1ebc4ebfc3e284fc7698d7ad05fb598ae72086469e807a2d781eee",
+  "atomic_step_id": "s12-approve-door",
+  "case_ids": [
+    "case-btm-v2-unapproved",
+    "case-btm-v2-approved-later",
+    "case-btm-v2-no-decider",
+    "case-btm-v2-half-record"
+  ],
+  "probe_id": "s12-approve-door-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "ce5ce29f45a03128cb13c5c1049cae3c94cd37944881dea9b15e5ba5183222b9",
+  "schema_version": 1,
+  "status": "completed"
+}

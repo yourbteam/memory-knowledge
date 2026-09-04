@@ -1,0 +1,82 @@
+{
+  "baseline_sha256": "94255399a55424212e9cff89c60a784b0bfe1032666ee05f1bc2905e2b7d91b3",
+  "candidates": [
+    {
+      "approach_id": "door-from-lock",
+      "artifact": "s12-approve-door-scripts",
+      "bundle_sha256": "6091366599e4f511e22ee6379a917753cddec996b605064c16326c79b821fac0",
+      "probe_id": "s12-approve-door-contract"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "s12-approve-door",
+    "development_manifest_sha256": "3abe89f8a7fb41e7da9c922a8d3aa7e20dc95563f4d5fee265bca69778bebbb0"
+  },
+  "inputs": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "path": "case-btm-v2-unapproved.input",
+      "sha256": "ef9b81baa0b1f8673e62b5b7ccc0fde59669f74504c374768fb6918da04ed957",
+      "size": 28578
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "path": "case-btm-v2-approved-later.input",
+      "sha256": "ce27e71abc55fc3de3b4ba2f5b2f9352407a2867018c5e31550d45f3abe0ee2c",
+      "size": 28562
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "path": "case-btm-v2-no-decider.input",
+      "sha256": "a02eb09a784685cb61b56e6cbdfcbc798c29085de3ceab39930ebf93d930986f",
+      "size": 28652
+    },
+    {
+      "case_id": "case-btm-v2-half-record",
+      "path": "case-btm-v2-half-record.input",
+      "sha256": "f966d07d03785274b7b2004cccf887012122455bec751eca533f4fc2e877d0a6",
+      "size": 28563
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "s12-approve-door-contract"
+      ],
+      "path": "scripts/atom_check.py",
+      "sha256": "7ff904d1c7605035e95fad3542149f1fa1e7114d6561f8ded9c0e4f8a510b8ca",
+      "size": 1268
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "920236ed16827a80c5633f5b13597f2eb3da5eaad3133bc02af2bad29ee5e4d0",
+        "size": 6122
+      },
+      {
+        "path": "scripts/atom_check.py",
+        "sha256": "7ff904d1c7605035e95fad3542149f1fa1e7114d6561f8ded9c0e4f8a510b8ca",
+        "size": 1268
+      }
+    ],
+    "root": "source",
+    "sha256": "5ee43e170e845ae1130249904e186c33cac0377911761773766f46b92e5c13b0"
+  },
+  "status": "assembled"
+}

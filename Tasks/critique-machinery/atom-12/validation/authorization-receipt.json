@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "status": "authorized",
+  "atomic_step_id": "atom-rebuild-preserves-change-surface",
+  "supersession_chain": [
+    "Tasks/critique-machinery/atom-12/controller",
+    "Tasks/critique-machinery/atom-12/controller-v2",
+    "Tasks/critique-machinery/atom-12/controller-v3"
+  ],
+  "supersession_chain_closed": true,
+  "event_count_after_first_authorization": 5,
+  "event_count_after_second_authorization": 5,
+  "proof_event_sha256_after_first_authorization": "c2d485b320a3e2ca0c4928e02939e874a1fbda72c0119e1cb9bf55026b9eb375",
+  "proof_event_sha256_after_second_authorization": "c2d485b320a3e2ca0c4928e02939e874a1fbda72c0119e1cb9bf55026b9eb375",
+  "idempotent": true
+}

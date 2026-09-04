@@ -1,0 +1,13 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "chain": [
+    {
+      "baseline_sha256": "c1ef6331eea7c794503fee5124ace51a24ad23c6b15c44ab460465d2f2a8112b",
+      "latest_event_sha256": "9879b7afae5ddf3ac2b5a60e45e1671d4ca91edb06237017aa39fb7fc184c2cb",
+      "request_sha256": "87157a11654dd23eaebb9485f52bd736dc3c72f2c5a0eba96cb4ac84f597a5c0",
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/replay-source/atom-s12-approve-door-attempt-1"
+    }
+  ],
+  "previous_run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-12/experiment/replay-source/atom-s12-approve-door-attempt-1",
+  "schema_version": 1
+}

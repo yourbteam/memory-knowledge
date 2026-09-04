@@ -1,0 +1,37 @@
+{
+  "assembly_sha256": "cd65c7f74dda56214197ae0da126b21465eb3f9d6b73969f1be72abe13bc98d0",
+  "atomic_step_id": "s12-approve-door",
+  "cases": [
+    {
+      "case_id": "case-btm-v2-unapproved",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case passed and rendered the declared fragments in order",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "case-btm-v2-approved-later",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case passed and rendered the declared fragments in order",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "case-btm-v2-no-decider",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case refused actionably with the prose untouched",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

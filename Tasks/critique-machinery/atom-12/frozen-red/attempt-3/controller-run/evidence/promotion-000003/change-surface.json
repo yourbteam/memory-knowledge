@@ -1,0 +1,32 @@
+{
+  "atomic_step_id": "s12-approve-door",
+  "baseline_sha256": "d1bda5390a3cc951ccf1e805d8525b46a82ad725db5c02a373f378a3682f4fd2",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "02d7be33ad32b007368ae7b8e98f3761e58b8831deb08c3cefc036eaa0a96871",
+      "before_mode": 420,
+      "before_sha256": "d7323bed853daa0d46d69ee4290a6eb05228d62a40aa1732975d9e669b7daae7",
+      "kind": "changed",
+      "path": "src/up_harness/tactical_roadmap.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "1e69f709b8ce0c1c0c6a76bc6e3b760673e69dde7ad5fd570d84e4809d9998ee",
+      "before_mode": 420,
+      "before_sha256": "241414618f4dbfdff9a0548961896c955479c60df87798baced944b45bbe08ca",
+      "kind": "changed",
+      "path": "tests/unit/__pycache__/test_tactical_roadmap.cpython-314-pytest-9.1.1.pyc"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "d772f5318982e4295346f4306e78cdc1eb5a72386a35997f74298dfaa1cf5b94",
+      "before_mode": 420,
+      "before_sha256": "5ae1cf5b768eadd43214e3b395517c2ec3afcab5480e6068233914c8e3008a42",
+      "kind": "changed",
+      "path": "tests/unit/test_tactical_roadmap.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}
