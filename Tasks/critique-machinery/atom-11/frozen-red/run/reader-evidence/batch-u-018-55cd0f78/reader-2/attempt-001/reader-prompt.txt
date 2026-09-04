@@ -1,0 +1,2959 @@
+Judge one immutable delivered-page unit through each named lens.
+Return exactly one judgment per lens, in the listed order.
+Vocabulary: reject = contradiction makes the unit unusable; revise = material weakness needs repair; clear = no material defect under that lens.
+For every judgment, select start_line and end_line from NUMBERED UNIT LINES. Code will copy that inclusive passage exactly. Choose a passage whose whitespace-collapsed text has at least 25 characters. Do not use knowledge outside the unit.
+For an upstream-trace reject or revise, also return source_id, source_start_line, and source_end_line selecting exact words from one REGISTERED PRODUCER SOURCE. These fields are optional for clear. Code verifies the named source passage; never infer or paraphrase it.
+Reject or revise only when the quoted words themselves demonstrate a concrete failure of the lens question. Do not penalize a general risk, a style preference, or context absent from this unit. If no concrete failure is present, return clear or fine and quote the strongest words that establish clarity when the schema asks for a quote.
+When a defect is an absent item in a sequential table, prove one gap by selecting the complete row immediately before it through the complete row immediately after it.
+
+FIXED FOCUS
+Judge every listed lens for this unit.
+
+RECORDED SOURCE CONTEXT
+No external source is available for this blind reading. Judge only the immutable unit.
+
+REGISTERED PRODUCER SOURCES
+SOURCE communications-platform
+1: The Stop Line
+2: 
+3: The B Team can own this platform if it makes restraint visible through approved proof, named senior responsibility and clear limits before any artificial intelligence claim reaches the market.
+4: 
+5: It differentiates The B Team by refusing the broad artificial intelligence promise and showing the proof, owner and limit behind each claim.
+6: 
+7: It fits The B Team's strongest established proof: trusted software delivery, senior judgment and careful claims.
+8: 
+9: It can extend into proof pages, founder posts, partner packs, technical artifacts, sales material and talent content without changing the idea.
+10: 
+11: Competitors can talk about governance, but they cannot copy The B Team's approval route, named senior ownership and approved proof library unchanged.
+12: 
+13: It can travel across the United States, the European Union and Sofia because trust, proof and human responsibility are not local claims.
+14: 
+15: Signed by Humans
+16: 
+17: The B Team can own this platform if every serious artificial intelligence claim carries a visible human signature: who checked it, what proof supports it and where the system stops.
+18: 
+19: It stands apart because it makes human responsibility the proof point, not a decorative reassurance after an artificial intelligence claim.
+20: 
+21: It draws from The B Team's senior craft and approval discipline, which are already central to the strategy.
+22: 
+23: It can support founder visibility, technical credibility, recruitment, partner enablement and buyer follow-up because each use shows human ownership.
+24: 
+25: It creates a practical trust mechanism competitors cannot easily copy unless they expose their own approval route and senior accountability.
+26: 
+27: It is durable because buyers in different markets can understand a simple promise: a senior person still owns the work.
+28: 
+29: Paid supports targeted message testing, retargeting and amplification after proof exists; it drives buyers and partners to owned proof pages, then lifts earned stories and shared founder content rather than carrying the reputation story alone.
+30: 
+31: Earned leads this corporate reputation platform once the proof library and public identity cleanup are ready, because independent validation makes The Stop Line harder to dismiss and gives paid, shared and owned channels stronger proof to carry.
+32: 
+33: Shared makes senior ownership visible through founder, executive and team posts; it points audiences to owned proof, gives influencers and partners material they can repeat and helps paid amplification reach warmer audiences.
+34: 
+35: Owned is the proof base: website pages, proof library, approval language, case material, technical artifacts and sales follow-ups; paid drives to it, earned cites it and shared content turns it into a steady public signal.
+36: 
+37: The Stop Line proof page
+38: 
+39: Buyers do not need a bigger artificial intelligence promise; they need to see what is proved, who owns it and where the system stops.
+40: 
+41: Create one owned page that introduces The Stop Line and shows each approved claim with its proof type, senior owner and stated limit.
+42: 
+43: Visitors can inspect the proof behind the claim before they are asked to book a meeting or accept the artificial intelligence story.
+44: 
+45: The B Team has a public proof base that paid, earned, shared and sales activity can all point to.
+46: 
+47: Proof-page visits, time on page, qualified meeting clicks and percentage of public artificial intelligence claims linked to approved proof.
+48: 
+49: Proof library lock and founder-led proof launch.
+50: 
+51: Owners of midsize businesses, technical buyers, partners and senior Sofia talent.
+52: 
+53: The B Team makes artificial intelligence credible by showing The Stop Line before it promotes the claim.
+54: 
+55: The Stop Line makes restraint visible.
+56: 
+57: Owned
+58: 
+59: Signed by Humans founder launch post
+60: 
+61: The human moment makes the artificial intelligence story credible when a senior person visibly checks, owns and signs the work.
+62: 
+63: Publish a founder-led launch post that explains Signed by Humans as the visible promise behind The Stop Line.
+64: 
+65: Readers see the senior responsibility behind the claim and are directed to the owned proof page for evidence.
+66: 
+67: Founder visibility increases while the public story stays inside the approved proof boundary.
+68: 
+69: Founder-post reach, engagement quality, proof-page clicks, partner reshares and qualified inbound conversations.
+70: 
+71: Founder-led proof launch.
+72: 
+73: Owners of midsize businesses, technical buyers, referral partners and senior Sofia talent.
+74: 
+75: Signed by Humans means senior people still own the outcome.
+76: 
+77: Signed by Humans means senior people own the outcome.
+78: 
+79: Shared
+80: 
+81: Partner proof pack
+82: 
+83: Referral partners can carry the story only if the approved proof is simple, repeatable and safe to share.
+84: 
+85: Build a short partner pack that explains The Stop Line, Signed by Humans and the approved proof types behind each claim.
+86: 
+87: Partners get language they can use without inventing claims or stretching evidence.
+88: 
+89: Referral conversations become easier, more consistent and less exposed to unapproved artificial intelligence claims.
+90: 
+91: Partner pack downloads, partner briefings completed, referred qualified leads and claim-compliance checks.
+92: 
+93: Earn third-party validation.
+94: 
+95: Referral partners, ecosystem partners and enterprise buyers.
+96: 
+97: Every artificial intelligence claim earns its place through approved proof before it reaches the market.
+98: 
+99: Proof comes before promotion.
+100: 
+101: Owned and Earned
+102: 
+103: Owner control message test
+104: 
+105: Elena's preference for control and visibility is a strong hypothesis, but it is not settled buyer truth until owners compare the messages.
+106: 
+107: Test a control-led message against an artificial-intelligence-capability message, both anchored in The Stop Line.
+108: 
+109: Owners react to plain-language options that show visibility, ownership and early risk detection without asking them to become technical buyers.
+110: 
+111: The B Team learns whether control should lead owner-facing communication before scaling the message.
+112: 
+113: Preference split, comprehension score, trust lift, meeting intent and qualitative reasons for choice.
+114: 
+115: Message testing.
+116: 
+117: Owners of midsize businesses, led by Elena.
+118: 
+119: Owners get more control and visibility without having to become technical buyers themselves.
+120: 
+121: Owners get control without becoming technical.
+122: 
+123: Paid and Owned
+124: 
+125: Senior craft story series
+126: 
+127: Senior Sofia talent and careful buyers will believe the artificial intelligence story only if it protects judgment rather than celebrating automation alone.
+128: 
+129: Publish a recurring series under Signed by Humans that shows how senior people review work, make decisions and define the stop line.
+130: 
+131: Readers see craft, judgment and responsibility inside artificial intelligence-supported delivery.
+132: 
+133: The talent story and buyer story reinforce each other without turning The B Team into a broad ethics platform.
+134: 
+135: Senior-talent engagement, profile visits, qualified candidate interest, buyer engagement and proof-page clicks.
+136: 
+137: Always-on after launch.
+138: 
+139: Senior Sofia talent and buyers who want craft behind artificial intelligence-supported delivery.
+140: 
+141: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+142: 
+143: Senior craft keeps judgment in the work.
+144: 
+145: Shared and Owned
+146: 
+147: The platform is The Stop Line, launched through Signed by Humans. Its purpose is to make The B Team's artificial intelligence story credible by showing approved proof, senior responsibility and the limit the system will not cross before any claim is promoted.
+148: 
+149: The rollout should move in this order: clean the public identity, lock the proof library, test the control-led owner message, launch the founder-led proof story and then seek earned validation. No delivery date is established beyond 30 June 2027.
+150: 
+151: The plan leads with owners of midsize businesses who want control and visibility, then equips technical buyers with proof. It also supports referral partners, ecosystem partners, enterprise buyers and senior Sofia talent with the same story, adapted to their role.
+152: 
+153: Owned runs always-on as the proof base: proof pages, approval language, case material, technical artifacts, sales follow-ups and frequently asked questions. Shared runs always-on through founder, executive and team posts. The newsroom watches for artificial intelligence trust, governance and buyer-risk moments, then responds only when The B Team has approved proof and a clear stop line to show. Earned leads reputation once proof exists, while paid supports testing, retargeting and amplification.
+154: 
+155: The main tactics are The Stop Line proof page, Signed by Humans founder launch post, partner proof pack, owner control message test and senior craft story series. Each tactic must trace to an audience, a key message and a communications pillar before it goes on the calendar.
+156: 
+157: The calendar should not be built as campaign bursts only. It should combine a few hero moments with steady hub content and hygiene updates, with the middle carrying most of the programme through proof pages, founder posts, buyer explainers, partner material and technical artifacts.
+158: 
+159: The sequence is proof before promotion. If a claim cannot show approved proof, a senior owner and the line the system will not cross, it does not ship; where approval or evidence is not established, the plan must say so instead of filling the gap.
+160: 
+161: The Stop Line
+162: 
+163: The B Team can own this platform if it makes restraint visible through approved proof, named senior responsibility and clear limits before any artificial intelligence claim reaches the market.
+164: 
+165: It differentiates The B Team by refusing the broad artificial intelligence promise and showing the proof, owner and limit behind each claim.
+166: 
+167: It fits The B Team's strongest established proof: trusted software delivery, senior judgment and careful claims.
+168: 
+169: It can extend into proof pages, founder posts, partner packs, technical artifacts, sales material and talent content without changing the idea.
+170: 
+171: Competitors can talk about governance, but they cannot copy The B Team's approval route, named senior ownership and approved proof library unchanged.
+172: 
+173: It can travel across the United States, the European Union and Sofia because trust, proof and human responsibility are not local claims.
+174: 
+175: Signed by Humans
+176: 
+177: The B Team can own this platform if every serious artificial intelligence claim carries a visible human signature: who checked it, what proof supports it and where the system stops.
+178: 
+179: It stands apart because it makes human responsibility the proof point, not a decorative reassurance after an artificial intelligence claim.
+180: 
+181: It draws from The B Team's senior craft and approval discipline, which are already central to the strategy.
+182: 
+183: It can support founder visibility, technical credibility, recruitment, partner enablement and buyer follow-up because each use shows human ownership.
+184: 
+185: It creates a practical trust mechanism competitors cannot easily copy unless they expose their own approval route and senior accountability.
+186: 
+187: It is durable because buyers in different markets can understand a simple promise: a senior person still owns the work.
+188: 
+189: Paid supports targeted message testing, retargeting and amplification after proof exists; it drives buyers and partners to owned proof pages, then lifts earned stories and shared founder content rather than carrying the reputation story alone.
+190: 
+191: Earned leads this corporate reputation platform once the proof library and public identity cleanup are ready, because independent validation makes The Stop Line harder to dismiss and gives paid, shared and owned channels stronger proof to carry.
+192: 
+193: Shared makes senior ownership visible through founder, executive and team posts; it points audiences to owned proof, gives influencers and partners material they can repeat and helps paid amplification reach warmer audiences.
+194: 
+195: Owned is the proof base: website pages, proof library, approval language, case material, technical artifacts and sales follow-ups; paid drives to it, earned cites it and shared content turns it into a steady public signal.
+196: 
+197: The Stop Line proof page
+198: 
+199: Buyers do not need a bigger artificial intelligence promise; they need to see what is proved, who owns it and where the system stops.
+200: 
+201: Create one owned page that introduces The Stop Line and shows each approved claim with its proof type, senior owner and stated limit.
+202: 
+203: Visitors can inspect the proof behind the claim before they are asked to book a meeting or accept the artificial intelligence story.
+204: 
+205: The B Team has a public proof base that paid, earned, shared and sales activity can all point to.
+206: 
+207: Proof-page visits, time on page, qualified meeting clicks and percentage of public artificial intelligence claims linked to approved proof.
+208: 
+209: Proof library lock and founder-led proof launch.
+210: 
+211: Owners of midsize businesses, technical buyers, partners and senior Sofia talent.
+212: 
+213: The B Team makes artificial intelligence credible by showing The Stop Line before it promotes the claim.
+214: 
+215: The Stop Line makes restraint visible.
+216: 
+217: Owned
+218: 
+219: Signed by Humans founder launch post
+220: 
+221: The human moment makes the artificial intelligence story credible when a senior person visibly checks, owns and signs the work.
+222: 
+223: Publish a founder-led launch post that explains Signed by Humans as the visible promise behind The Stop Line.
+224: 
+225: Readers see the senior responsibility behind the claim and are directed to the owned proof page for evidence.
+226: 
+227: Founder visibility increases while the public story stays inside the approved proof boundary.
+228: 
+229: Founder-post reach, engagement quality, proof-page clicks, partner reshares and qualified inbound conversations.
+230: 
+231: Founder-led proof launch.
+232: 
+233: Owners of midsize businesses, technical buyers, referral partners and senior Sofia talent.
+234: 
+235: Signed by Humans means senior people still own the outcome.
+236: 
+237: Signed by Humans means senior people own the outcome.
+238: 
+239: Shared
+240: 
+241: Partner proof pack
+242: 
+243: Referral partners can carry the story only if the approved proof is simple, repeatable and safe to share.
+244: 
+245: Build a short partner pack that explains The Stop Line, Signed by Humans and the approved proof types behind each claim.
+246: 
+247: Partners get language they can use without inventing claims or stretching evidence.
+248: 
+249: Referral conversations become easier, more consistent and less exposed to unapproved artificial intelligence claims.
+250: 
+251: Partner pack downloads, partner briefings completed, referred qualified leads and claim-compliance checks.
+252: 
+253: Earn third-party validation.
+254: 
+255: Referral partners, ecosystem partners and enterprise buyers.
+256: 
+257: Every artificial intelligence claim earns its place through approved proof before it reaches the market.
+258: 
+259: Proof comes before promotion.
+260: 
+261: Owned and Earned
+262: 
+263: Owner control message test
+264: 
+265: Elena's preference for control and visibility is a strong hypothesis, but it is not settled buyer truth until owners compare the messages.
+266: 
+267: Test a control-led message against an artificial-intelligence-capability message, both anchored in The Stop Line.
+268: 
+269: Owners react to plain-language options that show visibility, ownership and early risk detection without asking them to become technical buyers.
+270: 
+271: The B Team learns whether control should lead owner-facing communication before scaling the message.
+272: 
+273: Preference split, comprehension score, trust lift, meeting intent and qualitative reasons for choice.
+274: 
+275: Message testing.
+276: 
+277: Owners of midsize businesses, led by Elena.
+278: 
+279: Owners get more control and visibility without having to become technical buyers themselves.
+280: 
+281: Owners get control without becoming technical.
+282: 
+283: Paid and Owned
+284: 
+285: Senior craft story series
+286: 
+287: Senior Sofia talent and careful buyers will believe the artificial intelligence story only if it protects judgment rather than celebrating automation alone.
+288: 
+289: Publish a recurring series under Signed by Humans that shows how senior people review work, make decisions and define the stop line.
+290: 
+291: Readers see craft, judgment and responsibility inside artificial intelligence-supported delivery.
+292: 
+293: The talent story and buyer story reinforce each other without turning The B Team into a broad ethics platform.
+294: 
+295: Senior-talent engagement, profile visits, qualified candidate interest, buyer engagement and proof-page clicks.
+296: 
+297: Always-on after launch.
+298: 
+299: Senior Sofia talent and buyers who want craft behind artificial intelligence-supported delivery.
+300: 
+301: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+302: 
+303: Senior craft keeps judgment in the work.
+304: 
+305: Shared and Owned
+306: 
+307: The platform is The Stop Line, launched through Signed by Humans. Its purpose is to make The B Team's artificial intelligence story credible by showing approved proof, senior responsibility and the limit the system will not cross before any claim is promoted.
+308: 
+309: The rollout should move in this order: clean the public identity, lock the proof library, test the control-led owner message, launch the founder-led proof story and then seek earned validation. No delivery date is established beyond 30 June 2027.
+310: 
+311: The plan leads with owners of midsize businesses who want control and visibility, then equips technical buyers with proof. It also supports referral partners, ecosystem partners, enterprise buyers and senior Sofia talent with the same story, adapted to their role.
+312: 
+313: Owned runs always-on as the proof base: proof pages, approval language, case material, technical artifacts, sales follow-ups and frequently asked questions. Shared runs always-on through founder, executive and team posts. The newsroom watches for artificial intelligence trust, governance and buyer-risk moments, then responds only when The B Team has approved proof and a clear stop line to show. Earned leads reputation once proof exists, while paid supports testing, retargeting and amplification.
+314: 
+315: The main tactics are The Stop Line proof page, Signed by Humans founder launch post, partner proof pack, owner control message test and senior craft story series. Each tactic must trace to an audience, a key message and a communications pillar before it goes on the calendar.
+316: 
+317: The calendar should not be built as campaign bursts only. It should combine a few hero moments with steady hub content and hygiene updates, with the middle carrying most of the programme through proof pages, founder posts, buyer explainers, partner material and technical artifacts.
+318: 
+319: The sequence is proof before promotion. If a claim cannot show approved proof, a senior owner and the line the system will not cross, it does not ship; where approval or evidence is not established, the plan must say so instead of filling the gap.
+
+SOURCE message-architecture
+1: The tension resolves when restraint becomes the trust signal. The B Team leads with The Stop Line, so every AI claim shows the proof behind it, the people responsible for it and the limit it will not cross.
+2: 
+3: The B Team's role is to make governed AI believable by making the stop line public, provable and Signed by Humans.
+4: 
+5: The market pulls AI stories toward speed and capability. The B Team's credible ground pulls the other way: fewer claims, approved proof, senior responsibility and visible limits.
+6: 
+7: Elena wants the control and visibility AI can bring, but she does not want to become technical to know whether the work is safe. The B Team has to show her where AI helps, where people stay responsible and where the system stops.
+8: 
+9: The B Team makes AI credible by showing The Stop Line: approved proof, senior ownership and the clear limit the system will not cross. Every claim is traceable. Every serious promise is Signed by Humans.
+10: 
+11: Artificial intelligence (AI) has made software claims easier to make and harder to trust. Owners want the benefit, but they need to see who is responsible, what is proved and where the system stops.
+12: 
+13: AI-supported delivery should be useful without becoming vague, hidden or unowned.
+14: 
+15: Buyers do not need a bigger AI promise. They need proof they can inspect, senior people they can hold accountable and a clear line the system will not cross.
+16: 
+17: Every public AI claim is approved, traceable and limited to what The B Team can prove.
+18: 
+19: Work from The Stop Line: proof first, senior ownership visible and every claim Signed by Humans.
+20: 
+21: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.
+22: 
+23: Owners of midsize businesses, technical buyers, partners and senior Sofia talent
+24: 
+25: Awareness
+26: 
+27: The Stop Line makes restraint visible.
+28: 
+29: The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.
+30: 
+31: The B Team claims governed, checked and reviewable AI, not autonomous AI.
+32: 
+33: The approved brief says The B Team claims governed, checked and reviewable AI, never autonomous AI.
+34: 
+35: Do not claim autonomous AI.
+36: 
+37: Do not lead with a broad AI promise before approved proof exists.
+38: 
+39: Owners get more control and visibility without having to become technical buyers themselves.
+40: 
+41: Owners of midsize businesses, led by Elena
+42: 
+43: Relevance
+44: 
+45: Owners get control without becoming technical.
+46: 
+47: Elena should be able to see the work, the risk and the decision points without translating an AI claim herself.
+48: 
+49: The strategy leads with owners who want control and visibility, then equips technical buyers with proof.
+50: 
+51: The Killer Insight Card says owners may care more about visibility, ownership and early risk detection than AI capability, but this remains a testable audience hypothesis until owners compare the messages.
+52: 
+53: Do not treat owner preference for control as settled buyer truth before message testing.
+54: 
+55: Signed by Humans means senior people still own the outcome.
+56: 
+57: Technical buyers, including chief technology officers and architecture owners
+58: 
+59: Logic
+60: 
+61: Signed by Humans means senior people own the outcome.
+62: 
+63: AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.
+64: 
+65: The claim boundary gives Kamen Kamenov final sign-off on positioning, proof lane, claims and public references, while Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+66: 
+67: The approved brief names Kamen Kamenov as final sign-off for positioning, proof lane, claims and public references, and Matthew Maday as technical confirmation for claim-level and AI-language approvals before release.
+68: 
+69: Do not imply AI owns delivery outcomes.
+70: 
+71: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+72: 
+73: Every AI claim earns its place through approved proof before it reaches the market.
+74: 
+75: Referral partners, ecosystem partners and enterprise buyers
+76: 
+77: Commitment
+78: 
+79: Proof comes before promotion.
+80: 
+81: The B Team does not ask the market to accept an AI story without receipts.
+82: 
+83: The proof library marks each approved asset as a named reference, verifiable anonymous reference, technical artifact or internal demo.
+84: 
+85: The measurement brief says proof assets must be marked as named reference, verifiable anonymous reference, technical artifact or internal demo.
+86: 
+87: Do not use unapproved references.
+88: 
+89: Do not defend a broad AI promise when evidence is missing.
+90: 
+91: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+92: 
+93: Senior Sofia talent and buyers who want craft behind AI-supported delivery
+94: 
+95: Emotion
+96: 
+97: Senior craft keeps judgment in the work.
+98: 
+99: Signed by Humans is a promise that judgment has not been removed from the work.
+100: 
+101: The B Team's AI story is credible when senior people govern the work, approve the claim and show where the system stops.
+102: 
+103: The Killer Insight Card says the claim is not that AI makes delivery effortless; it is that senior people govern the work, approve the claim and show where the system stops.
+104: 
+105: Do not celebrate automation alone.
+106: 
+107: Do not inflate refusal to do harmful work into a broad ethics platform.
+108: 
+109: The Stop Line makes restraint visible.
+110: 
+111: This carries the resolution: restraint becomes the trust signal when the line is public, provable and easy to see.
+112: 
+113: Owners of midsize businesses, technical buyers, partners and senior Sofia talent
+114: 
+115: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.
+116: 
+117: Platform and owned proof
+118: 
+119: The proof library, public identity cleanup and claim approval route must be visible before public AI promotion.
+120: 
+121: A launch story that introduces The Stop Line as the public proof of restraint.
+122: 
+123: Proof pages, founder posts and buyer explainers that show the approved proof, responsible person and limit behind each claim.
+124: 
+125: Claim approval checklists, public profile cleanup and consistent wording across website, LinkedIn and sales material.
+126: 
+127: Do not claim autonomous AI.
+128: 
+129: Do not lead with a broad AI promise before approved proof exists.
+130: 
+131: Evergreen
+132: 
+133: Real-time Reactive
+134: 
+135: Owners get control without becoming technical.
+136: 
+137: This carries the protagonist and first proof: Elena wants control and visibility without having to inspect the technology herself.
+138: 
+139: Owners of midsize businesses, led by Elena
+140: 
+141: Owners get more control and visibility without having to become technical buyers themselves.
+142: 
+143: Owner relevance and founder visibility
+144: 
+145: Owners must compare the control-led message with the AI-capability message before this motive is treated as confirmed.
+146: 
+147: A founder-led story about the moment an owner can see what AI is doing, what a senior person checked and where the system stops.
+148: 
+149: Plain-language owner explainers, control-led case stories and meeting assets that show visibility, ownership and early risk detection.
+150: 
+151: Frequently asked questions, sales follow-ups and short LinkedIn posts that keep the same control language throughout.
+152: 
+153: Do not treat owner preference for control as settled buyer truth before message testing.
+154: 
+155: Evergreen
+156: 
+157: Seasonal
+158: 
+159: Signed by Humans means senior people own the outcome.
+160: 
+161: This carries the role: The B Team makes AI believable because named senior people remain responsible for the work and the claim.
+162: 
+163: Technical buyers, including CTOs and architecture owners
+164: 
+165: Signed by Humans means senior people still own the outcome.
+166: 
+167: Technical proof and executive visibility
+168: 
+169: Claim-level and AI-language approvals must be confirmed by Matthew Maday before release.
+170: 
+171: A technical credibility story that shows how senior review governs an AI-supported delivery claim.
+172: 
+173: Technical artifacts, architecture notes, approved demos and proof-led posts from senior leaders.
+174: 
+175: Approval records, proof labels and consistent technical language in sales, web and LinkedIn material.
+176: 
+177: Do not imply AI owns delivery outcomes.
+178: 
+179: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+180: 
+181: Evergreen
+182: 
+183: Real-time Reactive
+184: 
+185: Proof comes before promotion.
+186: 
+187: This carries the tension and decision rule: the market rewards big AI claims, but The B Team only ships the claim when the evidence is approved.
+188: 
+189: Referral partners, ecosystem partners and enterprise buyers
+190: 
+191: Every AI claim earns its place through approved proof before it reaches the market.
+192: 
+193: Referral and partner ecosystem
+194: 
+195: Each claim must be tied to a named reference, verifiable anonymous reference, technical artifact or internal demo.
+196: 
+197: A proof-led launch asset that shows fewer AI claims, clearer evidence and the approval route behind them.
+198: 
+199: Partner-ready proof packs, approved reference stories, technical artifacts and internal demos that make referral conversations easier.
+200: 
+201: Proof labels, reference permissions and claim records that keep partner language inside the approved boundary.
+202: 
+203: Do not use unapproved references.
+204: 
+205: Do not defend a broad AI promise when evidence is missing.
+206: 
+207: Evergreen
+208: 
+209: Seasonal
+210: 
+211: Real-time Reactive
+212: 
+213: Senior craft keeps judgment in the work.
+214: 
+215: This carries the warm thread: the AI story has a human core because a senior person checks, owns and signs the work.
+216: 
+217: Senior Sofia talent and buyers who want craft behind AI-supported delivery
+218: 
+219: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+220: 
+221: Talent pull and brand consistency
+222: 
+223: The story must show that AI protects architectural judgment and senior responsibility, not that automation replaces them.
+224: 
+225: A human-led story under Signed by Humans, centered on the senior person who checks the work before it leaves the team.
+226: 
+227: Craft stories, team visibility, architecture judgment examples and Sofia talent content.
+228: 
+229: Recruitment language, profile copy and social posts that use one consistent craft-led AI story.
+230: 
+231: Do not celebrate automation alone.
+232: 
+233: Do not inflate refusal to do harmful work into a broad ethics platform.
+234: 
+235: Evergreen
+236: 
+237: Seasonal
+238: 
+239: Do not claim autonomous AI.
+240: 
+241: The approved brief says The B Team claims governed, checked and reviewable AI, never autonomous AI.
+242: 
+243: Do not lead with a broad AI promise before approved proof exists.
+244: 
+245: The research pack says The B Team's strongest public proof is trusted software delivery, while public AI proof still needs to be built and approved.
+246: 
+247: Do not use unapproved references.
+248: 
+249: The claim boundary says Kamen Kamenov gives final sign-off on public references.
+250: 
+251: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+252: 
+253: The claim boundary says Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+254: 
+255: Do not imply AI owns delivery outcomes.
+256: 
+257: The strategy says AI supports the work, while senior people still own the outcome.
+258: 
+259: Do not defend a broad AI promise when evidence is missing.
+260: 
+261: The issues preparedness rule says the message narrows instead of defending a broad AI promise when evidence is missing.
+262: 
+263: Do not treat owner preference for control as settled buyer truth before message testing.
+264: 
+265: The Killer Insight Card says Elena's preference for visibility, ownership and early risk detection is a testable audience hypothesis until owners compare the AI-led message with the control-led message.
+266: 
+267: Do not celebrate automation alone.
+268: 
+269: The screening notes say senior Sofia engineers will believe the AI story only if it protects architectural judgement, not if it celebrates automation alone.
+270: 
+271: Do not inflate refusal to do harmful work into a broad ethics platform.
+272: 
+273: The screening notes say refusal to do harmful work can support trust only if it stays as founder-approved proof of judgement, not as an inflated ethics platform.
+274: 
+275: B2B
+276: 
+277: Owned proof, founder and executive visibility and LinkedIn thought leadership lead because The Stop Line has to be seen before it is believed. Referral and partner-ecosystem tracks are weighted because approved proof, senior ownership and visible limits make the story easier for trusted third parties to carry.
+278: 
+279: The Stop Line
+280: 
+281: Signed by Humans
+282: 
+283: The tension resolves when restraint becomes the trust signal. The B Team leads with The Stop Line, so every AI claim shows the proof behind it, the people responsible for it and the limit it will not cross.
+284: 
+285: The B Team's role is to make governed AI believable by making the stop line public, provable and Signed by Humans.
+286: 
+287: The market pulls AI stories toward speed and capability. The B Team's credible ground pulls the other way: fewer claims, approved proof, senior responsibility and visible limits.
+288: 
+289: Elena wants the control and visibility AI can bring, but she does not want to become technical to know whether the work is safe. The B Team has to show her where AI helps, where people stay responsible and where the system stops.
+290: 
+291: The B Team makes AI credible by showing The Stop Line: approved proof, senior ownership and the clear limit the system will not cross. Every claim is traceable. Every serious promise is Signed by Humans.
+292: 
+293: Artificial intelligence (AI) has made software claims easier to make and harder to trust. Owners want the benefit, but they need to see who is responsible, what is proved and where the system stops.
+294: 
+295: AI-supported delivery should be useful without becoming vague, hidden or unowned.
+296: 
+297: Buyers do not need a bigger AI promise. They need proof they can inspect, senior people they can hold accountable and a clear line the system will not cross.
+298: 
+299: Every public AI claim is approved, traceable and limited to what The B Team can prove.
+300: 
+301: Work from The Stop Line: proof first, senior ownership visible and every claim Signed by Humans.
+302: 
+303: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.
+304: 
+305: Owners of midsize businesses, technical buyers, partners and senior Sofia talent
+306: 
+307: Awareness
+308: 
+309: The Stop Line makes restraint visible.
+310: 
+311: The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.
+312: 
+313: The B Team claims governed, checked and reviewable AI, not autonomous AI.
+314: 
+315: The approved brief says The B Team claims governed, checked and reviewable AI, never autonomous AI.
+316: 
+317: Do not claim autonomous AI.
+318: 
+319: Do not lead with a broad AI promise before approved proof exists.
+320: 
+321: Owners get more control and visibility without having to become technical buyers themselves.
+322: 
+323: Owners of midsize businesses, led by Elena
+324: 
+325: Relevance
+326: 
+327: Owners get control without becoming technical.
+328: 
+329: Elena should be able to see the work, the risk and the decision points without translating an AI claim herself.
+330: 
+331: The strategy leads with owners who want control and visibility, then equips technical buyers with proof.
+332: 
+333: The Killer Insight Card says owners may care more about visibility, ownership and early risk detection than AI capability, but this remains a testable audience hypothesis until owners compare the messages.
+334: 
+335: Do not treat owner preference for control as settled buyer truth before message testing.
+336: 
+337: Signed by Humans means senior people still own the outcome.
+338: 
+339: Technical buyers, including chief technology officers and architecture owners
+340: 
+341: Logic
+342: 
+343: Signed by Humans means senior people own the outcome.
+344: 
+345: AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.
+346: 
+347: The claim boundary gives Kamen Kamenov final sign-off on positioning, proof lane, claims and public references, while Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+348: 
+349: The approved brief names Kamen Kamenov as final sign-off for positioning, proof lane, claims and public references, and Matthew Maday as technical confirmation for claim-level and AI-language approvals before release.
+350: 
+351: Do not imply AI owns delivery outcomes.
+352: 
+353: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+354: 
+355: Every AI claim earns its place through approved proof before it reaches the market.
+356: 
+357: Referral partners, ecosystem partners and enterprise buyers
+358: 
+359: Commitment
+360: 
+361: Proof comes before promotion.
+362: 
+363: The B Team does not ask the market to accept an AI story without receipts.
+364: 
+365: The proof library marks each approved asset as a named reference, verifiable anonymous reference, technical artifact or internal demo.
+366: 
+367: The measurement brief says proof assets must be marked as named reference, verifiable anonymous reference, technical artifact or internal demo.
+368: 
+369: Do not use unapproved references.
+370: 
+371: Do not defend a broad AI promise when evidence is missing.
+372: 
+373: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+374: 
+375: Senior Sofia talent and buyers who want craft behind AI-supported delivery
+376: 
+377: Emotion
+378: 
+379: Senior craft keeps judgment in the work.
+380: 
+381: Signed by Humans is a promise that judgment has not been removed from the work.
+382: 
+383: The B Team's AI story is credible when senior people govern the work, approve the claim and show where the system stops.
+384: 
+385: The Killer Insight Card says the claim is not that AI makes delivery effortless; it is that senior people govern the work, approve the claim and show where the system stops.
+386: 
+387: Do not celebrate automation alone.
+388: 
+389: Do not inflate refusal to do harmful work into a broad ethics platform.
+390: 
+391: The Stop Line makes restraint visible.
+392: 
+393: This carries the resolution: restraint becomes the trust signal when the line is public, provable and easy to see.
+394: 
+395: Owners of midsize businesses, technical buyers, partners and senior Sofia talent
+396: 
+397: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.
+398: 
+399: Platform and owned proof
+400: 
+401: The proof library, public identity cleanup and claim approval route must be visible before public AI promotion.
+402: 
+403: A launch story that introduces The Stop Line as the public proof of restraint.
+404: 
+405: Proof pages, founder posts and buyer explainers that show the approved proof, responsible person and limit behind each claim.
+406: 
+407: Claim approval checklists, public profile cleanup and consistent wording across website, LinkedIn and sales material.
+408: 
+409: Do not claim autonomous AI.
+410: 
+411: Do not lead with a broad AI promise before approved proof exists.
+412: 
+413: Evergreen
+414: 
+415: Real-time Reactive
+416: 
+417: Owners get control without becoming technical.
+418: 
+419: This carries the protagonist and first proof: Elena wants control and visibility without having to inspect the technology herself.
+420: 
+421: Owners of midsize businesses, led by Elena
+422: 
+423: Owners get more control and visibility without having to become technical buyers themselves.
+424: 
+425: Owner relevance and founder visibility
+426: 
+427: Owners must compare the control-led message with the AI-capability message before this motive is treated as confirmed.
+428: 
+429: A founder-led story about the moment an owner can see what AI is doing, what a senior person checked and where the system stops.
+430: 
+431: Plain-language owner explainers, control-led case stories and meeting assets that show visibility, ownership and early risk detection.
+432: 
+433: Frequently asked questions, sales follow-ups and short LinkedIn posts that keep the same control language throughout.
+434: 
+435: Do not treat owner preference for control as settled buyer truth before message testing.
+436: 
+437: Evergreen
+438: 
+439: Seasonal
+440: 
+441: Signed by Humans means senior people own the outcome.
+442: 
+443: This carries the role: The B Team makes AI believable because named senior people remain responsible for the work and the claim.
+444: 
+445: Technical buyers, including CTOs and architecture owners
+446: 
+447: Signed by Humans means senior people still own the outcome.
+448: 
+449: Technical proof and executive visibility
+450: 
+451: Claim-level and AI-language approvals must be confirmed by Matthew Maday before release.
+452: 
+453: A technical credibility story that shows how senior review governs an AI-supported delivery claim.
+454: 
+455: Technical artifacts, architecture notes, approved demos and proof-led posts from senior leaders.
+456: 
+457: Approval records, proof labels and consistent technical language in sales, web and LinkedIn material.
+458: 
+459: Do not imply AI owns delivery outcomes.
+460: 
+461: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+462: 
+463: Evergreen
+464: 
+465: Real-time Reactive
+466: 
+467: Proof comes before promotion.
+468: 
+469: This carries the tension and decision rule: the market rewards big AI claims, but The B Team only ships the claim when the evidence is approved.
+470: 
+471: Referral partners, ecosystem partners and enterprise buyers
+472: 
+473: Every AI claim earns its place through approved proof before it reaches the market.
+474: 
+475: Referral and partner ecosystem
+476: 
+477: Each claim must be tied to a named reference, verifiable anonymous reference, technical artifact or internal demo.
+478: 
+479: A proof-led launch asset that shows fewer AI claims, clearer evidence and the approval route behind them.
+480: 
+481: Partner-ready proof packs, approved reference stories, technical artifacts and internal demos that make referral conversations easier.
+482: 
+483: Proof labels, reference permissions and claim records that keep partner language inside the approved boundary.
+484: 
+485: Do not use unapproved references.
+486: 
+487: Do not defend a broad AI promise when evidence is missing.
+488: 
+489: Evergreen
+490: 
+491: Seasonal
+492: 
+493: Real-time Reactive
+494: 
+495: Senior craft keeps judgment in the work.
+496: 
+497: This carries the warm thread: the AI story has a human core because a senior person checks, owns and signs the work.
+498: 
+499: Senior Sofia talent and buyers who want craft behind AI-supported delivery
+500: 
+501: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+502: 
+503: Talent pull and brand consistency
+504: 
+505: The story must show that AI protects architectural judgment and senior responsibility, not that automation replaces them.
+506: 
+507: A human-led story under Signed by Humans, centered on the senior person who checks the work before it leaves the team.
+508: 
+509: Craft stories, team visibility, architecture judgment examples and Sofia talent content.
+510: 
+511: Recruitment language, profile copy and social posts that use one consistent craft-led AI story.
+512: 
+513: Do not celebrate automation alone.
+514: 
+515: Do not inflate refusal to do harmful work into a broad ethics platform.
+516: 
+517: Evergreen
+518: 
+519: Seasonal
+520: 
+521: Do not claim autonomous AI.
+522: 
+523: The approved brief says The B Team claims governed, checked and reviewable AI, never autonomous AI.
+524: 
+525: Do not lead with a broad AI promise before approved proof exists.
+526: 
+527: The research pack says The B Team's strongest public proof is trusted software delivery, while public AI proof still needs to be built and approved.
+528: 
+529: Do not use unapproved references.
+530: 
+531: The claim boundary says Kamen Kamenov gives final sign-off on public references.
+532: 
+533: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+534: 
+535: The claim boundary says Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+536: 
+537: Do not imply AI owns delivery outcomes.
+538: 
+539: The strategy says AI supports the work, while senior people still own the outcome.
+540: 
+541: Do not defend a broad AI promise when evidence is missing.
+542: 
+543: The issues preparedness rule says the message narrows instead of defending a broad AI promise when evidence is missing.
+544: 
+545: Do not treat owner preference for control as settled buyer truth before message testing.
+546: 
+547: The Killer Insight Card says Elena's preference for visibility, ownership and early risk detection is a testable audience hypothesis until owners compare the AI-led message with the control-led message.
+548: 
+549: Do not celebrate automation alone.
+550: 
+551: The screening notes say senior Sofia engineers will believe the AI story only if it protects architectural judgement, not if it celebrates automation alone.
+552: 
+553: Do not inflate refusal to do harmful work into a broad ethics platform.
+554: 
+555: The screening notes say refusal to do harmful work can support trust only if it stays as founder-approved proof of judgement, not as an inflated ethics platform.
+556: 
+557: B2B
+558: 
+559: Owned proof, founder and executive visibility and LinkedIn thought leadership lead because The Stop Line has to be seen before it is believed. Referral and partner-ecosystem tracks are weighted because approved proof, senior ownership and visible limits make the story easier for trusted third parties to carry.
+560: 
+561: The Stop Line
+562: 
+563: Signed by Humans
+
+SOURCE strategy-one-pager
+1: Win two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union by 30 June 2027 (the second quarter of 2027).
+2: 
+3: By 30 June 2027 (the second quarter of 2027), make owners of midsize businesses and technical buyers see The B Team as a proof-led artificial intelligence (AI) engineering partner by publishing only approved, traceable AI claims and lifting buyer trust, proof credibility and founder visibility above their first recorded baselines.
+4: 
+5: The communication objective serves the business objective by giving qualified buyers a clear, proved reason to trust the AI story and take a meeting before the lead target date.
+6: 
+7: Proof-first restraint
+8: 
+9: Own the tension
+10: 
+11: GET owners of midsize businesses, technical buyers and senior Sofia talent WHO see AI claims as easy to overstate TO see The B Team as the AI engineering partner that proves what it claims BY making every public claim traceable to approved proof, senior ownership and visible limits.
+12: 
+13: The B Team makes AI credible by showing the proof, the people responsible and the line it will not cross.
+14: 
+15: It resolves the insight's tension because it turns restraint into the trust signal that can move buyers toward a meeting.
+16: 
+17: Competitors can claim governance, but they cannot copy The B Team's founder sign-off, approved-reference route and refusal to overclaim unchanged.
+18: 
+19: The client can do it if the proof library, public identity cleanup and claim approval route are visible before public release.
+20: 
+21: It can survive a year and a bad news cycle because fewer, approved and traceable claims are easier to defend than broad AI promises.
+22: 
+23: Visible owner control
+24: 
+25: Close the trust gap
+26: 
+27: GET owners of midsize businesses WHO want AI benefits but fear losing control TO see The B Team as the partner that makes work, risk and delivery visible BY translating governed AI into plain control, review and accountability signals.
+28: 
+29: The B Team gives owners clearer control over AI-supported delivery.
+30: 
+31: It fits Elena strongly, but it does not carry the full proof burden for technical buyers and senior Sofia talent.
+32: 
+33: A competitor could also claim clearer control unless The B Team ties it tightly to founder approval and proof assets.
+34: 
+35: The client can express it in plain owner language, but buyer testing must confirm that control beats capability as the first message.
+36: 
+37: It can last through the year, but it is weaker under technical challenge unless paired with detailed proof.
+38: 
+39: Architect-led AI engineering
+40: 
+41: Reposition
+42: 
+43: GET technical buyers WHO doubt newer AI claims from a small software firm TO accept The B Team as a serious AI engineering partner BY leading with architecture ownership, review discipline, technical artifacts and approved delivery proof.
+44: 
+45: The B Team brings senior architecture discipline to governed AI delivery.
+46: 
+47: It fits the proof requirement and Matthew Maday's technical standard, but it risks making the strategy too narrow for the whole buyer base.
+48: 
+49: Many engineering firms can claim architect-led delivery, so distinctiveness depends on proof quality rather than the concept alone.
+50: 
+51: The client can build this from its senior-craft base, but public AI proof still needs to be approved and made visible.
+52: 
+53: It survives technical scrutiny better than broad AI language, but it may not carry Elena's need for control on its own.
+54: 
+55: The strategy should make restraint visible before The B Team promotes its artificial intelligence (AI) story.
+56: It speaks first to Elena, the owner who wants more control and visibility without becoming technical.
+57: The public story should show approved proof, senior responsibility and clear limits before it asks buyers to believe the AI claim.
+58: 
+59: Refreshed at the annual review for the coming year — re-approval pending in writing.
+60: 
+61: By 30 June 2027, increase recognition of The B Team as the proof-led AI engineering partner behind The Stop Line among owners of midsize businesses and technical buyers from the baseline set in the first message-testing wave before launch to the target set in that same wave, contributing to two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union.
+62: 
+63: By 30 June 2027, increase trust in The Stop Line among CTOs and architecture owners from the baseline set in the first buyer interview or survey wave before launch to the target set in that same wave, contributing to two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union.
+64: 
+65: By 30 June 2027, increase understanding of Signed by Humans among owners of midsize businesses from the baseline set in the first owner message test before launch to the target set in that same test, contributing to two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union.
+66: 
+67: By 30 June 2027, decrease unresolved public-profile conflicts among buyer-facing public records from six unresolved conflict areas to zero, contributing to two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union.
+68: 
+69: By 30 June 2027, increase qualified enterprise leads connected to The Stop Line among buyers in the United States and the European Union from sales tracking starting at zero on 25 August 2026 to two qualified enterprise leads per calendar quarter, contributing to the same enterprise-lead objective.
+70: 
+71: Target audience profile & persona: The strategy leads with owners of midsize businesses who want control and visibility, then equips technical buyers, including chief technology officers and architecture owners, with proof. It also supports senior Sofia talent with a craft-led AI story. Persona: Elena.
+72: 
+73: Approach: Proof-first restraint.
+74: Positioning: The B Team makes AI credible by showing the proof, the people responsible and the line it will not cross.
+75: Positioning (lead line): Restraint is the proof.
+76: 
+77: Core narrative: The B Team is not asking buyers to trust AI because it sounds fast or advanced. It asks them to trust AI-supported delivery only where senior people govern the work, approve the claim and show where the system stops.
+78: Key messages: AI supports the work; senior people still own the outcome. Every public AI claim must connect to approved proof. The B Team will not claim autonomous AI. The proof comes before the promotion. Clear limits make the AI story easier to trust.
+79: 
+80: The approved brief says The B Team claims governed, checked and reviewable AI, never autonomous AI. The approved brief says Kamen Kamenov signs positioning, proof lane, claims and public references. The approved brief says Matthew Maday confirms claim-level and AI-language approvals before release. The research pack says The B Team's strongest public proof is trusted software delivery, while public AI proof still needs to be built and approved. The measurement brief says proof assets must be marked as named reference, verifiable anonymous reference, technical artifact or internal demo.
+81: 
+82: Paid, Earned, Shared and Owned (PESO) shape: earned activity leads once the proof library and public identity cleanup are ready, because the reputation gap needs independent credibility. Owned proof pages and founder-led shared posts prepare the evidence; paid activity supports targeted testing and retargeting only.
+83: 
+84: No delivery date is established beyond 30 June 2027 (the second quarter of 2027). The practical order is public identity cleanup, proof library lock, message testing, founder-led proof launch and earned validation.
+85: 
+86: Measurement follows the Association for Measurement and Evaluation of Communication Barcelona Principles 4.0 and the Integrated Evaluation Framework. Core measures are proof credibility, technical-buyer trust, public-profile consistency, founder visibility and talent pull in Sofia.
+87: 
+88: The pilot runs at United Partners' internal cost, and out-of-pocket costs are decided case by case. The main risks are an AI story that outruns proof, public identity inconsistency, unapproved references and unclear data or AI claims.
+89: 
+90: Proof-first restraint
+91: 
+92: It is strongest across fit, distinctiveness, feasibility and durability because it answers the core tension with a proof route The B Team can actually operate. It also gives the other two routes a role without letting either narrow the strategy too early.
+93: 
+94: The B Team serves owners of midsize businesses, technical buyers and senior Sofia talent. This approach covers all three with one idea: AI is credible when proof, senior ownership and limits are visible.
+95: 
+96: It speaks well to Elena, but it does not carry enough technical proof on its own.
+97: 
+98: It can satisfy technical buyers, but it narrows the story before the owner-control opportunity is tested.
+99: 
+100: The recommended approach is believable only if the proof library, public identity cleanup and claim approval route are visible before public AI promotion. Buyers must be able to see what is proved, who owns the claim and where AI stops.
+101: 
+102: If that condition fails, restraint stops looking like discipline and starts looking like a claim without proof.
+103: 
+104: If a message cannot show the approved proof behind the AI claim, the senior owner responsible for it and the line the system will not cross, it does not ship.
+105: 
+106: Earned media leads because the gap is credibility, not reach. Owned and shared channels can state the proof, but independent validation makes the repositioning harder to dismiss.
+107: 
+108: Clean the public identity
+109: 
+110: Lock the proof library
+111: 
+112: Test the control-led message
+113: 
+114: Launch founder-led proof
+115: 
+116: Earn third-party validation
+117: 
+118: The fixed concept is proof-first restraint: The B Team makes AI credible by showing evidence, senior responsibility and limits. In public, it should be shown through approved proof, demonstrations, references and stop lines, not proclaimed as a superiority claim.
+119: 
+120: Kamen Kamenov gives final sign-off on positioning, proof lane, claims and public references. Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+121: 
+122: Restraint is the proof.
+123: 
+124: Proof before promise
+125: 
+126: restraint before promotion
+127: 
+128: Where AI stops, trust starts
+129: 
+130: visible limits as trust
+131: 
+132: Senior-owned AI delivery
+133: 
+134: human responsibility behind AI
+135: 
+136: Under public or buyer challenge, the approach holds because it carries fewer claims and each claim has an approval route and proof type. If evidence is missing, the message narrows instead of defending a broad AI promise.
+137: 
+138: Kamen Kamenov
+139: 
+140: The Stop Line
+141: 
+142: standard-enterprise
+143: 
+144: Win two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union by 30 June 2027 (the second quarter of 2027).
+145: 
+146: By 30 June 2027 (the second quarter of 2027), make owners of midsize businesses and technical buyers see The B Team as a proof-led artificial intelligence (AI) engineering partner by publishing only approved, traceable AI claims and lifting buyer trust, proof credibility and founder visibility above their first recorded baselines.
+147: 
+148: The communication objective serves the business objective by giving qualified buyers a clear, proved reason to trust the AI story and take a meeting before the lead target date.
+149: 
+150: Proof-first restraint
+151: 
+152: Own the tension
+153: 
+154: GET owners of midsize businesses, technical buyers and senior Sofia talent WHO see AI claims as easy to overstate TO see The B Team as the AI engineering partner that proves what it claims BY making every public claim traceable to approved proof, senior ownership and visible limits.
+155: 
+156: The B Team makes AI credible by showing the proof, the people responsible and the line it will not cross.
+157: 
+158: It resolves the insight's tension because it turns restraint into the trust signal that can move buyers toward a meeting.
+159: 
+160: Competitors can claim governance, but they cannot copy The B Team's founder sign-off, approved-reference route and refusal to overclaim unchanged.
+161: 
+162: The client can do it if the proof library, public identity cleanup and claim approval route are visible before public release.
+163: 
+164: It can survive a year and a bad news cycle because fewer, approved and traceable claims are easier to defend than broad AI promises.
+165: 
+166: Visible owner control
+167: 
+168: Close the trust gap
+169: 
+170: GET owners of midsize businesses WHO want AI benefits but fear losing control TO see The B Team as the partner that makes work, risk and delivery visible BY translating governed AI into plain control, review and accountability signals.
+171: 
+172: The B Team gives owners clearer control over AI-supported delivery.
+173: 
+174: It fits Elena strongly, but it does not carry the full proof burden for technical buyers and senior Sofia talent.
+175: 
+176: A competitor could also claim clearer control unless The B Team ties it tightly to founder approval and proof assets.
+177: 
+178: The client can express it in plain owner language, but buyer testing must confirm that control beats capability as the first message.
+179: 
+180: It can last through the year, but it is weaker under technical challenge unless paired with detailed proof.
+181: 
+182: Architect-led AI engineering
+183: 
+184: Reposition
+185: 
+186: GET technical buyers WHO doubt newer AI claims from a small software firm TO accept The B Team as a serious AI engineering partner BY leading with architecture ownership, review discipline, technical artifacts and approved delivery proof.
+187: 
+188: The B Team brings senior architecture discipline to governed AI delivery.
+189: 
+190: It fits the proof requirement and Matthew Maday's technical standard, but it risks making the strategy too narrow for the whole buyer base.
+191: 
+192: Many engineering firms can claim architect-led delivery, so distinctiveness depends on proof quality rather than the concept alone.
+193: 
+194: The client can build this from its senior-craft base, but public AI proof still needs to be approved and made visible.
+195: 
+196: It survives technical scrutiny better than broad AI language, but it may not carry Elena's need for control on its own.
+197: 
+198: The strategy should make restraint visible before The B Team promotes its artificial intelligence (AI) story.
+199: It speaks first to Elena, the owner who wants more control and visibility without becoming technical.
+200: The public story should show approved proof, senior responsibility and clear limits before it asks buyers to believe the AI claim.
+201: 
+202: Communication objective: By 30 June 2027 (the second quarter of 2027), make owners of midsize businesses and technical buyers see The B Team as a proof-led artificial intelligence (AI) engineering partner by publishing only approved, traceable AI claims and lifting buyer trust, proof credibility and founder visibility above their first recorded baselines.
+203: Business objective: Win two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union by 30 June 2027 (the second quarter of 2027).
+204: 
+205: Target audience profile & persona: The strategy leads with owners of midsize businesses who want control and visibility, then equips technical buyers, including chief technology officers and architecture owners, with proof. It also supports senior Sofia talent with a craft-led AI story. Persona: Elena.
+206: 
+207: Approach: Proof-first restraint.
+208: Positioning: The B Team makes AI credible by showing the proof, the people responsible and the line it will not cross.
+209: Positioning (lead line): Restraint is the proof.
+210: 
+211: Core narrative: The B Team is not asking buyers to trust AI because it sounds fast or advanced. It asks them to trust AI-supported delivery only where senior people govern the work, approve the claim and show where the system stops.
+212: Key messages: AI supports the work; senior people still own the outcome. Every public AI claim must connect to approved proof. The B Team will not claim autonomous AI. The proof comes before the promotion. Clear limits make the AI story easier to trust.
+213: 
+214: The approved brief says The B Team claims governed, checked and reviewable AI, never autonomous AI. The approved brief says Kamen Kamenov signs positioning, proof lane, claims and public references. The approved brief says Matthew Maday confirms claim-level and AI-language approvals before release. The research pack says The B Team's strongest public proof is trusted software delivery, while public AI proof still needs to be built and approved. The measurement brief says proof assets must be marked as named reference, verifiable anonymous reference, technical artifact or internal demo.
+215: 
+216: Paid, Earned, Shared and Owned (PESO) shape: earned activity leads once the proof library and public identity cleanup are ready, because the reputation gap needs independent credibility. Owned proof pages and founder-led shared posts prepare the evidence; paid activity supports targeted testing and retargeting only.
+217: 
+218: No delivery date is established beyond 30 June 2027 (the second quarter of 2027). The practical order is public identity cleanup, proof library lock, message testing, founder-led proof launch and earned validation.
+219: 
+220: Measurement follows the Association for Measurement and Evaluation of Communication Barcelona Principles 4.0 and the Integrated Evaluation Framework. Core measures are proof credibility, technical-buyer trust, public-profile consistency, founder visibility and talent pull in Sofia.
+221: 
+222: The pilot runs at United Partners' internal cost, and out-of-pocket costs are decided case by case. The main risks are an AI story that outruns proof, public identity inconsistency, unapproved references and unclear data or AI claims.
+223: 
+224: Proof-first restraint
+225: 
+226: It is strongest across fit, distinctiveness, feasibility and durability because it answers the core tension with a proof route The B Team can actually operate. It also gives the other two routes a role without letting either narrow the strategy too early.
+227: 
+228: The B Team serves owners of midsize businesses, technical buyers and senior Sofia talent. This approach covers all three with one idea: AI is credible when proof, senior ownership and limits are visible.
+229: 
+230: It speaks well to Elena, but it does not carry enough technical proof on its own.
+231: 
+232: It can satisfy technical buyers, but it narrows the story before the owner-control opportunity is tested.
+233: 
+234: Clean the public identity
+235: 
+236: Lock the proof library
+237: 
+238: Test the control-led message
+239: 
+240: Launch founder-led proof
+241: 
+242: Earn third-party validation
+243: 
+244: Proof before promise
+245: 
+246: restraint before promotion
+247: 
+248: Where AI stops, trust starts
+249: 
+250: visible limits as trust
+251: 
+252: Senior-owned AI delivery
+253: 
+254: human responsibility behind AI
+
+SOURCE big-idea
+1: The B Team needs a campaign idea that makes its artificial intelligence story credible to owners of midsize businesses and technical buyers without overstating what AI can do.
+2: 
+3: Make The B Team the company that changes how ambitious businesses judge AI partners: not by who promises the most automation, but by who can show the proof, the people responsible and the line where the system stops.
+4: 
+5: On launch day, owners, technical buyers and peers are pointing to The B Team's line in the sand and asking their own partners where AI stops and human responsibility begins. The campaign has succeeded when the market repeats the demand: show me the proof, show me the person and show me the stop line.
+6: 
+7: United Partners turns restraint from a safety caveat into a public trust signal: proof, senior responsibility and a visible line that AI does not cross.
+8: 
+9: The Stop Line
+10: 
+11: Challenge Idea
+12: 
+13: Signed by Humans
+14: 
+15: Movement
+16: 
+17: Where AI Stops, Trust Starts
+18: 
+19: Provocation
+20: 
+21: The Receipts Before the Robot
+22: 
+23: Random Entry
+24: 
+25: No Claim Leaves Alone
+26: 
+27: Movement
+28: 
+29: The Human Approval Layer
+30: 
+31: Provocation
+32: 
+33: Fewer Promises, Better Proof
+34: 
+35: Challenge Idea
+36: 
+37: The Line We Will Not Cross
+38: 
+39: Provocation
+40: 
+41: Proof Has a Signature
+42: 
+43: Random Entry
+44: 
+45: Show the Stop
+46: 
+47: Challenge Idea
+48: 
+49: AI With an Adult in the Room
+50: 
+51: Provocation
+52: 
+53: Every Claim Has an Owner
+54: 
+55: Movement
+56: 
+57: The Stop Line
+58: 
+59: The B Team makes AI credible by publicly showing the point where automation stops and senior human responsibility takes over.
+60: 
+61: Change the buyer's question from 'what can your AI do?' to 'where does your AI stop, and who is responsible after that?'
+62: 
+63: It turns the client's proof-first restraint into a memorable market demand that competitors can discuss but cannot copy with the same founder sign-off, approved claim route and refusal to overclaim.
+64: 
+65: Owners ask for a stop line before they trust an AI partner; technical buyers test claims against proof; institutions and peers borrow the language to demand clearer limits.
+66: 
+67: It meets the IdeaHaus bar because it is about The B Team's benefit, stands out from inflated AI promises, opens hearts through reassurance and creates movement by giving buyers a question to ask.
+68: 
+69: Pass: the idea is easy to repeat because it turns trust into one concrete image, a line that AI does not cross.
+70: 
+71: Pass: 'show me the stop line' gives buyers, founders and technical leaders a phrase they can use in posts, sales conversations and scrutiny.
+72: 
+73: Pass: it can stretch from a website line to proof pages, demos, events, sales tools and earned media.
+74: 
+75: Pass: the phrase is visual and contrasts sharply with the category's usual speed and capability language.
+76: 
+77: Pass: competitors can claim governance, but they cannot copy The B Team's founder approval route, proof library and public refusal to overclaim unchanged.
+78: 
+79: Pass with a condition: it persuades only if every public claim links to approved proof and a named human approval route.
+80: 
+81: Signed by Humans
+82: 
+83: Every AI claim from The B Team carries visible human ownership before it reaches the market.
+84: 
+85: Make human responsibility the proof mark that separates serious AI delivery from loose automation talk.
+86: 
+87: It makes the abstract promise of governance feel personal, accountable and repeatable by showing that a senior person approves the claim before the market sees it.
+88: 
+89: Buyers start asking who signed the claim; teams attach human approval to AI work; public proof shifts from system capability to accountable responsibility.
+90: 
+91: It meets the IdeaHaus bar because it carries the brand benefit, opens hearts through accountability and creates a visible behavior people can copy or demand.
+92: 
+93: Pass: the idea is clear in three words and needs little explanation.
+94: 
+95: Pass: it works as a public prompt, proof mark and launch expression.
+96: 
+97: Pass: it can appear on claim pages, case studies, technical artifacts, demos and leadership posts.
+98: 
+99: Pass: it gives the campaign a human signature in a category full of machine language.
+100: 
+101: Partial: the phrase is strong for The B Team, but another firm could imitate the signature device unless The B Team ties it tightly to its approval route and proof library.
+102: 
+103: Pass: it makes accountability visible and lowers the risk of vague AI claims.
+104: 
+105: Fewer Promises, Better Proof
+106: 
+107: The B Team earns trust by making fewer AI claims and proving each one more clearly.
+108: 
+109: Make restraint feel like confidence: a company that can prove its claims does not need to inflate them.
+110: 
+111: It attacks the category habit of sounding bigger and gives The B Team a disciplined way to launch before its public AI proof is fully mature.
+112: 
+113: Buyers reward evidence over volume; sales conversations narrow to what can be proved; the company cuts any claim that has no approved proof type.
+114: 
+115: It meets part of the IdeaHaus bar because it supports the brand benefit and stands apart from overclaiming, but it is more strategic discipline than full emotional platform.
+116: 
+117: Pass: the sentence is plain and immediately understandable.
+118: 
+119: Partial: it is easy to quote, but it has less public drama than The Stop Line or Signed by Humans.
+120: 
+121: Pass: it can guide messaging, proof assets, media interviews and sales enablement.
+122: 
+123: The thought is strong, but the wording is harder to make yours and less easy to picture than the platform wording already approved for use.
+124: 
+125: Weak: disciplined proof is credible for The B Team, but many competitors could claim a similar stance.
+126: 
+127: Pass: it turns the client's limited public AI proof into a disciplined trust position.
+128: 
+129: Internalize the strategy
+130: 
+131: Result-back thinking
+132: 
+133: Embrace insights
+134: 
+135: Elevate the objectives
+136: 
+137: Focused ideation
+138: 
+139: Validate against the Big Idea Criteria
+140: 
+141: Internalize the strategy
+142: 
+143: The work starts from proof-first restraint, with AI made credible through approved proof, senior responsibility and visible limits.
+144: 
+145: Result-back thinking
+146: 
+147: The campaign ending is a market behavior: buyers ask every AI partner to show the proof, the person responsible and the stop line.
+148: 
+149: Embrace insights
+150: 
+151: The WHO truths are that owners may value control and visibility more than AI capability language (intuitive), and the approved brief supports governed, checked and reviewable AI rather than autonomous AI (empirical).
+152: 
+153: Elevate the objectives
+154: 
+155: The objective moves from promoting The B Team's AI story to changing how buyers judge responsible AI partners.
+156: 
+157: Focused ideation
+158: 
+159: The four trainers produced headlines that forced restraint, signatures, proof and limits into campaign-scale ideas rather than claim checks alone.
+160: 
+161: Validate against the Big Idea Criteria
+162: 
+163: The built ideas were tested for simplicity, shareability, scale, memory, ownership, persuasion and their ability to create real buyer movement.
+164: 
+165: AI becomes more credible for The B Team when restraint is visible, because the buyer's real fear is not weak technology; it is losing control of responsibility, evidence and judgement.
+166: 
+167: intuitive
+168: 
+169: This follows from the approved brief's proof-first restraint position and the audience hypothesis that owners value control and visibility without becoming technical buyers.
+170: 
+171: Pass: it fits the approved strategy and the stated audience concern.
+172: 
+173: Pass: it names restraint as the hidden trust signal beneath AI interest.
+174: 
+175: Partial: it reassures anxious owners, but the emotional pull still needs audience testing.
+176: 
+177: Pass: it sets market AI ambition against the need for limits.
+178: 
+179: Pass: it points directly to proof assets, claim approval and visible stop lines.
+180: 
+181: A smaller AI claim can feel stronger than a larger one when the proof is cleaner, the owner is visible and the limit is explicit.
+182: 
+183: empirical
+184: 
+185: The research pack says The B Team's strongest public proof is trusted software delivery, while public AI proof still needs to be built and approved.
+186: 
+187: Pass: the evidence supports a narrower public claim route.
+188: 
+189: Pass: it reveals why restraint can feel like confidence.
+190: 
+191: Partial: it builds trust, but it may need a sharper human story to move beyond reassurance.
+192: 
+193: Pass: it challenges the category instinct to sound bigger.
+194: 
+195: Pass: it directs the launch to fewer claims and better evidence.
+196: 
+197: Pass: The Stop Line expresses The B Team's benefit as governed AI delivery with senior responsibility and proof.
+198: 
+199: Pass: it rejects the category's usual speed and capability race and makes visible restraint the trust signal.
+200: 
+201: Pass with a condition: it can change how buyers feel about AI risk, but only if the proof feels human and not procedural.
+202: 
+203: Pass: the idea is short, visual and easy to repeat.
+204: 
+205: Pass: it can scale across positioning, website, proof library, demos, sales tools, founder content and earned media.
+206: 
+207: Pass: the stop line is a repeatable verbal and visual asset.
+208: 
+209: Pass: it gives buyers a concrete demand: show me where AI stops and who takes responsibility.
+210: 
+211: Partial: the phrase travels well, but the proof detail behind it must be simplified for small-screen use.
+212: 
+213: The idea can be big, but every claim stays small enough to prove. Public AI language must remain governed, checked and reviewable, with each claim tied to approved proof, a responsible human and a clear line the system does not cross; the bigger the platform becomes, the more important that proof discipline becomes.
+214: 
+215: Proof before public scale
+216: 
+217: No public AI claim ships unless it is approved and tied to one proof type: named reference, verifiable anonymous reference, technical artifact or internal demo.
+218: 
+219: Human ceiling for emotional altitude
+220: 
+221: A named human owner must protect the emotional height of The Stop Line and Signed by Humans when they become pages, posts, demos and sales tools, so the work does not collapse into proof mechanics alone.
+222: 
+223: Kamen Kamenov
+224: 
+225: The Stop Line
+226: 
+227: The Stop Line
+228: 
+229: Signed by Humans
+230: 
+231: The Stop Line is the bigger, category-shaping idea but it needs a concrete proof mechanism to be believed; Signed by Humans is that mechanism — a named person stands behind every claim — and it needs the larger idea to belong to. The platform sets the standard; the launch expression proves it person by person.
+232: 
+233: Signed by Humans launches the idea and makes it tangible on the website, founder content and buyer meetings — every public claim carries the name of the person who proved it; The Stop Line carries the category conversation above it and holds the next expression after the signed campaign has run.
+234: 
+235: The B Team needs a campaign idea that makes its artificial intelligence story credible to owners of midsize businesses and technical buyers without overstating what AI can do.
+236: 
+237: Make The B Team the company that changes how ambitious businesses judge AI partners: not by who promises the most automation, but by who can show the proof, the people responsible and the line where the system stops.
+238: 
+239: On launch day, owners, technical buyers and peers are pointing to The B Team's line in the sand and asking their own partners where AI stops and human responsibility begins. The campaign has succeeded when the market repeats the demand: show me the proof, show me the person and show me the stop line.
+240: 
+241: United Partners turns restraint from a safety caveat into a public trust signal: proof, senior responsibility and a visible line that AI does not cross.
+242: 
+243: The Stop Line
+244: 
+245: Challenge Idea
+246: 
+247: Signed by Humans
+248: 
+249: Movement
+250: 
+251: Where AI Stops, Trust Starts
+252: 
+253: Provocation
+254: 
+255: The Receipts Before the Robot
+256: 
+257: Random Entry
+258: 
+259: No Claim Leaves Alone
+260: 
+261: Movement
+262: 
+263: The Human Approval Layer
+264: 
+265: Provocation
+266: 
+267: Fewer Promises, Better Proof
+268: 
+269: Challenge Idea
+270: 
+271: The Line We Will Not Cross
+272: 
+273: Provocation
+274: 
+275: Proof Has a Signature
+276: 
+277: Random Entry
+278: 
+279: Show the Stop
+280: 
+281: Challenge Idea
+282: 
+283: AI With an Adult in the Room
+284: 
+285: Provocation
+286: 
+287: Every Claim Has an Owner
+288: 
+289: Movement
+290: 
+291: The Stop Line
+292: 
+293: The B Team makes AI credible by publicly showing the point where automation stops and senior human responsibility takes over.
+294: 
+295: Change the buyer's question from 'what can your AI do?' to 'where does your AI stop, and who is responsible after that?'
+296: 
+297: It turns the client's proof-first restraint into a memorable market demand that competitors can discuss but cannot copy with the same founder sign-off, approved claim route and refusal to overclaim.
+298: 
+299: Owners ask for a stop line before they trust an AI partner; technical buyers test claims against proof; institutions and peers borrow the language to demand clearer limits.
+300: 
+301: It meets the IdeaHaus bar because it is about The B Team's benefit, stands out from inflated AI promises, opens hearts through reassurance and creates movement by giving buyers a question to ask.
+302: 
+303: Pass: the idea is easy to repeat because it turns trust into one concrete image, a line that AI does not cross.
+304: 
+305: Pass: 'show me the stop line' gives buyers, founders and technical leaders a phrase they can use in posts, sales conversations and scrutiny.
+306: 
+307: Pass: it can stretch from a website line to proof pages, demos, events, sales tools and earned media.
+308: 
+309: Pass: the phrase is visual and contrasts sharply with the category's usual speed and capability language.
+310: 
+311: Pass: competitors can claim governance, but they cannot copy The B Team's founder approval route, proof library and public refusal to overclaim unchanged.
+312: 
+313: Pass with a condition: it persuades only if every public claim links to approved proof and a named human approval route.
+314: 
+315: Signed by Humans
+316: 
+317: Every AI claim from The B Team carries visible human ownership before it reaches the market.
+318: 
+319: Make human responsibility the proof mark that separates serious AI delivery from loose automation talk.
+320: 
+321: It makes the abstract promise of governance feel personal, accountable and repeatable by showing that a senior person approves the claim before the market sees it.
+322: 
+323: Buyers start asking who signed the claim; teams attach human approval to AI work; public proof shifts from system capability to accountable responsibility.
+324: 
+325: It meets the IdeaHaus bar because it carries the brand benefit, opens hearts through accountability and creates a visible behavior people can copy or demand.
+326: 
+327: Pass: the idea is clear in three words and needs little explanation.
+328: 
+329: Pass: it works as a public prompt, proof mark and launch expression.
+330: 
+331: Pass: it can appear on claim pages, case studies, technical artifacts, demos and leadership posts.
+332: 
+333: Pass: it gives the campaign a human signature in a category full of machine language.
+334: 
+335: Partial: the phrase is strong for The B Team, but another firm could imitate the signature device unless The B Team ties it tightly to its approval route and proof library.
+336: 
+337: Pass: it makes accountability visible and lowers the risk of vague AI claims.
+338: 
+339: Fewer Promises, Better Proof
+340: 
+341: The B Team earns trust by making fewer AI claims and proving each one more clearly.
+342: 
+343: Make restraint feel like confidence: a company that can prove its claims does not need to inflate them.
+344: 
+345: It attacks the category habit of sounding bigger and gives The B Team a disciplined way to launch before its public AI proof is fully mature.
+346: 
+347: Buyers reward evidence over volume; sales conversations narrow to what can be proved; the company cuts any claim that has no approved proof type.
+348: 
+349: It meets part of the IdeaHaus bar because it supports the brand benefit and stands apart from overclaiming, but it is more strategic discipline than full emotional platform.
+350: 
+351: Pass: the sentence is plain and immediately understandable.
+352: 
+353: Partial: it is easy to quote, but it has less public drama than The Stop Line or Signed by Humans.
+354: 
+355: Pass: it can guide messaging, proof assets, media interviews and sales enablement.
+356: 
+357: The thought is strong, but the wording is harder to make yours and less easy to picture than the platform wording already approved for use.
+358: 
+359: Weak: disciplined proof is credible for The B Team, but many competitors could claim a similar stance.
+360: 
+361: Pass: it turns the client's limited public AI proof into a disciplined trust position.
+362: 
+363: Internalize the strategy
+364: 
+365: Result-back thinking
+366: 
+367: Embrace insights
+368: 
+369: Elevate the objectives
+370: 
+371: Focused ideation
+372: 
+373: Validate against the Big Idea Criteria
+374: 
+375: Internalize the strategy
+376: 
+377: The work starts from proof-first restraint, with AI made credible through approved proof, senior responsibility and visible limits.
+378: 
+379: Result-back thinking
+380: 
+381: The campaign ending is a market behavior: buyers ask every AI partner to show the proof, the person responsible and the stop line.
+382: 
+383: Embrace insights
+384: 
+385: The WHO truths are that owners may value control and visibility more than AI capability language (intuitive), and the approved brief supports governed, checked and reviewable AI rather than autonomous AI (empirical).
+386: 
+387: Elevate the objectives
+388: 
+389: The objective moves from promoting The B Team's AI story to changing how buyers judge responsible AI partners.
+390: 
+391: Focused ideation
+392: 
+393: The four trainers produced headlines that forced restraint, signatures, proof and limits into campaign-scale ideas rather than claim checks alone.
+394: 
+395: Validate against the Big Idea Criteria
+396: 
+397: The built ideas were tested for simplicity, shareability, scale, memory, ownership, persuasion and their ability to create real buyer movement.
+398: 
+399: AI becomes more credible for The B Team when restraint is visible, because the buyer's real fear is not weak technology; it is losing control of responsibility, evidence and judgement.
+400: 
+401: intuitive
+402: 
+403: This follows from the approved brief's proof-first restraint position and the audience hypothesis that owners value control and visibility without becoming technical buyers.
+404: 
+405: Pass: it fits the approved strategy and the stated audience concern.
+406: 
+407: Pass: it names restraint as the hidden trust signal beneath AI interest.
+408: 
+409: Partial: it reassures anxious owners, but the emotional pull still needs audience testing.
+410: 
+411: Pass: it sets market AI ambition against the need for limits.
+412: 
+413: Pass: it points directly to proof assets, claim approval and visible stop lines.
+414: 
+415: A smaller AI claim can feel stronger than a larger one when the proof is cleaner, the owner is visible and the limit is explicit.
+416: 
+417: empirical
+418: 
+419: The research pack says The B Team's strongest public proof is trusted software delivery, while public AI proof still needs to be built and approved.
+420: 
+421: Pass: the evidence supports a narrower public claim route.
+422: 
+423: Pass: it reveals why restraint can feel like confidence.
+424: 
+425: Partial: it builds trust, but it may need a sharper human story to move beyond reassurance.
+426: 
+427: Pass: it challenges the category instinct to sound bigger.
+428: 
+429: Pass: it directs the launch to fewer claims and better evidence.
+430: 
+431: Pass: The Stop Line expresses The B Team's benefit as governed AI delivery with senior responsibility and proof.
+432: 
+433: Pass: it rejects the category's usual speed and capability race and makes visible restraint the trust signal.
+434: 
+435: Pass with a condition: it can change how buyers feel about AI risk, but only if the proof feels human and not procedural.
+436: 
+437: Pass: the idea is short, visual and easy to repeat.
+438: 
+439: Pass: it can scale across positioning, website, proof library, demos, sales tools, founder content and earned media.
+440: 
+441: Pass: the stop line is a repeatable verbal and visual asset.
+442: 
+443: Pass: it gives buyers a concrete demand: show me where AI stops and who takes responsibility.
+444: 
+445: Partial: the phrase travels well, but the proof detail behind it must be simplified for small-screen use.
+446: 
+447: Proof before public scale
+448: 
+449: No public AI claim ships unless it is approved and tied to one proof type: named reference, verifiable anonymous reference, technical artifact or internal demo.
+450: 
+451: Human ceiling for emotional altitude
+452: 
+453: A named human owner must protect the emotional height of The Stop Line and Signed by Humans when they become pages, posts, demos and sales tools, so the work does not collapse into proof mechanics alone.
+454: 
+455: Kamen Kamenov
+456: 
+457: The Stop Line
+458: 
+459: The Stop Line
+460: 
+461: Signed by Humans
+462: 
+463: The Stop Line is the bigger, category-shaping idea but it needs a concrete proof mechanism to be believed; Signed by Humans is that mechanism — a named person stands behind every claim — and it needs the larger idea to belong to. The platform sets the standard; the launch expression proves it person by person.
+464: 
+465: Signed by Humans launches the idea and makes it tangible on the website, founder content and buyer meetings — every public claim carries the name of the person who proved it; The Stop Line carries the category conversation above it and holds the next expression after the signed campaign has run.
+
+SOURCE execution-toolkit
+1: The platform is The Stop Line, launched through Signed by Humans. It makes The B Team's artificial intelligence (AI) story credible by showing approved proof, senior responsibility and the limit the system will not cross before any AI claim reaches the market.
+2: 
+3: Insight: AI has made software claims easier to make and harder to trust. Owners want the benefit, but they need to see who is responsible, what is proved and where the system stops. · Reason to Believe: The B Team's approved brief claims governed, checked and reviewable AI, not autonomous AI. The claim boundary names Kamen Kamenov as final sign-off for positioning, proof lane, claims and public references, and Matthew Maday as technical confirmation for claim-level and AI-language approvals before release. · Benefit: Buyers, partners and senior talent can understand the AI story without accepting a broad promise on trust alone. · Proof: The proof library must mark each approved asset as a named reference, verifiable anonymous reference, technical artifact or internal demo. Each public AI claim must show its proof type, senior owner and stated limit.
+4: 
+5: The rollout follows proof before promotion. The programme cleans public identity, locks the proof library, tests the owner control message, launches the founder-led proof story and then seeks earned validation. Owned proof is the foundation, earned media leads reputation after proof exists, shared content makes senior ownership visible and paid media supports testing, retargeting and amplification.
+6: 
+7: Pre-Seed / Tease
+8: 
+9: Prepare the proof base before the market sees the AI story.
+10: 
+11: Owners of midsize businesses, technical buyers, referral partners, ecosystem partners, enterprise buyers and senior Sofia talent.
+12: 
+13: The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.
+14: 
+15: Clean public identity, lock approved proof, prepare the Key-Message Table, build the proof page, prepare the Q&A / FAQ and brief spokespeople.
+16: 
+17: Launch
+18: 
+19: Introduce The Stop Line through Signed by Humans and direct audiences to approved proof.
+20: 
+21: Owners of midsize businesses, technical buyers, partners and senior Sofia talent.
+22: 
+23: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim. Every serious promise is Signed by Humans.
+24: 
+25: Publish the proof page, issue the founder launch post, release the press release, run the 30-second pitch, publish the fact sheet and activate the social pack.
+26: 
+27: Sustain
+28: 
+29: Keep the platform visible between launch moments through proof, explanation and senior ownership.
+30: 
+31: Owners, technical buyers, partners and senior Sofia talent.
+32: 
+33: Owners get control without becoming technical. Signed by Humans means senior people still own the outcome. Proof comes before promotion.
+34: 
+35: Run the owner message test, publish buyer explainers, continue senior craft stories, share approved technical artifacts and keep the Conversation Management loop active.
+36: 
+37: Amplify
+38: 
+39: Use proof and third-party credibility to extend the story without widening the claim.
+40: 
+41: Referral partners, ecosystem partners, enterprise buyers, professional influencers, employees and followers.
+42: 
+43: Every AI claim earns its place through approved proof before it reaches the market.
+44: 
+45: Brief partners, pitch earned validation after proof exists, equip employees, amplify the strongest proof-led content and recalibrate from campaign measurement.
+46: 
+47: Month 1
+48: 
+49: Pre-Seed / Tease
+50: 
+51: Platform and owned proof
+52: 
+53: Proof library lock and public identity cleanup
+54: 
+55: The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.
+56: 
+57: Key-Message Table (KMT)
+58: 
+59: Owned
+60: 
+61: Percentage of public AI claims linked to approved proof.
+62: 
+63: Month 2
+64: 
+65: Pre-Seed / Tease
+66: 
+67: Technical proof and executive visibility
+68: 
+69: Proof page build and approval route check
+70: 
+71: Signed by Humans means senior people still own the outcome.
+72: 
+73: Fact sheet / backgrounder
+74: 
+75: Owned
+76: 
+77: Approved claims, proof labels completed and approval checks passed.
+78: 
+79: Month 3
+80: 
+81: Pre-Seed / Tease
+82: 
+83: Owner relevance and founder visibility
+84: 
+85: Owner control message test
+86: 
+87: Owners get more control and visibility without having to become technical buyers themselves.
+88: 
+89: Advertorial outline
+90: 
+91: Paid and Owned
+92: 
+93: Preference split, comprehension score, trust lift and meeting intent.
+94: 
+95: Month 4
+96: 
+97: Launch
+98: 
+99: Platform and owned proof
+100: 
+101: The Stop Line proof launch
+102: 
+103: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.
+104: 
+105: Press release
+106: 
+107: Earned and Owned
+108: 
+109: Proof-page visits, earned coverage quality and qualified meeting clicks.
+110: 
+111: Month 5
+112: 
+113: Launch
+114: 
+115: Founder visibility and shared advocacy
+116: 
+117: Signed by Humans founder launch post
+118: 
+119: Every serious promise is Signed by Humans.
+120: 
+121: Social pack
+122: 
+123: Shared and Paid
+124: 
+125: Founder-post reach, engagement quality, proof-page clicks and partner reshares.
+126: 
+127: Month 6
+128: 
+129: Sustain
+130: 
+131: Referral and partner ecosystem
+132: 
+133: Partner proof briefing
+134: 
+135: Every AI claim earns its place through approved proof before it reaches the market.
+136: 
+137: Event / experiential kit
+138: 
+139: Owned and Earned
+140: 
+141: Partner briefings completed, pack downloads and referred qualified leads.
+142: 
+143: Month 7
+144: 
+145: Sustain
+146: 
+147: Technical proof and executive visibility
+148: 
+149: Technical proof story
+150: 
+151: AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.
+152: 
+153: Infographics & imagery
+154: 
+155: Owned and Shared
+156: 
+157: Technical artifact views, time on page, sales use and qualified technical conversations.
+158: 
+159: Month 8
+160: 
+161: Sustain
+162: 
+163: Talent pull and brand consistency
+164: 
+165: Senior craft story series
+166: 
+167: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+168: 
+169: Spokesperson materials
+170: 
+171: Shared and Owned
+172: 
+173: Senior-talent engagement, profile visits, candidate interest and proof-page clicks.
+174: 
+175: Month 9
+176: 
+177: Sustain
+178: 
+179: Always-on baseline
+180: 
+181: Conversation Management loop and Observatory newsroom
+182: 
+183: Proof comes before promotion.
+184: 
+185: Q&A / FAQ
+186: 
+187: Owned and Shared
+188: 
+189: Response time, issue resolution, message consistency and approved-answer reuse.
+190: 
+191: Month 10
+192: 
+193: Amplify
+194: 
+195: Professional influencers
+196: 
+197: Earned validation outreach
+198: 
+199: The B Team does not ask the market to accept an AI story without receipts.
+200: 
+201: Fact sheet / backgrounder
+202: 
+203: Earned
+204: 
+205: Briefings secured, coverage quality, proof citations and qualified inbound conversations.
+206: 
+207: Month 11
+208: 
+209: Amplify
+210: 
+211: Employees and advocates
+212: 
+213: Employee advocacy push
+214: 
+215: Senior craft keeps judgment in the work.
+216: 
+217: Social pack
+218: 
+219: Shared
+220: 
+221: Employee participation, post quality, engagement quality and proof-page clicks.
+222: 
+223: Month 12
+224: 
+225: Amplify
+226: 
+227: Executive and partner audiences
+228: 
+229: Close scorecard and message recalibration
+230: 
+231: The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.
+232: 
+233: Key-Message Table (KMT)
+234: 
+235: Owned
+236: 
+237: Executive scorecard completion, message changes approved and next-year proof gaps named.
+238: 
+239: Owners of midsize businesses
+240: 
+241: Owners may value visibility, ownership and early risk detection more than AI capability, but this remains a testable hypothesis until owners compare the messages.
+242: 
+243: They get more control and visibility without becoming technical buyers themselves.
+244: 
+245: The strategy leads with owners who want control and visibility, then equips technical buyers with proof.
+246: 
+247: The B Team shows me what AI is doing, who checked it and where it stops.
+248: 
+249: Plain-language owner explainers, the proof page, control-led case stories and meeting assets.
+250: 
+251: Technical buyers, including chief technology officers and architecture owners
+252: 
+253: Technical buyers need proof that AI supports delivery without taking ownership away from senior people.
+254: 
+255: They can inspect the claim, the proof, the senior owner and the stated limit.
+256: 
+257: The approved brief names Kamen Kamenov as final sign-off for positioning, proof lane, claims and public references, and Matthew Maday as technical confirmation for claim-level and AI-language approvals before release.
+258: 
+259: AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.
+260: 
+261: Technical artifacts, architecture notes, approved demos, proof labels and senior leader posts.
+262: 
+263: Referral partners, ecosystem partners and enterprise buyers
+264: 
+265: Partners can carry the story only if the approved proof is simple, repeatable and safe to share.
+266: 
+267: They can introduce The B Team without inventing claims or stretching evidence.
+268: 
+269: The measurement brief says proof assets must be marked as a named reference, verifiable anonymous reference, technical artifact or internal demo.
+270: 
+271: Every AI claim earns its place through approved proof before it reaches the market.
+272: 
+273: Partner proof packs, approved reference stories, technical artifacts and internal demos.
+274: 
+275: Senior Sofia talent and buyers who want craft behind AI-supported delivery
+276: 
+277: Senior Sofia engineers will believe the AI story only if it protects architectural judgment, not if it celebrates automation alone.
+278: 
+279: They see that judgment remains in the work.
+280: 
+281: The Killer Insight Card says the claim is not that AI makes delivery effortless; it is that senior people govern the work, approve the claim and show where the system stops.
+282: 
+283: Signed by Humans means senior people still own the outcome.
+284: 
+285: Craft stories, team visibility, architecture judgment examples and recruitment language.
+286: 
+287: Key-Message Table (KMT)
+288: 
+289: Give every team one approved source for audience messages, proof points and do-not-say lines.
+290: 
+291: drafted
+292: 
+293: Press release
+294: 
+295: Announce The Stop Line and Signed by Humans once the proof page and approvals are ready.
+296: 
+297: to be produced
+298: 
+299: 30-second pitch
+300: 
+301: Give spokespeople a short, approved explanation of The Stop Line, Signed by Humans and proof before promotion.
+302: 
+303: drafted
+304: 
+305: Advertorial outline
+306: 
+307: Structure a paid or partner article around owner control, senior responsibility and visible proof.
+308: 
+309: drafted
+310: 
+311: Q&A / FAQ
+312: 
+313: Answer buyer, partner and media questions without widening the AI claim beyond approved proof.
+314: 
+315: drafted
+316: 
+317: Fact sheet / backgrounder
+318: 
+319: Explain the platform, proof types, approval route and claim limits for media, partners and sales.
+320: 
+321: drafted
+322: 
+323: Social pack
+324: 
+325: Support founder, executive, team and partner posts with consistent approved language.
+326: 
+327: to be produced
+328: 
+329: Infographics & imagery
+330: 
+331: Show the claim path from proof to senior ownership to the stop line.
+332: 
+333: to be produced
+334: 
+335: Spokesperson materials
+336: 
+337: Prepare founders and senior leaders to explain the platform in clear, approved language.
+338: 
+339: drafted
+340: 
+341: Event / experiential kit
+342: 
+343: Equip partner briefings, proof sessions and launch moments with approved messages and proof assets.
+344: 
+345: to be produced
+346: 
+347: Every asset uses one campaign identifier and urchin tracking module (UTM) format: up_stopline_[phase]_[audience]_[asset]_[channel]. Required fields are utm_source, utm_medium, utm_campaign, utm_content and utm_term when paid search is used.
+348: 
+349: Paid activity is checked daily. Headline key performance indicators are reviewed weekly. The executive scorecard closes the programme at the end of Month 12.
+350: 
+351: Level 1 measures outputs: assets published, proof labels completed, partner packs delivered and approved claims linked to proof. Level 2 measures outtakes: comprehension score, message preference, trust lift, engagement quality and proof-page time on page. Level 3 measures outcomes: qualified meeting clicks, referred qualified leads, qualified inbound conversations, candidate interest and claim-compliance rate.
+352: 
+353: Do not claim autonomous AI.
+354: 
+355: Do not lead with a broad AI promise before approved proof exists.
+356: 
+357: Do not use unapproved references.
+358: 
+359: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+360: 
+361: Do not imply AI owns delivery outcomes.
+362: 
+363: Do not defend a broad AI promise when evidence is missing.
+364: 
+365: Do not treat owner preference for control as settled buyer truth before message testing.
+366: 
+367: Do not celebrate automation alone.
+368: 
+369: Do not inflate refusal to do harmful work into a broad ethics platform.
+370: 
+371: Before anything publishes, Kamen Kamenov gives final sign-off on positioning, proof lane, claims and public references. Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+372: 
+373: The platform is The Stop Line, launched through Signed by Humans. It makes The B Team's artificial intelligence (AI) story credible by showing approved proof, senior responsibility and the limit the system will not cross before any AI claim reaches the market.
+374: 
+375: Insight: AI has made software claims easier to make and harder to trust. Owners want the benefit, but they need to see who is responsible, what is proved and where the system stops. · Reason to Believe: The B Team's approved brief claims governed, checked and reviewable AI, not autonomous AI. The claim boundary names Kamen Kamenov as final sign-off for positioning, proof lane, claims and public references, and Matthew Maday as technical confirmation for claim-level and AI-language approvals before release. · Benefit: Buyers, partners and senior talent can understand the AI story without accepting a broad promise on trust alone. · Proof: The proof library must mark each approved asset as a named reference, verifiable anonymous reference, technical artifact or internal demo. Each public AI claim must show its proof type, senior owner and stated limit.
+376: 
+377: The rollout follows proof before promotion. The programme cleans public identity, locks the proof library, tests the owner control message, launches the founder-led proof story and then seeks earned validation. Owned proof is the foundation, earned media leads reputation after proof exists, shared content makes senior ownership visible and paid media supports testing, retargeting and amplification.
+378: 
+379: Pre-Seed / Tease
+380: 
+381: Prepare the proof base before the market sees the AI story.
+382: 
+383: Owners of midsize businesses, technical buyers, referral partners, ecosystem partners, enterprise buyers and senior Sofia talent.
+384: 
+385: The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.
+386: 
+387: Clean public identity, lock approved proof, prepare the Key-Message Table, build the proof page, prepare the Q&A / FAQ and brief spokespeople.
+388: 
+389: Launch
+390: 
+391: Introduce The Stop Line through Signed by Humans and direct audiences to approved proof.
+392: 
+393: Owners of midsize businesses, technical buyers, partners and senior Sofia talent.
+394: 
+395: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim. Every serious promise is Signed by Humans.
+396: 
+397: Publish the proof page, issue the founder launch post, release the press release, run the 30-second pitch, publish the fact sheet and activate the social pack.
+398: 
+399: Sustain
+400: 
+401: Keep the platform visible between launch moments through proof, explanation and senior ownership.
+402: 
+403: Owners, technical buyers, partners and senior Sofia talent.
+404: 
+405: Owners get control without becoming technical. Signed by Humans means senior people still own the outcome. Proof comes before promotion.
+406: 
+407: Run the owner message test, publish buyer explainers, continue senior craft stories, share approved technical artifacts and keep the Conversation Management loop active.
+408: 
+409: Amplify
+410: 
+411: Use proof and third-party credibility to extend the story without widening the claim.
+412: 
+413: Referral partners, ecosystem partners, enterprise buyers, professional influencers, employees and followers.
+414: 
+415: Every AI claim earns its place through approved proof before it reaches the market.
+416: 
+417: Brief partners, pitch earned validation after proof exists, equip employees, amplify the strongest proof-led content and recalibrate from campaign measurement.
+418: 
+419: Month 1
+420: 
+421: Pre-Seed / Tease
+422: 
+423: Platform and owned proof
+424: 
+425: Proof library lock and public identity cleanup
+426: 
+427: The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.
+428: 
+429: Key-Message Table (KMT)
+430: 
+431: Owned
+432: 
+433: Percentage of public AI claims linked to approved proof.
+434: 
+435: Month 2
+436: 
+437: Pre-Seed / Tease
+438: 
+439: Technical proof and executive visibility
+440: 
+441: Proof page build and approval route check
+442: 
+443: Signed by Humans means senior people still own the outcome.
+444: 
+445: Fact sheet / backgrounder
+446: 
+447: Owned
+448: 
+449: Approved claims, proof labels completed and approval checks passed.
+450: 
+451: Month 3
+452: 
+453: Pre-Seed / Tease
+454: 
+455: Owner relevance and founder visibility
+456: 
+457: Owner control message test
+458: 
+459: Owners get more control and visibility without having to become technical buyers themselves.
+460: 
+461: Advertorial outline
+462: 
+463: Paid and Owned
+464: 
+465: Preference split, comprehension score, trust lift and meeting intent.
+466: 
+467: Month 4
+468: 
+469: Launch
+470: 
+471: Platform and owned proof
+472: 
+473: The Stop Line proof launch
+474: 
+475: The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.
+476: 
+477: Press release
+478: 
+479: Earned and Owned
+480: 
+481: Proof-page visits, earned coverage quality and qualified meeting clicks.
+482: 
+483: Month 5
+484: 
+485: Launch
+486: 
+487: Founder visibility and shared advocacy
+488: 
+489: Signed by Humans founder launch post
+490: 
+491: Every serious promise is Signed by Humans.
+492: 
+493: Social pack
+494: 
+495: Shared and Paid
+496: 
+497: Founder-post reach, engagement quality, proof-page clicks and partner reshares.
+498: 
+499: Month 6
+500: 
+501: Sustain
+502: 
+503: Referral and partner ecosystem
+504: 
+505: Partner proof briefing
+506: 
+507: Every AI claim earns its place through approved proof before it reaches the market.
+508: 
+509: Event / experiential kit
+510: 
+511: Owned and Earned
+512: 
+513: Partner briefings completed, pack downloads and referred qualified leads.
+514: 
+515: Month 7
+516: 
+517: Sustain
+518: 
+519: Technical proof and executive visibility
+520: 
+521: Technical proof story
+522: 
+523: AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.
+524: 
+525: Infographics & imagery
+526: 
+527: Owned and Shared
+528: 
+529: Technical artifact views, time on page, sales use and qualified technical conversations.
+530: 
+531: Month 8
+532: 
+533: Sustain
+534: 
+535: Talent pull and brand consistency
+536: 
+537: Senior craft story series
+538: 
+539: The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.
+540: 
+541: Spokesperson materials
+542: 
+543: Shared and Owned
+544: 
+545: Senior-talent engagement, profile visits, candidate interest and proof-page clicks.
+546: 
+547: Month 9
+548: 
+549: Sustain
+550: 
+551: Always-on baseline
+552: 
+553: Conversation Management loop and Observatory newsroom
+554: 
+555: Proof comes before promotion.
+556: 
+557: Q&A / FAQ
+558: 
+559: Owned and Shared
+560: 
+561: Response time, issue resolution, message consistency and approved-answer reuse.
+562: 
+563: Month 10
+564: 
+565: Amplify
+566: 
+567: Professional influencers
+568: 
+569: Earned validation outreach
+570: 
+571: The B Team does not ask the market to accept an AI story without receipts.
+572: 
+573: Fact sheet / backgrounder
+574: 
+575: Earned
+576: 
+577: Briefings secured, coverage quality, proof citations and qualified inbound conversations.
+578: 
+579: Month 11
+580: 
+581: Amplify
+582: 
+583: Employees and advocates
+584: 
+585: Employee advocacy push
+586: 
+587: Senior craft keeps judgment in the work.
+588: 
+589: Social pack
+590: 
+591: Shared
+592: 
+593: Employee participation, post quality, engagement quality and proof-page clicks.
+594: 
+595: Month 12
+596: 
+597: Amplify
+598: 
+599: Executive and partner audiences
+600: 
+601: Close scorecard and message recalibration
+602: 
+603: The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.
+604: 
+605: Key-Message Table (KMT)
+606: 
+607: Owned
+608: 
+609: Executive scorecard completion, message changes approved and next-year proof gaps named.
+610: 
+611: Owners of midsize businesses
+612: 
+613: Owners may value visibility, ownership and early risk detection more than AI capability, but this remains a testable hypothesis until owners compare the messages.
+614: 
+615: They get more control and visibility without becoming technical buyers themselves.
+616: 
+617: The strategy leads with owners who want control and visibility, then equips technical buyers with proof.
+618: 
+619: The B Team shows me what AI is doing, who checked it and where it stops.
+620: 
+621: Plain-language owner explainers, the proof page, control-led case stories and meeting assets.
+622: 
+623: Technical buyers, including chief technology officers and architecture owners
+624: 
+625: Technical buyers need proof that AI supports delivery without taking ownership away from senior people.
+626: 
+627: They can inspect the claim, the proof, the senior owner and the stated limit.
+628: 
+629: The approved brief names Kamen Kamenov as final sign-off for positioning, proof lane, claims and public references, and Matthew Maday as technical confirmation for claim-level and AI-language approvals before release.
+630: 
+631: AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.
+632: 
+633: Technical artifacts, architecture notes, approved demos, proof labels and senior leader posts.
+634: 
+635: Referral partners, ecosystem partners and enterprise buyers
+636: 
+637: Partners can carry the story only if the approved proof is simple, repeatable and safe to share.
+638: 
+639: They can introduce The B Team without inventing claims or stretching evidence.
+640: 
+641: The measurement brief says proof assets must be marked as a named reference, verifiable anonymous reference, technical artifact or internal demo.
+642: 
+643: Every AI claim earns its place through approved proof before it reaches the market.
+644: 
+645: Partner proof packs, approved reference stories, technical artifacts and internal demos.
+646: 
+647: Senior Sofia talent and buyers who want craft behind AI-supported delivery
+648: 
+649: Senior Sofia engineers will believe the AI story only if it protects architectural judgment, not if it celebrates automation alone.
+650: 
+651: They see that judgment remains in the work.
+652: 
+653: The Killer Insight Card says the claim is not that AI makes delivery effortless; it is that senior people govern the work, approve the claim and show where the system stops.
+654: 
+655: Signed by Humans means senior people still own the outcome.
+656: 
+657: Craft stories, team visibility, architecture judgment examples and recruitment language.
+658: 
+659: Key-Message Table (KMT)
+660: 
+661: Give every team one approved source for audience messages, proof points and do-not-say lines.
+662: 
+663: drafted
+664: 
+665: Press release
+666: 
+667: Announce The Stop Line and Signed by Humans once the proof page and approvals are ready.
+668: 
+669: to be produced
+670: 
+671: 30-second pitch
+672: 
+673: Give spokespeople a short, approved explanation of The Stop Line, Signed by Humans and proof before promotion.
+674: 
+675: drafted
+676: 
+677: Advertorial outline
+678: 
+679: Structure a paid or partner article around owner control, senior responsibility and visible proof.
+680: 
+681: drafted
+682: 
+683: Q&A / FAQ
+684: 
+685: Answer buyer, partner and media questions without widening the AI claim beyond approved proof.
+686: 
+687: drafted
+688: 
+689: Fact sheet / backgrounder
+690: 
+691: Explain the platform, proof types, approval route and claim limits for media, partners and sales.
+692: 
+693: drafted
+694: 
+695: Social pack
+696: 
+697: Support founder, executive, team and partner posts with consistent approved language.
+698: 
+699: to be produced
+700: 
+701: Infographics & imagery
+702: 
+703: Show the claim path from proof to senior ownership to the stop line.
+704: 
+705: to be produced
+706: 
+707: Spokesperson materials
+708: 
+709: Prepare founders and senior leaders to explain the platform in clear, approved language.
+710: 
+711: drafted
+712: 
+713: Event / experiential kit
+714: 
+715: Equip partner briefings, proof sessions and launch moments with approved messages and proof assets.
+716: 
+717: to be produced
+718: 
+719: Every asset uses one campaign identifier and urchin tracking module (UTM) format: up_stopline_[phase]_[audience]_[asset]_[channel]. Required fields are utm_source, utm_medium, utm_campaign, utm_content and utm_term when paid search is used.
+720: 
+721: Paid activity is checked daily. Headline key performance indicators are reviewed weekly. The executive scorecard closes the programme at the end of Month 12.
+722: 
+723: Level 1 measures outputs: assets published, proof labels completed, partner packs delivered and approved claims linked to proof. Level 2 measures outtakes: comprehension score, message preference, trust lift, engagement quality and proof-page time on page. Level 3 measures outcomes: qualified meeting clicks, referred qualified leads, qualified inbound conversations, candidate interest and claim-compliance rate.
+724: 
+725: Do not claim autonomous AI.
+726: 
+727: Do not lead with a broad AI promise before approved proof exists.
+728: 
+729: Do not use unapproved references.
+730: 
+731: Do not make claim-level or AI-language approvals without Matthew Maday's technical confirmation.
+732: 
+733: Do not imply AI owns delivery outcomes.
+734: 
+735: Do not defend a broad AI promise when evidence is missing.
+736: 
+737: Do not treat owner preference for control as settled buyer truth before message testing.
+738: 
+739: Do not celebrate automation alone.
+740: 
+741: Do not inflate refusal to do harmful work into a broad ethics platform.
+742: 
+743: Before anything publishes, Kamen Kamenov gives final sign-off on positioning, proof lane, claims and public references. Matthew Maday gives technical confirmation for claim-level and AI-language approvals before release.
+
+SOURCE measurement-framework
+1: By 30 June 2027, increase qualified enterprise leads among buyers in the United States and the European Union from sales tracking starting at zero on 25 August 2026 to two qualified enterprise leads per calendar quarter.
+2: 
+3: By 30 June 2027, increase recognition of The B Team as a proof-led artificial intelligence engineering partner among owners of midsize businesses and technical buyers from baseline not established; it will be set in the first message-testing wave before launch to the target set in that same wave.
+4: 
+5: By 30 June 2027, increase trust in The Stop Line among sampled chief technology officers and architecture owners from baseline not established; it will be set in the first buyer interview or survey wave before launch to the target set in that same wave.
+6: 
+7: By 30 June 2027, increase understanding of Signed by Humans among owners of midsize businesses from baseline not established; it will be set in the first owner message test before launch to the target set in that same test.
+8: 
+9: By 30 June 2027, increase approved proof assets for The Stop Line among public AI claims from zero approved assets to the target set at the first client conversation.
+10: 
+11: By 30 June 2027, decrease unresolved public-profile conflicts among buyer-facing public records from six unresolved conflict areas to zero before any public release ships.
+12: 
+13: By 30 June 2027, increase technical-buyer trust in The Stop Line among sampled CTOs and architecture owners from baseline not established; it will be set in the first buyer research wave to the target set in that wave.
+14: 
+15: By 30 June 2027, increase approved Signed by Humans founder visibility among buyer and talent audiences from Matthew Maday's sampled baseline of 2 to 5 reactions and 0 to 2 comments, with Kamen Kamenov's baseline set at his first post, to a lift above each founder's baseline over the first campaign period.
+16: 
+17: By 30 June 2027, increase qualified enterprise leads connected to The Stop Line among United States and European Union buyers from sales tracking starting at zero on 25 August 2026 to two qualified enterprise leads per calendar quarter.
+18: 
+19: Output
+20: 
+21: medium
+22: 
+23: Approved The Stop Line proof assets
+24: 
+25: Increase proof credibility among owners of midsize businesses and technical buyers.
+26: 
+27: Counts approved proof assets in The Stop Line proof library, each marked as named reference, verifiable anonymous reference, technical artifact or internal demo.
+28: 
+29: Starts at zero, as recorded in the Measurement Brief.
+30: 
+31: The target number is set at the first client conversation after the proof library is reviewed.
+32: 
+33: The target assumes United Partners account time, founder review time, proof-library tooling and access to approved client references or technical artifacts.
+34: 
+35: United Partners controls the audit and packaging, while The B Team controls proof access, permissions and founder approval.
+36: 
+37: Proof-library audit and client-approved reference register.
+38: 
+39: Monthly.
+40: 
+41: UP account lead.
+42: 
+43: By proof type, claim type, audience, approval status and owner.
+44: 
+45: Completion is attributed to the approved proof process because each asset requires a recorded proof type and approval before it is counted.
+46: 
+47: This proves the existence and approval of proof assets; it does not prove buyer trust until buyer research reads that change.
+48: 
+49: Output
+50: 
+51: medium
+52: 
+53: Public AI claim compliance
+54: 
+55: Increase approved and traceable AI claims before The Stop Line reaches the market.
+56: 
+57: Measures the percentage of public AI claims that show approved proof, a senior owner and the stop line before release.
+58: 
+59: Starts at zero for the new campaign claim route because no campaign claim has yet shipped through The Stop Line.
+60: 
+61: One hundred percent compliance before any public campaign release ships.
+62: 
+63: The target assumes UP review time, Matthew Maday's technical confirmation and Kamen Kamenov's final sign-off.
+64: 
+65: United Partners controls the check and release gate, while The B Team controls technical confirmation and final approval.
+66: 
+67: Claim approval register and public-release checklist.
+68: 
+69: Before release, then monthly during campaign activity.
+70: 
+71: UP account lead, with Matthew Maday on technical confirmation.
+72: 
+73: By channel, claim, proof type, senior owner and release status.
+74: 
+75: Compliance is attributed to the approval route because a claim is counted only after that route records proof, owner and limit.
+76: 
+77: This measures discipline before release; it does not measure audience belief.
+78: 
+79: Output
+80: 
+81: medium
+82: 
+83: Public-profile consistency
+84: 
+85: Decrease public signals that weaken trust in The B Team before The Stop Line launches.
+86: 
+87: Counts unresolved public conflicts across founding year, headcount, address, legal name, domain identity and nearshore-price language.
+88: 
+89: Six unresolved conflict areas, recorded in the Step 1 pack and Step 2 debrief.
+90: 
+91: Zero unresolved public-profile conflict areas before any public campaign release ships.
+92: 
+93: The target assumes UP audit time, public-profile access and Matthew Maday's support on factual corrections.
+94: 
+95: United Partners controls the audit and correction list, while The B Team controls profile access and factual approvals.
+96: 
+97: Public-profile audit.
+98: 
+99: Monthly until cleared, then quarterly.
+100: 
+101: UP account lead, with Matthew Maday on the fixes.
+102: 
+103: By source, conflict type, owner, correction status and market relevance.
+104: 
+105: Correction is attributed to the profile-cleanup work when the same audited source no longer carries the conflict.
+106: 
+107: This measures visible consistency; it does not prove that buyers noticed the correction.
+108: 
+109: Outtake
+110: 
+111: low
+112: 
+113: The Stop Line proof-page engagement quality
+114: 
+115: Increase buyer engagement with proof before promotion.
+116: 
+117: Measures quality actions on The Stop Line proof page, including engaged visits, time on page, proof-item opens and qualified meeting clicks.
+118: 
+119: Baseline not established; it will be set during the first four weeks after the proof page goes live.
+120: 
+121: The target is set after the first four-week baseline read and is reported as improvement against that page's own starting point.
+122: 
+123: The target assumes an owned proof page, basic analytics, campaign tagging and enough paid, shared or earned traffic to read the page fairly.
+124: 
+125: United Partners controls page structure and campaign tagging, while traffic volume depends on launch timing, media weight, founder posting and market response.
+126: 
+127: Website analytics and inbound-response records.
+128: 
+129: Weekly during launch activity and monthly outside launch activity.
+130: 
+131: UP account lead.
+132: 
+133: By audience route, market, channel, proof type opened and meeting-click source.
+134: 
+135: Engagement is treated as coinciding with campaign exposure unless a tagged path connects the visit to a specific campaign touchpoint.
+136: 
+137: Engagement does not equal trust, behaviour change or business impact.
+138: 
+139: Outcome
+140: 
+141: medium
+142: 
+143: Technical-buyer trust in The Stop Line
+144: 
+145: Increase trust among technical buyers that The B Team has enough proof for a next meeting.
+146: 
+147: Measures the share of sampled CTOs or architecture owners who say The Stop Line gives enough evidence to take a next meeting.
+148: 
+149: Baseline not established; it will be set in the first buyer interview or commissioned survey wave before launch.
+150: 
+151: The target is set in the same wave after the baseline is read.
+152: 
+153: The target assumes interview or survey budget, recruitment of relevant technical buyers and approved proof stimuli.
+154: 
+155: United Partners controls the research design and stimuli, while recruitment quality and buyer judgement depend on the sample and market context.
+156: 
+157: Buyer interviews or a commissioned survey.
+158: 
+159: After each research or message-testing wave.
+160: 
+161: UP account lead.
+162: 
+163: By role, market, company size, proof route and stated reason for trust or doubt.
+164: 
+165: Change is described as contributed to only when the same research wave compares responses to The Stop Line material against a clear comparison stimulus.
+166: 
+167: Sampled trust is not a sales result and should not be read as market-wide behaviour.
+168: 
+169: Outtake
+170: 
+171: medium
+172: 
+173: Owner control comprehension
+174: 
+175: Increase understanding among owners of midsize businesses that The Stop Line gives more control and visibility.
+176: 
+177: Measures the share of sampled owners who correctly explain that The Stop Line shows proof, senior responsibility and the limit the system will not cross.
+178: 
+179: Baseline not established; it will be set in the first owner message test before launch.
+180: 
+181: The target is set in the same test after the baseline is read.
+182: 
+183: The target assumes message-testing budget, owner recruitment, approved test copy and a plain-language scoring guide.
+184: 
+185: United Partners controls the test design and scoring, while owner understanding depends on sample quality and the clarity of approved claims.
+186: 
+187: Owner message test.
+188: 
+189: After each message-testing wave.
+190: 
+191: UP account lead.
+192: 
+193: By market, owner profile, message route and explanation quality.
+194: 
+195: Change is described as contributed to only when the test compares The Stop Line against a defined alternative message in the same wave.
+196: 
+197: Comprehension does not prove purchase intent or lead creation.
+198: 
+199: Outtake
+200: 
+201: low
+202: 
+203: Signed by Humans founder visibility
+204: 
+205: Increase founder visibility while keeping the public story inside the approved proof boundary.
+206: 
+207: Measures engagement quality on approved Signed by Humans founder content, including reactions, comments, shares, saves where available, proof-page clicks and qualified inbound conversations.
+208: 
+209: Matthew Maday's sampled posts show 2 to 5 reactions and 0 to 2 comments; Kamen Kamenov's baseline is not established and will be set at his first approved post.
+210: 
+211: Lift each founder's result above their own baseline over the first campaign period.
+212: 
+213: The target assumes founder time, UP editorial support, approved proof links and basic social and inbound tracking.
+214: 
+215: United Partners controls the content plan and measurement setup, while founders control posting and audience response depends on platform and market conditions.
+216: 
+217: LinkedIn analytics, Substack analytics and inbound-response records.
+218: 
+219: Monthly.
+220: 
+221: UP account lead.
+222: 
+223: By founder, post, audience route, proof-page click and inbound quality.
+224: 
+225: Movement is described as coinciding with approved founder activity unless a tracked click or response connects the action to a specific post.
+226: 
+227: Engagement quality does not equal buyer trust, behaviour change or business impact.
+228: 
+229: Impact
+230: 
+231: medium
+232: 
+233: Qualified enterprise leads connected to The Stop Line
+234: 
+235: Win two qualified enterprise leads per calendar quarter from buyers in the United States and the European Union.
+236: 
+237: Counts qualified enterprise leads from United States and European Union buyers that sales records connect to The Stop Line proof page, Signed by Humans founder content, partner proof pack or approved referral language.
+238: 
+239: Sales tracking starts at zero, as recorded on 25 August 2026.
+240: 
+241: Two qualified enterprise leads per calendar quarter by 30 June 2027.
+242: 
+243: The target assumes founder sales follow-up, UP campaign management, owned proof assets, partner capacity and enough channel activity to create qualified opportunities.
+244: 
+245: United Partners controls campaign setup and reporting, while qualification, sales response, referrals and buyer decisions depend on The B Team, partners and the market.
+246: 
+247: Sales pipeline records, referral records, website forms and inbound-response records.
+248: 
+249: Monthly and at quarter end.
+250: 
+251: Kamen Kamenov with the UP account lead.
+252: 
+253: By market, source route, buyer type, qualification status and campaign touchpoint.
+254: 
+255: The campaign is described as contributed to a lead only when the record shows a campaign touchpoint before qualification and sales confirms the lead met the agreed definition.
+256: 
+257: This does not claim sole cause unless a stronger comparison or closed-loop sales model is later added.
+258: 
+259: Outcome
+260: 
+261: low
+262: 
+263: Talent pull in Sofia
+264: 
+265: Increase senior Sofia talent interest in AI-supported craft and senior responsibility.
+266: 
+267: Counts qualified senior-engineering inbound from Sofia talent audiences tied to approved The Stop Line or Signed by Humans story assets.
+268: 
+269: Starts at zero, as recorded in the Measurement Brief.
+270: 
+271: The target is set at the first client conversation after recruitment tracking access is confirmed.
+272: 
+273: The target assumes recruitment-review access, founder or team content, UP reporting time and enough approved talent-facing material to test the story.
+274: 
+275: United Partners controls the message and reporting structure, while candidate interest depends on The B Team's recruitment activity and the Sofia talent market.
+276: 
+277: Applicant-tracking, referral and recruitment-review records.
+278: 
+279: Monthly.
+280: 
+281: UP account lead.
+282: 
+283: By source, role level, asset, referral route and qualification outcome.
+284: 
+285: Talent movement is described as coinciding with campaign activity unless the candidate record names the campaign asset or referral route.
+286: 
+287: Talent interest does not prove hiring success or buyer trust.
+288: 
+289: P21
+290: 
+291: P22
+292: 
+293: P23
+294: 
+295: P24
+296: 
+297: P25
+298: 
+299: P26
+300: 
+301: P27
+302: 
+303: P28
+304: 
+305: N12
+306: 
+307: Before launch, United Partners records the proof-library count, claim-compliance status, public-profile conflicts, founder-content baselines, buyer trust baseline, owner comprehension baseline, sales tracking setup and talent tracking setup. Any baseline not yet established is labelled that way and given a named first-read date.
+308: 
+309: Weekly reporting runs during launch activity, monthly reporting runs outside launch activity, and the quarter-end review checks whether The Stop Line and Signed by Humans contributed to the enterprise-lead target.
+310: 
+311: During the campaign, the weekly report compares the headline key performance indicators with target and ends with the decision to scale, change or stop the activity that produced the reading.
+312: 
+313: The one-page after-campaign executive scorecard is produced within ten working days of the final campaign reading.
+314: 
+315: The campaign has not launched, so no spend has been read against plan. The first budget view lands in the first weekly report after paid testing or production spend starts.
+316: 
+317: No campaign anomalies can be observed before launch. The first anomaly check lands with the first live weekly report.
+318: 
+319: The main pre-launch risks are proof assets not being approved, public-profile conflicts staying visible and buyer baselines not being read before claims scale.
+320: 
+321: No audience movement can be read before launch. The first breakdown will show owners, technical buyers, partners and senior Sofia talent by owned, shared, earned and paid routes.
+322: 
+323: No campaign activity has run yet, so no performance finding exists. The first finding will be based on live proof-page, founder-content and message-test readings.
+324: 
+325: No underperformance can be measured before launch. Any missed baseline setup or approval delay is treated as a pre-launch risk, not a campaign result.
+326: 
+327: Change: complete baseline setup, proof approval and public-profile cleanup before any wider launch. Do not scale paid, earned or founder-led activity until The Stop Line proof route is ready.
+328: 
+329: Approved The Stop Line proof assets
+330: 
+331: Starts at zero.
+332: 
+333: Target set at the first client conversation after the proof library is reviewed.
+334: 
+335: No campaign reading exists yet; the first reading lands before the proof page goes live.
+336: 
+337: At risk
+338: 
+339: Set the proof-library target and approval owner before launch.
+340: 
+341: Public-profile consistency
+342: 
+343: Six unresolved conflict areas.
+344: 
+345: Zero unresolved conflict areas before public release.
+346: 
+347: No campaign reading exists yet; the first reading lands in the pre-launch public-profile audit.
+348: 
+349: At risk
+350: 
+351: Clear or assign each public-profile conflict before public release.
+352: 
+353: Technical-buyer trust in The Stop Line
+354: 
+355: Baseline not established; it will be set in the first buyer research wave.
+356: 
+357: Target set in the same wave after the baseline is read.
+358: 
+359: No campaign reading exists yet; the first reading lands after the first buyer interview or survey wave.
+360: 
+361: At risk
+362: 
+363: Schedule the buyer research wave before scaling the claim.
+364: 
+365: Signed by Humans founder visibility
+366: 
+367: Matthew Maday's sampled baseline is 2 to 5 reactions and 0 to 2 comments; Kamen Kamenov's baseline is set at his first approved post.
+368: 
+369: Lift each founder above their own baseline over the first campaign period.
+370: 
+371: No campaign reading exists yet; the first reading lands after the first approved founder post.
+372: 
+373: On
+374: 
+375: Publish only after the proof link and approval route are ready.
+376: 
+377: Qualified enterprise leads connected to The Stop Line
+378: 
+379: Sales tracking starts at zero.
+380: 
+381: Two qualified enterprise leads per calendar quarter by 30 June 2027.
+382: 
+383: No campaign reading exists yet; the first reading lands in the first monthly sales review after launch.
+384: 
+385: At risk
+386: 
+387: Confirm the qualified-lead definition and sales recording route before launch.
+388: 
+389: Qualified enterprise leads connected to The Stop Line
+390: 
+391: Sales tracking starts at zero.
+392: 
+393: Two qualified enterprise leads per calendar quarter by 30 June 2027.
+394: 
+395: No campaign reading exists yet; the first result lands in the first monthly sales review after launch.
+396: 
+397: At risk
+398: 
+399: No result exists because the campaign has not launched and the qualified-lead recording route still needs confirmation.
+400: 
+401: Change: confirm the lead definition and recording route before launch.
+402: 
+403: No trend exists yet; the first trend lands after two monthly sales readings.
+404: 
+405: Approved The Stop Line proof assets
+406: 
+407: Starts at zero.
+408: 
+409: Target set at the first client conversation after the proof library is reviewed.
+410: 
+411: No campaign reading exists yet; the first result lands before the proof page goes live.
+412: 
+413: At risk
+414: 
+415: No result exists because proof assets have not yet been reviewed and approved for the campaign.
+416: 
+417: Change: lock the proof-library target and approval owner before launch.
+418: 
+419: No trend exists yet; the first trend lands after the second monthly proof-library audit.
+420: 
+421: Public-profile consistency
+422: 
+423: Six unresolved conflict areas.
+424: 
+425: Zero unresolved conflict areas before public release.
+426: 
+427: No campaign reading exists yet; the first result lands in the pre-launch public-profile audit.
+428: 
+429: At risk
+430: 
+431: The risk exists because public sources still carry conflicts that could weaken the proof-led story.
+432: 
+433: Change: correct or assign every conflict before public release.
+434: 
+435: No trend exists yet; the first trend lands after the second public-profile audit.
+436: 
+437: Technical-buyer trust in The Stop Line
+438: 
+439: Baseline not established; it will be set in the first buyer research wave.
+440: 
+441: Target set in the same wave after the baseline is read.
+442: 
+443: No campaign reading exists yet; the first result lands after the first buyer interview or survey wave.
+444: 
+445: At risk
+446: 
+447: No result exists because technical buyers have not yet tested the proof-led message.
+448: 
+449: Change: run the buyer research wave before scaling technical claims.
+450: 
+451: No trend exists yet; the first trend lands after a second buyer research or message-testing wave.
+452: 
+453: Owner control comprehension
+454: 
+455: Baseline not established; it will be set in the first owner message test.
+456: 
+457: Target set in the same test after the baseline is read.
+458: 
+459: No campaign reading exists yet; the first result lands after the first owner message test.
+460: 
+461: At risk
+462: 
+463: No result exists because owners have not yet tested whether The Stop Line explains control and visibility clearly.
+464: 
+465: Change: test the owner-control message before owner-facing scale.
+466: 
+467: No trend exists yet; the first trend lands after the second owner message test.
+468: 
+469: Signed by Humans founder visibility
+470: 
+471: Matthew Maday's sampled baseline is 2 to 5 reactions and 0 to 2 comments; Kamen Kamenov's baseline is set at his first approved post.
+472: 
+473: Lift each founder above their own baseline over the first campaign period.
+474: 
+475: No campaign reading exists yet; the first result lands after the first approved founder post.
+476: 
+477: On
+478: 
+479: The route is ready to measure once the first approved post carries the proof link and the approval boundary.
+480: 
+481: Scale: use founder content only after the proof page is ready to receive readers.
+482: 
+483: No trend exists yet; the first trend lands after two approved founder posts.
+484: 
+485: objective_status
+486: 
+487: The campaign is pre-launch, so no objective can be judged yet. The first judgement comes after proof, trust, founder visibility and sales readings are live.
+488: 
+489: organizational_contribution
+490: 
+491: The Stop Line can be reported as contributed to qualified enterprise leads only when sales records show a campaign touchpoint before qualification and sales confirms the lead definition.
+492: 
+493: outputs_outtakes_outcomes
+494: 
+495: Outputs will show whether proof and claims were prepared correctly. Outtakes and outcomes will show whether buyers understood and trusted the story.
+496: 
+497: audience_market_differences
+498: 
+499: Audience and market differences will be read against each group's own starting point, not against another market's number.
+500: 
+501: what_worked
+502: 
+503: No activity has worked yet because the campaign has not launched. The first working evidence will come from proof-page use, message-test results, founder-content response and qualified inbound.
+504: 
+505: what_did_not
+506: 
+507: Nothing has underperformed yet because no campaign result exists. Pre-launch risk sits in missing baselines, unapproved proof and unresolved public-profile conflicts.
+508: 
+509: decisions_next_actions
+510: 
+511: Change the launch order only if proof, profile cleanup or baseline setup is not ready. Scale only the activity that meets its target, and stop any claim that cannot show proof, senior owner and limit.
+512: 
+513: limitations_confidence
+514: 
+515: Confidence is limited until baseline readings exist. Next time, set buyer and owner baselines before platform selection, confirm sales tracking before creative work starts, and agree the proof-asset target before the proof page is drafted.
+516: 
+517: Do not use Advertising Value Equivalents
+518: 
+519: Do not present impressions as actual reach unless the data supports deduplication
+520: 
+521: Do not equate positive sentiment with behaviour or business impact
+522: 
+523: Do not aggregate markets without showing material local differences
+524: 
+525: Do not optimize solely for the easiest metric to collect
+526: 
+527: Always show baseline, target, result and trend together
+528: 
+529: Always distinguish what UP delivered, what audiences did, and what changed for the client
+530: 
+531: Preserve definitions, query logic and tagging conventions so results are repeatable
+532: 
+533: End every report with decisions and next actions, not merely observations
+534: 
+535: Measurement gate
+536: 
+537: Optimization gate
+538: 
+539: Learning gate
+540: 
+541: Client lead
+542: 
+543: approvals
+544: 
+545: Account director
+546: 
+547: the brief and alignment
+548: 
+549: Strategy lead
+550: 
+551: baseline and methodology
+552: 
+553: Channel leads
+554: 
+555: tagging and collection
+556: 
+557: Analyst
+558: 
+559: data quality, dashboards and evaluation
+560: 
+561: Campaign lead
+562: 
+563: execution decisions
+
+LENSES
+- buyer-read: Can the client buyer act confidently on what this unit says, without a conflicting status or instruction?
+- cfo: Does this unit make the full annual program and its planning coverage visible enough to fund and govern?
+- journalist: Would a skeptical journalist find a material contradiction or unsupported status inside this unit?
+- employee-insider: Can an informed employee tell what has actually been decided without conflicting internal signals?
+- competitor-counter-position: Does the unit expose an inconsistency a competitor could quote to undermine credibility?
+- upstream-trace: Does this calendar unit preserve the upstream promise of a visible full-year cadence?
+
+NUMBERED UNIT LINES
+1: ### Senior Craft Story Series
+2: 
+3: **Insight.** Senior Sofia talent and careful buyers will believe the AI story only if it protects judgment rather than celebrating automation alone.
+4: 
+5: **Idea.** Publish a recurring monthly series under Signed by Humans that shows how senior people review work, make decisions and define the stop line.
+6: 
+7: **Engagement — the mechanic.** Readers see craft, judgment and responsibility inside AI-supported delivery.
+8: 
+9: **Desired outcome.** The talent story and buyer story reinforce each other without turning The B Team into a broad ethics platform.  ·  **Targets.** Monthly from Month 8 through Month 11; each story read for craft signal, proof link and claim compliance before publication.
+10: 
+11: **Signature.** Signed by Humans  ·  **KPI.** Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality scored on a 1-5 Senior Craft Story Rubric for judgment, responsibility, stop-line clarity and no automation-only framing.  ·  **Month.** 8
+
+EXACT REPLY SCHEMA
+{"additionalProperties": false, "properties": {"judgments": {"items": {"additionalProperties": false, "properties": {"end_line": {"type": "integer"}, "lens": {"enum": ["buyer-read", "cfo", "journalist", "employee-insider", "competitor-counter-position", "upstream-trace"], "type": "string"}, "source_end_line": {"type": "integer"}, "source_id": {"type": "string"}, "source_start_line": {"type": "integer"}, "start_line": {"type": "integer"}, "verdict": {"enum": ["reject", "revise", "clear"], "type": "string"}}, "required": ["lens", "verdict", "start_line", "end_line"], "type": "object"}, "maxItems": 6, "minItems": 6, "type": "array"}}, "required": ["judgments"], "type": "object"}
+
+Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or after it.

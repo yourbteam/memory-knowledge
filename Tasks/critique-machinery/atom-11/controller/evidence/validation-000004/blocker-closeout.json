@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "55f22bc0f323b470aaf7f4576ff7df5ecbee1cb6378024b16f92d83a288f38f2",
+  "atom_run_id": "fe3715c84e3e5b5042d856a772e6fdc1f5800674091240ee4735a7137c2e7864",
+  "atomic_step_id": "critique-grounded-claims-and-operator-commands",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441"
+}

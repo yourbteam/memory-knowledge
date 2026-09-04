@@ -1,0 +1,5 @@
+*.input -whitespace
+*.bin -whitespace
+reader-prompt.txt -whitespace
+located-output.txt -whitespace
+page-v3-located.txt -whitespace

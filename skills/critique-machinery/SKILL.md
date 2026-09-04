@@ -21,6 +21,10 @@ python3 scripts/critique.py open --page <page.md> \
 python3 scripts/critique.py open --page <page.md> \
   --payload <state.json#context.key> --work <repo/Tasks/task/runs/name> \
   --no-reference "<recorded reason>" --no-upstream "<recorded reason>"
+# For a declared deliverable profile, derive its payload and complete producer set:
+python3 scripts/critique.py open --page <page.md> \
+  --from-run <state.json> --deliverable tactical_roadmap \
+  --work <repo/Tasks/task/runs/name> --no-reference "<recorded reason>"
 python3 scripts/critique.py status --work <work>
 python3 scripts/critique.py read-run --work <work>
 python3 scripts/critique.py retry-failed --work <work>
@@ -28,9 +32,12 @@ python3 scripts/critique.py read-cell --work <work> --id <unit::lens>
 python3 scripts/critique.py ask-owner --work <work>
 python3 scripts/critique.py answer-owner --work <work> --id <decision-id> \
   --choice <offered-verdict> --because "<owner's exact words>"
+python3 scripts/critique.py rule-bulk --work <work> --assessment <assessment.md> \
+  --by "<owner's words>"
 python3 scripts/critique.py correct-owner --work <work> --id <recorded-decision-id> \
   --choice <offered-verdict> --because "<owner's corrected words>"
 python3 scripts/critique.py document --work <work> --out <findings.md>
+python3 scripts/critique.py located --work <work> --only disputed
 ```
 
 `open` requires exactly one benchmark-source declaration: a reference id plus page, or a non-empty
@@ -42,9 +49,16 @@ are never sent to readers; `status` and the finished document retain the reason.
 `--upstream-source <id>=<state.json#context.key>` values, or a non-empty `--no-upstream` reason.
 In a no-upstream run, upstream cells are recorded as not applicable, never sent to readers, and
 retain the reason in `status` and the finished document. Registered producer text is shown to each
-seat. An upstream reject or revise must name one registered source and select exact numbered words;
-code copies and verifies the passage. A claim that cannot satisfy that contract becomes a visible
-recording refusal, never a defect.
+seat. An upstream reject or revise must name one registered source and select exact numbered words.
+Code accepts an exact passage of at least 25 collapsed characters or an entire line of the
+registered source; the seat instruction and refusal state that same rule. A claim that cannot
+satisfy it becomes an owner question with both raw seat claims and the exact refusal. It never
+disappears, and `document` remains blocked until the owner rules.
+
+`open --from-run --deliverable` is a bounded derivation mode, not a new declaration class. It
+prints the payload key and complete producer registry it derived, and refuses before opening if the
+deliverable profile or any consumed producer is absent. Use the explicit flags for deliverables
+without a declared profile.
 
 `register-source` and `trace` remain available for legacy runs that did not declare producer
 material at open. Before a defect can be recorded under `benchmark-vs-reference`, register the
@@ -73,6 +87,14 @@ Present only the first question, record only an offered verdict, and preserve th
 verbatim. The machine never casts that vote.
 If the owner refines a recorded ruling, use `correct-owner`; it keeps the prior version in append-only
 history rather than silently replacing it.
+`rule-bulk` accepts only a complete summary table plus numbered grounding blocks for the current
+queue. It checks every row, choice, lens, and grounding before writing any ruling; any mismatch
+files nothing. The `--by` words are preserved before the drafted-by-reader marker.
+
+Use `located` to inspect stored line spans without a reader call. `disputed` includes disagreements
+and agreement defects, `defects` includes agreed or owner-resolved defects, and `all` includes every
+applicable cell with both stored seats. It reads the run's own reader-response and source records;
+missing or invalid evidence refuses instead of reconstructing words.
 
 `status` may expose progress, but `cell`, `report`, and `document` refuse while any cell is unread.
 `report` and `document` also refuse while the owner queue is nonempty. A finished document retains

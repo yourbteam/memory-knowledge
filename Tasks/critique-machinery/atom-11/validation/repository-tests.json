@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "focused": {
+    "command": "scripts/run_pytest.sh tests/test_critique_machinery.py tests/test_client_skill_projections.py tests/test_claude_parity.py tests/test_validate_skills.py -q",
+    "exit_code": 0,
+    "passed": 73,
+    "subtests_passed": 11
+  },
+  "full_repository": {
+    "command": "scripts/run_pytest.sh -q",
+    "exit_code": 1,
+    "passed": 2259,
+    "skipped": 1,
+    "subtests_passed": 41,
+    "warnings": 31,
+    "atom_regressions": 0,
+    "known_checkout_bound_failure": {
+      "failure": "tests/prevention/test_owner_contract_materialization.py::test_materialized_executable_contracts_are_byte_stable_and_complete",
+      "reason": "The generated prevention contract embeds the absolute canonical checkout and is byte-different in this worktree.",
+      "canonical_checkout_command": "scripts/run_pytest.sh tests/prevention/test_owner_contract_materialization.py::test_materialized_executable_contracts_are_byte_stable_and_complete -q",
+      "canonical_checkout_result": "1 passed in 0.26s"
+    }
+  },
+  "installed_projection_checks": {
+    "critique_machinery_codex": "exact generated projection match",
+    "critique_machinery_claude": "exact generated projection match",
+    "global_unrelated_drift": ["codex:description-machinery", "claude:description-machinery", "claude:requirements-machinery"]
+  }
+}

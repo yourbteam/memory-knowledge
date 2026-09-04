@@ -1,0 +1,151 @@
+{
+  "baseline_commands_absent": {
+    "derive_open_inputs": true,
+    "located": true,
+    "rule_bulk": true
+  },
+  "bulk_ruling": {
+    "actual_count": 16,
+    "before": {
+      "matrix.json": "d191b5fc5a65fc43935fdfb0d37e53f62e1707f52c4ed7d1c2a11a1540caef8d",
+      "owner-queue.json": "3f86476de9d26f15d6ee892a30618ec608d5a6a3d8bad8a178cb3e6ad7385e43",
+      "owner-rulings.json": null
+    },
+    "cell_parity": true,
+    "choice_parity": true,
+    "marker_parity": true,
+    "result": {
+      "filed": 16,
+      "marker": " \u2014 reasoning drafted by Claude, adopted by the owner: ",
+      "remaining": 0,
+      "status": "recorded"
+    }
+  },
+  "derived_open": {
+    "derivation": {
+      "deliverable": "tactical_roadmap",
+      "payload_key": "context.up.cd_s_002.tactical_roadmap",
+      "sources": [
+        {
+          "key": "context.up.cd_s_002.communications_platform",
+          "source_id": "communications-platform",
+          "value_sha256": "7830f490a65f87a5559ab0f72d94bde9a516b5384cd60e2e3d3d5a95752aa8f5"
+        },
+        {
+          "key": "context.up.cd_s_002.message_architecture",
+          "source_id": "message-architecture",
+          "value_sha256": "d1685e572ecccc78e2bf6fd449db3774d38b836c972fcfa964994bbb16c38994"
+        },
+        {
+          "key": "context.up.cd_s_002.strategy_one_pager",
+          "source_id": "strategy-one-pager",
+          "value_sha256": "a53bd0f6c29a27a48f0048f84447af87386c57ba7b40e614af8b105be34f748f"
+        },
+        {
+          "key": "context.up.cd_s_002.big_idea",
+          "source_id": "big-idea",
+          "value_sha256": "f4007c86e6179e7798b4ec558eb2157985d80c85393b41b1bff67904c11a8536"
+        },
+        {
+          "key": "context.up.cd_s_002.execution_toolkit",
+          "source_id": "execution-toolkit",
+          "value_sha256": "aa8657071e6e8c27c8572ddd9ec50dba81944a09ea19f23209345c716a919d09"
+        },
+        {
+          "key": "context.up.cd_s_002.measurement_framework",
+          "source_id": "measurement-framework",
+          "value_sha256": "ab88ad406922026bbe1b39108528c0e2f9e6f874dab933b57e2788667b4529b1"
+        }
+      ],
+      "state_path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-11/frozen-red/state.json",
+      "state_sha256": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"
+    },
+    "exact_source_parity": true,
+    "expected_sources": [
+      {
+        "key": "context.up.cd_s_002.communications_platform",
+        "source_id": "communications-platform",
+        "value_sha256": "7830f490a65f87a5559ab0f72d94bde9a516b5384cd60e2e3d3d5a95752aa8f5"
+      },
+      {
+        "key": "context.up.cd_s_002.message_architecture",
+        "source_id": "message-architecture",
+        "value_sha256": "d1685e572ecccc78e2bf6fd449db3774d38b836c972fcfa964994bbb16c38994"
+      },
+      {
+        "key": "context.up.cd_s_002.strategy_one_pager",
+        "source_id": "strategy-one-pager",
+        "value_sha256": "a53bd0f6c29a27a48f0048f84447af87386c57ba7b40e614af8b105be34f748f"
+      },
+      {
+        "key": "context.up.cd_s_002.big_idea",
+        "source_id": "big-idea",
+        "value_sha256": "f4007c86e6179e7798b4ec558eb2157985d80c85393b41b1bff67904c11a8536"
+      },
+      {
+        "key": "context.up.cd_s_002.execution_toolkit",
+        "source_id": "execution-toolkit",
+        "value_sha256": "aa8657071e6e8c27c8572ddd9ec50dba81944a09ea19f23209345c716a919d09"
+      },
+      {
+        "key": "context.up.cd_s_002.measurement_framework",
+        "source_id": "measurement-framework",
+        "value_sha256": "ab88ad406922026bbe1b39108528c0e2f9e6f874dab933b57e2788667b4529b1"
+      }
+    ],
+    "opened_sources_sha256": "d68149a219172c2077e8829c95f245709452b1c0248bf2a6fd4be55ce683ffc9"
+  },
+  "frozen_hashes_after": {
+    "assessment.md": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d",
+    "page-v3-located.txt": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b",
+    "page.md": "590ec561b472cecf118160c176527d9eeb687313961efce0ca0e94217d633023",
+    "run/matrix.json": "82c6372ac39295ef34d21063b1639a0812ffd22cc1646556be636873677dfb16",
+    "run/owner-rulings.json": "be0a832de5345b25f4bae744797379e1ff9425c67caf0a36b099a722eb331eb7",
+    "run/sources.json": "923e8914d6aa8c17ebc7a34508c27b6be7f43bf716c4ee5e8bfbebf56b1b0e52",
+    "state.json": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"
+  },
+  "frozen_hashes_before": {
+    "assessment.md": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d",
+    "page-v3-located.txt": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b",
+    "page.md": "590ec561b472cecf118160c176527d9eeb687313961efce0ca0e94217d633023",
+    "run/matrix.json": "82c6372ac39295ef34d21063b1639a0812ffd22cc1646556be636873677dfb16",
+    "run/owner-rulings.json": "be0a832de5345b25f4bae744797379e1ff9425c67caf0a36b099a722eb331eb7",
+    "run/sources.json": "923e8914d6aa8c17ebc7a34508c27b6be7f43bf716c4ee5e8bfbebf56b1b0e52",
+    "state.json": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"
+  },
+  "located": {
+    "cell_count": 20,
+    "expected_body_sha256": "99cda2932113ac63a2eaf20dd2d754be8514b27a2de6e11cc57bca3535ea5ebc",
+    "line_for_line": true,
+    "output_sha256": "99cda2932113ac63a2eaf20dd2d754be8514b27a2de6e11cc57bca3535ea5ebc"
+  },
+  "new_model_calls": 0,
+  "producer_grounding": {
+    "baseline": {
+      "outcome": "recording-refusal",
+      "owner_queue_count": 0,
+      "status": "refused"
+    },
+    "candidate_altered": {
+      "document_refusal": "document refused: 1 owner questions remain open: owner-be3a9b74b96a7558. Run ask-owner, record only an offered choice with answer-owner, then retry.",
+      "outcome": "claim-without-grounded-words",
+      "queue_cell": "u-018-55cd0f78::upstream-trace",
+      "refusal": [
+        {
+          "reason": "trace quote for cell 'u-018-55cd0f78::upstream-trace' is not an exact passage of at least 25 collapsed characters or an entire line of the registered source 'communications-platform'; copy the producer's words from sources.json.",
+          "seat": "reader-2"
+        }
+      ],
+      "status": "unresolved"
+    },
+    "candidate_exact": {
+      "outcome": "agreement-defect",
+      "source_quote": "Always-on after launch.",
+      "status": "judged"
+    },
+    "instruction_refusal_phrase": "an exact passage of at least 25 collapsed characters or an entire line of the registered source"
+  },
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

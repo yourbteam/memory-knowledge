@@ -1,0 +1,49 @@
+{
+  "atomic_step_id": "critique-grounded-claims-and-operator-commands",
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "860bb8d4ae3d620a7bf9677061d9d3c0b38144174ba292a5987621c944713658"
+  },
+  "changed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "v3-short-producer-line-refusal",
+      "path": "../frozen-red/run/reader-evidence/batch-u-018-55cd0f78/reader-2/attempt-001/reader-response.json",
+      "sha256": "d4df129729023682f1b547c7e73c1d27471bb3c99e7a7d2e15d8fb1a38af8d92"
+    },
+    {
+      "case_id": "v3-derived-open-state",
+      "path": "../frozen-red/state.json",
+      "sha256": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"
+    },
+    {
+      "case_id": "v3-owner-assessment",
+      "path": "../frozen-red/assessment.md",
+      "sha256": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d"
+    },
+    {
+      "case_id": "v3-hand-filed-rulings",
+      "path": "../frozen-red/run/owner-rulings.json",
+      "sha256": "be0a832de5345b25f4bae744797379e1ff9425c67caf0a36b099a722eb331eb7"
+    },
+    {
+      "case_id": "v3-hand-located-output",
+      "path": "../frozen-red/page-v3-located.txt",
+      "sha256": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b"
+    }
+  ],
+  "experiment_assembly_sha256": "d3cba1d6b4e87f40e8e512c9b9dba822a10cb5cdfec487f714a8d8efe03b0c70",
+  "experiment_event_sha256": "c3b9eae8cf87305182b0b74963fabfc3e55af1cf37431ead3dac6b5fe44123eb",
+  "review": {
+    "path": "review.json",
+    "sha256": "a973ab75281d120fe46cf4e10294b67f48d63d40a4a9053b4a25ecec71fe1926"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

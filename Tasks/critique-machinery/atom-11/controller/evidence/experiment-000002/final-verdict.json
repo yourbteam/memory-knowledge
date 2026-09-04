@@ -1,0 +1,55 @@
+{
+  "assembly_sha256": "d3cba1d6b4e87f40e8e512c9b9dba822a10cb5cdfec487f714a8d8efe03b0c70",
+  "atomic_step_id": "critique-grounded-claims-and-operator-commands",
+  "cases": [
+    {
+      "case_id": "v3-short-producer-line-refusal",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-11/frozen-red/run/reader-evidence/batch-u-018-55cd0f78/reader-2/attempt-001/reader-response.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The exact 23-character whole producer line records as grounded; a one-character alteration is refused into the owner queue and blocks document.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-derived-open-state",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-11/frozen-red/state.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "Derived open resolves the tactical roadmap payload and exactly the six producer sources recorded in the v3 run.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-owner-assessment",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-11/frozen-red/assessment.md",
+        "experiment/probe-result.json"
+      ],
+      "reason": "Bulk ruling preflights all 16 rows before writing and reproduces the hand-filed choices and marker.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-hand-filed-rulings",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-11/frozen-red/run/owner-rulings.json",
+        "experiment/probe-result.json"
+      ],
+      "reason": "The command output is equal to the real hand loop choice for choice and drafted-by-reader marker for marker.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-hand-located-output",
+      "evidence_pointers": [
+        "Tasks/critique-machinery/atom-11/frozen-red/page-v3-located.txt",
+        "experiment/probe-result.json"
+      ],
+      "reason": "Located disputed output reproduces the real 16 disagreements plus four agreement defects line for line.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

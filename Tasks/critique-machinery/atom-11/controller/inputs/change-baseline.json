@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-grounded-claims-and-operator-commands",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "1ff5c2b05ec147d232b30abef25357790a5847664bf0798c32de97f5fab62981",
+      "size": 5387
+    },
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "ae0032f6368e011d9ab52b0906bd02534b862cf3ed0f23b580a8c75b911ffc05",
+      "size": 100246
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "142a986edf03b626159073bce0fc6cc155a0269b5e13beac2a901ae8cb3e9c92",
+      "size": 36179
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "2d9842b7c16e01fc8f2e455f5af83c8b8f81a9297f418a8c1f0173a336fe721b",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

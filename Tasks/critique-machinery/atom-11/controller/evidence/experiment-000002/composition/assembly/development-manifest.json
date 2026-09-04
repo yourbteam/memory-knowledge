@@ -1,0 +1,474 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The exact 23-character whole producer line records as grounded; a one-character alteration is refused into the owner queue and blocks document.",
+        "id": "v3-short-producer-line-refusal",
+        "kind": "failure",
+        "sha256": "d4df129729023682f1b547c7e73c1d27471bb3c99e7a7d2e15d8fb1a38af8d92",
+        "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/run/reader-evidence/batch-u-018-55cd0f78/reader-2/attempt-001/reader-response.json"
+      },
+      {
+        "expected_outcome": "Derived open resolves the tactical roadmap payload and exactly the six producer sources recorded in the v3 run.",
+        "id": "v3-derived-open-state",
+        "kind": "success",
+        "sha256": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3",
+        "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/state.json"
+      },
+      {
+        "expected_outcome": "Bulk ruling preflights all 16 rows before writing and reproduces the hand-filed choices and marker.",
+        "id": "v3-owner-assessment",
+        "kind": "success",
+        "sha256": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d",
+        "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/assessment.md"
+      },
+      {
+        "expected_outcome": "The command output is equal to the real hand loop choice for choice and drafted-by-reader marker for marker.",
+        "id": "v3-hand-filed-rulings",
+        "kind": "success",
+        "sha256": "be0a832de5345b25f4bae744797379e1ff9425c67caf0a36b099a722eb331eb7",
+        "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/run/owner-rulings.json"
+      },
+      {
+        "expected_outcome": "Located disputed output reproduces the real 16 disagreements plus four agreement defects line for line.",
+        "id": "v3-hand-located-output",
+        "kind": "success",
+        "sha256": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b",
+        "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/page-v3-located.txt"
+      }
+    ],
+    "id": "critique-grounded-claims-and-operator-commands",
+    "outcome": "A grounded producer claim cannot disappear, and the three repeated operator hand steps are deterministic critique commands over frozen run evidence.",
+    "practical_value": "The owner sees every real claim, opens recurring runs without retyping source declarations, files complete assessments atomically, and reads exact located evidence without hand scripts or model spend.",
+    "stopping_condition": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use the four winning deterministic boundaries together without changing lenses, verdicts, pages, or sources.",
+    "consumes": [
+      {
+        "artifact": "producer-grounding-winner",
+        "probe_id": "producer-grounding"
+      },
+      {
+        "artifact": "derived-open-winner",
+        "probe_id": "derived-open"
+      },
+      {
+        "artifact": "bulk-ruling-winner",
+        "probe_id": "bulk-ruling"
+      },
+      {
+        "artifact": "located-evidence-winner",
+        "probe_id": "located-evidence"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "v3-short-producer-line-refusal",
+        "v3-derived-open-state",
+        "v3-owner-assessment",
+        "v3-hand-filed-rulings",
+        "v3-hand-located-output"
+      ],
+      "failure_criterion": "Any frozen byte changes, any replay reader launches, or any one of the four real output oracles diverges.",
+      "operator_path": "Replay the frozen short claim, derived open, owner assessment, and located digest with zero reader calls.",
+      "success_criterion": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "One predicate can accept complete short source lines without weakening exact evidence.",
+          "id": "shared-floor-or-whole-line-predicate",
+          "implementation": "Require an exact 25-character passage or an exact entire non-empty source line and reuse its wording at prompt and refusal.",
+          "predicted_tradeoff": "Adds line-aware comparison while retaining the existing passage floor."
+        },
+        {
+          "hypothesis": "Reducing the numeric minimum is sufficient.",
+          "id": "lower-global-floor",
+          "implementation": "Accept every exact source passage above a smaller length.",
+          "predicted_tradeoff": "Simpler, but admits arbitrary fragments and still fails shorter complete lines."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "exact-short-whole-line-accepted"
+          },
+          {
+            "method": "sum",
+            "name": "one-character-change-refused"
+          },
+          {
+            "method": "sum",
+            "name": "refusal-enters-owner-queue"
+          },
+          {
+            "method": "sum",
+            "name": "document-blocked"
+          },
+          {
+            "method": "sum",
+            "name": "instruction-refusal-parity"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "exact-short-whole-line-accepted"
+          },
+          {
+            "direction": "maximize",
+            "name": "one-character-change-refused"
+          },
+          {
+            "direction": "maximize",
+            "name": "refusal-enters-owner-queue"
+          },
+          {
+            "direction": "maximize",
+            "name": "document-blocked"
+          },
+          {
+            "direction": "maximize",
+            "name": "instruction-refusal-parity"
+          }
+        ]
+      },
+      "goal": "Preserve exact short whole-line producer evidence and route failures to the owner.",
+      "id": "producer-grounding",
+      "inputs": [
+        {
+          "case_id": "v3-short-producer-line-refusal"
+        },
+        {
+          "case_id": "v3-derived-open-state"
+        },
+        {
+          "case_id": "v3-owner-assessment"
+        },
+        {
+          "case_id": "v3-hand-filed-rulings"
+        },
+        {
+          "case_id": "v3-hand-located-output"
+        }
+      ],
+      "practical_value": "The owner sees every real claim, opens recurring runs without retyping source declarations, files complete assessments atomically, and reads exact located evidence without hand scripts or model spend.",
+      "proof": {
+        "failure_criterion": "Any frozen oracle diverges, a claim disappears, a partial ruling writes, or an operator command launches a reader.",
+        "success_criterion": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+      },
+      "winner_output": {
+        "artifact": "producer-grounding-winner",
+        "description": "Selected code boundary for producer-grounding."
+      },
+      "work_type": "code",
+      "work_type_reason": "Grounding, state derivation, ruling intake, and evidence rendering are deterministic code boundaries."
+    },
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A bounded deliverable-to-producer contract can derive only declared real sources.",
+          "id": "fixed-deliverable-profile",
+          "implementation": "Resolve one context.up namespace and require every producer named by the tactical_roadmap profile.",
+          "predicted_tradeoff": "New deliverables require an explicit profile."
+        },
+        {
+          "hypothesis": "Every sibling object near the deliverable is an upstream producer.",
+          "id": "all-neighboring-state-keys",
+          "implementation": "Register all non-status sibling state keys automatically.",
+          "predicted_tradeoff": "No profile maintenance, but invents producer relationships and unstable source sets."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "exact-payload-key"
+          },
+          {
+            "method": "sum",
+            "name": "exact-six-source-ids"
+          },
+          {
+            "method": "sum",
+            "name": "exact-six-source-keys"
+          },
+          {
+            "method": "sum",
+            "name": "exact-value-hashes"
+          },
+          {
+            "method": "sum",
+            "name": "missing-producer-refuses-before-write"
+          },
+          {
+            "method": "sum",
+            "name": "explicit-mode-unchanged"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "exact-payload-key"
+          },
+          {
+            "direction": "maximize",
+            "name": "exact-six-source-ids"
+          },
+          {
+            "direction": "maximize",
+            "name": "exact-six-source-keys"
+          },
+          {
+            "direction": "maximize",
+            "name": "exact-value-hashes"
+          },
+          {
+            "direction": "maximize",
+            "name": "missing-producer-refuses-before-write"
+          },
+          {
+            "direction": "maximize",
+            "name": "explicit-mode-unchanged"
+          }
+        ]
+      },
+      "goal": "Derive one complete declared payload and producer set from a real run state.",
+      "id": "derived-open",
+      "inputs": [
+        {
+          "case_id": "v3-short-producer-line-refusal"
+        },
+        {
+          "case_id": "v3-derived-open-state"
+        },
+        {
+          "case_id": "v3-owner-assessment"
+        },
+        {
+          "case_id": "v3-hand-filed-rulings"
+        },
+        {
+          "case_id": "v3-hand-located-output"
+        }
+      ],
+      "practical_value": "The owner sees every real claim, opens recurring runs without retyping source declarations, files complete assessments atomically, and reads exact located evidence without hand scripts or model spend.",
+      "proof": {
+        "failure_criterion": "Any frozen oracle diverges, a claim disappears, a partial ruling writes, or an operator command launches a reader.",
+        "success_criterion": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+      },
+      "winner_output": {
+        "artifact": "derived-open-winner",
+        "description": "Selected code boundary for derived-open."
+      },
+      "work_type": "code",
+      "work_type_reason": "Grounding, state derivation, ruling intake, and evidence rendering are deterministic code boundaries."
+    },
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A full assessment plan can be validated in memory before one state transition.",
+          "id": "parse-preflight-then-atomic-write",
+          "implementation": "Parse all rows and grounding blocks, validate against a copied matrix, then replace the three run records only after success.",
+          "predicted_tradeoff": "More parser checks, with no stranded partial ruling set."
+        },
+        {
+          "hypothesis": "Calling answer-owner row by row is sufficient.",
+          "id": "sequential-answer-owner-loop",
+          "implementation": "Apply each parsed row immediately and stop on the first refusal.",
+          "predicted_tradeoff": "Reuses the CLI helper but can leave earlier rulings filed when a later row is invalid."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "complete-queue-preflight"
+          },
+          {
+            "method": "sum",
+            "name": "choice-parity"
+          },
+          {
+            "method": "sum",
+            "name": "marker-parity"
+          },
+          {
+            "method": "sum",
+            "name": "zero-partial-writes"
+          },
+          {
+            "method": "sum",
+            "name": "normal-answer-owner-constraints"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "complete-queue-preflight"
+          },
+          {
+            "direction": "maximize",
+            "name": "choice-parity"
+          },
+          {
+            "direction": "maximize",
+            "name": "marker-parity"
+          },
+          {
+            "direction": "maximize",
+            "name": "zero-partial-writes"
+          },
+          {
+            "direction": "maximize",
+            "name": "normal-answer-owner-constraints"
+          }
+        ]
+      },
+      "goal": "File one complete assessment with all-or-nothing validation.",
+      "id": "bulk-ruling",
+      "inputs": [
+        {
+          "case_id": "v3-short-producer-line-refusal"
+        },
+        {
+          "case_id": "v3-derived-open-state"
+        },
+        {
+          "case_id": "v3-owner-assessment"
+        },
+        {
+          "case_id": "v3-hand-filed-rulings"
+        },
+        {
+          "case_id": "v3-hand-located-output"
+        }
+      ],
+      "practical_value": "The owner sees every real claim, opens recurring runs without retyping source declarations, files complete assessments atomically, and reads exact located evidence without hand scripts or model spend.",
+      "proof": {
+        "failure_criterion": "Any frozen oracle diverges, a claim disappears, a partial ruling writes, or an operator command launches a reader.",
+        "success_criterion": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+      },
+      "winner_output": {
+        "artifact": "bulk-ruling-winner",
+        "description": "Selected code boundary for bulk-ruling."
+      },
+      "work_type": "code",
+      "work_type_reason": "Grounding, state derivation, ruling intake, and evidence rendering are deterministic code boundaries."
+    },
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "The hand digest is reproducible from immutable reader responses and run registries.",
+          "id": "persisted-span-renderer",
+          "implementation": "Load each seat's stored response spans and render the same ordered line format.",
+          "predicted_tradeoff": "Depends on preserved reader evidence, as the audit contract already requires."
+        },
+        {
+          "hypothesis": "Quotes retained in matrix.json are enough.",
+          "id": "matrix-quote-summary",
+          "implementation": "Print normalized quotes without reading response spans.",
+          "predicted_tradeoff": "Smaller read surface, but loses exact line numbers and cannot reproduce the source excerpts."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "exact-20-cell-set"
+          },
+          {
+            "method": "sum",
+            "name": "line-for-line-output"
+          },
+          {
+            "method": "sum",
+            "name": "page-and-source-spans"
+          },
+          {
+            "method": "sum",
+            "name": "zero-model-calls"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "exact-20-cell-set"
+          },
+          {
+            "direction": "maximize",
+            "name": "line-for-line-output"
+          },
+          {
+            "direction": "maximize",
+            "name": "page-and-source-spans"
+          },
+          {
+            "direction": "maximize",
+            "name": "zero-model-calls"
+          }
+        ]
+      },
+      "goal": "Render exact stored seat and source spans without reader calls.",
+      "id": "located-evidence",
+      "inputs": [
+        {
+          "case_id": "v3-short-producer-line-refusal"
+        },
+        {
+          "case_id": "v3-derived-open-state"
+        },
+        {
+          "case_id": "v3-owner-assessment"
+        },
+        {
+          "case_id": "v3-hand-filed-rulings"
+        },
+        {
+          "case_id": "v3-hand-located-output"
+        }
+      ],
+      "practical_value": "The owner sees every real claim, opens recurring runs without retyping source declarations, files complete assessments atomically, and reads exact located evidence without hand scripts or model spend.",
+      "proof": {
+        "failure_criterion": "Any frozen oracle diverges, a claim disappears, a partial ruling writes, or an operator command launches a reader.",
+        "success_criterion": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+      },
+      "winner_output": {
+        "artifact": "located-evidence-winner",
+        "description": "Selected code boundary for located-evidence."
+      },
+      "work_type": "code",
+      "work_type_reason": "Grounding, state derivation, ruling intake, and evidence rendering are deterministic code boundaries."
+    }
+  ],
+  "schema_version": 2
+}

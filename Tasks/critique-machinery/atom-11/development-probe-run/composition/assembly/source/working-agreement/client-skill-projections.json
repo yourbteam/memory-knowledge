@@ -1,0 +1,340 @@
+{
+  "entries": {
+    "_shared": {
+      "canonical_tree_sha256": "61f612c7344b2944bddd882305b8209ff08e125de42abb9bac26edc7eca37ab3",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "61f612c7344b2944bddd882305b8209ff08e125de42abb9bac26edc7eca37ab3",
+      "scenario_groups": [
+        "CAP-SHARED"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "atom-building-machinery": {
+      "canonical_tree_sha256": "b0074fdfcd479cf14f0749f4d083259ed41b82b0ee066dec5d827d2d529963f7",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "d9a4ad282f0c114cdbac4f34feeb5a0a3c352a22dbea58f4acf706a455435570",
+        "codex": "e5c0665f1b2f325deafe9aecbf76eb1d64ada3f9e8e2c43acc7748787d29b0ec"
+      },
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "corpus-add": {
+      "canonical_tree_sha256": "159f0609a05a4e84b76a1f5d94e0f9eedb8cd92f2489b3b6e5a2c667c98240b0",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "159f0609a05a4e84b76a1f5d94e0f9eedb8cd92f2489b3b6e5a2c667c98240b0",
+      "scenario_groups": [
+        "CAP-MEMORY"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "critic-foundry": {
+      "canonical_tree_sha256": "73aeccec42579ddf49d4711ba0ea80aa60c530e8d864d542944b35777aed6393",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "73aeccec42579ddf49d4711ba0ea80aa60c530e8d864d542944b35777aed6393",
+      "scenario_groups": [
+        "CAP-PERSONAS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "critique-machinery": {
+      "canonical_tree_sha256": "089f28de038865921d7a3e427d8985abb8a613327131b52d7c53939886a5ddb9",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the model runtime while critique state and evidence remain shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "450f8c69955c58316b6d2bb7b0034016e7359957b7280dca77f3bb7e8b35d2e6",
+        "codex": "02958f273b792a377865e7005671f386365f42aae1a24ddfe41121064df138af"
+      },
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "description-machinery": {
+      "canonical_tree_sha256": "32c341fd8267a28efa7c2f2846efa9ba2d5d3ba29ee771752393ef15448c91e9",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "28682478df8992f9e96b7a1c5bf06a9a5a3f65d2ac93b38c39759cfd7cc9a272",
+        "codex": "6614c707515c4ff1a6ff3c2448353c033972580c6accf3439a217e44c4c4c03d"
+      },
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "experiment-machinery": {
+      "canonical_tree_sha256": "eb46032dfcfc232ff91f3c959bf1bfd347ebddcbc2363a9eab69969d3c272728",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "eb46032dfcfc232ff91f3c959bf1bfd347ebddcbc2363a9eab69969d3c272728",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "info-intake-machinery": {
+      "canonical_tree_sha256": "c59411144246427846d9ac7c5428a718c7f665d7f4509921ceef61e4a24d057a",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "697d84dc19819ceb008d68a08c57dd05f817c0010bf8490ec47e697552eb8f04",
+        "codex": "a40a07c4ab1768255821e32ffc7a5893e88d0152d04f14572b42fa7b70d6a718"
+      },
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "phase-ledger-category-contract-foundry": {
+      "canonical_tree_sha256": "d24aefa2719e3ac169e9544774139e09be3dab2fdcf4fe2ae45a84c50af0e3e9",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "d24aefa2719e3ac169e9544774139e09be3dab2fdcf4fe2ae45a84c50af0e3e9",
+      "scenario_groups": [
+        "CAP-PERSONAS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "phase-ledger-contract-hardener": {
+      "canonical_tree_sha256": "322e9b3d8ae8414139010ba825d6ad737273c55a02606edf7d6c31dae21d065d",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "322e9b3d8ae8414139010ba825d6ad737273c55a02606edf7d6c31dae21d065d",
+      "scenario_groups": [
+        "CAP-PERSONAS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "producer-foundry": {
+      "canonical_tree_sha256": "ce6080ff7f8422d6f72bb1b15390ec3f498830214d79a1d3e169fd411c3de35e",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "ce6080ff7f8422d6f72bb1b15390ec3f498830214d79a1d3e169fd411c3de35e",
+      "scenario_groups": [
+        "CAP-PERSONAS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "prototype-driven-implementation": {
+      "canonical_tree_sha256": "ea4fb85a9b8ae2c074412b67eb8d2108896f8e61697e59fd348f0e4285bc88de",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "ea4fb85a9b8ae2c074412b67eb8d2108896f8e61697e59fd348f0e4285bc88de",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "remote-mcp-operator": {
+      "canonical_tree_sha256": "5a943d4f437749e047a116cdf808bc51b53179c6d89d65f0d3dc1eb4b21c6cbf",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "5a943d4f437749e047a116cdf808bc51b53179c6d89d65f0d3dc1eb4b21c6cbf",
+      "scenario_groups": [
+        "CAP-REMOTE"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "remote-mcp-user-admin": {
+      "canonical_tree_sha256": "b4e43e25d22d3c3de0baad516e9fabd815507feb68807d73c615ecf5c8d6bf84",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "b4e43e25d22d3c3de0baad516e9fabd815507feb68807d73c615ecf5c8d6bf84",
+      "scenario_groups": [
+        "CAP-REMOTE"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "requirements-machinery": {
+      "canonical_tree_sha256": "9e558a0ac0bc4ad1928df4f7dd1b9ed8a8d77544a1e4c067c7313fe4a603d04c",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the exact reader runtime policy while the coverage and requirements behavior remains shared.",
+      "generator": "machinery-client-model-v2",
+      "generator_sha256": "70fbf3155f75718fe10efd078becf87eaf593b84f0e310e181e6f7ad5fb30ffa",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "ea7098dd1942af88641c6a1aa5df65a8ac0aedadbbbdddba06a95d2b5f12a11d",
+        "codex": "4b3f405042280a97dab256ac4f93574fa9b0f3b60b046e34d2a6762951b867c9"
+      },
+      "scenario_groups": [
+        "CAP-SHARED"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "sequence-runner": {
+      "canonical_tree_sha256": "50b8d04fc4a03556ffaf8a15a8a5fc9668e3cf61ba83a0f8c4fb47c45f4121e6",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "50b8d04fc4a03556ffaf8a15a8a5fc9668e3cf61ba83a0f8c4fb47c45f4121e6",
+      "scenario_groups": [
+        "CAP-OPERATIONS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "shell-canary-foundry": {
+      "canonical_tree_sha256": "20d0c0422f70c2cf17413f14dcabcf87c607e11d77e32489210bda88205ee1ec",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "20d0c0422f70c2cf17413f14dcabcf87c607e11d77e32489210bda88205ee1ec",
+      "scenario_groups": [
+        "CAP-OPERATIONS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "shell-canary-runner": {
+      "canonical_tree_sha256": "1670340defadec7928dc4e851270f280459511fa29350d9859b580294cd3ac4f",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "1670340defadec7928dc4e851270f280459511fa29350d9859b580294cd3ac4f",
+      "scenario_groups": [
+        "CAP-OPERATIONS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "system-alignment-assessment-machinery": {
+      "canonical_tree_sha256": "abe3258e7619a5b9b8dd148c867de9e1211b961b6188d72a255503fb57161835",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "abe3258e7619a5b9b8dd148c867de9e1211b961b6188d72a255503fb57161835",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "verifier-foundry": {
+      "canonical_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
+      "scenario_groups": [
+        "CAP-PERSONAS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "working-agreement": {
+      "canonical_tree_sha256": "081df40fe95c90f50efbcfcd85307d078fcbc613853a862083218ba4df12cb00",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "081df40fe95c90f50efbcfcd85307d078fcbc613853a862083218ba4df12cb00",
+      "scenario_groups": [
+        "CAP-GOVERNANCE"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    }
+  },
+  "schema_version": 1
+}

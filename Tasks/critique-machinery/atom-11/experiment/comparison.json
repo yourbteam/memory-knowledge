@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "criteria_source": "../experiment-plan.json",
+  "promotion_applied": false,
+  "new_model_calls": 0,
+  "probes": [
+    {
+      "probe_id": "producer-grounding",
+      "winner": "shared-floor-or-whole-line-predicate",
+      "approaches": [
+        {
+          "id": "shared-floor-or-whole-line-predicate",
+          "score": 5,
+          "maximum": 5,
+          "criteria": {"exact-short-whole-line-accepted": true, "one-character-change-refused": true, "refusal-enters-owner-queue": true, "document-blocked": true, "instruction-refusal-parity": true},
+          "evidence": ["probe-result.json", "candidate/critique.py"]
+        },
+        {
+          "id": "lower-global-floor",
+          "score": 0,
+          "maximum": 5,
+          "criteria": {"exact-short-whole-line-accepted": false, "one-character-change-refused": false, "refusal-enters-owner-queue": false, "document-blocked": false, "instruction-refusal-parity": false},
+          "evidence": ["../frozen-red/run/matrix.json", "probe-result.json"]
+        }
+      ]
+    },
+    {
+      "probe_id": "derived-open",
+      "winner": "fixed-deliverable-profile",
+      "approaches": [
+        {
+          "id": "fixed-deliverable-profile",
+          "score": 6,
+          "maximum": 6,
+          "criteria": {"exact-payload-key": true, "exact-six-source-ids": true, "exact-six-source-keys": true, "exact-value-hashes": true, "missing-producer-refuses-before-write": true, "explicit-mode-unchanged": true},
+          "evidence": ["probe-result.json", "candidate/critique.py"]
+        },
+        {
+          "id": "all-neighboring-state-keys",
+          "score": 0,
+          "maximum": 6,
+          "criteria": {"exact-payload-key": true, "exact-six-source-ids": false, "exact-six-source-keys": false, "exact-value-hashes": false, "missing-producer-refuses-before-write": false, "explicit-mode-unchanged": false},
+          "evidence": ["../frozen-red/state.json", "../frozen-red/run/sources.json"]
+        }
+      ]
+    },
+    {
+      "probe_id": "bulk-ruling",
+      "winner": "parse-preflight-then-atomic-write",
+      "approaches": [
+        {
+          "id": "parse-preflight-then-atomic-write",
+          "score": 5,
+          "maximum": 5,
+          "criteria": {"complete-queue-preflight": true, "choice-parity": true, "marker-parity": true, "zero-partial-writes": true, "normal-answer-owner-constraints": true},
+          "evidence": ["probe-result.json", "candidate/critique.py"]
+        },
+        {
+          "id": "sequential-answer-owner-loop",
+          "score": 2,
+          "maximum": 5,
+          "criteria": {"complete-queue-preflight": false, "choice-parity": true, "marker-parity": true, "zero-partial-writes": false, "normal-answer-owner-constraints": false},
+          "evidence": ["../frozen-red/run/owner-rulings.json", "../frozen-red/assessment.md"]
+        }
+      ]
+    },
+    {
+      "probe_id": "located-evidence",
+      "winner": "persisted-span-renderer",
+      "approaches": [
+        {
+          "id": "persisted-span-renderer",
+          "score": 4,
+          "maximum": 4,
+          "criteria": {"exact-20-cell-set": true, "line-for-line-output": true, "page-and-source-spans": true, "zero-model-calls": true},
+          "evidence": ["probe-result.json", "located-output.txt", "candidate/critique.py"]
+        },
+        {
+          "id": "matrix-quote-summary",
+          "score": 1,
+          "maximum": 4,
+          "criteria": {"exact-20-cell-set": true, "line-for-line-output": false, "page-and-source-spans": false, "zero-model-calls": true},
+          "evidence": ["../frozen-red/run/matrix.json", "../frozen-red/page-v3-located.txt"]
+        }
+      ]
+    }
+  ],
+  "final_observation": {
+    "short_line_characters": 23,
+    "exact_short_line_outcome": "agreement-defect",
+    "altered_short_line_outcome": "claim-without-grounded-words",
+    "derived_sources": 6,
+    "bulk_rulings": 16,
+    "located_cells": 20,
+    "located_line_for_line": true,
+    "new_model_calls": 0
+  }
+}

@@ -1,0 +1,162 @@
+### u-001-67522c23::cfo — disagreement — unit: Tactical Roadmap
+ reader-1: clear L3-3
+ reader-2: revise L6-6
+   L6: **The owners and the calendar below are not yet approved; no owner is recorded.**
+
+### u-001-67522c23::competitor-counter-position — disagreement — unit: Tactical Roadmap
+ reader-1: clear L5-6
+ reader-2: revise L6-6
+   L6: **The owners and the calendar below are not yet approved; no owner is recorded.**
+
+### u-021-e3b3e376::cfo — disagreement — unit: Advocacy Enablement Push
+ reader-1: revise L9-11
+   L9: **Desired outcome.** The story widens through credible human carriers without leaving the approval boundary.  ·  **Targets.** Advocacy push runs in Month 11; employee, partner and alumni posts read during Month 11 for proof link, claim comp
+   L10: 
+   L11: **Signature.** Signed by Humans  ·  **KPI.** Advocate participation rate; post quality scored on a 1-5 Advocacy Enablement Post Rubric for proof link, human responsibility, stop-line clarity and required disclosure; engagement quality score
+ reader-2: clear L11-11
+
+### u-024-c3d4cb6a::journalist — disagreement — unit: The always-on loop
+ reader-1: clear L3-3
+ reader-2: revise L3-3 | source execution-toolkit L583-585
+   L3: Underneath the phases runs the Conversation Management loop — supported by the always-on newsroom running proactive stories and reactive issues management: establish goals → gather assets → develop proprietary content → deploy across owned,
+   -- source:
+   L583: Employees and advocates
+   L584: 
+   L585: Employee advocacy push
+
+### u-025-02c71d48::buyer-read — disagreement — unit: The proof-building order
+ reader-1: revise L3-3
+   L3: We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership ex
+ reader-2: clear L3-3
+
+### u-025-02c71d48::cfo — disagreement — unit: The proof-building order
+ reader-1: clear L3-3
+ reader-2: revise L3-3
+   L3: We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership ex
+
+### u-025-02c71d48::employee-insider — disagreement — unit: The proof-building order
+ reader-1: revise L3-3
+   L3: We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership ex
+ reader-2: clear L3-3
+
+### u-025-02c71d48::upstream-trace — agreement-defect — unit: The proof-building order
+ reader-1: revise L3-3 | source strategy-one-pager L84-84
+   L3: We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership ex
+   -- source:
+   L84: No delivery date is established beyond 30 June 2027 (the second quarter of 2027). The practical order is public identity cleanup, proof library lock, message testing, founder-led proof launch and earned validation.
+ reader-2: revise L3-3 | source strategy-one-pager L84-84
+   L3: We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership ex
+   -- source:
+   L84: No delivery date is established beyond 30 June 2027 (the second quarter of 2027). The practical order is public identity cleanup, proof library lock, message testing, founder-led proof launch and earned validation.
+
+### u-026-970d2b25::upstream-trace — disagreement — unit: The rollout
+ reader-1: revise L1-5 | source strategy-one-pager L84-84
+   L1: ## The rollout
+   L2: 
+   L3: **First audience.** The year speaks first to owners of midsize businesses, especially Elena, who wants control and visibility without becoming a technical buyer.
+   L4: 
+   L5: **Then widen.** After that audience has been tested and the proof base is live, the story widens to technical buyers, referral partners, ecosystem partners, enterprise buyers, professional influencers, employees and senior Sofia talent usin
+   -- source:
+   L84: No delivery date is established beyond 30 June 2027 (the second quarter of 2027). The practical order is public identity cleanup, proof library lock, message testing, founder-led proof launch and earned validation.
+ reader-2: clear L3-5
+
+### u-027-9424ef01::buyer-read — disagreement — unit: Ownership, cadence and dependencies
+ reader-1: clear L15-15
+ reader-2: revise L5-5
+   L5: | Public Identity Cleanup | unassigned — United Partners project lead must assign it by the kick-off before Month 1 | Runs in Month 1 for Public Identity Cleanup, then checked in Months 4 and 12 before launch and scorecard close. | Access t
+
+### u-027-9424ef01::cfo — disagreement — unit: Ownership, cadence and dependencies
+ reader-1: revise L10-10
+   L10: | Partner and Technical Proof Programme | unassigned — The B Team partner lead must assign it by Month 5 | Runs in Month 6 for Partner Proof Pack and Month 7 for Technical Proof Story, with reuse in Months 10 and 11 for earned and advocacy 
+ reader-2: clear L6-6
+
+### u-027-9424ef01::employee-insider — agreement-defect — unit: Ownership, cadence and dependencies
+ reader-1: revise L5-5
+   L5: | Public Identity Cleanup | unassigned — United Partners project lead must assign it by the kick-off before Month 1 | Runs in Month 1 for Public Identity Cleanup, then checked in Months 4 and 12 before launch and scorecard close. | Access t
+ reader-2: revise L7-7
+   L7: | The Stop Line Proof Page and Fact Sheet | unassigned — The B Team delivery owner must assign it by Month 1 | Runs in Month 2 for The Stop Line Proof Page and Fact Sheet and Backgrounder, then updates in Months 4, 7, 10 and 12. | Proof lib
+
+### u-027-9424ef01::competitor-counter-position — disagreement — unit: Ownership, cadence and dependencies
+ reader-1: revise L14-14
+   L14: | Advocacy Enablement Push | unassigned — The B Team people or partner owner must assign it by Month 10 | Runs in Month 11 for Advocacy Enablement Push and uses Senior Craft Story Series in Month 11. | Trained advocates, approved social pac
+ reader-2: clear L6-6
+
+### u-029-93167464::cfo — disagreement — unit: Open — waiting on a person
+ reader-1: clear L5-13
+ reader-2: revise L4-12
+   L4: - **Approve the owners and the calendar** — Kamen Kamenov before Month 1
+   L5: - **Assign the Public Identity Cleanup owner** — United Partners project lead must assign it by the kick-off before Month 1
+   L6: - **Assign the The Stop Line Proof Page and Fact Sheet owner** — The B Team delivery owner must assign it by Month 1
+   L7: - **Assign the Owner Control Message Test and Spokesperson Training owner** — United Partners research lead must assign it by Month 2
+   L8: - **Assign the Launch Assets owner** — United Partners communications lead must assign it by Month 3
+   L9: - **Assign the Partner and Technical Proof Programme owner** — The B Team partner lead must assign it by Month 5
+   L10: - **Assign the Senior Craft Story Series owner** — The B Team talent lead must assign it by Month 7
+   L11: - **Assign the Conversation Management and Observatory Newsroom owner** — United Partners account lead must assign it by the kick-off before Month 1
+   L12: - **Assign the Earned Validation Outreach owner** — United Partners media lead must assign it by Month 9
+
+### u-029-93167464::employee-insider — disagreement — unit: Open — waiting on a person
+ reader-1: clear L3-4
+ reader-2: revise L3-4
+   L3: - **Who owns each roadmap element?** — drafted above; no owner has approved.
+   L4: - **Approve the owners and the calendar** — Kamen Kamenov before Month 1
+
+### u-029-93167464::competitor-counter-position — disagreement — unit: Open — waiting on a person
+ reader-1: clear L3-5
+ reader-2: revise L3-4
+   L3: - **Who owns each roadmap element?** — drafted above; no owner has approved.
+   L4: - **Approve the owners and the calendar** — Kamen Kamenov before Month 1
+
+### u-029-93167464::upstream-trace — agreement-defect — unit: Open — waiting on a person
+ reader-1: revise L12-13 | source execution-toolkit L595-601
+   L12: - **Assign the Earned Validation Outreach owner** — United Partners media lead must assign it by Month 9
+   L13: - **Assign the Advocacy Enablement Push owner** — The B Team people or partner owner must assign it by Month 10
+   -- source:
+   L595: Month 12
+   L596: 
+   L597: Amplify
+   L598: 
+   L599: Executive and partner audiences
+   L600: 
+   L601: Close scorecard and message recalibration
+ reader-2: revise L4-12 | source execution-toolkit L223-237
+   L4: - **Approve the owners and the calendar** — Kamen Kamenov before Month 1
+   L5: - **Assign the Public Identity Cleanup owner** — United Partners project lead must assign it by the kick-off before Month 1
+   L6: - **Assign the The Stop Line Proof Page and Fact Sheet owner** — The B Team delivery owner must assign it by Month 1
+   L7: - **Assign the Owner Control Message Test and Spokesperson Training owner** — United Partners research lead must assign it by Month 2
+   L8: - **Assign the Launch Assets owner** — United Partners communications lead must assign it by Month 3
+   L9: - **Assign the Partner and Technical Proof Programme owner** — The B Team partner lead must assign it by Month 5
+   L10: - **Assign the Senior Craft Story Series owner** — The B Team talent lead must assign it by Month 7
+   L11: - **Assign the Conversation Management and Observatory Newsroom owner** — United Partners account lead must assign it by the kick-off before Month 1
+   L12: - **Assign the Earned Validation Outreach owner** — United Partners media lead must assign it by Month 9
+   -- source:
+   L223: Month 12
+   L224: 
+   L225: Amplify
+   L226: 
+   L227: Executive and partner audiences
+   L228: 
+   L229: Close scorecard and message recalibration
+   L230: 
+   L231: The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.
+   L232: 
+   L233: Key-Message Table (KMT)
+   L234: 
+   L235: Owned
+   L236: 
+   L237: Executive scorecard completion, message changes approved and next-year proof gaps named.
+
+### u-030-92bee704::journalist — disagreement — unit: Client Style Note applied
+ reader-1: revise L7-7
+   L7: - **signature do words:** AI, craftsmanship, enterprise-grade, architect-led, hand-crafted, agentic AI, workflow automations, fit
+ reader-2: clear L10-10
+
+### u-030-92bee704::employee-insider — disagreement — unit: Client Style Note applied
+ reader-1: revise L7-7
+   L7: - **signature do words:** AI, craftsmanship, enterprise-grade, architect-led, hand-crafted, agentic AI, workflow automations, fit
+ reader-2: clear L10-10
+
+### u-030-92bee704::competitor-counter-position — agreement-defect — unit: Client Style Note applied
+ reader-1: revise L7-7
+   L7: - **signature do words:** AI, craftsmanship, enterprise-grade, architect-led, hand-crafted, agentic AI, workflow automations, fit
+ reader-2: revise L7-7
+   L7: - **signature do words:** AI, craftsmanship, enterprise-grade, architect-led, hand-crafted, agentic AI, workflow automations, fit

@@ -362,3 +362,49 @@ model calls through the installed code-owned interview. The focused critique and
 pass 48 tests. The unrestricted repository suite passes 2,255 tests plus 41 subtests and skips one;
 its sole failure is the pre-existing absolute-checkout prevention contract byte-stability check,
 whose exact assertion passes 1/1 in `/Users/kamenkamenov/memory-knowledge`.
+
+## Upgrade Atom A — grounded claims and operator commands — 2026-09-04
+
+**Outcome — 4 found, 4 fixed.** A producer defect quote now records when it is either an exact
+passage of at least 25 collapsed characters or an exact whole source line; the reader instruction
+and intake refusal use the same rule. A claim that still cannot ground keeps both raw seat claims,
+enters the owner queue as `claim-without-grounded-words`, and blocks `document`. Three repeated
+hand steps are now commands: `open --from-run --deliverable` derives a declared payload and complete
+producer set; `rule-bulk` preflights and files one complete assessment without partial validation
+writes; and `located` renders persisted page and producer spans without launching a reader.
+
+**Red case.** `atom-11/frozen-red/` preserves the complete real Claude page-v3 run, its delivered
+page, state, six-source registry, owner assessment, hand-filed rulings, and hand-written located
+digest. The source matrix remains SHA-256
+`82c6372ac39295ef34d21063b1639a0812ffd22cc1646556be636873677dfb16`. In cell
+`u-018-55cd0f78::upstream-trace`, both seats said revise, but the exact 23-character producer line
+`Always-on after launch.` became `recording-refusal`, reached no owner question, and did not block
+the document. No united-partners file or source run was changed.
+
+**Experiment.** `atom-11/experiment/probe-result.json` and `comparison.json` run four two-path
+comparisons on the frozen v3 bytes. The shared floor-or-whole-line predicate scored 5/5; fixed
+deliverable derivation scored 6/6; parse-preflight-then-atomic-write scored 5/5; and the persisted
+span renderer scored 4/4. The baseline still refused the exact line with zero owner questions. The
+selected candidate recorded it as an agreed defect, rejected a one-character alteration into the
+owner queue, derived exactly the six frozen source ids, keys, and value hashes, reproduced all 16
+hand-filed choices and their drafted-by-reader marker, and reproduced the 20 located cell blocks
+line for line. The accepted assembly is
+`d3cba1d6b4e87f40e8e512c9b9dba822a10cb5cdfec487f714a8d8efe03b0c70`.
+
+**Promotion and real operator path.** `atom-11/installed-validation/summary.json` exercises the
+promoted commands from both managed installations. Codex and Claude each derive six sources,
+accept the exact short line, route the altered line to the owner, block the document, file all 16
+rulings with choice and marker parity, and reproduce the located digest line for line. Their trees
+exactly match generated projections at
+`4cfa10ed5eb1989f4725ec17b96c9f604132fe057247eecce8a9995cce28838b` and
+`000d2abd4c9820251b7e663972d04f65afc6b5e9fad8350dc464daf00537856f` respectively. The frozen
+hashes are unchanged and every operator replay spent zero model calls. The controller closed at
+proof event `a1f3c1239a922d88e9cba43056d56c0f2861d956cde42bbc536c384210ab50c5`.
+
+**Cost.** Four bounded code approaches against one frozen real run, two installed-client replays,
+and zero model calls. The focused critique and client-projection suites pass 73 tests plus 11
+subtests. The full repository suite passes 2,259 tests plus 41 subtests and skips one; its sole
+failure is the pre-existing absolute-checkout prevention-contract byte-stability assertion, which
+passes 1/1 in `/Users/kamenkamenov/memory-knowledge`. Global parity also reports unrelated existing
+description-machinery drift in both clients and requirements-machinery drift in Claude; the
+critique-machinery projections themselves match exactly.

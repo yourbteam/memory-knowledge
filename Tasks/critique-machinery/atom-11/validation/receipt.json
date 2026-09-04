@@ -1,0 +1,59 @@
+{
+  "atomic_step_id": "critique-grounded-claims-and-operator-commands",
+  "cases": [
+    {
+      "case_id": "v3-short-producer-line-refusal",
+      "evidence": [
+        {"case_id": "v3-short-producer-line-refusal", "path": "../frozen-red/run/reader-evidence/batch-u-018-55cd0f78/reader-2/attempt-001/reader-response.json", "sha256": "d4df129729023682f1b547c7e73c1d27471bb3c99e7a7d2e15d8fb1a38af8d92"},
+        {"case_id": "v3-short-producer-line-refusal", "path": "../experiment/probe-result.json", "sha256": "6b2553d8655730777e4d679b02c751834e1016e30f03a8cdf81cbb9d98ebd9f9"},
+        {"case_id": "v3-short-producer-line-refusal", "path": "../installed-validation/summary.json", "sha256": "4278b646bfd3f4277301beaaf11013e405b2dbdfdb52b454b38b98d2d3868031"}
+      ],
+      "reason": "Both installed clients accept the exact 23-character whole producer line. A one-character alteration retains both raw claims, enters the owner queue as claim-without-grounded-words, and blocks document; no model call was made.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-derived-open-state",
+      "evidence": [
+        {"case_id": "v3-derived-open-state", "path": "../frozen-red/state.json", "sha256": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"},
+        {"case_id": "v3-derived-open-state", "path": "../experiment/probe-result.json", "sha256": "6b2553d8655730777e4d679b02c751834e1016e30f03a8cdf81cbb9d98ebd9f9"},
+        {"case_id": "v3-derived-open-state", "path": "../installed-validation/summary.json", "sha256": "4278b646bfd3f4277301beaaf11013e405b2dbdfdb52b454b38b98d2d3868031"}
+      ],
+      "reason": "Derived open from each installed client resolves context.up.cd_s_002.tactical_roadmap and exactly the six frozen source ids, keys, and value hashes before creating the run.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-owner-assessment",
+      "evidence": [
+        {"case_id": "v3-owner-assessment", "path": "../frozen-red/assessment.md", "sha256": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d"},
+        {"case_id": "v3-owner-assessment", "path": "../experiment/probe-result.json", "sha256": "6b2553d8655730777e4d679b02c751834e1016e30f03a8cdf81cbb9d98ebd9f9"},
+        {"case_id": "v3-owner-assessment", "path": "../installed-validation/summary.json", "sha256": "4278b646bfd3f4277301beaaf11013e405b2dbdfdb52b454b38b98d2d3868031"}
+      ],
+      "reason": "The complete 16-row real assessment passes preflight and files through both installed clients; the incomplete-queue path leaves all three run files byte-identical.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-hand-filed-rulings",
+      "evidence": [
+        {"case_id": "v3-hand-filed-rulings", "path": "../frozen-red/run/owner-rulings.json", "sha256": "be0a832de5345b25f4bae744797379e1ff9425c67caf0a36b099a722eb331eb7"},
+        {"case_id": "v3-hand-filed-rulings", "path": "../experiment/probe-result.json", "sha256": "6b2553d8655730777e4d679b02c751834e1016e30f03a8cdf81cbb9d98ebd9f9"},
+        {"case_id": "v3-hand-filed-rulings", "path": "../installed-validation/summary.json", "sha256": "4278b646bfd3f4277301beaaf11013e405b2dbdfdb52b454b38b98d2d3868031"}
+      ],
+      "reason": "Both installed clients reproduce the hand loop's 16 ordered cell choices and preserve the exact owner-word plus drafted-by-reader marker prefix.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "v3-hand-located-output",
+      "evidence": [
+        {"case_id": "v3-hand-located-output", "path": "../frozen-red/page-v3-located.txt", "sha256": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b"},
+        {"case_id": "v3-hand-located-output", "path": "../experiment/located-output.txt", "sha256": "99cda2932113ac63a2eaf20dd2d754be8514b27a2de6e11cc57bca3535ea5ebc"},
+        {"case_id": "v3-hand-located-output", "path": "../installed-validation/summary.json", "sha256": "4278b646bfd3f4277301beaaf11013e405b2dbdfdb52b454b38b98d2d3868031"},
+        {"case_id": "v3-hand-located-output", "path": "repository-tests.json", "sha256": "d0b5a43c6718aac97c48927220062be46531e9ac06be20968cbf5aa85eb662de"}
+      ],
+      "reason": "Located disputed prints the same 20 cell blocks, page spans, and producer spans line for line from both installed clients with zero model calls; focused and repository regression evidence is recorded.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "c3f8333dae7196219fcb981ca0683ede2690b01879764e15d9b101608995b6d3",
+  "schema_version": 1,
+  "status": "completed"
+}

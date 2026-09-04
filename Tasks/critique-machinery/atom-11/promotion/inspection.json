@@ -1,0 +1,17 @@
+{
+  "blocking_findings": [],
+  "integration_correction": {
+    "found": 4,
+    "fixed": 4,
+    "reason": "The promoted surface is limited to the approved quote contract, owner-visible refusal, and three deterministic operator commands."
+  },
+  "reviewed_outcomes": [
+    "The exact 23-character producer line records; a one-character alteration refuses under the same prompt-visible rule.",
+    "An ungroundable claim retains both raw seats, enters the owner queue, and blocks document.",
+    "Derived open reproduces the v3 payload and six registered producer identities, keys, and hashes.",
+    "Bulk ruling reproduces all 16 choices and the drafted-by-reader marker after complete preflight.",
+    "Located disputed reproduces all 20 stored v3 evidence blocks line for line with zero model calls."
+  ],
+  "schema_version": 1,
+  "status": "passed"
+}

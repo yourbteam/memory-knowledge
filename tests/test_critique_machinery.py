@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ CASES = ROOT / "Tasks/critique-machinery/evidence/cases/atom-01"
 CALENDAR_CASES = ROOT / "Tasks/critique-machinery/atom-03/cases"
 NO_REFERENCE = "The frozen test case supplies no professional benchmark page."
 NO_UPSTREAM = "The frozen test case supplies no upstream producer material."
+FROZEN_V3 = ROOT / "Tasks/critique-machinery/atom-11/frozen-red"
 
 
 def load_module():
@@ -21,6 +23,54 @@ def load_module():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def copy_frozen_v3(module, tmp_path: Path, name: str) -> Path:
+    repo = tmp_path / name
+    (repo / ".git").mkdir(parents=True)
+    work = repo / "Tasks/run"
+    shutil.copytree(FROZEN_V3 / "run", work)
+    for path in [work, *work.rglob("*")]:
+        path.chmod(0o755 if path.is_dir() else 0o644)
+    return work
+
+
+def reset_v3_owner_rulings(module, work: Path) -> None:
+    matrix_path = work / "matrix.json"
+    matrix = json.loads(matrix_path.read_text())
+    for cell in matrix["cells"]:
+        if cell.get("outcome") != "owner-resolved":
+            continue
+        for key in ("owner_ruling", "owner_ruling_history", "resolved_verdict"):
+            cell.pop(key, None)
+        cell["outcome"] = module._reader_outcome(cell)
+        cell["status"] = "judged" if cell["outcome"].startswith("agreement-") else "unresolved"
+    matrix_path.write_bytes(module.canonical(matrix))
+    (work / "owner-rulings.json").unlink(missing_ok=True)
+    module.owner_queue(work)
+
+
+def reset_v3_cell(module, work: Path, cell_id: str) -> dict:
+    manifest = json.loads((work / "unit-manifest.json").read_text())
+    matrix_path = work / "matrix.json"
+    matrix = json.loads(matrix_path.read_text())
+    cell = next(item for item in matrix["cells"] if item["cell_id"] == cell_id)
+    claims = {
+        seat: {
+            "verdict": reader.get("verdict"),
+            "quote": reader.get("quote"),
+            "source_id": reader.get("source_id"),
+            "source_quote": reader.get("source_quote"),
+            **({"intake": reader["intake"]} if reader.get("intake") else {}),
+        }
+        for seat, reader in cell["readers"].items()
+    }
+    replacement = next(
+        item for item in module.build_matrix(manifest)["cells"] if item["cell_id"] == cell_id
+    )
+    matrix["cells"][matrix["cells"].index(cell)] = replacement
+    matrix_path.write_bytes(module.canonical(matrix))
+    return claims
 
 
 def fake_valid_result(module, lenses, judgments, evidence_root):
@@ -490,8 +540,8 @@ def test_atomic_cell_recording_contains_refusal_and_preserves_siblings(tmp_path:
             "reader-2": {"verdict": "clear", "quote": quote},
         },
     )
-    assert refused["status"] == "refused"
-    assert refused["outcome"] == "recording-refusal"
+    assert refused["status"] == "unresolved"
+    assert refused["outcome"] == "claim-without-grounded-words"
     assert set(refused["readers"]) == set(module.READER_SEATS)
     assert refused["readers"]["reader-1"]["verdict"] == "revise"
     assert "has no producer evidence" in refused["recording_refusal"]["failures"][0]["reason"]
@@ -508,6 +558,7 @@ def test_atomic_cell_recording_contains_refusal_and_preserves_siblings(tmp_path:
     assert sibling["outcome"] == "agreement-clear"
     status = module.matrix_status(work)
     assert status["refused_count"] == 1
+    assert status["owner_queue_count"] == 1
     assert status["half_recorded_count"] == 0
 
 
@@ -597,9 +648,11 @@ def test_read_run_continues_after_one_atomic_cell_refusal(
 
     monkeypatch.setattr(module, "_reader_judgments", fake_reader)
     result = module.read_run(work)
-    assert result["status"] == "complete"
+    assert result["status"] == "partial"
+    assert result["recording_status"] == "complete"
     assert result["unjudged_count"] == 0
     assert result["refused_count"] == 1
+    assert result["owner_queue_count"] == 1
     assert result["half_recorded_count"] == 0
     assert result["judged_count"] == 149
     assert result["recording_refusals"] == [f"{first_unit}::upstream-trace"]
@@ -853,3 +906,98 @@ def test_frozen_v3_replies_classify_47_valid_and_3_malformed_without_normalizati
     assert "byte 442" in failures["u-024-14772212/reader-1"]
     assert "byte 0" in failures["u-024-14772212/reader-2"]
     assert module.digest_file(frozen / "matrix.json") == before
+
+
+def test_frozen_v3_short_whole_producer_line_records_and_alteration_reaches_owner(tmp_path: Path) -> None:
+    module = load_module()
+    target = "u-018-55cd0f78::upstream-trace"
+    frozen_hash = module.digest_file(FROZEN_V3 / "run/matrix.json")
+
+    accepted_work = copy_frozen_v3(module, tmp_path, "accepted")
+    accepted_claims = reset_v3_cell(module, accepted_work, target)
+    accepted = module.record_cell_readers(accepted_work, target, accepted_claims)
+    assert accepted["outcome"] == "agreement-defect"
+    assert accepted["status"] == "judged"
+    assert accepted["readers"]["reader-2"]["upstream_trace"]["quote"] == "Always-on after launch."
+
+    altered_work = copy_frozen_v3(module, tmp_path, "altered")
+    altered_claims = reset_v3_cell(module, altered_work, target)
+    altered_claims["reader-2"]["source_quote"] = "Always-on after launch!"
+    altered = module.record_cell_readers(altered_work, target, altered_claims)
+    assert altered["outcome"] == "claim-without-grounded-words"
+    assert altered["status"] == "unresolved"
+    assert module.TRACE_GROUNDING_RULE in altered["recording_refusal"]["failures"][0]["reason"]
+    question = module.owner_queue(altered_work)["question"]
+    assert question["cell_id"] == target
+    assert set(question["reader_evidence"]) == set(module.READER_SEATS)
+    with pytest.raises(module.Refusal, match="owner questions remain open"):
+        module.reporting_route(altered_work, "document")
+    assert module.answer_owner(
+        altered_work, question["decision_id"], "revise", "The exact page words establish the owner-visible defect."
+    )["status"] == "recorded"
+    assert module.digest_file(FROZEN_V3 / "run/matrix.json") == frozen_hash
+
+
+def test_derived_open_reproduces_v3_payload_and_six_registered_sources(tmp_path: Path) -> None:
+    module = load_module()
+    state_path, key, specs, derived = module.derive_open_inputs(FROZEN_V3 / "state.json", "tactical_roadmap")
+    expected = [
+        {name: source[name] for name in ("source_id", "key", "value_sha256")}
+        for source in json.loads((FROZEN_V3 / "run/sources.json").read_text())["sources"]
+    ]
+    assert key == "context.up.cd_s_002.tactical_roadmap"
+    assert derived["sources"] == expected
+    assert len(specs) == 6
+
+    repo = tmp_path / "derived"
+    (repo / ".git").mkdir(parents=True)
+    work = repo / "Tasks/run"
+    module.open_run(
+        FROZEN_V3 / "page.md", state_path, key, work,
+        no_reference="UP supplies no roadmap-shaped benchmark", upstream_sources=specs,
+    )
+    opened = json.loads((work / "sources.json").read_text())["sources"]
+    assert [{name: source[name] for name in ("source_id", "key", "value_sha256")} for source in opened] == expected
+
+    incomplete = tmp_path / "incomplete-state.json"
+    state = json.loads((FROZEN_V3 / "state.json").read_text())
+    del state["context"]["up"]["cd_s_002"]["measurement_framework"]
+    incomplete.write_text(json.dumps(state))
+    absent_work = repo / "Tasks/absent"
+    with pytest.raises(module.Refusal, match="consumes producer 'measurement_framework'"):
+        module.derive_open_inputs(incomplete, "tactical_roadmap")
+    assert not absent_work.exists()
+
+
+def test_bulk_ruling_reproduces_v3_choices_and_marker_atomically(tmp_path: Path) -> None:
+    module = load_module()
+    owner_words = "Kamen: approved in bulk 2026-09-04"
+    work = copy_frozen_v3(module, tmp_path, "bulk")
+    reset_v3_owner_rulings(module, work)
+    result = module.rule_bulk(work, FROZEN_V3 / "assessment.md", owner_words)
+    actual = json.loads((work / "owner-rulings.json").read_text())["rulings"]
+    expected = json.loads((FROZEN_V3 / "run/owner-rulings.json").read_text())["rulings"]
+    assert result["filed"] == 16
+    assert [item["cell_id"] for item in actual] == [item["cell_id"] for item in expected]
+    assert [item["choice"] for item in actual] == [item["choice"] for item in expected]
+    assert all(item["because"].startswith(owner_words + module.BULK_RULING_MARKER) for item in actual)
+    assert module.owner_queue(work)["status"] == "empty"
+
+    refused_work = copy_frozen_v3(module, tmp_path, "bulk-refusal")
+    reset_v3_owner_rulings(module, refused_work)
+    question = module.owner_queue(refused_work)["question"]
+    module.answer_owner(refused_work, question["decision_id"], "clear", "Owner filed this one separately.")
+    before = {name: module.digest_file(refused_work / name) for name in ("matrix.json", "owner-rulings.json", "owner-queue.json")}
+    with pytest.raises(module.Refusal, match="expected exactly"):
+        module.rule_bulk(refused_work, FROZEN_V3 / "assessment.md", owner_words)
+    assert before == {name: module.digest_file(refused_work / name) for name in before}
+
+
+def test_located_disputed_reproduces_v3_hand_digest_line_for_line(tmp_path: Path) -> None:
+    module = load_module()
+    work = copy_frozen_v3(module, tmp_path, "located")
+    reset_v3_owner_rulings(module, work)
+    actual = module.located(work, "disputed").splitlines()
+    expected = (FROZEN_V3 / "page-v3-located.txt").read_text().splitlines()[3:]
+    assert actual == expected
+    assert sum(line.startswith("### ") for line in actual) == 20

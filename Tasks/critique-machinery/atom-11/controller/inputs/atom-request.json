@@ -1,0 +1,50 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-grounded-claims-and-operator-commands",
+  "captured_cases": [
+    {
+      "case_id": "v3-short-producer-line-refusal",
+      "expected_outcome": "The exact 23-character whole producer line records as grounded; a one-character alteration is refused into the owner queue and blocks document.",
+      "kind": "failure",
+      "sha256": "d4df129729023682f1b547c7e73c1d27471bb3c99e7a7d2e15d8fb1a38af8d92",
+      "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/run/reader-evidence/batch-u-018-55cd0f78/reader-2/attempt-001/reader-response.json"
+    },
+    {
+      "case_id": "v3-derived-open-state",
+      "expected_outcome": "Derived open resolves the tactical roadmap payload and exactly the six producer sources recorded in the v3 run.",
+      "kind": "success",
+      "sha256": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3",
+      "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/state.json"
+    },
+    {
+      "case_id": "v3-owner-assessment",
+      "expected_outcome": "Bulk ruling preflights all 16 rows before writing and reproduces the hand-filed choices and marker.",
+      "kind": "success",
+      "sha256": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d",
+      "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/assessment.md"
+    },
+    {
+      "case_id": "v3-hand-filed-rulings",
+      "expected_outcome": "The command output is equal to the real hand loop choice for choice and drafted-by-reader marker for marker.",
+      "kind": "success",
+      "sha256": "be0a832de5345b25f4bae744797379e1ff9425c67caf0a36b099a722eb331eb7",
+      "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/run/owner-rulings.json"
+    },
+    {
+      "case_id": "v3-hand-located-output",
+      "expected_outcome": "Located disputed output reproduces the real 16 disagreements plus four agreement defects line for line.",
+      "kind": "success",
+      "sha256": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b",
+      "source_ref": "Tasks/critique-machinery/atom-11/frozen-red/page-v3-located.txt"
+    }
+  ],
+  "outcome": "A grounded producer claim cannot disappear, and the three repeated operator hand steps are deterministic critique commands over frozen run evidence.",
+  "practical_value": "The owner sees every real claim, opens recurring runs without retyping source declarations, files complete assessments atomically, and reads exact located evidence without hand scripts or model spend.",
+  "schema_version": 1,
+  "stopping_condition": "The four deciding experiments pass on the frozen v3 bytes with zero model calls; the original run is unchanged; canonical tests and both managed client projections pass; the BUILD-LEDGER names every claim artifact."
+}

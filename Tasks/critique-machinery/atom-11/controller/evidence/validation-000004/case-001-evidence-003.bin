@@ -1,0 +1,70 @@
+{
+  "clients": {
+    "claude": {
+      "checks": {
+        "altered_owner_visible": true,
+        "bulk_choices": true,
+        "bulk_count": true,
+        "bulk_marker": true,
+        "derived_sources": true,
+        "document_blocked": true,
+        "exact_short_line": true,
+        "located_line_for_line": true,
+        "projection_match": true
+      },
+      "expected_projection_sha256": "000d2abd4c9820251b7e663972d04f65afc6b5e9fad8350dc464daf00537856f",
+      "model_calls": 0,
+      "path": "/Users/kamenkamenov/.claude/skills/critique-machinery",
+      "policy": {
+        "client": "claude",
+        "fail_closed": true,
+        "forbidden_runtime": "codex exec",
+        "required_runtime": "claude -p",
+        "schema_version": 1
+      },
+      "tree_sha256": "000d2abd4c9820251b7e663972d04f65afc6b5e9fad8350dc464daf00537856f"
+    },
+    "codex": {
+      "checks": {
+        "altered_owner_visible": true,
+        "bulk_choices": true,
+        "bulk_count": true,
+        "bulk_marker": true,
+        "derived_sources": true,
+        "document_blocked": true,
+        "exact_short_line": true,
+        "located_line_for_line": true,
+        "projection_match": true
+      },
+      "expected_projection_sha256": "4cfa10ed5eb1989f4725ec17b96c9f604132fe057247eecce8a9995cce28838b",
+      "model_calls": 0,
+      "path": "/Users/kamenkamenov/.codex/skills/critique-machinery",
+      "policy": {
+        "client": "codex",
+        "fail_closed": true,
+        "forbidden_runtime": "claude",
+        "required_runtime": "codex exec",
+        "schema_version": 1
+      },
+      "tree_sha256": "4cfa10ed5eb1989f4725ec17b96c9f604132fe057247eecce8a9995cce28838b"
+    }
+  },
+  "frozen_hashes_after": {
+    "assessment.md": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d",
+    "page-v3-located.txt": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b",
+    "run/matrix.json": "82c6372ac39295ef34d21063b1639a0812ffd22cc1646556be636873677dfb16",
+    "run/sources.json": "923e8914d6aa8c17ebc7a34508c27b6be7f43bf716c4ee5e8bfbebf56b1b0e52",
+    "state.json": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"
+  },
+  "frozen_hashes_before": {
+    "assessment.md": "4148f27d76e36b7614388c5a56a3797c3f29306e7cab2611003e2ae2396d5c8d",
+    "page-v3-located.txt": "52e236ccbba18fab847e39b809a9b25d5a5d7943e37d28fb84ac5f543d61081b",
+    "run/matrix.json": "82c6372ac39295ef34d21063b1639a0812ffd22cc1646556be636873677dfb16",
+    "run/sources.json": "923e8914d6aa8c17ebc7a34508c27b6be7f43bf716c4ee5e8bfbebf56b1b0e52",
+    "state.json": "0cd36c228a79e9bca61ac3504f24ab21743f2c71bc1a81e224c8cdbc8c5c03a3"
+  },
+  "installer": "working-agreement/install_skills.py",
+  "model_calls": 0,
+  "schema_version": 1,
+  "status": "passed"
+}

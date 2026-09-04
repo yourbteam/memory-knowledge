@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source_run": "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v3",
+  "frozen_copy": "Tasks/critique-machinery/atom-11/frozen-red/run",
+  "matrix_sha256": "82c6372ac39295ef34d21063b1639a0812ffd22cc1646556be636873677dfb16",
+  "cell_id": "u-018-55cd0f78::upstream-trace",
+  "observed_status": "refused",
+  "observed_outcome": "recording-refusal",
+  "exact_short_line": "Always-on after launch.",
+  "exact_short_line_collapsed_characters": 23,
+  "owner_queue_contains_cell": false,
+  "document_was_allowed": true,
+  "repeated_hand_steps": ["open-with-six-source-flags", "answer-owner-loop", "located-span-script"]
+}

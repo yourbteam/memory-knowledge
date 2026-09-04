@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "criteria_frozen_before_implementation": true,
+  "cases": [
+    "v3-short-producer-line-refusal",
+    "v3-derived-open-state",
+    "v3-owner-assessment",
+    "v3-hand-filed-rulings",
+    "v3-hand-located-output"
+  ],
+  "probes": [
+    {
+      "id": "producer-grounding",
+      "criteria": ["exact-short-whole-line-accepted", "one-character-change-refused", "refusal-enters-owner-queue", "document-blocked", "instruction-refusal-parity"],
+      "approaches": [
+        {"id": "shared-floor-or-whole-line-predicate", "hypothesis": "One predicate can accept complete short source lines without weakening exact evidence.", "implementation": "Require an exact 25-character passage or an exact entire non-empty source line and reuse its wording at prompt and refusal.", "predicted_tradeoff": "Adds line-aware comparison while retaining the existing passage floor."},
+        {"id": "lower-global-floor", "hypothesis": "Reducing the numeric minimum is sufficient.", "implementation": "Accept every exact source passage above a smaller length.", "predicted_tradeoff": "Simpler, but admits arbitrary fragments and still fails shorter complete lines."}
+      ]
+    },
+    {
+      "id": "derived-open",
+      "criteria": ["exact-payload-key", "exact-six-source-ids", "exact-six-source-keys", "exact-value-hashes", "missing-producer-refuses-before-write", "explicit-mode-unchanged"],
+      "approaches": [
+        {"id": "fixed-deliverable-profile", "hypothesis": "A bounded deliverable-to-producer contract can derive only declared real sources.", "implementation": "Resolve one context.up namespace and require every producer named by the tactical_roadmap profile.", "predicted_tradeoff": "New deliverables require an explicit profile."},
+        {"id": "all-neighboring-state-keys", "hypothesis": "Every sibling object near the deliverable is an upstream producer.", "implementation": "Register all non-status sibling state keys automatically.", "predicted_tradeoff": "No profile maintenance, but invents producer relationships and unstable source sets."}
+      ]
+    },
+    {
+      "id": "bulk-ruling",
+      "criteria": ["complete-queue-preflight", "choice-parity", "marker-parity", "zero-partial-writes", "normal-answer-owner-constraints"],
+      "approaches": [
+        {"id": "parse-preflight-then-atomic-write", "hypothesis": "A full assessment plan can be validated in memory before one state transition.", "implementation": "Parse all rows and grounding blocks, validate against a copied matrix, then replace the three run records only after success.", "predicted_tradeoff": "More parser checks, with no stranded partial ruling set."},
+        {"id": "sequential-answer-owner-loop", "hypothesis": "Calling answer-owner row by row is sufficient.", "implementation": "Apply each parsed row immediately and stop on the first refusal.", "predicted_tradeoff": "Reuses the CLI helper but can leave earlier rulings filed when a later row is invalid."}
+      ]
+    },
+    {
+      "id": "located-evidence",
+      "criteria": ["exact-20-cell-set", "line-for-line-output", "page-and-source-spans", "zero-model-calls"],
+      "approaches": [
+        {"id": "persisted-span-renderer", "hypothesis": "The hand digest is reproducible from immutable reader responses and run registries.", "implementation": "Load each seat's stored response spans and render the same ordered line format.", "predicted_tradeoff": "Depends on preserved reader evidence, as the audit contract already requires."},
+        {"id": "matrix-quote-summary", "hypothesis": "Quotes retained in matrix.json are enough.", "implementation": "Print normalized quotes without reading response spans.", "predicted_tradeoff": "Smaller read surface, but loses exact line numbers and cannot reproduce the source excerpts."}
+      ]
+    }
+  ]
+}
