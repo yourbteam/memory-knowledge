@@ -1,0 +1,25 @@
+{
+  "aggregated_metrics": {
+    "contract-surface-visible": 1.0,
+    "direct-contract-correct": 1.0,
+    "frozen-input-unchanged": 1.0,
+    "owner-waiver-request-bound": 1.0,
+    "refusal-actionable": 1.0
+  },
+  "approach_id": "enforced-surface",
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "bundle_sha256": "a7439f96c3078d2d2e188c6f354d248a5cb9ac6f29953d4154240677d3396391",
+  "case_count": 5,
+  "case_ids": [
+    "proof-order-prose",
+    "countable-kpis-prose",
+    "named-assigner-structured",
+    "card-inside-phase-structured",
+    "generic-line-render"
+  ],
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended"
+}

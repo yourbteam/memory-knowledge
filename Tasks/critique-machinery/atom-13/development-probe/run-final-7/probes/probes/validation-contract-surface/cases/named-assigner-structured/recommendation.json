@@ -1,0 +1,14 @@
+{
+  "approach_id": "enforced-surface",
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "bundle": "../../bundles/enforced-surface",
+  "bundle_sha256": "a7439f96c3078d2d2e188c6f354d248a5cb9ac6f29953d4154240677d3396391",
+  "case_id": "named-assigner-structured",
+  "experiment_id": "development-probe-ca5e3e3c4936b877a80c",
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

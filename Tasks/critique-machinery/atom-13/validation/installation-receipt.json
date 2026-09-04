@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "installed",
+  "installer": "working-agreement/install_skills.py",
+  "selected_managed_skills": ["atom-building-machinery"],
+  "target": "both",
+  "reconciliation": "working-agreement/client-skill-projections.json",
+  "clients": [
+    {
+      "client": "codex",
+      "destination": "/Users/kamenkamenov/.codex/skills/atom-building-machinery",
+      "installed_tree_sha256": "87387081203c15941fc5107373a5cdd3e7e3d8d4f23f164800e133e58ffd95fd",
+      "projected_tree_sha256": "87387081203c15941fc5107373a5cdd3e7e3d8d4f23f164800e133e58ffd95fd",
+      "parity_state": "MATCH",
+      "required_runtime": "codex exec",
+      "forbidden_runtime": "claude",
+      "fail_closed": true
+    },
+    {
+      "client": "claude",
+      "destination": "/Users/kamenkamenov/.claude/skills/atom-building-machinery",
+      "installed_tree_sha256": "c18b7c6495776344f44c9fac406321f96a5b5597ec5802f26a31711d0a49612b",
+      "projected_tree_sha256": "c18b7c6495776344f44c9fac406321f96a5b5597ec5802f26a31711d0a49612b",
+      "parity_state": "MATCH",
+      "required_runtime": "claude -p",
+      "forbidden_runtime": "codex exec",
+      "fail_closed": true
+    }
+  ],
+  "known_out_of_scope": {
+    "id": "CM-D2",
+    "observation": "Direct controller execution from either installed skill directory still depends on the repository-level scripts package.",
+    "scope_reason": "Atom C refreshes and verifies the managed client projections; it does not widen into the standing install-time dependency-closure item."
+  },
+  "unrelated_global_drift": ["description-machinery in the Codex installed tree"],
+  "new_model_calls": 0
+}

@@ -1,0 +1,61 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "captured_cases": [
+    {
+      "case_id": "proof-order-prose",
+      "expected_outcome": "The declared proof-building-order validation refuses at start without an owner prose waiver and starts with its request-bound owner waiver.",
+      "kind": "failure",
+      "sha256": "1765899f24daef77123c0c5a38bd561887d3ef065058f4185faeec074846d852",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/proof-order.atom-request.json"
+    },
+    {
+      "case_id": "countable-kpis-prose",
+      "expected_outcome": "The declared KPI validation refuses at start without an owner prose waiver and starts with its request-bound owner waiver.",
+      "kind": "failure",
+      "sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/countable-kpis.atom-request.json"
+    },
+    {
+      "case_id": "named-assigner-structured",
+      "expected_outcome": "The declared owner-door validation resolves its pinned-string schema source and starts without a waiver.",
+      "kind": "success",
+      "sha256": "c45c5b8422959646c18afbd5640cbaee0a663169aaa99f3a5551845cdfeba6e8",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/named-assigner.atom-request.json"
+    },
+    {
+      "case_id": "card-inside-phase-structured",
+      "expected_outcome": "The declared card validation resolves its integer and enum target fields and starts without a waiver.",
+      "kind": "success",
+      "sha256": "e83cd0ecf0a63e0b59c7c372fe1b55f62080063968d54eaed9daaad111630a18",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/card-inside-phase.atom-request.json"
+    },
+    {
+      "case_id": "generic-line-render",
+      "expected_outcome": "The declared renderer starts without a validation field or waiver, and the recorded launcher order stops only on its middle prose atom.",
+      "kind": "success",
+      "sha256": "45b35f0a33d6e27754bd5fccf493f2decace397503c81a68b6ca9abb75265eaf",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/generic-line-retired.atom-request.json"
+    }
+  ],
+  "contract_surface": {
+    "deliverable": "atom_controller",
+    "fields": [
+      {
+        "field": "contract_surface",
+        "shape": "object",
+        "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "outcome": "A validation atom declares the field it validates and its repository-backed shape before any experiment can run; prose requires Kamen Kamenov's exact waiver.",
+  "practical_value": "The three recorded prose-parser failures become a class refused at atom start instead of another lesson an author can forget.",
+  "schema_version": 1,
+  "stopping_condition": "The five declared real requests replay with two prose refusals, two structured starts, one render start, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+}

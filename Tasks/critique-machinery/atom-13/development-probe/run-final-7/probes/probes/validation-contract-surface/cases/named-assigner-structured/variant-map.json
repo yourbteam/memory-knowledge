@@ -1,0 +1,34 @@
+{
+  "experiment_id": "development-probe-ca5e3e3c4936b877a80c",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "enforced-surface",
+      "bundle": "../../bundles/enforced-surface",
+      "bundle_sha256": "a7439f96c3078d2d2e188c6f354d248a5cb9ac6f29953d4154240677d3396391",
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "probe_id": "validation-contract-surface",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "author-remembers",
+      "bundle": "../../bundles/author-remembers",
+      "bundle_sha256": "cd621fc98e0e616aa53eda9477f6179d68908961c26b783a40049eafd00de47f",
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "probe_id": "validation-contract-surface",
+      "variant_id": "variation-2"
+    }
+  ]
+}

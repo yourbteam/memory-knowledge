@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "case_id": "generic-line-render",
+  "experiment_id": "development-probe-e38122014ef8f7e80ded",
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "recommendation_sha256": "d1398cf8a4ad55531c99525a8a92d1c65ddba8cf4d29d66ef9a9fee93776fdc7",
+  "schema_version": 1,
+  "status": "completed"
+}

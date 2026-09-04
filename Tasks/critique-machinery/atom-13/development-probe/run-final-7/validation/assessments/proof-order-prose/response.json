@@ -1,0 +1,9 @@
+{
+  "case_id": "proof-order-prose",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all measured start, waiver, visibility, and immutability checks passed",
+  "verdict": "satisfied"
+}

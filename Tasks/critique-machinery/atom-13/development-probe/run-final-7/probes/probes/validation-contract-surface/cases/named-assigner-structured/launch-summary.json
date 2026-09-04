@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "case_id": "named-assigner-structured",
+  "experiment_id": "development-probe-ca5e3e3c4936b877a80c",
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "recommendation_sha256": "6bd0235f4286f4aaf9d31eb927462383585bb4cee9cddcbb6595aed1c2022b1b",
+  "schema_version": 1,
+  "status": "completed"
+}

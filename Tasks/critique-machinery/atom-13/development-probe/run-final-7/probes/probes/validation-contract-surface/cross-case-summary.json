@@ -1,0 +1,16 @@
+{
+  "aggregated_summary_sha256": "23f481fed4ceeabd2fcb09d710886bc79c20e0db1caea6be61c730c68fe8f067",
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "case_ids": [
+    "proof-order-prose",
+    "countable-kpis-prose",
+    "named-assigner-structured",
+    "card-inside-phase-structured",
+    "generic-line-render"
+  ],
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "recommendation_sha256": "d92522f8cdc7bb1e8ca897961d2a99decf4cb8519f242434ca8a073b4ebc9553",
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,168 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The declared proof-building-order validation refuses at start without an owner prose waiver and starts with its request-bound owner waiver.",
+        "id": "proof-order-prose",
+        "kind": "failure",
+        "sha256": "1765899f24daef77123c0c5a38bd561887d3ef065058f4185faeec074846d852",
+        "source_ref": "Tasks/critique-machinery/atom-13/declared-real/proof-order.atom-request.json"
+      },
+      {
+        "expected_outcome": "The declared KPI validation refuses at start without an owner prose waiver and starts with its request-bound owner waiver.",
+        "id": "countable-kpis-prose",
+        "kind": "failure",
+        "sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0",
+        "source_ref": "Tasks/critique-machinery/atom-13/declared-real/countable-kpis.atom-request.json"
+      },
+      {
+        "expected_outcome": "The declared owner-door validation resolves its pinned-string schema source and starts without a waiver.",
+        "id": "named-assigner-structured",
+        "kind": "success",
+        "sha256": "c45c5b8422959646c18afbd5640cbaee0a663169aaa99f3a5551845cdfeba6e8",
+        "source_ref": "Tasks/critique-machinery/atom-13/declared-real/named-assigner.atom-request.json"
+      },
+      {
+        "expected_outcome": "The declared card validation resolves its integer and enum target fields and starts without a waiver.",
+        "id": "card-inside-phase-structured",
+        "kind": "success",
+        "sha256": "e83cd0ecf0a63e0b59c7c372fe1b55f62080063968d54eaed9daaad111630a18",
+        "source_ref": "Tasks/critique-machinery/atom-13/declared-real/card-inside-phase.atom-request.json"
+      },
+      {
+        "expected_outcome": "The declared renderer starts without a validation field or waiver, and the recorded launcher order stops only on its middle prose atom.",
+        "id": "generic-line-render",
+        "kind": "success",
+        "sha256": "45b35f0a33d6e27754bd5fccf493f2decace397503c81a68b6ca9abb75265eaf",
+        "source_ref": "Tasks/critique-machinery/atom-13/declared-real/generic-line-retired.atom-request.json"
+      }
+    ],
+    "id": "validation-atom-declares-contract-surface",
+    "outcome": "A validation atom declares the field it validates and its repository-backed shape before any experiment can run; prose requires Kamen Kamenov's exact waiver.",
+    "practical_value": "The three recorded prose-parser failures become a class refused at atom start instead of another lesson an author can forget.",
+    "stopping_condition": "The five declared real requests replay with two prose refusals, two structured starts, one render start, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use only the measured winner; preserve every other controller lifecycle boundary.",
+    "consumes": [
+      {
+        "artifact": "validation-contract-surface-winner",
+        "probe_id": "validation-contract-surface"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "failure_criterion": "Any measured contract, waiver, visibility, or immutability metric is not one.",
+      "operator_path": "probe_entry.py invokes start and status on every frozen declared request and both owner receipts.",
+      "success_criterion": "The five declared real requests replay with two prose refusals, two structured starts, one render start, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/atom-building-machinery/SKILL.md",
+        "skills/atom-building-machinery/scripts/atom_controller.py",
+        "tests/test_atom_building_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A code-enforced field and shape declaration prevents prose-parser validation from starting silently.",
+          "id": "enforced-surface",
+          "implementation": "Resolve contract_surface against the repository and bind prose exceptions to the owner's code-interview receipt.",
+          "predicted_tradeoff": "New atoms declare their surface; prose atoms need one owner choice."
+        },
+        {
+          "hypothesis": "Documenting the lesson is enough.",
+          "id": "author-remembers",
+          "implementation": "Keep the pre-Atom C controller.",
+          "predicted_tradeoff": "No request change, but no executable protection."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "worst",
+            "name": "direct-contract-correct"
+          },
+          {
+            "method": "worst",
+            "name": "refusal-actionable"
+          },
+          {
+            "method": "worst",
+            "name": "owner-waiver-request-bound"
+          },
+          {
+            "method": "worst",
+            "name": "contract-surface-visible"
+          },
+          {
+            "method": "worst",
+            "name": "frozen-input-unchanged"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "direct-contract-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "refusal-actionable"
+          },
+          {
+            "direction": "maximize",
+            "name": "owner-waiver-request-bound"
+          },
+          {
+            "direction": "maximize",
+            "name": "contract-surface-visible"
+          },
+          {
+            "direction": "maximize",
+            "name": "frozen-input-unchanged"
+          }
+        ]
+      },
+      "goal": "Choose whether the atom controller enforces a repository-backed validation surface at start.",
+      "id": "validation-contract-surface",
+      "inputs": [
+        {
+          "case_id": "proof-order-prose"
+        },
+        {
+          "case_id": "countable-kpis-prose"
+        },
+        {
+          "case_id": "named-assigner-structured"
+        },
+        {
+          "case_id": "card-inside-phase-structured"
+        },
+        {
+          "case_id": "generic-line-render"
+        }
+      ],
+      "practical_value": "The three recorded prose-parser failures become a class refused at atom start instead of another lesson an author can forget.",
+      "proof": {
+        "failure_criterion": "A prose validator starts without its exact waiver, a structured request cannot start, or the declaration is absent from status.",
+        "success_criterion": "The five declared real requests replay with two prose refusals, two structured starts, one render start, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+      },
+      "winner_output": {
+        "artifact": "validation-contract-surface-winner",
+        "description": "The measured controller approach."
+      },
+      "work_type": "code",
+      "work_type_reason": "The boundary is deterministic start, status, and receipt behavior."
+    }
+  ],
+  "schema_version": 2
+}

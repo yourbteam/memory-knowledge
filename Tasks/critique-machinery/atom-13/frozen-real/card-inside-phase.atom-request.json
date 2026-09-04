@@ -1,0 +1,34 @@
+{
+ "schema_version": 1,
+ "atomic_step_id": "s12-card-inside-phase",
+ "outcome": "Every Activation Card's month sits inside its phase's months, and a Pre-Seed card that introduces or publishes states its pre-launch role \u2014 live, unpromoted, until the Launch moment in a named month.",
+ "practical_value": "Two located defects (critique run claude-seat-s12-btm-v4, unit u-007): the proof page 'introduces The Stop Line' in Month 2 while the phase plan introduces it publicly in Months 4-5.",
+ "stopping_condition": "The real v1 pack refuses on the proof-page card; with the role stated it is accepted; a card moved outside its phase refuses by name.",
+ "allowed_paths": [
+  "src/up_harness/tactical_roadmap.py",
+  "tests/unit"
+ ],
+ "captured_cases": [
+  {
+   "case_id": "case-btm-v1-proof-page",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-inside-phase/cases/case-btm-v1-proof-page.json",
+   "sha256": "b91ed69e4c28093020b12f16da09639d7879f3aa205cf62c8d82d7a5be0dfd00",
+   "kind": "failure",
+   "expected_outcome": "the real v1 proof-page card refuses: pre-launch role unstated"
+  },
+  {
+   "case_id": "case-btm-role-stated",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-inside-phase/cases/case-btm-role-stated.json",
+   "sha256": "b1c4ff189093afa41950ac8c2db8aaaa3a3726c397124a1dd9c798caad765223",
+   "kind": "success",
+   "expected_outcome": "the proof-page card with its pre-launch role stated is accepted"
+  },
+  {
+   "case_id": "case-btm-card-outside-phase",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-inside-phase/cases/case-btm-card-outside-phase.json",
+   "sha256": "1d601dc3a32a2af9d8a91228d6b466000b00cfe53da40043ac74a6617cabe050",
+   "kind": "failure",
+   "expected_outcome": "a Launch card moved to Month 2 refuses by name"
+  }
+ ]
+}

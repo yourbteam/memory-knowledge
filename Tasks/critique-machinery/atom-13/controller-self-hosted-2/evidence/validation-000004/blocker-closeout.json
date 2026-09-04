@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "68dff222d1f366c88a444a3ee91304f1e55a05bf6d0e8e697d751ccc66f55fce",
+  "atom_run_id": "a0578fc17a2744b281b71374cd2905317a68da2d88172f6067b1232805dca77b",
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441"
+}

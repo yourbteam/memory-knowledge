@@ -1,0 +1,1557 @@
+{
+ "atom_id": "s12-generic-line-retired",
+ "contract_surface": {"kind": "render"},
+ "outcome": "The open-items block on the page and the Word twin carries the derived doors alone — the approve door and one door per unassigned element — and, when nothing is open, says so; the round-1 generic line is retired.",
+ "practical_value": "One located cell (critique run claude-seat-s12-btm-page-v3, unit u-029): 'Who owns each roadmap element? — drafted above; no owner has approved' sits above the approve door that names who approves and by when.",
+ "stopping_condition": "The real v3 pack renders the doors without the generic line; a settled pack says nothing waits; a pack without ownership rows refuses by name.",
+ "probe_goal": "Whether the open-items block is derived doors alone.",
+ "allowed_paths": [
+  "src/up_harness/tactical_roadmap.py",
+  "tests/unit"
+ ],
+ "approach_descriptions": [
+  {
+   "id": "doors-only",
+   "hypothesis": "The derived doors carry everything the generic line said.",
+   "implementation": "scripts/atom_check.py renders the approve door and the owner doors only",
+   "predicted_tradeoff": "a settled roadmap needs an explicit nothing-open line"
+  },
+  {
+   "id": "generic-kept",
+   "hypothesis": "The generic line does no harm above the doors.",
+   "implementation": "scripts/atom_check.py keeps the v3 block",
+   "predicted_tradeoff": "the line contradicts the approve door"
+  }
+ ],
+ "proof": {
+  "success_criterion": "Doors only on the real pack; nothing-open line on a settled pack; refusal without ownership.",
+  "failure_criterion": "The generic line survives."
+ },
+ "baseline_module": "\"\"\"Control: the generic line above the doors (v3).\"\"\"\n\ndef apply(case):\n    return {\"refusal\": None, \"rendered\": '- **Who owns each roadmap element?** — drafted above; no owner has approved.', \"pack\": case[\"pack\"]}\n",
+ "approaches": {
+  "doors-only": "\"\"\"The open-items block is the derived doors alone (approach doors-only).\"\"\"\nimport re\n\nDOOR = re.compile(r\"^unassigned — (?P<who>.+?) by (?P<when>.+)$\")\n\n\ndef apply(case):\n    pack = case[\"pack\"]\n    ownership = pack.get(\"ownership\") or []\n    if not ownership:\n        raise ValueError(\"tactical_roadmap_open_block_unrenderable: the roadmap has no ownership rows — the open-items block is derived from them.\")\n    lines = []\n    approval = pack.get(\"approval\") or {}\n    if not approval.get(\"approved_by\"):\n        decider = str((pack.get(\"platform_approval\") or {}).get(\"decided_by\") or \"\").strip()\n        lines.append(f\"- **Approve the owners and the calendar** — {decider} before Month 1\" if decider\n                     else \"- **Approve the owners and the calendar** — waits on the platform decision; no decider is recorded\")\n    for row in ownership:\n        owner = str(row.get(\"owner\") or \"\").strip()\n        if DOOR.match(owner):\n            lines.append(f\"- **Assign the {row.get('element')} owner** — {owner[len('unassigned — '):]}\")\n    if not lines:\n        lines.append(\"- **Nothing waits on a person.** The owners are named and the calendar is approved.\")\n    return {\"refusal\": None, \"rendered\": \"\\n\".join(lines), \"pack\": pack}\n",
+  "generic-kept": "\"\"\"Generic line kept above the doors (approach generic-kept).\"\"\"\n\n\ndef apply(case):\n    pack = case[\"pack\"]\n    doors = [f\"- **Assign the {r.get('element')} owner** — {str(r.get('owner'))[len('unassigned — '):]}\"\n             for r in pack.get(\"ownership\") or [] if str(r.get(\"owner\") or \"\").startswith(\"unassigned\")]\n    return {\"refusal\": None, \"rendered\": \"\\n\".join(['- **Who owns each roadmap element?** — drafted above; no owner has approved.'] + doors), \"pack\": pack}\n"
+ },
+ "cases": [
+  {
+   "case_id": "case-btm-v3-doors-only",
+   "pack": {
+    "phases": [
+     {
+      "phase": "Pre-Seed",
+      "objective": "Prepare the proof base, approval route and owner-message evidence before The Stop Line is promoted.",
+      "months": "1-3"
+     },
+     {
+      "phase": "Launch",
+      "objective": "Introduce The Stop Line through Signed by Humans and direct priority audiences to approved proof.",
+      "months": "4-5"
+     },
+     {
+      "phase": "Sustain",
+      "objective": "Keep the platform visible through proof, explanation, partner enablement and senior craft.",
+      "months": "6-9"
+     },
+     {
+      "phase": "Amplify",
+      "objective": "Use proof, third-party credibility and trained advocates to widen the story without widening the claim.",
+      "months": "10-12"
+     }
+    ],
+    "activation_cards": [
+     {
+      "name": "Public Identity Cleanup",
+      "insight": "A proof-led AI story fails if buyer-facing records conflict before the proof is seen.",
+      "idea": "Clean The B Team's public identity around The Stop Line before launch so the market sees one consistent proof-first story; any cleaned public record is live, unpromoted, until the Launch moment in Month 4.",
+      "engagement_mechanic": "Buyers, partners and media encounter consistent public records before being asked to evaluate The Stop Line.",
+      "desired_outcome": "The launch has no unresolved public-profile conflicts undermining credibility.",
+      "targets": "Public website, LinkedIn profiles, sales decks, media boilerplate and buyer-facing descriptions read in Month 1; conflicts logged and resolved before Month 4.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners, media and senior Sofia talent.",
+      "message_pillar": "Proof comes before promotion.",
+      "peso_channel": "Owned",
+      "kpi": "Public-profile consistency rate measured as percentage of identified buyer-facing records passing the Public Identity Cleanup Checklist; unresolved conflict count; approved boilerplate adoption rate.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "Proof Library Lock",
+      "insight": "The Stop Line can only be ownable if every AI claim shows approved proof, a senior owner and a stated limit.",
+      "idea": "Lock the proof library behind The Stop Line before promotion, with every claim labelled as named reference, verifiable anonymous reference, technical artifact or internal demo.",
+      "engagement_mechanic": "Internal reviewers read each claim against its proof type, owner and stop-line limit before it can enter public use.",
+      "desired_outcome": "The year starts from an approved proof base instead of a list of AI claims.",
+      "targets": "All public AI claims, proof labels, senior-owner fields and stated limits read in Month 1; launch claims approved before Month 4.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Owners of midsize businesses, technical buyers, partners and sales users.",
+      "message_pillar": "Every public AI claim must connect to approved proof.",
+      "peso_channel": "Owned",
+      "kpi": "Percentage of launch AI claims linked to approved proof; percentage of proof entries passing the Proof Library Lock Checklist; number of claims rejected or narrowed before publication.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "Key-Message Table",
+      "insight": "A distributed launch needs one approved source of message truth or local teams will stretch the claim.",
+      "idea": "Produce the Key-Message Table for The Stop Line and Signed by Humans as the approved training source for audiences, proof points and do-not-say lines.",
+      "engagement_mechanic": "Spokespeople, sales and partners read one approved message table before creating launch or follow-up material.",
+      "desired_outcome": "Every tactic uses the same proof-first restraint language.",
+      "targets": "Audience messages, proof points, do-not-say lines and approval owners read in Month 1; table used from Month 1 through Month 12.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Internal spokespeople, sales users, partners and local market leads.",
+      "message_pillar": "Clear limits make the AI story easier to trust.",
+      "peso_channel": "Owned",
+      "kpi": "Message-table completion rate; percentage of assets passing the Key-Message Table Alignment Rubric on audience fit, proof trace, claim limit and do-not-say compliance; approved-answer reuse rate.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "The Stop Line Proof Page",
+      "insight": "Buyers do not need a bigger AI promise; they need to see what is proved, who owns it and where the system stops.",
+      "idea": "Create one owned page for The Stop Line that is live, unpromoted, until the Launch moment in Month 4, showing each approved claim with proof type, senior owner and stated limit.",
+      "engagement_mechanic": "Visitors can inspect the proof behind the claim before they are asked to book a meeting or accept the AI story.",
+      "desired_outcome": "The B Team has a public proof base that paid, earned, shared and sales activity can all point to.",
+      "targets": "Proof page read internally in Month 2 and published live, unpromoted, from Month 2 until launch promotion in Month 4; all launch claims checked before Month 4.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners and senior Sofia talent.",
+      "message_pillar": "The Stop Line makes restraint visible.",
+      "peso_channel": "Owned",
+      "kpi": "Proof-page visits; time on page; qualified meeting clicks; percentage of public AI claims linked to approved proof; page quality scored on a 1-5 Stop Line Proof Page Checklist covering proof type, senior owner, limit and buyer clarity.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hero",
+      "month": 2
+     },
+     {
+      "name": "Fact Sheet and Backgrounder",
+      "insight": "Media, partners and technical buyers need the approval route and claim limits in a form they can cite safely.",
+      "idea": "Build the fact sheet and backgrounder explaining The Stop Line, Signed by Humans, proof types, senior sign-off and claim boundaries.",
+      "engagement_mechanic": "Readers get a compact reference that answers what is proved, who approved it and what is not being claimed.",
+      "desired_outcome": "Earned, partner and sales conversations stay inside the approved proof boundary.",
+      "targets": "Fact sheet and backgrounder read in Month 2; used from Month 4 through Month 12 for launch, partner and earned activity.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Journalists, analysts, partners, enterprise buyers and sales users.",
+      "message_pillar": "Senior people still own the outcome.",
+      "peso_channel": "Owned",
+      "kpi": "Approval-route accuracy rate; percentage of backgrounder sections passing the Fact Sheet Accuracy Checklist; proof citations used in briefings; media-question answer reuse.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hub",
+      "month": 2
+     },
+     {
+      "name": "Owner Control Message Test",
+      "insight": "Owners may value control and visibility more than AI capability, but that remains a hypothesis until owners compare the messages.",
+      "idea": "Test a control-led message against an AI-capability message, both anchored in The Stop Line.",
+      "engagement_mechanic": "Owners react to plain-language options showing visibility, ownership and early risk detection without being asked to become technical buyers.",
+      "desired_outcome": "The B Team learns whether control should lead owner-facing communication before scaling the message.",
+      "targets": "Owner test responses read in Month 3; preference, comprehension, trust and meeting-intent evidence reviewed before Month 4 launch language is promoted.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, led by Elena.",
+      "message_pillar": "Owners get control without becoming technical.",
+      "peso_channel": "Paid and Owned",
+      "kpi": "Preference split; comprehension score on a 1-5 owner-clarity scale; trust lift; meeting intent; qualitative reasons coded against the Owner Control Message Test Rubric.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hub",
+      "month": 3
+     },
+     {
+      "name": "Spokesperson Training and Q&A",
+      "insight": "The Stop Line only holds if spokespeople can narrow a claim when proof is missing instead of defending a broad AI promise.",
+      "idea": "Train founders and senior leaders using the Key-Message Table, 30-second pitch and Q&A before anything is promoted.",
+      "engagement_mechanic": "Spokespeople rehearse buyer, partner and media questions and learn the approved escalation route.",
+      "desired_outcome": "Launch answers stay consistent, specific and proof-led.",
+      "targets": "Spokesperson materials, Q&A and 30-second pitch read in Month 3; every launch spokesperson trained before Month 4.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Founders, senior leaders, sales users and market spokespeople.",
+      "message_pillar": "If evidence is missing, the message narrows.",
+      "peso_channel": "Owned",
+      "kpi": "Training completion rate; answer quality scored on a 1-5 Spokesperson Stop Line Rubric for proof trace, owner naming, limit clarity and escalation discipline; number of unapproved claims corrected before launch.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 3
+     },
+     {
+      "name": "The Stop Line Launch",
+      "insight": "The reputation gap is credibility, not reach, so the launch must point to proof before promotion.",
+      "idea": "Publicly launch The Stop Line with the proof page, press release and approved fact sheet.",
+      "engagement_mechanic": "Audiences are directed from launch coverage and owned channels into the proof page where claims can be inspected.",
+      "desired_outcome": "The market sees The B Team's AI story as governed, checked and reviewable.",
+      "targets": "Launch assets published in Month 4; proof page, press release, fact sheet and approved claims read by owned, earned and sales audiences during the launch window.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners, journalists and senior Sofia talent.",
+      "message_pillar": "The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.",
+      "peso_channel": "Earned and Owned",
+      "kpi": "Proof-page visits; earned coverage quality scored on a 1-5 Launch Coverage Quality Rubric for proof citation, claim accuracy and stop-line mention; qualified meeting clicks; launch-asset approval pass rate.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hero",
+      "month": 4
+     },
+     {
+      "name": "Signed by Humans Founder Launch Post",
+      "insight": "The human moment makes the AI story credible when a senior person visibly checks, owns and signs the work.",
+      "idea": "Publish a founder-led launch post that explains Signed by Humans as the visible promise behind The Stop Line.",
+      "engagement_mechanic": "Readers see the senior responsibility behind the claim and are directed to the owned proof page for evidence.",
+      "desired_outcome": "Founder visibility increases while the public story stays inside the approved proof boundary.",
+      "targets": "Founder launch post published in Month 5; reactions, proof-page clicks, comments and partner reshares read during Month 5 before paid amplification is scaled.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Owners of midsize businesses, technical buyers, referral partners and senior Sofia talent.",
+      "message_pillar": "Signed by Humans means senior people still own the outcome.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Founder-post reach; engagement quality scored on a 1-5 Signed by Humans Engagement Rubric for relevance, proof-seeking, partner value and talent signal; proof-page clicks; partner reshares; qualified inbound conversations.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hero",
+      "month": 5
+     },
+     {
+      "name": "Social Pack Activation",
+      "insight": "The platform needs repeatable shared language so executives, team members and partners do not improvise claims.",
+      "idea": "Release an approved social pack for The Stop Line and Signed by Humans after the founder launch post.",
+      "engagement_mechanic": "Participants select approved posts, proof links and visual assets rather than writing from scratch.",
+      "desired_outcome": "Shared content reinforces the proof base without widening the AI claim.",
+      "targets": "Social pack published in Month 5 and used from Month 5 through Month 11; posts read weekly during active months for claim compliance.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Founders, executives, team members, referral partners and employees.",
+      "message_pillar": "Senior people still own the outcome.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Approved-post use rate; claim-compliance rate scored against the Social Pack Compliance Checklist; proof-page clicks; engagement quality scored on a 1-5 Social Pack Engagement Rubric for relevance, proof-seeking and safe-share value; partner and employee participation.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hub",
+      "month": 5
+     },
+     {
+      "name": "Partner Proof Pack",
+      "insight": "Referral partners can carry the story only if the approved proof is simple, repeatable and safe to share.",
+      "idea": "Build and brief a short partner pack that explains The Stop Line, Signed by Humans and the approved proof types behind each claim.",
+      "engagement_mechanic": "Partners get language they can use without inventing claims or stretching evidence.",
+      "desired_outcome": "Referral conversations become easier, more consistent and less exposed to unapproved AI claims.",
+      "targets": "Partner pack published and briefed in Month 6; partner use read in Months 6, 10 and 11 when partner and earned activity run.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Referral partners, ecosystem partners and enterprise buyers.",
+      "message_pillar": "Every AI claim earns its place through approved proof before it reaches the market.",
+      "peso_channel": "Owned and Earned",
+      "kpi": "Partner pack downloads; partner briefings completed; referred qualified leads; claim-compliance checks scored on a 1-5 Partner Proof Pack Rubric for proof type, repeatability, limit clarity and safe-share language.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 6
+     },
+     {
+      "name": "Technical Proof Story",
+      "insight": "Technical buyers need proof that AI supports delivery without taking ownership away from senior people.",
+      "idea": "Publish approved technical artifacts and an explainer showing how The Stop Line governs AI-supported delivery.",
+      "engagement_mechanic": "Technical buyers inspect artifacts, approval labels and limits before entering a technical conversation.",
+      "desired_outcome": "The platform gains technical credibility without becoming a broad AI capability claim.",
+      "targets": "Technical artifact story published in Month 7; technical conversations and artifact use read in Months 7, 10 and 12.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Chief technology officers, architecture owners, technical buyers and enterprise buyers.",
+      "message_pillar": "AI supports the work; senior people remain responsible for the claim, delivery and limit.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Technical artifact views; time on page; sales use; qualified technical conversations; artifact quality scored on a 1-5 Technical Proof Story Rubric for inspectability, proof label, senior owner and limit clarity.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 7
+     },
+     {
+      "name": "Senior Craft Story Series",
+      "insight": "Senior Sofia talent and careful buyers will believe the AI story only if it protects judgment rather than celebrating automation alone.",
+      "idea": "Publish a recurring monthly series under Signed by Humans that shows how senior people review work, make decisions and define the stop line.",
+      "engagement_mechanic": "Readers see craft, judgment and responsibility inside AI-supported delivery.",
+      "desired_outcome": "The talent story and buyer story reinforce each other without turning The B Team into a broad ethics platform.",
+      "targets": "Monthly from Month 8 through Month 11; each story read for craft signal, proof link and claim compliance before publication.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Senior Sofia talent and buyers who want craft behind AI-supported delivery.",
+      "message_pillar": "Senior craft keeps judgment in the work.",
+      "peso_channel": "Shared and Owned",
+      "kpi": "Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality scored on a 1-5 Senior Craft Story Rubric for judgment, responsibility, stop-line clarity and no automation-only framing.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 8
+     },
+     {
+      "name": "Conversation Management and Observatory Newsroom",
+      "insight": "Campaign bursts cannot hold a reputation if no one is listening, triaging and responding between moments.",
+      "idea": "Run the always-on Conversation Management loop and Observatory newsroom around The Stop Line from Month 1, with a visible calendar focus in Month 9.",
+      "engagement_mechanic": "The team listens, triages, responds and escalates only when there is approved proof and a clear stop line to show.",
+      "desired_outcome": "Issues, questions and market moments are handled without widening the claim.",
+      "targets": "Daily from Month 1 through Month 12, with Month 9 as the named calendar focus; AI trust, governance, buyer-risk and proof questions read every working day.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners, technical buyers, partners, media, employees and followers.",
+      "message_pillar": "Proof comes before promotion.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Response time; issue resolution rate; message consistency scored on a 1-5 Conversation Management Checklist; approved-answer reuse; escalation accuracy for crisis tripwires.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 9
+     },
+     {
+      "name": "Earned Validation Outreach",
+      "insight": "Third-party credibility makes The Stop Line harder to dismiss after the proof base exists.",
+      "idea": "Pitch journalists, analysts and named experts only after The Stop Line proof page, fact sheet and partner evidence are ready.",
+      "engagement_mechanic": "Professional influencers receive proof citations, approved limits and named responsibility rather than a broad AI claim.",
+      "desired_outcome": "The platform gains independent validation without outrunning evidence.",
+      "targets": "Earned outreach runs in Month 10; briefings, coverage questions and proof citations read weekly during Month 10.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Journalists, analysts, named experts, enterprise buyers and referral partners.",
+      "message_pillar": "The B Team does not ask the market to accept an AI story without receipts.",
+      "peso_channel": "Earned",
+      "kpi": "Briefings secured; coverage quality scored on a 1-5 Earned Validation Rubric for independent proof citation, claim accuracy, senior responsibility and stated limits; qualified inbound conversations; proof citations.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hero",
+      "month": 10
+     },
+     {
+      "name": "Advocacy Enablement Push",
+      "insight": "Advocacy works only after people have been engaged, trained and given a safe way to repeat the story.",
+      "idea": "Equip the advocates trained by the Conversation Management loop: employees, senior spokespeople, partners and alumni receive approved advocacy prompts, proof links and escalation rules for Signed by Humans.",
+      "engagement_mechanic": "Advocates share approved proof-led content and route questions back to the newsroom instead of improvising claims.",
+      "desired_outcome": "The story widens through credible human carriers without leaving the approval boundary.",
+      "targets": "Advocacy push runs in Month 11; employee, partner and alumni posts read during Month 11 for proof link, claim compliance and question escalation.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Employees, senior spokespeople, referral partners, respected alumni, fans and followers.",
+      "message_pillar": "Senior craft keeps judgment in the work.",
+      "peso_channel": "Shared",
+      "kpi": "Advocate participation rate; post quality scored on a 1-5 Advocacy Enablement Post Rubric for proof link, human responsibility, stop-line clarity and required disclosure; engagement quality scored on a 1-5 Advocacy Enablement Engagement Rubric for relevance, proof-seeking, safe-share value and question-routing discipline; proof-page clicks measured as UTM-tagged clicks from approved advocacy posts.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hub",
+      "month": 11
+     },
+     {
+      "name": "Close Scorecard and Message Recalibration",
+      "insight": "The next year should be built from measured proof, not from untested confidence.",
+      "idea": "Close the executive scorecard for The Stop Line and recalibrate messages, proof gaps and local targets for the next cycle.",
+      "engagement_mechanic": "Leadership reviews proof credibility, trust, public-profile consistency, founder visibility, talent pull and qualified-lead evidence before changing the message.",
+      "desired_outcome": "The platform enters the next year with approved changes and named proof gaps.",
+      "targets": "Scorecard completed in Month 12; campaign data from Months 1 through 12 read before next-year recommendations are approved.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Executive owners, market leads, sales users and communications team.",
+      "message_pillar": "The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.",
+      "peso_channel": "Owned",
+      "kpi": "Executive scorecard completion; message changes approved; next-year proof gaps named; KPI quality scored on a 1-5 Scorecard Recalibration Rubric for evidence source, audience trace, decision usefulness and claim-boundary discipline.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 12
+     }
+    ],
+    "hero_hub_hygiene_balance": {
+     "hero": "Hero carries about a fifth of the effort through The Stop Line proof page, the Month 4 launch, Signed by Humans founder launch and earned validation outreach.",
+     "hub": "Hub carries about three fifths of the effort through message testing, fact sheets, partner proof, technical proof, social activation, senior craft stories and advocacy enablement.",
+     "hygiene": "Hygiene carries about a fifth of the effort through public identity cleanup, proof-library governance, message-table control, spokesperson readiness, conversation management and the close scorecard."
+    },
+    "calendar": [
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Platform and owned proof",
+      "moment_hook": "Proof Library Lock, Public Identity Cleanup, Key-Message Table and the Conversation Management loop begin before any market-facing AI promotion.",
+      "key_message": "The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.",
+      "asset_tool": "Key-Message Table, public identity cleanup log, proof library register and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Percentage of public AI claims linked to approved proof; public-profile consistency rate; Key-Message Table alignment score; Conversation Management response time.",
+      "month": 1
+     },
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Technical proof and executive visibility",
+      "moment_hook": "The Stop Line proof page, Fact Sheet and Backgrounder are built and read while the Conversation Management loop keeps the pre-launch baseline live but unpromoted.",
+      "key_message": "Signed by Humans means senior people still own the outcome.",
+      "asset_tool": "The Stop Line proof page, fact sheet, backgrounder and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Approved claims; proof labels completed; approval checks passed; proof-page quality score; Conversation Management issue resolution rate.",
+      "month": 2
+     },
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Owner relevance and spokesperson readiness",
+      "moment_hook": "Owner Control Message Test and Spokesperson Training and Q&A run before launch, while Conversation Management reads early questions without promoting the platform.",
+      "key_message": "Owners get more control and visibility without having to become technical buyers themselves.",
+      "asset_tool": "Advertorial outline, Q&A, 30-second pitch, spokesperson materials and approved answer bank.",
+      "peso_channel": "Paid and Owned",
+      "kpi": "Preference split; comprehension score; trust lift; meeting intent; spokesperson answer quality; Conversation Management approved-answer reuse.",
+      "month": 3
+     },
+     {
+      "phase": "Launch",
+      "audience_track": "Platform and owned proof",
+      "moment_hook": "The Stop Line Launch ties the public moment to the proof page, press release and fact sheet, with Conversation Management watching reactions daily.",
+      "key_message": "The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.",
+      "asset_tool": "Proof page, press release, fact sheet and approved answer bank.",
+      "peso_channel": "Earned and Owned",
+      "kpi": "Proof-page visits; earned coverage quality; qualified meeting clicks; launch-asset approval pass rate; Conversation Management escalation accuracy.",
+      "month": 4
+     },
+     {
+      "phase": "Launch",
+      "audience_track": "Founder visibility and shared advocacy",
+      "moment_hook": "Signed by Humans Founder Launch Post activates the Social Pack Activation, with Conversation Management reading proof questions and shared responses.",
+      "key_message": "Every serious promise is Signed by Humans.",
+      "asset_tool": "Founder launch post, social pack, proof links and approved answer bank.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Founder-post reach; engagement quality; proof-page clicks; partner reshares; social pack claim-compliance rate; Conversation Management message consistency.",
+      "month": 5
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Referral and partner ecosystem",
+      "moment_hook": "Partner Proof Pack briefing gives the ecosystem safe language to carry The Stop Line, while Conversation Management supports partner questions.",
+      "key_message": "Every AI claim earns its place through approved proof before it reaches the market.",
+      "asset_tool": "Partner proof pack, event or experiential kit, proof links and approved answer bank.",
+      "peso_channel": "Owned and Earned",
+      "kpi": "Partner briefings completed; pack downloads; referred qualified leads; partner claim-compliance score; Conversation Management response time.",
+      "month": 6
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Technical proof and executive visibility",
+      "moment_hook": "Technical Proof Story turns approved artifacts into inspectable buyer evidence, with Conversation Management tracking technical trust questions.",
+      "key_message": "AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.",
+      "asset_tool": "Technical artifacts, architecture notes, infographics, imagery and approved answer bank.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Technical artifact views; time on page; sales use; qualified technical conversations; artifact quality score; Conversation Management issue resolution.",
+      "month": 7
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Talent pull and brand consistency",
+      "moment_hook": "Senior Craft Story Series begins and runs monthly from Month 8 through Month 11, while Conversation Management holds the always-on response baseline.",
+      "key_message": "The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.",
+      "asset_tool": "Senior craft story, spokesperson materials, social pack and approved answer bank.",
+      "peso_channel": "Shared and Owned",
+      "kpi": "Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality score; Conversation Management approved-answer reuse.",
+      "month": 8
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Always-on baseline",
+      "moment_hook": "Quiet month: no hero burst; Conversation Management and Observatory Newsroom are the named focus, and the Senior Craft Story Series continues monthly without widening the claim.",
+      "key_message": "Proof comes before promotion.",
+      "asset_tool": "Q&A, FAQ, approved answer bank, newsroom watchlist, senior craft story and social pack.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Response time; issue resolution; message consistency; approved-answer reuse; escalation accuracy; senior craft story quality score.",
+      "month": 9
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Professional influencers and enterprise buyers",
+      "moment_hook": "Earned Validation Outreach begins after proof, partner and technical assets exist; Senior Craft Story Series continues monthly and Conversation Management supports briefings.",
+      "key_message": "The B Team does not ask the market to accept an AI story without receipts.",
+      "asset_tool": "Fact sheet, backgrounder, proof citations, partner proof pack, technical proof story, senior craft story and approved answer bank.",
+      "peso_channel": "Earned",
+      "kpi": "Briefings secured; coverage quality; proof citations; qualified inbound conversations; senior craft story quality score; Conversation Management escalation accuracy.",
+      "month": 10
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Employees, advocates and partners",
+      "moment_hook": "Advocacy Enablement Push equips trained advocates while the Senior Craft Story Series completes its monthly run and Conversation Management routes questions back to approved proof.",
+      "key_message": "Senior craft keeps judgment in the work.",
+      "asset_tool": "Advocacy prompts, social pack, proof links, senior craft story and approved answer bank.",
+      "peso_channel": "Shared",
+      "kpi": "Advocate participation; post quality score; engagement quality score; UTM-tagged proof-page clicks from approved advocacy posts; required disclosure compliance; senior craft story quality score; Conversation Management message consistency.",
+      "month": 11
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Executive and partner audiences",
+      "moment_hook": "Close Scorecard and Message Recalibration; quiet external month unless proof-led evidence warrants selective follow-up, with Conversation Management still active until programme close.",
+      "key_message": "The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.",
+      "asset_tool": "Executive scorecard, Key-Message Table update, next-year proof gap list and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Executive scorecard completion; message changes approved; next-year proof gaps named; qualified lead contribution reviewed; Conversation Management final response and issue-resolution measures.",
+      "month": 12
+     }
+    ],
+    "proof_building_order": "We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership explains Signed by Humans through founder posts, technical artifacts, buyer explainers and senior craft stories; only after that do we widen visibility through partner briefing, earned validation, paid amplification and advocacy.",
+    "rollout": {
+     "first_audience": "The year speaks first to owners of midsize businesses, especially Elena, who wants control and visibility without becoming a technical buyer.",
+     "then_widen": "After that audience has been tested and the proof base is live, the story widens to technical buyers, referral partners, ecosystem partners, enterprise buyers, professional influencers, employees and senior Sofia talent using the same The Stop Line proof boundary."
+    },
+    "ownership": [
+     {
+      "element": "Public Identity Cleanup",
+      "owner": "unassigned — United Partners project lead must assign it by the kick-off before Month 1",
+      "cadence": "Runs in Month 1 for Public Identity Cleanup, then checked in Months 4 and 12 before launch and scorecard close.",
+      "dependencies": "Access to buyer-facing public records, approved boilerplate and final claim boundary.",
+      "budget_frame": "Internal time; out-of-pocket costs only for profile, website or listing updates that require paid support."
+     },
+     {
+      "element": "Proof Library Lock and Key-Message Table",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 1 for Proof Library Lock and Key-Message Table, then governs every asset review in Months 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12.",
+      "dependencies": "Matthew Maday technical confirmation for claim-level and AI-language approvals; proof assets marked by approved proof type.",
+      "budget_frame": "Internal strategy and approval time; no paid media until proof is approved."
+     },
+     {
+      "element": "The Stop Line Proof Page and Fact Sheet",
+      "owner": "unassigned — The B Team delivery owner must assign it by Month 1",
+      "cadence": "Runs in Month 2 for The Stop Line Proof Page and Fact Sheet and Backgrounder, then updates in Months 4, 7, 10 and 12.",
+      "dependencies": "Proof library, approval route, proof labels, senior-owner fields and web publishing access.",
+      "budget_frame": "Owned-channel production budget; design or development out-of-pocket approved case by case."
+     },
+     {
+      "element": "Owner Control Message Test and Spokesperson Training",
+      "owner": "unassigned — United Partners research lead must assign it by Month 2",
+      "cadence": "Runs in Month 3 for Owner Control Message Test and Spokesperson Training and Q&A.",
+      "dependencies": "Testable owner messages, Elena audience definition, Q&A, 30-second pitch and spokesperson availability.",
+      "budget_frame": "Internal planning plus case-by-case paid testing spend."
+     },
+     {
+      "element": "Launch Assets",
+      "owner": "unassigned — United Partners communications lead must assign it by Month 3",
+      "cadence": "Runs in Month 4 for The Stop Line Launch and in Month 5 for Signed by Humans Founder Launch Post and Social Pack Activation.",
+      "dependencies": "Approved proof page, press release, fact sheet, founder post, social pack and pre-publish gate.",
+      "budget_frame": "Launch production budget; paid amplification released only after proof assets are approved."
+     },
+     {
+      "element": "Partner and Technical Proof Programme",
+      "owner": "unassigned — The B Team partner lead must assign it by Month 5",
+      "cadence": "Runs in Month 6 for Partner Proof Pack and Month 7 for Technical Proof Story, with reuse in Months 10 and 11 for earned and advocacy activity.",
+      "dependencies": "Partner list, approved partner language, technical artifacts, Matthew Maday confirmation and sales follow-up process.",
+      "budget_frame": "Owned and partner-enablement budget; event or experiential costs approved case by case."
+     },
+     {
+      "element": "Senior Craft Story Series",
+      "owner": "unassigned — The B Team talent lead must assign it by Month 7",
+      "cadence": "Runs monthly in Months 8, 9, 10 and 11 for Senior Craft Story Series.",
+      "dependencies": "Senior participants, approved story prompts, proof links, recruitment language and social pack.",
+      "budget_frame": "Internal content time; paid talent amplification only if approved after organic quality is reviewed."
+     },
+     {
+      "element": "Conversation Management and Observatory Newsroom",
+      "owner": "unassigned — United Partners account lead must assign it by the kick-off before Month 1",
+      "cadence": "Runs daily in Months 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12 for Conversation Management and Observatory Newsroom, with Month 9 as the named calendar focus.",
+      "dependencies": "Approved answer bank, escalation route, crisis tripwires, monitoring access and proof-page links.",
+      "budget_frame": "Always-on retainer or internal operating time; escalation costs approved by incident."
+     },
+     {
+      "element": "Earned Validation Outreach",
+      "owner": "unassigned — United Partners media lead must assign it by Month 9",
+      "cadence": "Runs in Month 10 for Earned Validation Outreach.",
+      "dependencies": "Proof page, fact sheet, partner proof pack, technical proof story, spokesperson readiness and media list.",
+      "budget_frame": "Earned-media time; paid support limited to selective amplification after coverage quality is confirmed."
+     },
+     {
+      "element": "Advocacy Enablement Push",
+      "owner": "unassigned — The B Team people or partner owner must assign it by Month 10",
+      "cadence": "Runs in Month 11 for Advocacy Enablement Push and uses Senior Craft Story Series in Month 11.",
+      "dependencies": "Trained advocates, approved social pack, disclosure guidance, proof links and Conversation Management escalation route.",
+      "budget_frame": "Internal enablement time; creator or influencer costs approved case by case with disclosure."
+     },
+     {
+      "element": "Close Scorecard and Message Recalibration",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 12 for Close Scorecard and Message Recalibration.",
+      "dependencies": "Monthly KPI data, UTM tracking, proof gap log, lead contribution data and executive review availability.",
+      "budget_frame": "Internal measurement and strategy time; next-year budget decided after scorecard review."
+     }
+    ],
+    "global_local": "One channel-agnostic global toolkit carries the fixed The Stop Line platform, Signed by Humans narrative, proof-before-promotion rule, do-not-say lines, approval route and core asset set; local markets adapt hooks, language, spokespeople, proof examples and market-specific tactics while reporting a small global KPI set of proof credibility, technical-buyer trust, public-profile consistency, founder visibility, talent pull and qualified-lead contribution with local targets.",
+    "markets_period": "The campaign period runs for twelve months up to 30 June 2027 across the United States, the European Union and Sofia.",
+    "approval": {
+     "approved_by": null,
+     "approved_at": null
+    },
+    "platform_approval": {
+     "platform": "The Stop Line",
+     "decided_by": "Kamen Kamenov"
+    }
+   },
+   "inputs": {},
+   "expect": {
+    "result": "accepted",
+    "rendered_must_contain": [
+     "- **Approve the owners and the calendar** — Kamen Kamenov before Month 1",
+     "- **Assign the Public Identity Cleanup owner**"
+    ],
+    "rendered_must_not_contain": [
+     "- **Who owns each roadmap element?** — drafted above; no owner has approved."
+    ]
+   },
+   "expected_outcome": "the real v3 pack renders the derived doors without the generic line"
+  },
+  {
+   "case_id": "case-btm-v3-nothing-open",
+   "pack": {
+    "phases": [
+     {
+      "phase": "Pre-Seed",
+      "objective": "Prepare the proof base, approval route and owner-message evidence before The Stop Line is promoted.",
+      "months": "1-3"
+     },
+     {
+      "phase": "Launch",
+      "objective": "Introduce The Stop Line through Signed by Humans and direct priority audiences to approved proof.",
+      "months": "4-5"
+     },
+     {
+      "phase": "Sustain",
+      "objective": "Keep the platform visible through proof, explanation, partner enablement and senior craft.",
+      "months": "6-9"
+     },
+     {
+      "phase": "Amplify",
+      "objective": "Use proof, third-party credibility and trained advocates to widen the story without widening the claim.",
+      "months": "10-12"
+     }
+    ],
+    "activation_cards": [
+     {
+      "name": "Public Identity Cleanup",
+      "insight": "A proof-led AI story fails if buyer-facing records conflict before the proof is seen.",
+      "idea": "Clean The B Team's public identity around The Stop Line before launch so the market sees one consistent proof-first story; any cleaned public record is live, unpromoted, until the Launch moment in Month 4.",
+      "engagement_mechanic": "Buyers, partners and media encounter consistent public records before being asked to evaluate The Stop Line.",
+      "desired_outcome": "The launch has no unresolved public-profile conflicts undermining credibility.",
+      "targets": "Public website, LinkedIn profiles, sales decks, media boilerplate and buyer-facing descriptions read in Month 1; conflicts logged and resolved before Month 4.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners, media and senior Sofia talent.",
+      "message_pillar": "Proof comes before promotion.",
+      "peso_channel": "Owned",
+      "kpi": "Public-profile consistency rate measured as percentage of identified buyer-facing records passing the Public Identity Cleanup Checklist; unresolved conflict count; approved boilerplate adoption rate.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "Proof Library Lock",
+      "insight": "The Stop Line can only be ownable if every AI claim shows approved proof, a senior owner and a stated limit.",
+      "idea": "Lock the proof library behind The Stop Line before promotion, with every claim labelled as named reference, verifiable anonymous reference, technical artifact or internal demo.",
+      "engagement_mechanic": "Internal reviewers read each claim against its proof type, owner and stop-line limit before it can enter public use.",
+      "desired_outcome": "The year starts from an approved proof base instead of a list of AI claims.",
+      "targets": "All public AI claims, proof labels, senior-owner fields and stated limits read in Month 1; launch claims approved before Month 4.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Owners of midsize businesses, technical buyers, partners and sales users.",
+      "message_pillar": "Every public AI claim must connect to approved proof.",
+      "peso_channel": "Owned",
+      "kpi": "Percentage of launch AI claims linked to approved proof; percentage of proof entries passing the Proof Library Lock Checklist; number of claims rejected or narrowed before publication.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "Key-Message Table",
+      "insight": "A distributed launch needs one approved source of message truth or local teams will stretch the claim.",
+      "idea": "Produce the Key-Message Table for The Stop Line and Signed by Humans as the approved training source for audiences, proof points and do-not-say lines.",
+      "engagement_mechanic": "Spokespeople, sales and partners read one approved message table before creating launch or follow-up material.",
+      "desired_outcome": "Every tactic uses the same proof-first restraint language.",
+      "targets": "Audience messages, proof points, do-not-say lines and approval owners read in Month 1; table used from Month 1 through Month 12.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Internal spokespeople, sales users, partners and local market leads.",
+      "message_pillar": "Clear limits make the AI story easier to trust.",
+      "peso_channel": "Owned",
+      "kpi": "Message-table completion rate; percentage of assets passing the Key-Message Table Alignment Rubric on audience fit, proof trace, claim limit and do-not-say compliance; approved-answer reuse rate.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "The Stop Line Proof Page",
+      "insight": "Buyers do not need a bigger AI promise; they need to see what is proved, who owns it and where the system stops.",
+      "idea": "Create one owned page for The Stop Line that is live, unpromoted, until the Launch moment in Month 4, showing each approved claim with proof type, senior owner and stated limit.",
+      "engagement_mechanic": "Visitors can inspect the proof behind the claim before they are asked to book a meeting or accept the AI story.",
+      "desired_outcome": "The B Team has a public proof base that paid, earned, shared and sales activity can all point to.",
+      "targets": "Proof page read internally in Month 2 and published live, unpromoted, from Month 2 until launch promotion in Month 4; all launch claims checked before Month 4.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners and senior Sofia talent.",
+      "message_pillar": "The Stop Line makes restraint visible.",
+      "peso_channel": "Owned",
+      "kpi": "Proof-page visits; time on page; qualified meeting clicks; percentage of public AI claims linked to approved proof; page quality scored on a 1-5 Stop Line Proof Page Checklist covering proof type, senior owner, limit and buyer clarity.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hero",
+      "month": 2
+     },
+     {
+      "name": "Fact Sheet and Backgrounder",
+      "insight": "Media, partners and technical buyers need the approval route and claim limits in a form they can cite safely.",
+      "idea": "Build the fact sheet and backgrounder explaining The Stop Line, Signed by Humans, proof types, senior sign-off and claim boundaries.",
+      "engagement_mechanic": "Readers get a compact reference that answers what is proved, who approved it and what is not being claimed.",
+      "desired_outcome": "Earned, partner and sales conversations stay inside the approved proof boundary.",
+      "targets": "Fact sheet and backgrounder read in Month 2; used from Month 4 through Month 12 for launch, partner and earned activity.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Journalists, analysts, partners, enterprise buyers and sales users.",
+      "message_pillar": "Senior people still own the outcome.",
+      "peso_channel": "Owned",
+      "kpi": "Approval-route accuracy rate; percentage of backgrounder sections passing the Fact Sheet Accuracy Checklist; proof citations used in briefings; media-question answer reuse.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hub",
+      "month": 2
+     },
+     {
+      "name": "Owner Control Message Test",
+      "insight": "Owners may value control and visibility more than AI capability, but that remains a hypothesis until owners compare the messages.",
+      "idea": "Test a control-led message against an AI-capability message, both anchored in The Stop Line.",
+      "engagement_mechanic": "Owners react to plain-language options showing visibility, ownership and early risk detection without being asked to become technical buyers.",
+      "desired_outcome": "The B Team learns whether control should lead owner-facing communication before scaling the message.",
+      "targets": "Owner test responses read in Month 3; preference, comprehension, trust and meeting-intent evidence reviewed before Month 4 launch language is promoted.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, led by Elena.",
+      "message_pillar": "Owners get control without becoming technical.",
+      "peso_channel": "Paid and Owned",
+      "kpi": "Preference split; comprehension score on a 1-5 owner-clarity scale; trust lift; meeting intent; qualitative reasons coded against the Owner Control Message Test Rubric.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hub",
+      "month": 3
+     },
+     {
+      "name": "Spokesperson Training and Q&A",
+      "insight": "The Stop Line only holds if spokespeople can narrow a claim when proof is missing instead of defending a broad AI promise.",
+      "idea": "Train founders and senior leaders using the Key-Message Table, 30-second pitch and Q&A before anything is promoted.",
+      "engagement_mechanic": "Spokespeople rehearse buyer, partner and media questions and learn the approved escalation route.",
+      "desired_outcome": "Launch answers stay consistent, specific and proof-led.",
+      "targets": "Spokesperson materials, Q&A and 30-second pitch read in Month 3; every launch spokesperson trained before Month 4.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Founders, senior leaders, sales users and market spokespeople.",
+      "message_pillar": "If evidence is missing, the message narrows.",
+      "peso_channel": "Owned",
+      "kpi": "Training completion rate; answer quality scored on a 1-5 Spokesperson Stop Line Rubric for proof trace, owner naming, limit clarity and escalation discipline; number of unapproved claims corrected before launch.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 3
+     },
+     {
+      "name": "The Stop Line Launch",
+      "insight": "The reputation gap is credibility, not reach, so the launch must point to proof before promotion.",
+      "idea": "Publicly launch The Stop Line with the proof page, press release and approved fact sheet.",
+      "engagement_mechanic": "Audiences are directed from launch coverage and owned channels into the proof page where claims can be inspected.",
+      "desired_outcome": "The market sees The B Team's AI story as governed, checked and reviewable.",
+      "targets": "Launch assets published in Month 4; proof page, press release, fact sheet and approved claims read by owned, earned and sales audiences during the launch window.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners, journalists and senior Sofia talent.",
+      "message_pillar": "The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.",
+      "peso_channel": "Earned and Owned",
+      "kpi": "Proof-page visits; earned coverage quality scored on a 1-5 Launch Coverage Quality Rubric for proof citation, claim accuracy and stop-line mention; qualified meeting clicks; launch-asset approval pass rate.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hero",
+      "month": 4
+     },
+     {
+      "name": "Signed by Humans Founder Launch Post",
+      "insight": "The human moment makes the AI story credible when a senior person visibly checks, owns and signs the work.",
+      "idea": "Publish a founder-led launch post that explains Signed by Humans as the visible promise behind The Stop Line.",
+      "engagement_mechanic": "Readers see the senior responsibility behind the claim and are directed to the owned proof page for evidence.",
+      "desired_outcome": "Founder visibility increases while the public story stays inside the approved proof boundary.",
+      "targets": "Founder launch post published in Month 5; reactions, proof-page clicks, comments and partner reshares read during Month 5 before paid amplification is scaled.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Owners of midsize businesses, technical buyers, referral partners and senior Sofia talent.",
+      "message_pillar": "Signed by Humans means senior people still own the outcome.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Founder-post reach; engagement quality scored on a 1-5 Signed by Humans Engagement Rubric for relevance, proof-seeking, partner value and talent signal; proof-page clicks; partner reshares; qualified inbound conversations.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hero",
+      "month": 5
+     },
+     {
+      "name": "Social Pack Activation",
+      "insight": "The platform needs repeatable shared language so executives, team members and partners do not improvise claims.",
+      "idea": "Release an approved social pack for The Stop Line and Signed by Humans after the founder launch post.",
+      "engagement_mechanic": "Participants select approved posts, proof links and visual assets rather than writing from scratch.",
+      "desired_outcome": "Shared content reinforces the proof base without widening the AI claim.",
+      "targets": "Social pack published in Month 5 and used from Month 5 through Month 11; posts read weekly during active months for claim compliance.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Founders, executives, team members, referral partners and employees.",
+      "message_pillar": "Senior people still own the outcome.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Approved-post use rate; claim-compliance rate scored against the Social Pack Compliance Checklist; proof-page clicks; engagement quality scored on a 1-5 Social Pack Engagement Rubric for relevance, proof-seeking and safe-share value; partner and employee participation.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hub",
+      "month": 5
+     },
+     {
+      "name": "Partner Proof Pack",
+      "insight": "Referral partners can carry the story only if the approved proof is simple, repeatable and safe to share.",
+      "idea": "Build and brief a short partner pack that explains The Stop Line, Signed by Humans and the approved proof types behind each claim.",
+      "engagement_mechanic": "Partners get language they can use without inventing claims or stretching evidence.",
+      "desired_outcome": "Referral conversations become easier, more consistent and less exposed to unapproved AI claims.",
+      "targets": "Partner pack published and briefed in Month 6; partner use read in Months 6, 10 and 11 when partner and earned activity run.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Referral partners, ecosystem partners and enterprise buyers.",
+      "message_pillar": "Every AI claim earns its place through approved proof before it reaches the market.",
+      "peso_channel": "Owned and Earned",
+      "kpi": "Partner pack downloads; partner briefings completed; referred qualified leads; claim-compliance checks scored on a 1-5 Partner Proof Pack Rubric for proof type, repeatability, limit clarity and safe-share language.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 6
+     },
+     {
+      "name": "Technical Proof Story",
+      "insight": "Technical buyers need proof that AI supports delivery without taking ownership away from senior people.",
+      "idea": "Publish approved technical artifacts and an explainer showing how The Stop Line governs AI-supported delivery.",
+      "engagement_mechanic": "Technical buyers inspect artifacts, approval labels and limits before entering a technical conversation.",
+      "desired_outcome": "The platform gains technical credibility without becoming a broad AI capability claim.",
+      "targets": "Technical artifact story published in Month 7; technical conversations and artifact use read in Months 7, 10 and 12.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Chief technology officers, architecture owners, technical buyers and enterprise buyers.",
+      "message_pillar": "AI supports the work; senior people remain responsible for the claim, delivery and limit.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Technical artifact views; time on page; sales use; qualified technical conversations; artifact quality scored on a 1-5 Technical Proof Story Rubric for inspectability, proof label, senior owner and limit clarity.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 7
+     },
+     {
+      "name": "Senior Craft Story Series",
+      "insight": "Senior Sofia talent and careful buyers will believe the AI story only if it protects judgment rather than celebrating automation alone.",
+      "idea": "Publish a recurring monthly series under Signed by Humans that shows how senior people review work, make decisions and define the stop line.",
+      "engagement_mechanic": "Readers see craft, judgment and responsibility inside AI-supported delivery.",
+      "desired_outcome": "The talent story and buyer story reinforce each other without turning The B Team into a broad ethics platform.",
+      "targets": "Monthly from Month 8 through Month 11; each story read for craft signal, proof link and claim compliance before publication.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Senior Sofia talent and buyers who want craft behind AI-supported delivery.",
+      "message_pillar": "Senior craft keeps judgment in the work.",
+      "peso_channel": "Shared and Owned",
+      "kpi": "Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality scored on a 1-5 Senior Craft Story Rubric for judgment, responsibility, stop-line clarity and no automation-only framing.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 8
+     },
+     {
+      "name": "Conversation Management and Observatory Newsroom",
+      "insight": "Campaign bursts cannot hold a reputation if no one is listening, triaging and responding between moments.",
+      "idea": "Run the always-on Conversation Management loop and Observatory newsroom around The Stop Line from Month 1, with a visible calendar focus in Month 9.",
+      "engagement_mechanic": "The team listens, triages, responds and escalates only when there is approved proof and a clear stop line to show.",
+      "desired_outcome": "Issues, questions and market moments are handled without widening the claim.",
+      "targets": "Daily from Month 1 through Month 12, with Month 9 as the named calendar focus; AI trust, governance, buyer-risk and proof questions read every working day.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners, technical buyers, partners, media, employees and followers.",
+      "message_pillar": "Proof comes before promotion.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Response time; issue resolution rate; message consistency scored on a 1-5 Conversation Management Checklist; approved-answer reuse; escalation accuracy for crisis tripwires.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 9
+     },
+     {
+      "name": "Earned Validation Outreach",
+      "insight": "Third-party credibility makes The Stop Line harder to dismiss after the proof base exists.",
+      "idea": "Pitch journalists, analysts and named experts only after The Stop Line proof page, fact sheet and partner evidence are ready.",
+      "engagement_mechanic": "Professional influencers receive proof citations, approved limits and named responsibility rather than a broad AI claim.",
+      "desired_outcome": "The platform gains independent validation without outrunning evidence.",
+      "targets": "Earned outreach runs in Month 10; briefings, coverage questions and proof citations read weekly during Month 10.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Journalists, analysts, named experts, enterprise buyers and referral partners.",
+      "message_pillar": "The B Team does not ask the market to accept an AI story without receipts.",
+      "peso_channel": "Earned",
+      "kpi": "Briefings secured; coverage quality scored on a 1-5 Earned Validation Rubric for independent proof citation, claim accuracy, senior responsibility and stated limits; qualified inbound conversations; proof citations.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hero",
+      "month": 10
+     },
+     {
+      "name": "Advocacy Enablement Push",
+      "insight": "Advocacy works only after people have been engaged, trained and given a safe way to repeat the story.",
+      "idea": "Equip the advocates trained by the Conversation Management loop: employees, senior spokespeople, partners and alumni receive approved advocacy prompts, proof links and escalation rules for Signed by Humans.",
+      "engagement_mechanic": "Advocates share approved proof-led content and route questions back to the newsroom instead of improvising claims.",
+      "desired_outcome": "The story widens through credible human carriers without leaving the approval boundary.",
+      "targets": "Advocacy push runs in Month 11; employee, partner and alumni posts read during Month 11 for proof link, claim compliance and question escalation.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Employees, senior spokespeople, referral partners, respected alumni, fans and followers.",
+      "message_pillar": "Senior craft keeps judgment in the work.",
+      "peso_channel": "Shared",
+      "kpi": "Advocate participation rate; post quality scored on a 1-5 Advocacy Enablement Post Rubric for proof link, human responsibility, stop-line clarity and required disclosure; engagement quality scored on a 1-5 Advocacy Enablement Engagement Rubric for relevance, proof-seeking, safe-share value and question-routing discipline; proof-page clicks measured as UTM-tagged clicks from approved advocacy posts.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hub",
+      "month": 11
+     },
+     {
+      "name": "Close Scorecard and Message Recalibration",
+      "insight": "The next year should be built from measured proof, not from untested confidence.",
+      "idea": "Close the executive scorecard for The Stop Line and recalibrate messages, proof gaps and local targets for the next cycle.",
+      "engagement_mechanic": "Leadership reviews proof credibility, trust, public-profile consistency, founder visibility, talent pull and qualified-lead evidence before changing the message.",
+      "desired_outcome": "The platform enters the next year with approved changes and named proof gaps.",
+      "targets": "Scorecard completed in Month 12; campaign data from Months 1 through 12 read before next-year recommendations are approved.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Executive owners, market leads, sales users and communications team.",
+      "message_pillar": "The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.",
+      "peso_channel": "Owned",
+      "kpi": "Executive scorecard completion; message changes approved; next-year proof gaps named; KPI quality scored on a 1-5 Scorecard Recalibration Rubric for evidence source, audience trace, decision usefulness and claim-boundary discipline.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 12
+     }
+    ],
+    "hero_hub_hygiene_balance": {
+     "hero": "Hero carries about a fifth of the effort through The Stop Line proof page, the Month 4 launch, Signed by Humans founder launch and earned validation outreach.",
+     "hub": "Hub carries about three fifths of the effort through message testing, fact sheets, partner proof, technical proof, social activation, senior craft stories and advocacy enablement.",
+     "hygiene": "Hygiene carries about a fifth of the effort through public identity cleanup, proof-library governance, message-table control, spokesperson readiness, conversation management and the close scorecard."
+    },
+    "calendar": [
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Platform and owned proof",
+      "moment_hook": "Proof Library Lock, Public Identity Cleanup, Key-Message Table and the Conversation Management loop begin before any market-facing AI promotion.",
+      "key_message": "The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.",
+      "asset_tool": "Key-Message Table, public identity cleanup log, proof library register and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Percentage of public AI claims linked to approved proof; public-profile consistency rate; Key-Message Table alignment score; Conversation Management response time.",
+      "month": 1
+     },
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Technical proof and executive visibility",
+      "moment_hook": "The Stop Line proof page, Fact Sheet and Backgrounder are built and read while the Conversation Management loop keeps the pre-launch baseline live but unpromoted.",
+      "key_message": "Signed by Humans means senior people still own the outcome.",
+      "asset_tool": "The Stop Line proof page, fact sheet, backgrounder and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Approved claims; proof labels completed; approval checks passed; proof-page quality score; Conversation Management issue resolution rate.",
+      "month": 2
+     },
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Owner relevance and spokesperson readiness",
+      "moment_hook": "Owner Control Message Test and Spokesperson Training and Q&A run before launch, while Conversation Management reads early questions without promoting the platform.",
+      "key_message": "Owners get more control and visibility without having to become technical buyers themselves.",
+      "asset_tool": "Advertorial outline, Q&A, 30-second pitch, spokesperson materials and approved answer bank.",
+      "peso_channel": "Paid and Owned",
+      "kpi": "Preference split; comprehension score; trust lift; meeting intent; spokesperson answer quality; Conversation Management approved-answer reuse.",
+      "month": 3
+     },
+     {
+      "phase": "Launch",
+      "audience_track": "Platform and owned proof",
+      "moment_hook": "The Stop Line Launch ties the public moment to the proof page, press release and fact sheet, with Conversation Management watching reactions daily.",
+      "key_message": "The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.",
+      "asset_tool": "Proof page, press release, fact sheet and approved answer bank.",
+      "peso_channel": "Earned and Owned",
+      "kpi": "Proof-page visits; earned coverage quality; qualified meeting clicks; launch-asset approval pass rate; Conversation Management escalation accuracy.",
+      "month": 4
+     },
+     {
+      "phase": "Launch",
+      "audience_track": "Founder visibility and shared advocacy",
+      "moment_hook": "Signed by Humans Founder Launch Post activates the Social Pack Activation, with Conversation Management reading proof questions and shared responses.",
+      "key_message": "Every serious promise is Signed by Humans.",
+      "asset_tool": "Founder launch post, social pack, proof links and approved answer bank.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Founder-post reach; engagement quality; proof-page clicks; partner reshares; social pack claim-compliance rate; Conversation Management message consistency.",
+      "month": 5
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Referral and partner ecosystem",
+      "moment_hook": "Partner Proof Pack briefing gives the ecosystem safe language to carry The Stop Line, while Conversation Management supports partner questions.",
+      "key_message": "Every AI claim earns its place through approved proof before it reaches the market.",
+      "asset_tool": "Partner proof pack, event or experiential kit, proof links and approved answer bank.",
+      "peso_channel": "Owned and Earned",
+      "kpi": "Partner briefings completed; pack downloads; referred qualified leads; partner claim-compliance score; Conversation Management response time.",
+      "month": 6
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Technical proof and executive visibility",
+      "moment_hook": "Technical Proof Story turns approved artifacts into inspectable buyer evidence, with Conversation Management tracking technical trust questions.",
+      "key_message": "AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.",
+      "asset_tool": "Technical artifacts, architecture notes, infographics, imagery and approved answer bank.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Technical artifact views; time on page; sales use; qualified technical conversations; artifact quality score; Conversation Management issue resolution.",
+      "month": 7
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Talent pull and brand consistency",
+      "moment_hook": "Senior Craft Story Series begins and runs monthly from Month 8 through Month 11, while Conversation Management holds the always-on response baseline.",
+      "key_message": "The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.",
+      "asset_tool": "Senior craft story, spokesperson materials, social pack and approved answer bank.",
+      "peso_channel": "Shared and Owned",
+      "kpi": "Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality score; Conversation Management approved-answer reuse.",
+      "month": 8
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Always-on baseline",
+      "moment_hook": "Quiet month: no hero burst; Conversation Management and Observatory Newsroom are the named focus, and the Senior Craft Story Series continues monthly without widening the claim.",
+      "key_message": "Proof comes before promotion.",
+      "asset_tool": "Q&A, FAQ, approved answer bank, newsroom watchlist, senior craft story and social pack.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Response time; issue resolution; message consistency; approved-answer reuse; escalation accuracy; senior craft story quality score.",
+      "month": 9
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Professional influencers and enterprise buyers",
+      "moment_hook": "Earned Validation Outreach begins after proof, partner and technical assets exist; Senior Craft Story Series continues monthly and Conversation Management supports briefings.",
+      "key_message": "The B Team does not ask the market to accept an AI story without receipts.",
+      "asset_tool": "Fact sheet, backgrounder, proof citations, partner proof pack, technical proof story, senior craft story and approved answer bank.",
+      "peso_channel": "Earned",
+      "kpi": "Briefings secured; coverage quality; proof citations; qualified inbound conversations; senior craft story quality score; Conversation Management escalation accuracy.",
+      "month": 10
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Employees, advocates and partners",
+      "moment_hook": "Advocacy Enablement Push equips trained advocates while the Senior Craft Story Series completes its monthly run and Conversation Management routes questions back to approved proof.",
+      "key_message": "Senior craft keeps judgment in the work.",
+      "asset_tool": "Advocacy prompts, social pack, proof links, senior craft story and approved answer bank.",
+      "peso_channel": "Shared",
+      "kpi": "Advocate participation; post quality score; engagement quality score; UTM-tagged proof-page clicks from approved advocacy posts; required disclosure compliance; senior craft story quality score; Conversation Management message consistency.",
+      "month": 11
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Executive and partner audiences",
+      "moment_hook": "Close Scorecard and Message Recalibration; quiet external month unless proof-led evidence warrants selective follow-up, with Conversation Management still active until programme close.",
+      "key_message": "The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.",
+      "asset_tool": "Executive scorecard, Key-Message Table update, next-year proof gap list and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Executive scorecard completion; message changes approved; next-year proof gaps named; qualified lead contribution reviewed; Conversation Management final response and issue-resolution measures.",
+      "month": 12
+     }
+    ],
+    "proof_building_order": "We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership explains Signed by Humans through founder posts, technical artifacts, buyer explainers and senior craft stories; only after that do we widen visibility through partner briefing, earned validation, paid amplification and advocacy.",
+    "rollout": {
+     "first_audience": "The year speaks first to owners of midsize businesses, especially Elena, who wants control and visibility without becoming a technical buyer.",
+     "then_widen": "After that audience has been tested and the proof base is live, the story widens to technical buyers, referral partners, ecosystem partners, enterprise buyers, professional influencers, employees and senior Sofia talent using the same The Stop Line proof boundary."
+    },
+    "ownership": [
+     {
+      "element": "Public Identity Cleanup",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 1 for Public Identity Cleanup, then checked in Months 4 and 12 before launch and scorecard close.",
+      "dependencies": "Access to buyer-facing public records, approved boilerplate and final claim boundary.",
+      "budget_frame": "Internal time; out-of-pocket costs only for profile, website or listing updates that require paid support."
+     },
+     {
+      "element": "Proof Library Lock and Key-Message Table",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 1 for Proof Library Lock and Key-Message Table, then governs every asset review in Months 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12.",
+      "dependencies": "Matthew Maday technical confirmation for claim-level and AI-language approvals; proof assets marked by approved proof type.",
+      "budget_frame": "Internal strategy and approval time; no paid media until proof is approved."
+     },
+     {
+      "element": "The Stop Line Proof Page and Fact Sheet",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 2 for The Stop Line Proof Page and Fact Sheet and Backgrounder, then updates in Months 4, 7, 10 and 12.",
+      "dependencies": "Proof library, approval route, proof labels, senior-owner fields and web publishing access.",
+      "budget_frame": "Owned-channel production budget; design or development out-of-pocket approved case by case."
+     },
+     {
+      "element": "Owner Control Message Test and Spokesperson Training",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 3 for Owner Control Message Test and Spokesperson Training and Q&A.",
+      "dependencies": "Testable owner messages, Elena audience definition, Q&A, 30-second pitch and spokesperson availability.",
+      "budget_frame": "Internal planning plus case-by-case paid testing spend."
+     },
+     {
+      "element": "Launch Assets",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 4 for The Stop Line Launch and in Month 5 for Signed by Humans Founder Launch Post and Social Pack Activation.",
+      "dependencies": "Approved proof page, press release, fact sheet, founder post, social pack and pre-publish gate.",
+      "budget_frame": "Launch production budget; paid amplification released only after proof assets are approved."
+     },
+     {
+      "element": "Partner and Technical Proof Programme",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 6 for Partner Proof Pack and Month 7 for Technical Proof Story, with reuse in Months 10 and 11 for earned and advocacy activity.",
+      "dependencies": "Partner list, approved partner language, technical artifacts, Matthew Maday confirmation and sales follow-up process.",
+      "budget_frame": "Owned and partner-enablement budget; event or experiential costs approved case by case."
+     },
+     {
+      "element": "Senior Craft Story Series",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs monthly in Months 8, 9, 10 and 11 for Senior Craft Story Series.",
+      "dependencies": "Senior participants, approved story prompts, proof links, recruitment language and social pack.",
+      "budget_frame": "Internal content time; paid talent amplification only if approved after organic quality is reviewed."
+     },
+     {
+      "element": "Conversation Management and Observatory Newsroom",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs daily in Months 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12 for Conversation Management and Observatory Newsroom, with Month 9 as the named calendar focus.",
+      "dependencies": "Approved answer bank, escalation route, crisis tripwires, monitoring access and proof-page links.",
+      "budget_frame": "Always-on retainer or internal operating time; escalation costs approved by incident."
+     },
+     {
+      "element": "Earned Validation Outreach",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 10 for Earned Validation Outreach.",
+      "dependencies": "Proof page, fact sheet, partner proof pack, technical proof story, spokesperson readiness and media list.",
+      "budget_frame": "Earned-media time; paid support limited to selective amplification after coverage quality is confirmed."
+     },
+     {
+      "element": "Advocacy Enablement Push",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 11 for Advocacy Enablement Push and uses Senior Craft Story Series in Month 11.",
+      "dependencies": "Trained advocates, approved social pack, disclosure guidance, proof links and Conversation Management escalation route.",
+      "budget_frame": "Internal enablement time; creator or influencer costs approved case by case with disclosure."
+     },
+     {
+      "element": "Close Scorecard and Message Recalibration",
+      "owner": "Kamen Kamenov",
+      "cadence": "Runs in Month 12 for Close Scorecard and Message Recalibration.",
+      "dependencies": "Monthly KPI data, UTM tracking, proof gap log, lead contribution data and executive review availability.",
+      "budget_frame": "Internal measurement and strategy time; next-year budget decided after scorecard review."
+     }
+    ],
+    "global_local": "One channel-agnostic global toolkit carries the fixed The Stop Line platform, Signed by Humans narrative, proof-before-promotion rule, do-not-say lines, approval route and core asset set; local markets adapt hooks, language, spokespeople, proof examples and market-specific tactics while reporting a small global KPI set of proof credibility, technical-buyer trust, public-profile consistency, founder visibility, talent pull and qualified-lead contribution with local targets.",
+    "markets_period": "The campaign period runs for twelve months up to 30 June 2027 across the United States, the European Union and Sofia.",
+    "approval": {
+     "approved_by": "Kamen Kamenov",
+     "approved_at": "2026-09-04"
+    },
+    "platform_approval": {
+     "platform": "The Stop Line",
+     "decided_by": "Kamen Kamenov"
+    }
+   },
+   "inputs": {},
+   "expect": {
+    "result": "accepted",
+    "rendered_must_contain": [
+     "- **Nothing waits on a person.**"
+    ],
+    "rendered_must_not_contain": [
+     "- **Who owns each roadmap element?** — drafted above; no owner has approved.",
+     "Assign the"
+    ]
+   },
+   "expected_outcome": "a settled roadmap says nothing waits on a person"
+  },
+  {
+   "case_id": "case-btm-v3-no-ownership",
+   "pack": {
+    "phases": [
+     {
+      "phase": "Pre-Seed",
+      "objective": "Prepare the proof base, approval route and owner-message evidence before The Stop Line is promoted.",
+      "months": "1-3"
+     },
+     {
+      "phase": "Launch",
+      "objective": "Introduce The Stop Line through Signed by Humans and direct priority audiences to approved proof.",
+      "months": "4-5"
+     },
+     {
+      "phase": "Sustain",
+      "objective": "Keep the platform visible through proof, explanation, partner enablement and senior craft.",
+      "months": "6-9"
+     },
+     {
+      "phase": "Amplify",
+      "objective": "Use proof, third-party credibility and trained advocates to widen the story without widening the claim.",
+      "months": "10-12"
+     }
+    ],
+    "activation_cards": [
+     {
+      "name": "Public Identity Cleanup",
+      "insight": "A proof-led AI story fails if buyer-facing records conflict before the proof is seen.",
+      "idea": "Clean The B Team's public identity around The Stop Line before launch so the market sees one consistent proof-first story; any cleaned public record is live, unpromoted, until the Launch moment in Month 4.",
+      "engagement_mechanic": "Buyers, partners and media encounter consistent public records before being asked to evaluate The Stop Line.",
+      "desired_outcome": "The launch has no unresolved public-profile conflicts undermining credibility.",
+      "targets": "Public website, LinkedIn profiles, sales decks, media boilerplate and buyer-facing descriptions read in Month 1; conflicts logged and resolved before Month 4.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners, media and senior Sofia talent.",
+      "message_pillar": "Proof comes before promotion.",
+      "peso_channel": "Owned",
+      "kpi": "Public-profile consistency rate measured as percentage of identified buyer-facing records passing the Public Identity Cleanup Checklist; unresolved conflict count; approved boilerplate adoption rate.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "Proof Library Lock",
+      "insight": "The Stop Line can only be ownable if every AI claim shows approved proof, a senior owner and a stated limit.",
+      "idea": "Lock the proof library behind The Stop Line before promotion, with every claim labelled as named reference, verifiable anonymous reference, technical artifact or internal demo.",
+      "engagement_mechanic": "Internal reviewers read each claim against its proof type, owner and stop-line limit before it can enter public use.",
+      "desired_outcome": "The year starts from an approved proof base instead of a list of AI claims.",
+      "targets": "All public AI claims, proof labels, senior-owner fields and stated limits read in Month 1; launch claims approved before Month 4.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Owners of midsize businesses, technical buyers, partners and sales users.",
+      "message_pillar": "Every public AI claim must connect to approved proof.",
+      "peso_channel": "Owned",
+      "kpi": "Percentage of launch AI claims linked to approved proof; percentage of proof entries passing the Proof Library Lock Checklist; number of claims rejected or narrowed before publication.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "Key-Message Table",
+      "insight": "A distributed launch needs one approved source of message truth or local teams will stretch the claim.",
+      "idea": "Produce the Key-Message Table for The Stop Line and Signed by Humans as the approved training source for audiences, proof points and do-not-say lines.",
+      "engagement_mechanic": "Spokespeople, sales and partners read one approved message table before creating launch or follow-up material.",
+      "desired_outcome": "Every tactic uses the same proof-first restraint language.",
+      "targets": "Audience messages, proof points, do-not-say lines and approval owners read in Month 1; table used from Month 1 through Month 12.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Internal spokespeople, sales users, partners and local market leads.",
+      "message_pillar": "Clear limits make the AI story easier to trust.",
+      "peso_channel": "Owned",
+      "kpi": "Message-table completion rate; percentage of assets passing the Key-Message Table Alignment Rubric on audience fit, proof trace, claim limit and do-not-say compliance; approved-answer reuse rate.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 1
+     },
+     {
+      "name": "The Stop Line Proof Page",
+      "insight": "Buyers do not need a bigger AI promise; they need to see what is proved, who owns it and where the system stops.",
+      "idea": "Create one owned page for The Stop Line that is live, unpromoted, until the Launch moment in Month 4, showing each approved claim with proof type, senior owner and stated limit.",
+      "engagement_mechanic": "Visitors can inspect the proof behind the claim before they are asked to book a meeting or accept the AI story.",
+      "desired_outcome": "The B Team has a public proof base that paid, earned, shared and sales activity can all point to.",
+      "targets": "Proof page read internally in Month 2 and published live, unpromoted, from Month 2 until launch promotion in Month 4; all launch claims checked before Month 4.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners and senior Sofia talent.",
+      "message_pillar": "The Stop Line makes restraint visible.",
+      "peso_channel": "Owned",
+      "kpi": "Proof-page visits; time on page; qualified meeting clicks; percentage of public AI claims linked to approved proof; page quality scored on a 1-5 Stop Line Proof Page Checklist covering proof type, senior owner, limit and buyer clarity.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hero",
+      "month": 2
+     },
+     {
+      "name": "Fact Sheet and Backgrounder",
+      "insight": "Media, partners and technical buyers need the approval route and claim limits in a form they can cite safely.",
+      "idea": "Build the fact sheet and backgrounder explaining The Stop Line, Signed by Humans, proof types, senior sign-off and claim boundaries.",
+      "engagement_mechanic": "Readers get a compact reference that answers what is proved, who approved it and what is not being claimed.",
+      "desired_outcome": "Earned, partner and sales conversations stay inside the approved proof boundary.",
+      "targets": "Fact sheet and backgrounder read in Month 2; used from Month 4 through Month 12 for launch, partner and earned activity.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Journalists, analysts, partners, enterprise buyers and sales users.",
+      "message_pillar": "Senior people still own the outcome.",
+      "peso_channel": "Owned",
+      "kpi": "Approval-route accuracy rate; percentage of backgrounder sections passing the Fact Sheet Accuracy Checklist; proof citations used in briefings; media-question answer reuse.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hub",
+      "month": 2
+     },
+     {
+      "name": "Owner Control Message Test",
+      "insight": "Owners may value control and visibility more than AI capability, but that remains a hypothesis until owners compare the messages.",
+      "idea": "Test a control-led message against an AI-capability message, both anchored in The Stop Line.",
+      "engagement_mechanic": "Owners react to plain-language options showing visibility, ownership and early risk detection without being asked to become technical buyers.",
+      "desired_outcome": "The B Team learns whether control should lead owner-facing communication before scaling the message.",
+      "targets": "Owner test responses read in Month 3; preference, comprehension, trust and meeting-intent evidence reviewed before Month 4 launch language is promoted.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, led by Elena.",
+      "message_pillar": "Owners get control without becoming technical.",
+      "peso_channel": "Paid and Owned",
+      "kpi": "Preference split; comprehension score on a 1-5 owner-clarity scale; trust lift; meeting intent; qualitative reasons coded against the Owner Control Message Test Rubric.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hub",
+      "month": 3
+     },
+     {
+      "name": "Spokesperson Training and Q&A",
+      "insight": "The Stop Line only holds if spokespeople can narrow a claim when proof is missing instead of defending a broad AI promise.",
+      "idea": "Train founders and senior leaders using the Key-Message Table, 30-second pitch and Q&A before anything is promoted.",
+      "engagement_mechanic": "Spokespeople rehearse buyer, partner and media questions and learn the approved escalation route.",
+      "desired_outcome": "Launch answers stay consistent, specific and proof-led.",
+      "targets": "Spokesperson materials, Q&A and 30-second pitch read in Month 3; every launch spokesperson trained before Month 4.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Founders, senior leaders, sales users and market spokespeople.",
+      "message_pillar": "If evidence is missing, the message narrows.",
+      "peso_channel": "Owned",
+      "kpi": "Training completion rate; answer quality scored on a 1-5 Spokesperson Stop Line Rubric for proof trace, owner naming, limit clarity and escalation discipline; number of unapproved claims corrected before launch.",
+      "phase": "Pre-Seed",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 3
+     },
+     {
+      "name": "The Stop Line Launch",
+      "insight": "The reputation gap is credibility, not reach, so the launch must point to proof before promotion.",
+      "idea": "Publicly launch The Stop Line with the proof page, press release and approved fact sheet.",
+      "engagement_mechanic": "Audiences are directed from launch coverage and owned channels into the proof page where claims can be inspected.",
+      "desired_outcome": "The market sees The B Team's AI story as governed, checked and reviewable.",
+      "targets": "Launch assets published in Month 4; proof page, press release, fact sheet and approved claims read by owned, earned and sales audiences during the launch window.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners of midsize businesses, technical buyers, partners, journalists and senior Sofia talent.",
+      "message_pillar": "The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.",
+      "peso_channel": "Earned and Owned",
+      "kpi": "Proof-page visits; earned coverage quality scored on a 1-5 Launch Coverage Quality Rubric for proof citation, claim accuracy and stop-line mention; qualified meeting clicks; launch-asset approval pass rate.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hero",
+      "month": 4
+     },
+     {
+      "name": "Signed by Humans Founder Launch Post",
+      "insight": "The human moment makes the AI story credible when a senior person visibly checks, owns and signs the work.",
+      "idea": "Publish a founder-led launch post that explains Signed by Humans as the visible promise behind The Stop Line.",
+      "engagement_mechanic": "Readers see the senior responsibility behind the claim and are directed to the owned proof page for evidence.",
+      "desired_outcome": "Founder visibility increases while the public story stays inside the approved proof boundary.",
+      "targets": "Founder launch post published in Month 5; reactions, proof-page clicks, comments and partner reshares read during Month 5 before paid amplification is scaled.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Owners of midsize businesses, technical buyers, referral partners and senior Sofia talent.",
+      "message_pillar": "Signed by Humans means senior people still own the outcome.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Founder-post reach; engagement quality scored on a 1-5 Signed by Humans Engagement Rubric for relevance, proof-seeking, partner value and talent signal; proof-page clicks; partner reshares; qualified inbound conversations.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hero",
+      "month": 5
+     },
+     {
+      "name": "Social Pack Activation",
+      "insight": "The platform needs repeatable shared language so executives, team members and partners do not improvise claims.",
+      "idea": "Release an approved social pack for The Stop Line and Signed by Humans after the founder launch post.",
+      "engagement_mechanic": "Participants select approved posts, proof links and visual assets rather than writing from scratch.",
+      "desired_outcome": "Shared content reinforces the proof base without widening the AI claim.",
+      "targets": "Social pack published in Month 5 and used from Month 5 through Month 11; posts read weekly during active months for claim compliance.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Founders, executives, team members, referral partners and employees.",
+      "message_pillar": "Senior people still own the outcome.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Approved-post use rate; claim-compliance rate scored against the Social Pack Compliance Checklist; proof-page clicks; engagement quality scored on a 1-5 Social Pack Engagement Rubric for relevance, proof-seeking and safe-share value; partner and employee participation.",
+      "phase": "Launch",
+      "hero_hub_hygiene": "Hub",
+      "month": 5
+     },
+     {
+      "name": "Partner Proof Pack",
+      "insight": "Referral partners can carry the story only if the approved proof is simple, repeatable and safe to share.",
+      "idea": "Build and brief a short partner pack that explains The Stop Line, Signed by Humans and the approved proof types behind each claim.",
+      "engagement_mechanic": "Partners get language they can use without inventing claims or stretching evidence.",
+      "desired_outcome": "Referral conversations become easier, more consistent and less exposed to unapproved AI claims.",
+      "targets": "Partner pack published and briefed in Month 6; partner use read in Months 6, 10 and 11 when partner and earned activity run.",
+      "hashtag_or_signature": "Proof before promotion",
+      "audience": "Referral partners, ecosystem partners and enterprise buyers.",
+      "message_pillar": "Every AI claim earns its place through approved proof before it reaches the market.",
+      "peso_channel": "Owned and Earned",
+      "kpi": "Partner pack downloads; partner briefings completed; referred qualified leads; claim-compliance checks scored on a 1-5 Partner Proof Pack Rubric for proof type, repeatability, limit clarity and safe-share language.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 6
+     },
+     {
+      "name": "Technical Proof Story",
+      "insight": "Technical buyers need proof that AI supports delivery without taking ownership away from senior people.",
+      "idea": "Publish approved technical artifacts and an explainer showing how The Stop Line governs AI-supported delivery.",
+      "engagement_mechanic": "Technical buyers inspect artifacts, approval labels and limits before entering a technical conversation.",
+      "desired_outcome": "The platform gains technical credibility without becoming a broad AI capability claim.",
+      "targets": "Technical artifact story published in Month 7; technical conversations and artifact use read in Months 7, 10 and 12.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Chief technology officers, architecture owners, technical buyers and enterprise buyers.",
+      "message_pillar": "AI supports the work; senior people remain responsible for the claim, delivery and limit.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Technical artifact views; time on page; sales use; qualified technical conversations; artifact quality scored on a 1-5 Technical Proof Story Rubric for inspectability, proof label, senior owner and limit clarity.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 7
+     },
+     {
+      "name": "Senior Craft Story Series",
+      "insight": "Senior Sofia talent and careful buyers will believe the AI story only if it protects judgment rather than celebrating automation alone.",
+      "idea": "Publish a recurring monthly series under Signed by Humans that shows how senior people review work, make decisions and define the stop line.",
+      "engagement_mechanic": "Readers see craft, judgment and responsibility inside AI-supported delivery.",
+      "desired_outcome": "The talent story and buyer story reinforce each other without turning The B Team into a broad ethics platform.",
+      "targets": "Monthly from Month 8 through Month 11; each story read for craft signal, proof link and claim compliance before publication.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Senior Sofia talent and buyers who want craft behind AI-supported delivery.",
+      "message_pillar": "Senior craft keeps judgment in the work.",
+      "peso_channel": "Shared and Owned",
+      "kpi": "Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality scored on a 1-5 Senior Craft Story Rubric for judgment, responsibility, stop-line clarity and no automation-only framing.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hub",
+      "month": 8
+     },
+     {
+      "name": "Conversation Management and Observatory Newsroom",
+      "insight": "Campaign bursts cannot hold a reputation if no one is listening, triaging and responding between moments.",
+      "idea": "Run the always-on Conversation Management loop and Observatory newsroom around The Stop Line from Month 1, with a visible calendar focus in Month 9.",
+      "engagement_mechanic": "The team listens, triages, responds and escalates only when there is approved proof and a clear stop line to show.",
+      "desired_outcome": "Issues, questions and market moments are handled without widening the claim.",
+      "targets": "Daily from Month 1 through Month 12, with Month 9 as the named calendar focus; AI trust, governance, buyer-risk and proof questions read every working day.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Owners, technical buyers, partners, media, employees and followers.",
+      "message_pillar": "Proof comes before promotion.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Response time; issue resolution rate; message consistency scored on a 1-5 Conversation Management Checklist; approved-answer reuse; escalation accuracy for crisis tripwires.",
+      "phase": "Sustain",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 9
+     },
+     {
+      "name": "Earned Validation Outreach",
+      "insight": "Third-party credibility makes The Stop Line harder to dismiss after the proof base exists.",
+      "idea": "Pitch journalists, analysts and named experts only after The Stop Line proof page, fact sheet and partner evidence are ready.",
+      "engagement_mechanic": "Professional influencers receive proof citations, approved limits and named responsibility rather than a broad AI claim.",
+      "desired_outcome": "The platform gains independent validation without outrunning evidence.",
+      "targets": "Earned outreach runs in Month 10; briefings, coverage questions and proof citations read weekly during Month 10.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Journalists, analysts, named experts, enterprise buyers and referral partners.",
+      "message_pillar": "The B Team does not ask the market to accept an AI story without receipts.",
+      "peso_channel": "Earned",
+      "kpi": "Briefings secured; coverage quality scored on a 1-5 Earned Validation Rubric for independent proof citation, claim accuracy, senior responsibility and stated limits; qualified inbound conversations; proof citations.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hero",
+      "month": 10
+     },
+     {
+      "name": "Advocacy Enablement Push",
+      "insight": "Advocacy works only after people have been engaged, trained and given a safe way to repeat the story.",
+      "idea": "Equip the advocates trained by the Conversation Management loop: employees, senior spokespeople, partners and alumni receive approved advocacy prompts, proof links and escalation rules for Signed by Humans.",
+      "engagement_mechanic": "Advocates share approved proof-led content and route questions back to the newsroom instead of improvising claims.",
+      "desired_outcome": "The story widens through credible human carriers without leaving the approval boundary.",
+      "targets": "Advocacy push runs in Month 11; employee, partner and alumni posts read during Month 11 for proof link, claim compliance and question escalation.",
+      "hashtag_or_signature": "Signed by Humans",
+      "audience": "Employees, senior spokespeople, referral partners, respected alumni, fans and followers.",
+      "message_pillar": "Senior craft keeps judgment in the work.",
+      "peso_channel": "Shared",
+      "kpi": "Advocate participation rate; post quality scored on a 1-5 Advocacy Enablement Post Rubric for proof link, human responsibility, stop-line clarity and required disclosure; engagement quality scored on a 1-5 Advocacy Enablement Engagement Rubric for relevance, proof-seeking, safe-share value and question-routing discipline; proof-page clicks measured as UTM-tagged clicks from approved advocacy posts.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hub",
+      "month": 11
+     },
+     {
+      "name": "Close Scorecard and Message Recalibration",
+      "insight": "The next year should be built from measured proof, not from untested confidence.",
+      "idea": "Close the executive scorecard for The Stop Line and recalibrate messages, proof gaps and local targets for the next cycle.",
+      "engagement_mechanic": "Leadership reviews proof credibility, trust, public-profile consistency, founder visibility, talent pull and qualified-lead evidence before changing the message.",
+      "desired_outcome": "The platform enters the next year with approved changes and named proof gaps.",
+      "targets": "Scorecard completed in Month 12; campaign data from Months 1 through 12 read before next-year recommendations are approved.",
+      "hashtag_or_signature": "The Stop Line",
+      "audience": "Executive owners, market leads, sales users and communications team.",
+      "message_pillar": "The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.",
+      "peso_channel": "Owned",
+      "kpi": "Executive scorecard completion; message changes approved; next-year proof gaps named; KPI quality scored on a 1-5 Scorecard Recalibration Rubric for evidence source, audience trace, decision usefulness and claim-boundary discipline.",
+      "phase": "Amplify",
+      "hero_hub_hygiene": "Hygiene",
+      "month": 12
+     }
+    ],
+    "hero_hub_hygiene_balance": {
+     "hero": "Hero carries about a fifth of the effort through The Stop Line proof page, the Month 4 launch, Signed by Humans founder launch and earned validation outreach.",
+     "hub": "Hub carries about three fifths of the effort through message testing, fact sheets, partner proof, technical proof, social activation, senior craft stories and advocacy enablement.",
+     "hygiene": "Hygiene carries about a fifth of the effort through public identity cleanup, proof-library governance, message-table control, spokesperson readiness, conversation management and the close scorecard."
+    },
+    "calendar": [
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Platform and owned proof",
+      "moment_hook": "Proof Library Lock, Public Identity Cleanup, Key-Message Table and the Conversation Management loop begin before any market-facing AI promotion.",
+      "key_message": "The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system stops.",
+      "asset_tool": "Key-Message Table, public identity cleanup log, proof library register and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Percentage of public AI claims linked to approved proof; public-profile consistency rate; Key-Message Table alignment score; Conversation Management response time.",
+      "month": 1
+     },
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Technical proof and executive visibility",
+      "moment_hook": "The Stop Line proof page, Fact Sheet and Backgrounder are built and read while the Conversation Management loop keeps the pre-launch baseline live but unpromoted.",
+      "key_message": "Signed by Humans means senior people still own the outcome.",
+      "asset_tool": "The Stop Line proof page, fact sheet, backgrounder and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Approved claims; proof labels completed; approval checks passed; proof-page quality score; Conversation Management issue resolution rate.",
+      "month": 2
+     },
+     {
+      "phase": "Pre-Seed",
+      "audience_track": "Owner relevance and spokesperson readiness",
+      "moment_hook": "Owner Control Message Test and Spokesperson Training and Q&A run before launch, while Conversation Management reads early questions without promoting the platform.",
+      "key_message": "Owners get more control and visibility without having to become technical buyers themselves.",
+      "asset_tool": "Advertorial outline, Q&A, 30-second pitch, spokesperson materials and approved answer bank.",
+      "peso_channel": "Paid and Owned",
+      "kpi": "Preference split; comprehension score; trust lift; meeting intent; spokesperson answer quality; Conversation Management approved-answer reuse.",
+      "month": 3
+     },
+     {
+      "phase": "Launch",
+      "audience_track": "Platform and owned proof",
+      "moment_hook": "The Stop Line Launch ties the public moment to the proof page, press release and fact sheet, with Conversation Management watching reactions daily.",
+      "key_message": "The B Team makes AI credible by showing The Stop Line before it promotes the AI claim.",
+      "asset_tool": "Proof page, press release, fact sheet and approved answer bank.",
+      "peso_channel": "Earned and Owned",
+      "kpi": "Proof-page visits; earned coverage quality; qualified meeting clicks; launch-asset approval pass rate; Conversation Management escalation accuracy.",
+      "month": 4
+     },
+     {
+      "phase": "Launch",
+      "audience_track": "Founder visibility and shared advocacy",
+      "moment_hook": "Signed by Humans Founder Launch Post activates the Social Pack Activation, with Conversation Management reading proof questions and shared responses.",
+      "key_message": "Every serious promise is Signed by Humans.",
+      "asset_tool": "Founder launch post, social pack, proof links and approved answer bank.",
+      "peso_channel": "Shared and Paid",
+      "kpi": "Founder-post reach; engagement quality; proof-page clicks; partner reshares; social pack claim-compliance rate; Conversation Management message consistency.",
+      "month": 5
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Referral and partner ecosystem",
+      "moment_hook": "Partner Proof Pack briefing gives the ecosystem safe language to carry The Stop Line, while Conversation Management supports partner questions.",
+      "key_message": "Every AI claim earns its place through approved proof before it reaches the market.",
+      "asset_tool": "Partner proof pack, event or experiential kit, proof links and approved answer bank.",
+      "peso_channel": "Owned and Earned",
+      "kpi": "Partner briefings completed; pack downloads; referred qualified leads; partner claim-compliance score; Conversation Management response time.",
+      "month": 6
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Technical proof and executive visibility",
+      "moment_hook": "Technical Proof Story turns approved artifacts into inspectable buyer evidence, with Conversation Management tracking technical trust questions.",
+      "key_message": "AI supports the work, but senior people remain responsible for the claim, the delivery and the limit.",
+      "asset_tool": "Technical artifacts, architecture notes, infographics, imagery and approved answer bank.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Technical artifact views; time on page; sales use; qualified technical conversations; artifact quality score; Conversation Management issue resolution.",
+      "month": 7
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Talent pull and brand consistency",
+      "moment_hook": "Senior Craft Story Series begins and runs monthly from Month 8 through Month 11, while Conversation Management holds the always-on response baseline.",
+      "key_message": "The human moment is the hand on the work: someone senior checks it, owns it and signs it before it is put in front of a buyer.",
+      "asset_tool": "Senior craft story, spokesperson materials, social pack and approved answer bank.",
+      "peso_channel": "Shared and Owned",
+      "kpi": "Senior-talent engagement; profile visits; qualified candidate interest; buyer engagement; proof-page clicks; story quality score; Conversation Management approved-answer reuse.",
+      "month": 8
+     },
+     {
+      "phase": "Sustain",
+      "audience_track": "Always-on baseline",
+      "moment_hook": "Quiet month: no hero burst; Conversation Management and Observatory Newsroom are the named focus, and the Senior Craft Story Series continues monthly without widening the claim.",
+      "key_message": "Proof comes before promotion.",
+      "asset_tool": "Q&A, FAQ, approved answer bank, newsroom watchlist, senior craft story and social pack.",
+      "peso_channel": "Owned and Shared",
+      "kpi": "Response time; issue resolution; message consistency; approved-answer reuse; escalation accuracy; senior craft story quality score.",
+      "month": 9
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Professional influencers and enterprise buyers",
+      "moment_hook": "Earned Validation Outreach begins after proof, partner and technical assets exist; Senior Craft Story Series continues monthly and Conversation Management supports briefings.",
+      "key_message": "The B Team does not ask the market to accept an AI story without receipts.",
+      "asset_tool": "Fact sheet, backgrounder, proof citations, partner proof pack, technical proof story, senior craft story and approved answer bank.",
+      "peso_channel": "Earned",
+      "kpi": "Briefings secured; coverage quality; proof citations; qualified inbound conversations; senior craft story quality score; Conversation Management escalation accuracy.",
+      "month": 10
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Employees, advocates and partners",
+      "moment_hook": "Advocacy Enablement Push equips trained advocates while the Senior Craft Story Series completes its monthly run and Conversation Management routes questions back to approved proof.",
+      "key_message": "Senior craft keeps judgment in the work.",
+      "asset_tool": "Advocacy prompts, social pack, proof links, senior craft story and approved answer bank.",
+      "peso_channel": "Shared",
+      "kpi": "Advocate participation; post quality score; engagement quality score; UTM-tagged proof-page clicks from approved advocacy posts; required disclosure compliance; senior craft story quality score; Conversation Management message consistency.",
+      "month": 11
+     },
+     {
+      "phase": "Amplify",
+      "audience_track": "Executive and partner audiences",
+      "moment_hook": "Close Scorecard and Message Recalibration; quiet external month unless proof-led evidence warrants selective follow-up, with Conversation Management still active until programme close.",
+      "key_message": "The Stop Line holds the AI story inside approved proof, senior responsibility and visible limits.",
+      "asset_tool": "Executive scorecard, Key-Message Table update, next-year proof gap list and approved answer bank.",
+      "peso_channel": "Owned",
+      "kpi": "Executive scorecard completion; message changes approved; next-year proof gaps named; qualified lead contribution reviewed; Conversation Management final response and issue-resolution measures.",
+      "month": 12
+     }
+    ],
+    "proof_building_order": "We build proof in the order the strategy can stand behind: first, the senior owner approves the case base and proof library in writing, so every The Stop Line claim has a proof type, senior owner and stated limit; then thought leadership explains Signed by Humans through founder posts, technical artifacts, buyer explainers and senior craft stories; only after that do we widen visibility through partner briefing, earned validation, paid amplification and advocacy.",
+    "rollout": {
+     "first_audience": "The year speaks first to owners of midsize businesses, especially Elena, who wants control and visibility without becoming a technical buyer.",
+     "then_widen": "After that audience has been tested and the proof base is live, the story widens to technical buyers, referral partners, ecosystem partners, enterprise buyers, professional influencers, employees and senior Sofia talent using the same The Stop Line proof boundary."
+    },
+    "ownership": [],
+    "global_local": "One channel-agnostic global toolkit carries the fixed The Stop Line platform, Signed by Humans narrative, proof-before-promotion rule, do-not-say lines, approval route and core asset set; local markets adapt hooks, language, spokespeople, proof examples and market-specific tactics while reporting a small global KPI set of proof credibility, technical-buyer trust, public-profile consistency, founder visibility, talent pull and qualified-lead contribution with local targets.",
+    "markets_period": "The campaign period runs for twelve months up to 30 June 2027 across the United States, the European Union and Sofia.",
+    "approval": {
+     "approved_by": null,
+     "approved_at": null
+    },
+    "platform_approval": {
+     "platform": "The Stop Line",
+     "decided_by": "Kamen Kamenov"
+    }
+   },
+   "inputs": {},
+   "expect": {
+    "result": "refused",
+    "refusal_must_contain": [
+     "open_block_unrenderable"
+    ]
+   },
+   "expected_outcome": "a pack without ownership rows refuses by name"
+  }
+ ]
+}

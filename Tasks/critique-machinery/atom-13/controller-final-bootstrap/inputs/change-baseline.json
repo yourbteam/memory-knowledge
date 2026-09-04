@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "2c4e58865dee48650715c107e8743291c6be727df3a5d07f25f87dfd3421cd76",
+      "size": 9141
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "a59288d729308c86c0bf362c75f7171fde2bc2cb638177e160ea4e8089e52f43",
+      "size": 71121
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "ff40d2b400a77821d6c29029278acc5de7222e6e8001d93f16aefa58becadbce",
+      "size": 34746
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "3d704010d3467356917d89f6f77cd601415cdf39968d6dc0a1dbc0bd12790d34",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

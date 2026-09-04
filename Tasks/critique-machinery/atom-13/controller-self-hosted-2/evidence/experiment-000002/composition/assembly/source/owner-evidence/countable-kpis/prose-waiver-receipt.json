@@ -1,0 +1,14 @@
+{
+  "answer_event_sha256": "feb7feb2cf26982d7b1638cc601c71088acd92af3bf245b7835c907879a3106b",
+  "by": "Kamen Kamenov",
+  "date": "2026-09-04",
+  "fields": [
+    "activation_cards[].kpi"
+  ],
+  "operator_choice": "waive",
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "request_sha256": "f0cbdb472843afaf996b38fc6e67adffe1ee24f8f4723150d1e0c9ca90afd4c7",
+  "schema_version": 1,
+  "status": "accepted",
+  "words": "I authorize this exact validation request to start as a recorded prose exception. This does not authorize promotion, operational use, another field, or another atom."
+}

@@ -1,0 +1,37 @@
+{
+ "schema_version": 1,
+  "atomic_step_id": "s12-generic-line-retired",
+  "contract_surface": {
+    "kind": "render"
+  },
+ "outcome": "The open-items block on the page and the Word twin carries the derived doors alone \u2014 the approve door and one door per unassigned element \u2014 and, when nothing is open, says so; the round-1 generic line is retired.",
+ "practical_value": "One located cell (critique run claude-seat-s12-btm-page-v3, unit u-029): 'Who owns each roadmap element? \u2014 drafted above; no owner has approved' sits above the approve door that names who approves and by when.",
+ "stopping_condition": "The real v3 pack renders the doors without the generic line; a settled pack says nothing waits; a pack without ownership rows refuses by name.",
+ "allowed_paths": [
+  "src/up_harness/tactical_roadmap.py",
+  "tests/unit"
+ ],
+ "captured_cases": [
+  {
+   "case_id": "case-btm-v3-doors-only",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-generic-line-retired/cases/case-btm-v3-doors-only.json",
+   "sha256": "80f09eb23157e720e9ba3e0c54d92423ea5b2d7ed30da51b9ff2f82a6fd710c6",
+   "kind": "success",
+   "expected_outcome": "the real v3 pack renders the derived doors without the generic line"
+  },
+  {
+   "case_id": "case-btm-v3-nothing-open",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-generic-line-retired/cases/case-btm-v3-nothing-open.json",
+   "sha256": "9de4e8d4a3c45a16732bc4b743aa47bd99e996f89d9d80be08ad5dc7d0bfd01a",
+   "kind": "success",
+   "expected_outcome": "a settled roadmap says nothing waits on a person"
+  },
+  {
+   "case_id": "case-btm-v3-no-ownership",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-generic-line-retired/cases/case-btm-v3-no-ownership.json",
+   "sha256": "f570a1f5ba6515b03950f552772d4867e150ee0aadb87807a747292e39fbec13",
+   "kind": "failure",
+   "expected_outcome": "a pack without ownership rows refuses by name"
+  }
+ ]
+}

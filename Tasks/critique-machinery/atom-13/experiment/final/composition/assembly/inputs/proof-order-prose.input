@@ -1,0 +1,34 @@
+{
+ "schema_version": 1,
+ "atomic_step_id": "s12-proof-order-staged",
+ "outcome": "Each stage of the proof-building order names the Activation Cards and months that carry it, in calendar order; a stage with no card or no month, or stages that run backwards, are refused naming every such stage.",
+ "practical_value": "Three located cells (critique run claude-seat-s12-btm-page-v3, unit u-025): the version 3 paragraph is one sentence with no month and no card, unrelated to the one-pager's practical order, so nobody can check it against the calendar.",
+ "stopping_condition": "The real v3 pack refuses naming its three stages; the same pack with staged cards and months is accepted; backwards stages are refused.",
+ "allowed_paths": [
+  "src/up_harness/tactical_roadmap.py",
+  "tests/unit"
+ ],
+ "captured_cases": [
+  {
+   "case_id": "case-btm-v3-unstaged-order",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-unstaged-order.json",
+   "sha256": "885985ebb49f639c8ab6111cfd499664d140b51026a943734e411747841151de",
+   "kind": "failure",
+   "expected_outcome": "the real v3 paragraph refuses naming each stage's gap"
+  },
+  {
+   "case_id": "case-btm-v3-staged-order",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-staged-order.json",
+   "sha256": "0691453558e018cf08a358d5c29909332606a32751e23a77d7976ae45d741041",
+   "kind": "success",
+   "expected_outcome": "a paragraph whose stages name cards and months in order is accepted"
+  },
+  {
+   "case_id": "case-btm-v3-backwards-stages",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-backwards-stages.json",
+   "sha256": "1f386409f2bd23784e3f737f790cacb30a07d17f36c714292156261812b8c614",
+   "kind": "failure",
+   "expected_outcome": "stages that run backwards are refused"
+  }
+ ]
+}

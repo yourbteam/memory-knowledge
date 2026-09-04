@@ -1,0 +1,8 @@
+[
+  {
+    "label": "misspelled",
+    "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/named-assigner-misspelled.atom-request.json",
+    "returncode": 2,
+    "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/candidate/runs-6/misspelled"
+  }
+]

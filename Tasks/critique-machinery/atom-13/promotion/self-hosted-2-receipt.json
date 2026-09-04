@@ -1,0 +1,60 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "change_surface": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/promotion/self-hosted-2-change-surface.json",
+    "sha256": "1b1210ebb3e87ca7d8ff09fde1f99cdd6b932828fd47727a96a51419c6315b7c"
+  },
+  "changed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "contract_surface": {
+    "deliverable": "atom_controller",
+    "fields": [
+      {
+        "field": "contract_surface",
+        "shape": "object",
+        "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "proof-order-prose",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/proof-order.atom-request.json",
+      "sha256": "1765899f24daef77123c0c5a38bd561887d3ef065058f4185faeec074846d852"
+    },
+    {
+      "case_id": "countable-kpis-prose",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/countable-kpis.atom-request.json",
+      "sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0"
+    },
+    {
+      "case_id": "named-assigner-structured",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/named-assigner.atom-request.json",
+      "sha256": "c45c5b8422959646c18afbd5640cbaee0a663169aaa99f3a5551845cdfeba6e8"
+    },
+    {
+      "case_id": "card-inside-phase-structured",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/card-inside-phase.atom-request.json",
+      "sha256": "e83cd0ecf0a63e0b59c7c372fe1b55f62080063968d54eaed9daaad111630a18"
+    },
+    {
+      "case_id": "generic-line-render",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/generic-line-retired.atom-request.json",
+      "sha256": "45b35f0a33d6e27754bd5fccf493f2decace397503c81a68b6ca9abb75265eaf"
+    }
+  ],
+  "experiment_assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+  "experiment_event_sha256": "8a0f332de96daa90f75091388572f673954ed6f89553ea60d1f5c45bf3e26709",
+  "review": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/promotion/self-hosted-2-review.json",
+    "sha256": "1ec63e8978e37e14190d12dc87a68dd461f4f39149ff445b2bc7d2be3ae55aa3"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

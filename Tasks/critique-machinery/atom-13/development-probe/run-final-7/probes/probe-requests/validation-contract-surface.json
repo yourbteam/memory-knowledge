@@ -1,0 +1,27 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "enforced-surface",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/requests/build-enforced-surface.json"
+    },
+    {
+      "approach_id": "author-remembers",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/requests/build-author-remembers.json"
+    }
+  ],
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/development-manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/evaluator_adapter.py",
+      "sha256": "fe7ee5cb28ff70aeec042b5544bc66e4e07e02977950d6466b6b1a0321ab3676"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "validation-contract-surface",
+  "schema_version": 1
+}

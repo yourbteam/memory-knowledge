@@ -1,0 +1,50 @@
+{
+  "allowed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit"
+  ],
+  "atomic_step_id": "s12-card-inside-phase",
+  "captured_cases": [
+    {
+      "case_id": "case-btm-v1-proof-page",
+      "expected_outcome": "the real v1 proof-page card refuses: pre-launch role unstated",
+      "kind": "failure",
+      "sha256": "b91ed69e4c28093020b12f16da09639d7879f3aa205cf62c8d82d7a5be0dfd00",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-inside-phase/cases/case-btm-v1-proof-page.json"
+    },
+    {
+      "case_id": "case-btm-role-stated",
+      "expected_outcome": "the proof-page card with its pre-launch role stated is accepted",
+      "kind": "success",
+      "sha256": "b1c4ff189093afa41950ac8c2db8aaaa3a3726c397124a1dd9c798caad765223",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-inside-phase/cases/case-btm-role-stated.json"
+    },
+    {
+      "case_id": "case-btm-card-outside-phase",
+      "expected_outcome": "a Launch card moved to Month 2 refuses by name",
+      "kind": "failure",
+      "sha256": "1d601dc3a32a2af9d8a91228d6b466000b00cfe53da40043ac74a6617cabe050",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-inside-phase/cases/case-btm-card-outside-phase.json"
+    }
+  ],
+  "contract_surface": {
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards[].month",
+        "shape": "integer",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      },
+      {
+        "field": "activation_cards[].phase",
+        "shape": "enum",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ROADMAP_PHASES"
+      }
+    ],
+    "kind": "validation"
+  },
+  "outcome": "Every Activation Card's month sits inside its phase's months, and a Pre-Seed card that introduces or publishes states its pre-launch role \u2014 live, unpromoted, until the Launch moment in a named month.",
+  "practical_value": "Two located defects (critique run claude-seat-s12-btm-v4, unit u-007): the proof page 'introduces The Stop Line' in Month 2 while the phase plan introduces it publicly in Months 4-5.",
+  "schema_version": 1,
+  "stopping_condition": "The real v1 pack refuses on the proof-page card; with the role stated it is accepted; a card moved outside its phase refuses by name."
+}

@@ -1,0 +1,3 @@
+controller start: {"atomic_step_id": "s12-generic-line-retired", "contract_surface": {"kind": "render"}, "current_experiment": null, "current_promotion": null, "event_count": 1, "latest_event_sha256": "9c743f17e0caebfc
+dp: {"assembly_sha256": "68b57298d1241ead0297a956f9a2e0135bd1da6b55d1323405bdc51902ede873", "atomic_step_id": "s12-generic-line-retired", "cases": [{"case_id": "case-btm-v3-doors-only", "evidence_pointers
+record-experiment: {"atomic_step_id": "s12-generic-line-retired", "contract_surface": {"kind": "render"}, "current_experiment": {"assembly_sha256": "68b57298d1241ead0297a956f9a2e0135bd1da6b55d1323405bdc51902ede873", "co

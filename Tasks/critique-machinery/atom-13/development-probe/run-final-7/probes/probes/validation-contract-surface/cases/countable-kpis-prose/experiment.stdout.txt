@@ -1,0 +1,162 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/evaluator_adapter.py",
+        "sha256": "fe7ee5cb28ff70aeec042b5544bc66e4e07e02977950d6466b6b1a0321ab3676"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "direct-contract-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "name": "owner-waiver-request-bound"
+      },
+      {
+        "direction": "maximize",
+        "name": "contract-surface-visible"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-ad7603c72bb241e56e6f",
+  "frozen_input_sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0",
+  "hypothesis": "Every approach declared by mini-probe 'validation-contract-surface' can run against captured case 'countable-kpis-prose', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "contract-surface-visible": 1.0,
+        "direct-contract-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "owner-waiver-request-bound": 1.0,
+        "refusal-actionable": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "contract-surface-visible": 0.0,
+        "direct-contract-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "owner-waiver-request-bound": 0.0,
+        "refusal-actionable": 0.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 775,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "contract-surface-visible": 1.0,
+        "direct-contract-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "owner-waiver-request-bound": 1.0,
+        "refusal-actionable": 1.0
+      },
+      "outcome": {
+        "direct_returncode": 2,
+        "direct_stderr": "Atom Building Machinery refused at start: validation field(s) ['activation_cards[].kpi'] use prose; a validation rule over prose is the class that misread three real runs. Change the deliverable schema so the model fills a structured field, or run prose-waiver-interview so Kamen Kamenov can choose between the fixed 'waive' and 'decline' meanings; a model-written prose_waiver is not accepted\n",
+        "prose_fields": [
+          "activation_cards[].kpi"
+        ],
+        "waived_returncode": 0,
+        "wrong_waiver_returncode": 2
+      },
+      "reported_metrics": {
+        "contract-surface-visible": 1,
+        "direct-contract-correct": 1,
+        "frozen-input-unchanged": 1,
+        "owner-waiver-request-bound": 1,
+        "refusal-actionable": 1
+      },
+      "result_sha256": "81ccc8876e0825594288969308fb1015b93d767c1acee3fa7b4c91cee16b9d0a",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "2f535864bb9fb8803de3c9f96397b1f28553e87b8a9a3bbb384f3715b38a18c9",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 576,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "contract-surface-visible": 0.0,
+        "direct-contract-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "owner-waiver-request-bound": 0.0,
+        "refusal-actionable": 0.0
+      },
+      "outcome": {
+        "direct_returncode": 2,
+        "direct_stderr": "Atom Building Machinery refused at validate-request: atom request has missing fields [] and unexpected fields ['contract_surface']; add the missing fields and remove the unexpected fields\n",
+        "prose_fields": [
+          "activation_cards[].kpi"
+        ],
+        "waived_returncode": 2,
+        "wrong_waiver_returncode": 2
+      },
+      "reported_metrics": {
+        "contract-surface-visible": 0,
+        "direct-contract-correct": 1,
+        "frozen-input-unchanged": 1,
+        "owner-waiver-request-bound": 0,
+        "refusal-actionable": 0
+      },
+      "result_sha256": "b28a0318db2f412e9917bc88acbd1a6fc51dc4e0f5a809870c61a9023f2df3d7",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "5ad46b5fe70046554025a94a8e2f96e5062d7fb37b154b76e06184a89b7fefe3",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

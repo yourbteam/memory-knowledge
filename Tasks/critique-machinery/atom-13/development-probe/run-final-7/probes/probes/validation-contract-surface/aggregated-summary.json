@@ -1,0 +1,67 @@
+{
+  "case_ids": [
+    "proof-order-prose",
+    "countable-kpis-prose",
+    "named-assigner-structured",
+    "card-inside-phase-structured",
+    "generic-line-render"
+  ],
+  "champion": "enforced-surface",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "direct-contract-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "owner-waiver-request-bound"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "contract-surface-visible"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "contract-surface-visible": 1.0,
+        "direct-contract-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "owner-waiver-request-bound": 1.0,
+        "refusal-actionable": 1.0
+      },
+      "approach_id": "enforced-surface",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "contract-surface-visible": 0.0,
+        "direct-contract-correct": 0.0,
+        "frozen-input-unchanged": 1.0,
+        "owner-waiver-request-bound": 0.0,
+        "refusal-actionable": 0.0
+      },
+      "approach_id": "author-remembers",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

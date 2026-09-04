@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "case_id": "proof-order-prose",
+      "output": "cases/proof-order-prose",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "countable-kpis-prose",
+      "output": "cases/countable-kpis-prose",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "named-assigner-structured",
+      "output": "cases/named-assigner-structured",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "card-inside-phase-structured",
+      "output": "cases/card-inside-phase-structured",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "generic-line-render",
+      "output": "cases/generic-line-render",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

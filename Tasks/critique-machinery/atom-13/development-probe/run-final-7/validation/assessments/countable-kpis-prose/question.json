@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+  "atomic_outcome": "A validation atom declares the field it validates and its repository-backed shape before any experiment can run; prose requires Kamen Kamenov's exact waiver.",
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "case_id": "countable-kpis-prose",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/countable-kpis-prose/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/countable-kpis-prose/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/countable-kpis-prose/telemetry.jsonl",
+      "sha256": "2978f541d11381075e1dd4133c69fa626cf1347f13195ea087d63e079089e4de"
+    }
+  ],
+  "expected_outcome": "The declared KPI validation refuses at start without an owner prose waiver and starts with its request-bound owner waiver.",
+  "operator_path": "probe_entry.py invokes start and status on every frozen declared request and both owner receipts.",
+  "overall_criterion": "Any measured contract, waiver, visibility, or immutability metric is not one.",
+  "schema_version": 1
+}

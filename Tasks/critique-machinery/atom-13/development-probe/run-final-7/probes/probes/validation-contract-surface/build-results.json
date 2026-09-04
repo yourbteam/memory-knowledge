@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "approach_id": "enforced-surface",
+      "bundle": "bundles/enforced-surface",
+      "bundle_sha256": "a7439f96c3078d2d2e188c6f354d248a5cb9ac6f29953d4154240677d3396391",
+      "candidate_sha256": "b35b334e6f8405f822ad49ecb19ceb56b60c1f8b1c2faa4b746eb74da968acc7",
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "error": null,
+      "probe_id": "validation-contract-surface",
+      "status": "built"
+    },
+    {
+      "approach_id": "author-remembers",
+      "bundle": "bundles/author-remembers",
+      "bundle_sha256": "cd621fc98e0e616aa53eda9477f6179d68908961c26b783a40049eafd00de47f",
+      "candidate_sha256": "f18021ffbc3c9459bf135bcd3516306942cd4c1d7e4a5e7e51af0be9d19a5dcf",
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "error": null,
+      "probe_id": "validation-contract-surface",
+      "status": "built"
+    }
+  ],
+  "schema_version": 1
+}

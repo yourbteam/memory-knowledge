@@ -1,0 +1,80 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+        "atomic_step_id": "validation-atom-declares-contract-surface",
+        "case_id": "proof-order-prose",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all measured start, waiver, visibility, and immutability checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "proof-order-prose",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+        "atomic_step_id": "validation-atom-declares-contract-surface",
+        "case_id": "countable-kpis-prose",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all measured start, waiver, visibility, and immutability checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "countable-kpis-prose",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+        "atomic_step_id": "validation-atom-declares-contract-surface",
+        "case_id": "named-assigner-structured",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all measured start, waiver, visibility, and immutability checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "named-assigner-structured",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+        "atomic_step_id": "validation-atom-declares-contract-surface",
+        "case_id": "card-inside-phase-structured",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all measured start, waiver, visibility, and immutability checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "card-inside-phase-structured",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+        "atomic_step_id": "validation-atom-declares-contract-surface",
+        "case_id": "generic-line-render",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all measured start, waiver, visibility, and immutability checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "generic-line-render",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,41 @@
+{
+  "controller": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/atom_controller.py",
+  "controller_sha256": "2b8269f8dd2f66c524492633e261ce54be5ae48b282bd516bfc031d3ffd6dc91",
+  "launcher": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/build_atom.py",
+  "launcher_sha256": "73263bc92b3dbeaadf56aa20b65e67cf50ff1a0ad31669431970c496e0f95dac",
+  "model_calls": 0,
+  "relocated_repository": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/operator-order-final/relocated",
+  "results": [
+    {
+      "atom_id": "s12-named-assigner",
+      "controller_run_created": true,
+      "development_probe_completed": true,
+      "request_sha256": "fda01ab4412661b21762460871cabfa0a4bb74f9b6eb85c759fa1f0e99604d14",
+      "returncode": 0,
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/operator-order-final/relocated/Tasks/step6-feedback-closure/runs/atom-s12-named-assigner",
+      "spec": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/specs/spec-s12-named-assigner.json",
+      "spec_sha256": "d54b339b084b6441338576e5434ac3f41a4dde397e9de0791fad953543e7df8a"
+    },
+    {
+      "atom_id": "s12-proof-order-staged",
+      "controller_run_created": false,
+      "development_probe_completed": false,
+      "request_sha256": "e9a370f65b1b9e6eded0582ae408c1c4d3094cc06dfd3c1222faa7162f7ec2bd",
+      "returncode": 2,
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/operator-order-final/relocated/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged",
+      "spec": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/specs/spec-s12-proof-order-staged.json",
+      "spec_sha256": "3b82cdf7032666d1d4e6c4aee22c9d6c4e693749fdc957de85a56023d55b2cf0"
+    },
+    {
+      "atom_id": "s12-generic-line-retired",
+      "controller_run_created": true,
+      "development_probe_completed": true,
+      "request_sha256": "96ab7b69c829a6220eb68be310109c75c85acaad472f031d429d1b60b09eb3b1",
+      "returncode": 0,
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/operator-order-final/relocated/Tasks/step6-feedback-closure/runs/atom-s12-generic-line-retired",
+      "spec": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/specs/spec-s12-generic-line-retired.json",
+      "spec_sha256": "827b96217c611b9a7c9756eac6c075a319442721053fa82830a9d4e817b6f6de"
+    }
+  ],
+  "source_repository": "/Users/kamenkamenov/united-partners"
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "card-inside-phase-structured",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all measured start, waiver, visibility, and immutability checks passed",
+  "verdict": "satisfied"
+}

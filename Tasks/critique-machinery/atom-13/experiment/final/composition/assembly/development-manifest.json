@@ -1,0 +1,168 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The recorded proof-building-order validation refuses at start without an owner prose waiver.",
+        "id": "proof-order-prose",
+        "kind": "failure",
+        "sha256": "b5a4cd30bc13e0fcd9d177c2c82aa62288111898c2aad21039a915bb97c4304d",
+        "source_ref": "Tasks/critique-machinery/atom-13/frozen-real/proof-order.atom-request.json"
+      },
+      {
+        "expected_outcome": "The recorded KPI validation refuses at start without an owner prose waiver.",
+        "id": "countable-kpis-prose",
+        "kind": "failure",
+        "sha256": "e166ad590e202c4a355dc330ba1390b62ef44f30ec3d98381dfc0b1d74addc5f",
+        "source_ref": "Tasks/critique-machinery/atom-13/frozen-real/countable-kpis.atom-request.json"
+      },
+      {
+        "expected_outcome": "The recorded owner-door validation resolves its pinned-string schema source and starts without a waiver.",
+        "id": "named-assigner-structured",
+        "kind": "success",
+        "sha256": "a34517df94208f6840f1f481ea6c897d3091f1b52a1c430d8b9d935e67a1c2e2",
+        "source_ref": "Tasks/critique-machinery/atom-13/frozen-real/named-assigner.atom-request.json"
+      },
+      {
+        "expected_outcome": "The recorded card validation resolves its integer and enum target fields and starts without a waiver.",
+        "id": "card-inside-phase-structured",
+        "kind": "success",
+        "sha256": "4f5cc6ae2a9da23748d41f2a2ff9c82a050ff535b36076833b41d17d2f1946fd",
+        "source_ref": "Tasks/critique-machinery/atom-13/frozen-real/card-inside-phase.atom-request.json"
+      },
+      {
+        "expected_outcome": "The recorded renderer declares render and starts without a validation field or waiver.",
+        "id": "generic-line-render",
+        "kind": "success",
+        "sha256": "45ef122179d6568de7d1238333b24be259de611f0456d06c42dfed02eb074afa",
+        "source_ref": "Tasks/critique-machinery/atom-13/frozen-real/generic-line-retired.atom-request.json"
+      }
+    ],
+    "id": "validation-atom-declares-contract-surface",
+    "outcome": "A validation atom declares the field it validates and its repository-backed shape before any experiment can run; prose requires Kamen Kamenov's exact waiver.",
+    "practical_value": "The three recorded prose-parser failures become a class refused at atom start instead of another lesson an author can forget.",
+    "stopping_condition": "The four real requests replay with two prose refusals, two structured starts, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Enforce the declared field and shape without changing existing atom lifecycle behavior.",
+    "consumes": [
+      {
+        "artifact": "validation-contract-surface-winner",
+        "probe_id": "validation-contract-surface"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "failure_criterion": "The controller permits undeclared or unwaived prose validation, or blocks a valid structured/render request.",
+      "operator_path": "Replay the frozen real requests and the real Step 12 launcher order through the current controller.",
+      "success_criterion": "The four real requests replay with two prose refusals, two structured starts, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/atom-building-machinery/SKILL.md",
+        "skills/atom-building-machinery/scripts/atom_controller.py",
+        "tests/test_atom_building_machinery.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A repository-resolved field declaration and code-owned owner choice block the whole prose-parser failure class.",
+          "id": "declared-repository-backed-surface-with-owner-choice",
+          "implementation": "Verify contract_surface at start and require a hash-bound interview receipt for prose exceptions.",
+          "predicted_tradeoff": "Adds a declaration to new atoms and a one-word owner decision only for prose validation."
+        },
+        {
+          "hypothesis": "Documenting the prose-parser lesson is sufficient without a start gate.",
+          "id": "author-remembers-the-lesson",
+          "implementation": "Keep the pre-atom controller and rely on authors to avoid prose rules.",
+          "predicted_tradeoff": "No request change, but the repeated defect class remains mechanically possible."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "prose-requests-refuse-without-waiver"
+          },
+          {
+            "method": "sum",
+            "name": "structured-and-render-requests-start"
+          },
+          {
+            "method": "sum",
+            "name": "owner-waivers-are-request-bound"
+          },
+          {
+            "method": "sum",
+            "name": "unknown-fields-refuse-actionably"
+          },
+          {
+            "method": "sum",
+            "name": "real-launcher-order-is-preserved"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "prose-requests-refuse-without-waiver"
+          },
+          {
+            "direction": "maximize",
+            "name": "structured-and-render-requests-start"
+          },
+          {
+            "direction": "maximize",
+            "name": "owner-waivers-are-request-bound"
+          },
+          {
+            "direction": "maximize",
+            "name": "unknown-fields-refuse-actionably"
+          },
+          {
+            "direction": "maximize",
+            "name": "real-launcher-order-is-preserved"
+          }
+        ]
+      },
+      "goal": "Require every new atom to declare the exact contract surface it reads.",
+      "id": "validation-contract-surface",
+      "inputs": [
+        {
+          "case_id": "proof-order-prose"
+        },
+        {
+          "case_id": "countable-kpis-prose"
+        },
+        {
+          "case_id": "named-assigner-structured"
+        },
+        {
+          "case_id": "card-inside-phase-structured"
+        },
+        {
+          "case_id": "generic-line-render"
+        }
+      ],
+      "practical_value": "The three recorded prose-parser failures become a class refused at atom start instead of another lesson an author can forget.",
+      "proof": {
+        "failure_criterion": "Any prose request starts without its exact owner receipt, a valid structured request is rejected, or the real launcher bypasses start.",
+        "success_criterion": "The four real requests replay with two prose refusals, two structured starts, an actionable misspelling refusal, two owner-waived starts, and the recorded three-request order stops only on the prose validation; status, experiment evidence, promotion, both managed projections, tests, and the BUILD-LEDGER all carry the declaration with zero model calls."
+      },
+      "winner_output": {
+        "artifact": "validation-contract-surface-winner",
+        "description": "The selected code-enforced contract-surface controller."
+      },
+      "work_type": "code",
+      "work_type_reason": "Start, experiment recording, status, and promotion are deterministic controller boundaries."
+    }
+  ],
+  "schema_version": 2
+}

@@ -1,0 +1,38 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "cases": [
+    {
+      "case_id": "proof-order-prose",
+      "evidence": [{"case_id": "proof-order-prose", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/proof-order-prose/result.json", "sha256": "7a637048f5f738a21f111989312a0c85832423b56e9572083574072328613dcc"}],
+      "reason": "The final validation measured refusal without a waiver, success with the exact request-bound owner waiver, and rejection of the other request's waiver.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "countable-kpis-prose",
+      "evidence": [{"case_id": "countable-kpis-prose", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/countable-kpis-prose/result.json", "sha256": "42d3523addb2f41743d580009ca219453b126ac133d2e85cb9bfd0f48b52b745"}],
+      "reason": "The final validation measured refusal without a waiver, success with the exact request-bound owner waiver, and rejection of the other request's waiver.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "named-assigner-structured",
+      "evidence": [{"case_id": "named-assigner-structured", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/named-assigner-structured/result.json", "sha256": "05044eccfc6d55ae7e1a8ed5264301e5f6339ed90e9ffeb95d67ebd587383684"}],
+      "reason": "The final validation measured a successful start and exact contract-surface visibility.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "card-inside-phase-structured",
+      "evidence": [{"case_id": "card-inside-phase-structured", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/card-inside-phase-structured/result.json", "sha256": "05044eccfc6d55ae7e1a8ed5264301e5f6339ed90e9ffeb95d67ebd587383684"}],
+      "reason": "The final validation measured a successful start and exact contract-surface visibility.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "generic-line-render",
+      "evidence": [{"case_id": "generic-line-render", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-final-7/validation/executions/generic-line-render/result.json", "sha256": "05044eccfc6d55ae7e1a8ed5264301e5f6339ed90e9ffeb95d67ebd587383684"}],
+      "reason": "The final validation measured a successful render start and exact contract-surface visibility; the separate real launcher replay records the required 0,2,0 order.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "320f3fe6298add64e2d347fbf49389dd40c898b9fe60f9df3615db6f49876ab2",
+  "schema_version": 1,
+  "status": "completed"
+}

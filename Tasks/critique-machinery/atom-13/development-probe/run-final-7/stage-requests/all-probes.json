@@ -1,0 +1,10 @@
+{
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/development-manifest.json",
+  "probe_requests": [
+    {
+      "probe_id": "validation-contract-surface",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/requests/cross-case.json"
+    }
+  ],
+  "schema_version": 1
+}

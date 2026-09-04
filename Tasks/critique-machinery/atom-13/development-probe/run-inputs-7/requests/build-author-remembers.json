@@ -1,0 +1,21 @@
+{
+  "approach_id": "author-remembers",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/development-manifest.json",
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "probe_id": "validation-contract-surface",
+  "schema_version": 1,
+  "source": {
+    "baseline": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/baseline",
+    "candidate": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/candidates/author-remembers",
+    "entrypoint": "probe_entry.py"
+  }
+}

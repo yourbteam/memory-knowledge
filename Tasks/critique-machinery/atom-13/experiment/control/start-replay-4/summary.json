@@ -1,0 +1,32 @@
+[
+  {
+    "label": "proof-order",
+    "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/frozen-real/proof-order.atom-request.json",
+    "returncode": 0,
+    "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/control/runs-4/proof-order"
+  },
+  {
+    "label": "countable-kpis",
+    "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/frozen-real/countable-kpis.atom-request.json",
+    "returncode": 0,
+    "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/control/runs-4/countable-kpis"
+  },
+  {
+    "label": "named-assigner",
+    "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/frozen-real/named-assigner.atom-request.json",
+    "returncode": 0,
+    "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/control/runs-4/named-assigner"
+  },
+  {
+    "label": "card-inside-phase",
+    "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/frozen-real/card-inside-phase.atom-request.json",
+    "returncode": 0,
+    "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/control/runs-4/card-inside-phase"
+  },
+  {
+    "label": "generic-line",
+    "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/frozen-real/generic-line-retired.atom-request.json",
+    "returncode": 0,
+    "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/experiment/control/runs-4/generic-line"
+  }
+]

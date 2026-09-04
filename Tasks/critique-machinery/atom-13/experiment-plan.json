@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "criteria_source": "Tasks/critique-machinery/atom-13/spec.md",
+  "model_calls": 0,
+  "approaches": [
+    {
+      "id": "declared-ordered-targets",
+      "hypothesis": "A start-time, repository-resolved ordered target declaration prevents prose-reading validators while supporting one atom that validates multiple fields.",
+      "implementation": "Require contract_surface; resolve every target against module constants; require a code-controlled owner choice for prose; bind the declaration and adopted waiver statement through experiment, status, and promotion.",
+      "predicted_tradeoff": "Every launcher must preserve the declaration and prose validation needs one informed owner choice between two fixed meanings."
+    },
+    {
+      "id": "outcome-text-only",
+      "hypothesis": "The existing outcome and allowed paths give atom authors enough guidance without another machine-readable boundary.",
+      "implementation": "Keep the pre-Atom controller unchanged and rely on authors and reviewers to notice prose-reading validation.",
+      "predicted_tradeoff": "No request migration, but the same validation class remains mechanically admissible."
+    }
+  ],
+  "criteria": [
+    "the two recorded prose targets refuse before a run is created without a waiver",
+    "the two recorded structured validators start against the real Step 12 schema",
+    "the card validator declares both month and phase in order",
+    "a misspelling names the failed path and available keys",
+    "the owner sees fixed meanings, chooses only waive or decline, and an accepted choice preserves the full adopted statement in status",
+    "the real launcher preserves declarations and round three stops only on proof-order",
+    "record-experiment stores its named static key evidence",
+    "legacy stored runs remain readable"
+  ]
+}

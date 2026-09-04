@@ -461,3 +461,49 @@ focused controller, projection, installer, and skill-validation suites pass 75 t
 subtests. The broader suite passes 2,262 tests plus 41 subtests and skips one; its sole failure is
 the pre-existing absolute-checkout prevention-contract byte assertion, which passes 1/1 in the
 canonical checkout. Exact commands and counts are in `atom-12/validation/test-receipt.json`.
+
+## Upgrade Atom C — validation atoms declare their contract surface — 2026-09-05
+
+**Outcome — 3 recorded prose-parser failures made enforceable.** Every new atom request now
+declares exactly one contract surface. A renderer declares `kind: render`; a validation atom names
+an ordered set of deliverable fields, their shapes, and their repository schema sources. `start`
+resolves those declarations against the named repository and refuses absent fields, misspellings,
+unsupported shapes, and prose targets without a code-owned owner decision. Existing runs remain
+readable. `status`, the experiment event, and the promotion receipt retain the declaration.
+
+**Owner exception is code-owned.** The prose interview displays fixed meanings for `waive` and
+`decline` and accepts only one of those words. `waive` adopts the displayed, narrowly scoped
+statement; `decline` leaves the request blocked. A direct request-authored waiver is refused. Each
+receipt binds the exact request hash, field, repository, meanings, choice, adopted statement, and
+date, so one request's waiver cannot authorize another. Kamen's final `waive` choices are preserved
+at `atom-13/waiver-interviews/proof-order-final-waive/` and
+`atom-13/waiver-interviews/countable-kpis-final/`.
+
+**Frozen real cases and deciding experiment.** `atom-13/frozen-real/` and `declared-real/` preserve
+the two prose validators that misread real runs, the two structured validators, the renderer, and
+the misspelled field case. `development-probe/run-final-7/` ran both approaches over all five
+declared cases. The pre-atom control started every legacy request. The selected enforced-surface
+approach refused both prose requests without an owner receipt, started the two structured requests
+and renderer, rejected the misspelling with the available keys, accepted both exact request-bound
+waivers, and rejected a cross-request waiver. It passed 5/5 with assembly SHA-256
+`14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05` and zero model calls.
+
+**Experiment and operator path.** `record-experiment` now stores a named Python-AST string-key scan
+and refuses when a changed champion module does not read the declared validation leaf. The final
+self-hosted run declares and observes its own `atom_controller.contract_surface`; its promotion
+surface is the four canonical paths in `atom-13/promotion/self-hosted-2-change-surface.json`, SHA-256
+`1b1210ebb3e87ca7d8ff09fde1f99cdd6b932828fd47727a96a51419c6315b7c`.
+The real Step 12 order under `atom-13/experiment/operator-order-final/relocated/operator-evidence/`
+returns `0, 2, 0`: named assigner proceeds, proof order stops at `start`, and the renderer proceeds.
+The controller closed the supersession chain at event
+`f7bc7a9e22c73f668cb89d73fffed3be955a35571e3ff90ba7c6413bdad18bc5`.
+
+**Client installation and cost.** The managed installer refreshed only `atom-building-machinery`.
+`atom-13/validation/installation-receipt.json` records exact projection parity for Codex at
+`87387081203c15941fc5107373a5cdd3e7e3d8d4f23f164800e133e58ffd95fd` and Claude at
+`c18b7c6495776344f44c9fac406321f96a5b5597ec5802f26a31711d0a49612b`, retaining `codex exec`
+and `claude -p` respectively. Atom C used two deterministic approaches, five frozen real cases,
+one real three-request operator replay, two owner interviews, and zero model calls. Focused
+verification and the repository-wide result are recorded in `atom-13/validation/test-receipt.json`;
+the standing CM-D2 installed dependency boundary and unrelated installed description-machinery
+drift remain explicitly out of scope.

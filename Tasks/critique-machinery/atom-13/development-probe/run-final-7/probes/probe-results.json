@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/validation-contract-surface",
+      "probe_id": "validation-contract-surface",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

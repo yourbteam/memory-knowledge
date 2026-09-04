@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/assessment_adapter.py",
+      "sha256": "ea271d610eb2a7845aa7450448c038f794705195a3c3f1b476b878493eff48e0"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "baseline": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/baseline",
+    "sha256": "f18021ffbc3c9459bf135bcd3516306942cd4c1d7e4a5e7e51af0be9d19a5dcf"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/development-manifest.json",
+    "sha256": "404e9c0fb4efd55c23168d980a2f25108f8636eeec113b42ecb7c8de6e49cc9c"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "validation-contract-surface",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/development-probe/run-inputs-7/requests/cross-case.json",
+      "request_sha256": "5db720bc081eadf3702388ca9f7233c711ca1bf461da3f1f6b204e3c6aa6b106"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

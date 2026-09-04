@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "14b1c1392a14e72f43f74498d3db68e1468939da2e68194f1a07047d27e76d05",
+  "assessment_adapter_sha256": "ea271d610eb2a7845aa7450448c038f794705195a3c3f1b476b878493eff48e0",
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

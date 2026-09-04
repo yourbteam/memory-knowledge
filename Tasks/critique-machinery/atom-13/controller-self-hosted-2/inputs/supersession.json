@@ -1,0 +1,13 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "chain": [
+    {
+      "baseline_sha256": "22ed90cbe0190836dc837e7d04c91df4e66ef022e2448b2c6021acb92a7be9ac",
+      "latest_event_sha256": "6e0aceaa110600c8857bf7cca9c1bcee0b064123b0ef3294cf4c893cf3ebb717",
+      "request_sha256": "11ccd80f5dca95150732f4b41e97dbdaa492c5266a990ab209dbe28df94439fe",
+      "run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/controller-final-bootstrap"
+    }
+  ],
+  "previous_run": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/controller-final-bootstrap",
+  "schema_version": 1
+}

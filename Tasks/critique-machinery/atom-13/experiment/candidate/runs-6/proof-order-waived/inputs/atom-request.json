@@ -1,0 +1,50 @@
+{
+  "allowed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit"
+  ],
+  "atomic_step_id": "s12-proof-order-staged",
+  "captured_cases": [
+    {
+      "case_id": "case-btm-v3-unstaged-order",
+      "expected_outcome": "the real v3 paragraph refuses naming each stage's gap",
+      "kind": "failure",
+      "sha256": "885985ebb49f639c8ab6111cfd499664d140b51026a943734e411747841151de",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-unstaged-order.json"
+    },
+    {
+      "case_id": "case-btm-v3-staged-order",
+      "expected_outcome": "a paragraph whose stages name cards and months in order is accepted",
+      "kind": "success",
+      "sha256": "0691453558e018cf08a358d5c29909332606a32751e23a77d7976ae45d741041",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-staged-order.json"
+    },
+    {
+      "case_id": "case-btm-v3-backwards-stages",
+      "expected_outcome": "stages that run backwards are refused",
+      "kind": "failure",
+      "sha256": "1f386409f2bd23784e3f737f790cacb30a07d17f36c714292156261812b8c614",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-backwards-stages.json"
+    }
+  ],
+  "contract_surface": {
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "proof_building_order",
+        "shape": "prose",
+        "shape_source": "src/up_harness/tactical_roadmap.py::SECTION_KEYS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "outcome": "Each stage of the proof-building order names the Activation Cards and months that carry it, in calendar order; a stage with no card or no month, or stages that run backwards, are refused naming every such stage.",
+  "practical_value": "Three located cells (critique run claude-seat-s12-btm-page-v3, unit u-025): the version 3 paragraph is one sentence with no month and no card, unrelated to the one-pager's practical order, so nobody can check it against the calendar.",
+  "prose_waiver": {
+    "by": "Kamen Kamenov",
+    "date": "2026-09-04",
+    "words": "I authorize this exact validation request to start as a recorded prose exception. This does not authorize promotion, operational use, another field, or another atom."
+  },
+  "schema_version": 1,
+  "stopping_condition": "The real v3 pack refuses naming its three stages; the same pack with staged cards and months is accepted; backwards stages are refused."
+}

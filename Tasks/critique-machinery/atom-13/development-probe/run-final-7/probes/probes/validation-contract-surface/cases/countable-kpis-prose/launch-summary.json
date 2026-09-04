@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "case_id": "countable-kpis-prose",
+  "experiment_id": "development-probe-ad7603c72bb241e56e6f",
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "recommendation_sha256": "0acd3d8065d61a98c2256f5421f5ca00689883848318e89c4208690666154263",
+  "schema_version": 1,
+  "status": "completed"
+}

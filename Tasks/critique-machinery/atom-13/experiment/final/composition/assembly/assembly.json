@@ -1,0 +1,123 @@
+{
+  "baseline_sha256": "57a848682c93cf727f6fbe8f56aa241cc664049872035224533b98a300ec800d",
+  "candidates": [
+    {
+      "approach_id": "declared-repository-backed-surface-with-owner-choice",
+      "artifact": "validation-contract-surface-winner",
+      "bundle_sha256": "9d12fc0c55b4dae035aca9f2c1df272ed8206e07435aa91e415874db16a699ad",
+      "probe_id": "validation-contract-surface"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "--help"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "validation-atom-declares-contract-surface",
+    "development_manifest_sha256": "81aaf9aff0a6f1bbf9df332051a32767aceb93b3426902a790335f8a10a07b64"
+  },
+  "inputs": [
+    {
+      "case_id": "proof-order-prose",
+      "path": "proof-order-prose.input",
+      "sha256": "b5a4cd30bc13e0fcd9d177c2c82aa62288111898c2aad21039a915bb97c4304d",
+      "size": 1989
+    },
+    {
+      "case_id": "countable-kpis-prose",
+      "path": "countable-kpis-prose.input",
+      "sha256": "e166ad590e202c4a355dc330ba1390b62ef44f30ec3d98381dfc0b1d74addc5f",
+      "size": 1462
+    },
+    {
+      "case_id": "named-assigner-structured",
+      "path": "named-assigner-structured.input",
+      "sha256": "a34517df94208f6840f1f481ea6c897d3091f1b52a1c430d8b9d935e67a1c2e2",
+      "size": 2094
+    },
+    {
+      "case_id": "card-inside-phase-structured",
+      "path": "card-inside-phase-structured.input",
+      "sha256": "4f5cc6ae2a9da23748d41f2a2ff9c82a050ff535b36076833b41d17d2f1946fd",
+      "size": 1920
+    },
+    {
+      "case_id": "generic-line-render",
+      "path": "generic-line-render.input",
+      "sha256": "45ef122179d6568de7d1238333b24be259de611f0456d06c42dfed02eb074afa",
+      "size": 1983
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "validation-contract-surface"
+      ],
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "8510808722d3f4891fb86fa1550c197bcad2c5c84b4a6c56a492d303bafb2382",
+      "size": 11466
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "validation-contract-surface"
+      ],
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "2b8269f8dd2f66c524492633e261ce54be5ae48b282bd516bfc031d3ffd6dc91",
+      "size": 105774
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "validation-contract-surface"
+      ],
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "a4a44f9e57cbc9eae85ecfabb3d53f5309a09c67d0c69908d12841b388c24992",
+      "size": 44523
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "validation-contract-surface"
+      ],
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "2a11a4e76b64484f0e9e64c6477ab9287d0d8f55eeeaeea03144df8319e73c28",
+      "size": 11941
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/atom-building-machinery/scripts/atom_controller.py",
+    "files": [
+      {
+        "path": "skills/atom-building-machinery/SKILL.md",
+        "sha256": "8510808722d3f4891fb86fa1550c197bcad2c5c84b4a6c56a492d303bafb2382",
+        "size": 11466
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+        "sha256": "2b8269f8dd2f66c524492633e261ce54be5ae48b282bd516bfc031d3ffd6dc91",
+        "size": 105774
+      },
+      {
+        "path": "tests/test_atom_building_machinery.py",
+        "sha256": "a4a44f9e57cbc9eae85ecfabb3d53f5309a09c67d0c69908d12841b388c24992",
+        "size": 44523
+      },
+      {
+        "path": "working-agreement/client-skill-projections.json",
+        "sha256": "2a11a4e76b64484f0e9e64c6477ab9287d0d8f55eeeaeea03144df8319e73c28",
+        "size": 11941
+      }
+    ],
+    "root": "source",
+    "sha256": "2680cfbc837234a00ffed77b011c9fefd1318987722ba88b8590904aa81f2bf7"
+  },
+  "status": "assembled"
+}

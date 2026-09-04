@@ -1,0 +1,23 @@
+{
+  "candidate": {
+    "approach": "declared-repository-backed-surface-with-owner-choice",
+    "evidence": [
+      "Tasks/critique-machinery/atom-13/experiment/candidate/start-replay-6/summary.json",
+      "Tasks/critique-machinery/atom-13/experiment/candidate/misspelling-replay-3/summary.json",
+      "Tasks/critique-machinery/atom-13/waiver-interviews/proof-order-final-waive/prose-waiver-receipt.json",
+      "Tasks/critique-machinery/atom-13/waiver-interviews/countable-kpis-final/prose-waiver-receipt.json",
+      "Tasks/critique-machinery/atom-13/experiment/operator-order-final/relocated/operator-evidence/summary.json"
+    ],
+    "result": "two prose refusals, two structured starts, one render start, an actionable misspelling refusal, and two owner-waived starts"
+  },
+  "control": {
+    "approach": "undeclared-validation-surface",
+    "evidence": "Tasks/critique-machinery/atom-13/experiment/control/start-replay-4/summary.json",
+    "result": "all five legacy requests started, including both prose validators"
+  },
+  "decision": "Only the candidate makes the validation boundary executable at start while preserving an explicit, request-bound owner exception.",
+  "model_calls": 0,
+  "schema_version": 1,
+  "status": "completed",
+  "winner": "declared-repository-backed-surface-with-owner-choice"
+}

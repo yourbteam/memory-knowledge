@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "approach_id": "enforced-surface",
+      "artifact": "validation-contract-surface-winner",
+      "bundle": "probes/validation-contract-surface/bundles/enforced-surface",
+      "bundle_sha256": "a7439f96c3078d2d2e188c6f354d248a5cb9ac6f29953d4154240677d3396391",
+      "case_ids": [
+        "proof-order-prose",
+        "countable-kpis-prose",
+        "named-assigner-structured",
+        "card-inside-phase-structured",
+        "generic-line-render"
+      ],
+      "probe_id": "validation-contract-surface",
+      "recommendation": "probes/validation-contract-surface/recommendation.json"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "candidates-ready"
+}

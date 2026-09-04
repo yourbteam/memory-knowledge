@@ -1,0 +1,3 @@
+controller start: {"atomic_step_id": "s12-named-assigner", "contract_surface": {"deliverable": "tactical_roadmap", "fields": [{"field": "ownership[].owner", "shape": "pinned-string", "shape_source": "src/up_harness/tac
+dp: {"assembly_sha256": "503fb68c0887d39d1735bc584c1dcb79bd419ece50e369ea3a303db1af88545a", "atomic_step_id": "s12-named-assigner", "cases": [{"case_id": "case-btm-v3-role-assigners", "evidence_pointers":
+record-experiment: {"atomic_step_id": "s12-named-assigner", "contract_surface": {"deliverable": "tactical_roadmap", "fields": [{"field": "ownership[].owner", "shape": "pinned-string", "shape_source": "src/up_harness/tac

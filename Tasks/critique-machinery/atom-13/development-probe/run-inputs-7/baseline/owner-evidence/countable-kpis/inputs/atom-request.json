@@ -1,0 +1,38 @@
+{
+  "allowed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit"
+  ],
+  "atomic_step_id": "s12-countable-kpis",
+  "captured_cases": [
+    {
+      "case_id": "case-btm-v1-quality-kpis",
+      "expected_outcome": "the real v1 pack refuses on the first unmeasured quality KPI",
+      "kind": "failure",
+      "sha256": "5392a212b79eeca1597b54964f2510a2222a0259a4c3053a4a44eb0aec369d0e",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-countable-kpis/cases/case-btm-v1-quality-kpis.json"
+    },
+    {
+      "case_id": "case-btm-scored-kpis",
+      "expected_outcome": "the four quality KPIs with a scoring definition are accepted",
+      "kind": "success",
+      "sha256": "0990807da80b1a441c09fe222a69854502eab169683e236d959fd75680330911",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-countable-kpis/cases/case-btm-scored-kpis.json"
+    }
+  ],
+  "contract_surface": {
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards[].kpi",
+        "shape": "prose",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "outcome": "Every KPI item on an Activation Card names a measure; a 'quality' KPI with no scoring definition is refused naming the card and the item.",
+  "practical_value": "One located defect and its class (critique run claude-seat-s12-btm-v4, unit u-016; the same shape on the Month 4, 5 and 10 cards): 'post quality, engagement quality' cannot be funded or governed.",
+  "schema_version": 1,
+  "stopping_condition": "The real v1 pack refuses on the first unmeasured quality KPI; the same pack with the four quality items scored is accepted."
+}

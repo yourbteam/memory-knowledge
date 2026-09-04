@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "focused": {
+    "command": "scripts/run_pytest.sh tests/test_critique_machinery.py tests/test_atom_building_machinery.py tests/test_client_skill_projections.py tests/test_install_skills.py",
+    "passed": 85,
+    "failed": 0
+  },
+  "repository": {
+    "command": "scripts/run_pytest.sh",
+    "execution": "unrestricted so repository-local temporary directories and test sockets were available",
+    "passed": 2270,
+    "failed": 1,
+    "skipped": 1,
+    "failure": "tests/prevention/test_owner_contract_materialization.py::test_materialized_executable_contracts_are_byte_stable_and_complete",
+    "scope": "pre-existing prevention contract materialization outside every Atom A-C canonical and evidence path"
+  },
+  "new_model_calls": 0
+}

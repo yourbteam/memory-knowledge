@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "validation-atom-declares-contract-surface",
+  "case_id": "card-inside-phase-structured",
+  "experiment_id": "development-probe-bc4a9137eefa70caf558",
+  "probe_id": "validation-contract-surface",
+  "promotion_applied": false,
+  "recommendation_sha256": "7576acf037de9fdd152784724a9f5ba9b778085d6a5134c53d2ac87691fb0db9",
+  "schema_version": 1,
+  "status": "completed"
+}
