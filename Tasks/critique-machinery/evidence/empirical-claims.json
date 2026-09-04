@@ -93,6 +93,29 @@
       },
       "operator_validation": "Tasks/critique-machinery/atom-04/operator-validation",
       "status": "promoted"
+    },
+    {
+      "atom_id": "critique-upstream-trace",
+      "claim": "Registering an immutable producer source and accepting only its exact words gives an upstream criticism causal identity that page-only evidence cannot supply, while refusing invented producer quotations on both unchanged calendar cases.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-05/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-05/experiment/comparison.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-05/experiment/comparison.json",
+      "metrics": {
+        "page-only": {
+          "exact-upstream-grounding": 0,
+          "source-identity": 0,
+          "invented-quote-refusal": 0,
+          "repair-locality": 0
+        },
+        "registered-source-trace": {
+          "exact-upstream-grounding": 2,
+          "source-identity": 2,
+          "invented-quote-refusal": 2,
+          "repair-locality": 2
+        }
+      },
+      "operator_validation": "Tasks/critique-machinery/atom-05/operator-validation",
+      "status": "promoted"
     }
   ],
   "schema_version": 1

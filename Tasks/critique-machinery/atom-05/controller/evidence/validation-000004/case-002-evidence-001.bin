@@ -1,0 +1,14 @@
+{
+  "case_id": "calendar-green",
+  "cell_id": "u-008-eb8c85bd::upstream-trace",
+  "invalid_trace_refusal": "critique refused: trace quote for cell 'u-008-eb8c85bd::upstream-trace' is not an exact 25-character passage from registered source 'execution-guide'; copy the producer's words from sources.json.",
+  "outcome": "agreement-clear",
+  "status": "satisfied",
+  "trace": {
+    "quote": "The 12-month content calendar balanced Hero/Hub/Hygiene, showing the white space.",
+    "quote_sha256": "470ef445b5489744a1dfd9bdef5936ba2dfccbed6c4098b47b28389b010c60d0",
+    "source_id": "execution-guide",
+    "source_value_sha256": "e0f9e2589b22aaba906c3e4858627ba165d4b7c0570cfb05159f1949edc45965",
+    "strategy": "registered-source-exact-quote"
+  }
+}

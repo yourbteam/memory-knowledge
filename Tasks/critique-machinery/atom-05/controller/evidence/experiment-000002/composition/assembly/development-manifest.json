@@ -1,0 +1,125 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The incomplete calendar traces to exact upstream words requiring a twelve-month annual roadmap.",
+        "id": "calendar-red",
+        "kind": "failure",
+        "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-red.tar"
+      },
+      {
+        "expected_outcome": "The corrected calendar traces to exact upstream words defining a twelve-month content calendar.",
+        "id": "calendar-green",
+        "kind": "success",
+        "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+        "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-green.tar"
+      }
+    ],
+    "id": "critique-upstream-trace",
+    "outcome": "A criticism that belongs upstream carries an immutable source identity and an exact quotation from that registered producer source.",
+    "practical_value": "The operator can repair the promise or input that caused a weak page instead of polishing only the visible symptom.",
+    "stopping_condition": "The unchanged incomplete and corrected calendar cases both bind exact upstream source words, invented source quotes refuse, and an upstream-trace defect cannot complete without that evidence."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use registered-source-trace unchanged.",
+    "consumes": [
+      {
+        "artifact": "registered-source-trace-contract",
+        "probe_id": "upstream-trace"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "calendar-red",
+        "calendar-green"
+      ],
+      "failure_criterion": "Either source identity is lost or invented source words are accepted.",
+      "operator_path": "Open each unchanged page, register its exact producer packet, attach a trace, then record both readers.",
+      "success_criterion": "The incomplete and corrected calendars both preserve their exact producer evidence."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A page quotation alone is enough to localize an upstream defect.",
+          "id": "page-only",
+          "implementation": "Store only words from the criticized page.",
+          "predicted_tradeoff": "Simple, but cannot prove which producer promise was lost."
+        },
+        {
+          "hypothesis": "A frozen source plus an exact quotation makes the upstream cause inspectable.",
+          "id": "registered-source-trace",
+          "implementation": "Register the source value, retain its identity and hash, and accept only exact quotations.",
+          "predicted_tradeoff": "One explicit registration step in exchange for causal evidence."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "exact-upstream-grounding"
+          },
+          {
+            "method": "sum",
+            "name": "source-identity"
+          },
+          {
+            "method": "sum",
+            "name": "invented-quote-refusal"
+          },
+          {
+            "method": "sum",
+            "name": "repair-locality"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "exact-upstream-grounding"
+          },
+          {
+            "direction": "maximize",
+            "name": "source-identity"
+          },
+          {
+            "direction": "maximize",
+            "name": "invented-quote-refusal"
+          },
+          {
+            "direction": "maximize",
+            "name": "repair-locality"
+          }
+        ]
+      },
+      "goal": "Bind upstream criticism to immutable producer identity and exact source words.",
+      "id": "upstream-trace",
+      "inputs": [
+        {
+          "case_id": "calendar-red"
+        },
+        {
+          "case_id": "calendar-green"
+        }
+      ],
+      "practical_value": "The operator can repair the promise or input that caused a weak page instead of polishing only the visible symptom.",
+      "proof": {
+        "failure_criterion": "A defect can complete without producer evidence or a non-source quotation is accepted.",
+        "success_criterion": "Both cases retain source identity, exact producer words, and reject an invented quotation."
+      },
+      "winner_output": {
+        "artifact": "registered-source-trace-contract",
+        "description": "Immutable source registration, exact trace validation, and a defect gate."
+      },
+      "work_type": "code",
+      "work_type_reason": "Code freezes sources, validates quotations, and blocks unsupported upstream defects."
+    }
+  ],
+  "schema_version": 2
+}

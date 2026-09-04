@@ -1,0 +1,27 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "atomic_step_id": "critique-upstream-trace",
+  "captured_cases": [
+    {
+      "case_id": "calendar-red",
+      "expected_outcome": "The incomplete calendar traces to exact upstream words requiring a twelve-month annual roadmap.",
+      "kind": "failure",
+      "sha256": "b86f46c6d75e3f3030d1ef5bb2ea12df657c479bcc766368224bd3d9773e877f",
+      "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-red.tar"
+    },
+    {
+      "case_id": "calendar-green",
+      "expected_outcome": "The corrected calendar traces to exact upstream words defining a twelve-month content calendar.",
+      "kind": "success",
+      "sha256": "6dba5ba50a27a5358568ebee6f8492bf63c1dd6b15f3a8df581e97ddde827b0e",
+      "source_ref": "Tasks/critique-machinery/atom-03/cases/calendar-green.tar"
+    }
+  ],
+  "outcome": "A criticism that belongs upstream carries an immutable source identity and an exact quotation from that registered producer source.",
+  "practical_value": "The operator can repair the promise or input that caused a weak page instead of polishing only the visible symptom.",
+  "schema_version": 1,
+  "stopping_condition": "The unchanged incomplete and corrected calendar cases both bind exact upstream source words, invented source quotes refuse, and an upstream-trace defect cannot complete without that evidence."
+}

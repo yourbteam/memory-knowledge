@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "critique-upstream-trace",
+  "baseline_sha256": "6374c72e322d82f0b6e69469d4cf0256cc511c52d3a7c3efba4fdf1edd93f0b8",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "295dd0d491c170e590f2210d057e57e833b17af8a10800fdf96cfe6b42dc1e4e",
+      "before_mode": 420,
+      "before_sha256": "e5817c691f04af214000673d413cc259ac9f22e01810320b786c0aa196f31330",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "23a6d8c36abe801f8ad1e07e83fa494f1969e4ffb0c05d55f627b2b31033d354",
+      "before_mode": 420,
+      "before_sha256": "72b5bcf5243fdb76c9afc17c30e0b11e76be105101d4f4d2e14a70594dd51afb",
+      "kind": "changed",
+      "path": "tests/test_critique_machinery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

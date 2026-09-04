@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-upstream-trace",
+  "promotion_event_sha256": "ce6774ed91189b38f3b4c09df1f5fb7d45be4f16a56e8f1ac488773b0a908f7f",
+  "cases": [
+    {
+      "case_id": "calendar-red",
+      "verdict": "satisfied",
+      "reason": "The promoted operator path refused invented producer words and retained the exact registered execution-guide passage on the incomplete calendar.",
+      "evidence": [
+        {
+          "case_id": "calendar-red",
+          "path": "operator-validation/calendar-red.json",
+          "sha256": "98d8a9b913ae9d0a56000024aa93753323a62323d0c3448079e848949ab3e155"
+        }
+      ]
+    },
+    {
+      "case_id": "calendar-green",
+      "verdict": "satisfied",
+      "reason": "The promoted operator path refused invented producer words and retained the exact registered execution-guide passage on the corrected calendar.",
+      "evidence": [
+        {
+          "case_id": "calendar-green",
+          "path": "operator-validation/calendar-green.json",
+          "sha256": "67055270d247aafdf471f37eb51e0fe688e9d3e9f21472a9839035ffc3a0e40c"
+        }
+      ]
+    }
+  ]
+}

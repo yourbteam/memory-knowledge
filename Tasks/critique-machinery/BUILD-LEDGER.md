@@ -104,3 +104,23 @@ directories. The controller authorized the next atom at proof event
 `e472431afe1fb0d1478cc112a1ba47228aaff243ccc8cf44203da65f3e145abc`.
 
 **Cost.** Six Codex model calls: two per stale-door page and two on the approved Vivacom scorecard.
+
+## Atom 5 — upstream trace — 2026-09-04
+
+**Outcome.** An upstream criticism now names a registered immutable producer source and carries an
+exact passage from that source. A reject or revise verdict under the upstream-trace lens is refused
+until that evidence exists; invented or replacement source words cannot enter state.
+
+**Experiment.** `atom-05/experiment/` compares page-only criticism with registered-source-trace on
+the unchanged incomplete and corrected calendar pair. Page-only scored zero because it could name
+only the page symptom. The selected contract retained exact upstream grounding and source identity,
+refused the deliberately invented trace, and kept the repair boundary local in both cases.
+
+**Promotion and real operator path.** The verified assembly SHA-256 is
+`ab680f1e513ce93511fd594b797bd4755985ab62f6796052c42e7b0a33061196`.
+`atom-05/operator-validation/` records the actual open, register-source, trace, and two-reader route.
+The controller authorized the next atom at proof event
+`8c490b4aa7cd4c27d701c3653439d578fb4ac9494e952e29fecd7ab959cd6e0e`.
+
+**Cost.** Two unchanged real cases and no additional model calls; the operator path reuses the
+already grounded reader judgments so this atom isolates the upstream-evidence contract.

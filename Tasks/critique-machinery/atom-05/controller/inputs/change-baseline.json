@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py"
+  ],
+  "atomic_step_id": "critique-upstream-trace",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "e5817c691f04af214000673d413cc259ac9f22e01810320b786c0aa196f31330",
+      "size": 35554
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "72b5bcf5243fdb76c9afc17c30e0b11e76be105101d4f4d2e14a70594dd51afb",
+      "size": 6309
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

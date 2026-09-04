@@ -1,0 +1,59 @@
+{
+  "cases": {
+    "calendar-green": {
+      "case_id": "calendar-green",
+      "cell_id": "u-008-eb8c85bd::upstream-trace",
+      "invalid_trace_refusal": "critique refused: trace quote for cell 'u-008-eb8c85bd::upstream-trace' is not an exact 25-character passage from registered source 'execution-guide'; copy the producer's words from sources.json.",
+      "outcome": "agreement-clear",
+      "status": "satisfied",
+      "trace": {
+        "quote": "The 12-month content calendar balanced Hero/Hub/Hygiene, showing the white space.",
+        "quote_sha256": "470ef445b5489744a1dfd9bdef5936ba2dfccbed6c4098b47b28389b010c60d0",
+        "source_id": "execution-guide",
+        "source_value_sha256": "e0f9e2589b22aaba906c3e4858627ba165d4b7c0570cfb05159f1949edc45965",
+        "strategy": "registered-source-exact-quote"
+      }
+    },
+    "calendar-red": {
+      "case_id": "calendar-red",
+      "cell_id": "u-008-2a91bbf4::upstream-trace",
+      "invalid_trace_refusal": "critique refused: trace quote for cell 'u-008-2a91bbf4::upstream-trace' is not an exact 25-character passage from registered source 'execution-guide'; copy the producer's words from sources.json.",
+      "outcome": "agreement-defect",
+      "status": "satisfied",
+      "trace": {
+        "quote": "Twelve-month corporate calendar showing major moments (results announcements, investor days, AGM, sustainability report publication, executive appearances, signature events, anticipated regulatory milestones), plus always-on activity.",
+        "quote_sha256": "47aee4ab6480853d89a53a72b872a319f002ed48ea42a03196466ecef5e18df4",
+        "source_id": "execution-guide",
+        "source_value_sha256": "d6c2d2f68705b6fdc1aae3540d3fa0d3d6c8f650ca1dc7363a6487f02f8cc022",
+        "strategy": "registered-source-exact-quote"
+      }
+    }
+  },
+  "champion": "registered-source-trace",
+  "criteria_frozen_at": "spec.md",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "approach_id": "registered-source-trace",
+      "metrics": {
+        "exact-upstream-grounding": 2,
+        "invented-quote-refusal": 2,
+        "repair-locality": 2,
+        "source-identity": 2
+      },
+      "rank": 1
+    },
+    {
+      "approach_id": "page-only",
+      "metrics": {
+        "exact-upstream-grounding": 0,
+        "invented-quote-refusal": 0,
+        "repair-locality": 0,
+        "source-identity": 0
+      },
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}
