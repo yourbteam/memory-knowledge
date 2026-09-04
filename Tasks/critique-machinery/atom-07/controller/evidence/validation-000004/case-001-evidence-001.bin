@@ -1,0 +1,45 @@
+{
+  "case_id": "btm-roadmap-open-queue",
+  "document_refusal": "critique refused: document refused: 5 owner questions remain open: owner-5859cc4dd6fb6492, owner-c62fd1633cbe694d, owner-d131d8cfc20dee3d, owner-7d28021b5e080a48, owner-a87f36e2509a4644. Run ask-owner, record only an offered choice with answer-owner, then retry.",
+  "first_question": {
+    "cell_id": "u-001-67522c23::cfo",
+    "decision_id": "owner-5859cc4dd6fb6492",
+    "lens": "cfo",
+    "offered_choices": [
+      "reject",
+      "revise",
+      "clear"
+    ],
+    "outcome": "disagreement",
+    "reader_evidence": {
+      "reader-1": {
+        "quote": "The phased twelve-month sequence of the approved platform: signature moments balanced against an always-on presence, every tactic an Activation Card placed by date, channel, audience, message, phase and KPI (key performance indicator). **Not approved.** The owners and the calendar are a person's to approve, and no owner is recorded.",
+        "quote_sha256": "e8fb87881a0acdea33dfe10603d54e6a03eb27e5475312935f97f469cb48dc53",
+        "status": "answered",
+        "verdict": "revise",
+        "verdict_strategy": "action-grounded"
+      },
+      "reader-2": {
+        "quote": "The phased twelve-month sequence of the approved platform: signature moments balanced against an always-on presence, every tactic an Activation Card placed by date, channel, audience, message, phase and KPI (key performance indicator). **Not approved.** The owners and the calendar are a person's to approve, and no owner is recorded.",
+        "quote_sha256": "e8fb87881a0acdea33dfe10603d54e6a03eb27e5475312935f97f469cb48dc53",
+        "status": "answered",
+        "verdict": "reject",
+        "verdict_strategy": "action-grounded"
+      }
+    },
+    "unit_id": "u-001-67522c23"
+  },
+  "matrix_sha256": "21f5244adbc4283a10b14daab71fbb6bf6c52c4c4ee7321ed1e1815ce6a515f0",
+  "matrix_status": {
+    "cell_count": 175,
+    "judged_count": 175,
+    "lens_count": 7,
+    "owner_queue_count": 5,
+    "status": "partial",
+    "unit_count": 25,
+    "unjudged_cells": [],
+    "unjudged_count": 0
+  },
+  "owner_queue_count": 5,
+  "status": "satisfied"
+}

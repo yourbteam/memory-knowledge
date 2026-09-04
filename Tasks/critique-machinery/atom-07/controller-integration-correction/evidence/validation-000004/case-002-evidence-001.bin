@@ -1,0 +1,99 @@
+{
+  "case_id": "btm-roadmap-resolved-queue",
+  "document": {
+    "cells": 175,
+    "findings": 30,
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-07/operator-validation/located-defects.md",
+    "route": "document",
+    "sha256": "3933bb2586d1663c097fbe8ebd065715521baf15c80cbcb7917ccf64ed772a1b",
+    "status": "complete"
+  },
+  "matrix_sha256": "ce218747117fdc05efc24dacbfbab44d589f481736f3a07c3aaf546a797f8fb5",
+  "matrix_status": {
+    "cell_count": 175,
+    "judged_count": 175,
+    "lens_count": 7,
+    "owner_queue_count": 0,
+    "status": "complete",
+    "unit_count": 25,
+    "unjudged_cells": [],
+    "unjudged_count": 0
+  },
+  "owner_rulings": [
+    {
+      "because": "Revise. Clearly distinguish the approved platform from the still-unapproved roadmap ownership and calendar, so nobody mistakes strategic approval for authorization to execute.",
+      "because_sha256": "cb5e49a53f69fe1623d5138e2844d20063a03627ad0c1a8b28ec9ef8062d8111",
+      "cell_id": "u-001-67522c23::cfo",
+      "choice": "revise",
+      "decision_id": "owner-5859cc4dd6fb6492",
+      "offered_choices": [
+        "reject",
+        "revise",
+        "clear"
+      ]
+    },
+    {
+      "because": "clear",
+      "because_sha256": "913a4cb91be20332f3559f8070255d7ac3e6228bb423f4441551d3f783e7d4f4",
+      "cell_id": "u-013-84d440d2::buyer-read",
+      "choice": "clear",
+      "decision_id": "owner-c62fd1633cbe694d",
+      "offered_choices": [
+        "reject",
+        "revise",
+        "clear"
+      ]
+    },
+    {
+      "because": "Revise. It clearly separates fixed global elements from local adaptations, but it does not say who authorizes or funds those adaptations, or what cost boundary constrains them. A CFO could understand the operating model but could not yet govern its financial variation.",
+      "because_sha256": "e60bde5ef3b661e2f40fff2f7d814e2ef9ca9830492c1afeffb52203dd82a689",
+      "cell_id": "u-023-69aa065d::cfo",
+      "choice": "revise",
+      "decision_id": "owner-d131d8cfc20dee3d",
+      "history": [
+        {
+          "because": "revise",
+          "because_sha256": "aa53d35cdecfe4a2bc65f25f9a20e040c9a1a9afe89366a0608b14cfe587dfc7",
+          "choice": "revise",
+          "decision_id": "owner-d131d8cfc20dee3d",
+          "offered_choices": [
+            "reject",
+            "revise",
+            "clear"
+          ]
+        }
+      ],
+      "offered_choices": [
+        "reject",
+        "revise",
+        "clear"
+      ]
+    },
+    {
+      "because": "`clear`. \u201cLong-form voice not yet calibrated\u201d is a real editorial limitation, but the quoted passage does not establish a funding, annual-coverage, or governance defect. Calling it a CFO weakness would stretch this lens beyond its evidence.",
+      "because_sha256": "8b29c00564f4c2c7379ced0c77140834dd5078f62ee133d9d61b049649137b56",
+      "cell_id": "u-025-b580af1d::cfo",
+      "choice": "clear",
+      "decision_id": "owner-7d28021b5e080a48",
+      "offered_choices": [
+        "reject",
+        "revise",
+        "clear"
+      ]
+    },
+    {
+      "because": "my ruling is `clear`. The unit names its website sources and explicitly discloses that long-form voice remains uncalibrated. That limitation may constrain later writing, but it is neither hidden nor contradicted by the narrower observations about website tone and vocabulary. `Revise` would require evidence that those stated observations exceed their cited sources.",
+      "because_sha256": "ca56666694b99df03b2adc69e6c27f4db1598283d7a3d0de7e20205ca2baef94",
+      "cell_id": "u-025-b580af1d::journalist",
+      "choice": "clear",
+      "decision_id": "owner-a87f36e2509a4644",
+      "offered_choices": [
+        "reject",
+        "revise",
+        "clear"
+      ]
+    }
+  ],
+  "owner_rulings_sha256": "034978c1491d12d528b2e2ccac00b0bb558986b42df1fc002f0b4347b2ee4f03",
+  "status": "satisfied"
+}

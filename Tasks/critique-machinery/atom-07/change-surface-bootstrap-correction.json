@@ -1,0 +1,16 @@
+{
+  "atomic_step_id": "critique-managed-skill-count-correction",
+  "baseline_sha256": "581180f770c0eca625cb510fa7ac1c3a6b18510a1d0ae05052045f38aaaae4b9",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "032a281d11ccf3558ca114ebd18268e5587eb4ac90ab2aaa840a17c42e6189b8",
+      "before_mode": 420,
+      "before_sha256": "bc42d637e6af763e965a3e08093fa2282758b83125831641832786194694e407",
+      "kind": "changed",
+      "path": "tests/test_codex_office_bootstrap.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

@@ -1,0 +1,132 @@
+{
+  "baseline_sha256": "62a31b78a7d2c46f7cc7451272bfdfebe3555d683dd016cf64956ab13c9faf96",
+  "candidates": [
+    {
+      "approach_id": "owner-bound",
+      "artifact": "owner-bound-findings-contract",
+      "bundle_sha256": "05b4ada2db010adfcf47fc3840604b38567b6a370960aa822e8cf1595dc7fc52",
+      "probe_id": "owner-bound-assembly"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-owner-queue-document",
+    "development_manifest_sha256": "d96458d04dd623bd2b15c6fcbe5dedef2e9d7be7d93edc779428ffe6ec865559"
+  },
+  "inputs": [
+    {
+      "case_id": "btm-roadmap-open-queue",
+      "path": "btm-roadmap-open-queue.input",
+      "sha256": "10113814ebeb9d5f503fd1cffce8ac80e44f148ab13a495d3c989075160a7bbc",
+      "size": 26054
+    },
+    {
+      "case_id": "btm-roadmap-resolved-queue",
+      "path": "btm-roadmap-resolved-queue.input",
+      "sha256": "10113814ebeb9d5f503fd1cffce8ac80e44f148ab13a495d3c989075160a7bbc",
+      "size": 26054
+    }
+  ],
+  "operations": [
+    {
+      "action": "add",
+      "contributors": [
+        "owner-bound-assembly"
+      ],
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "dad0cba45cb7089dc9d32681a811cd52893cf3fc1abe9cf16f90e7a912590f62",
+      "size": 2631
+    },
+    {
+      "action": "add",
+      "contributors": [
+        "owner-bound-assembly"
+      ],
+      "path": "skills/critique-machinery/agents/openai.yaml",
+      "sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+      "size": 265
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "owner-bound-assembly"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "597b7e7d18de7954026ed995042da29ac8d5e46bc57aa1c4f1444311041de66c",
+      "size": 58441
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "owner-bound-assembly"
+      ],
+      "path": "skills/managed-skills.txt",
+      "sha256": "fc8d88c9ba405147122af29b66e6f8e786f341c1a7cb1e58145fe8ff807712c3",
+      "size": 456
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "owner-bound-assembly"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "b980358adc0ce282734636f337a9de020bb559fa2cd6c6ef61a1ed029656b7f4",
+      "size": 14101
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "owner-bound-assembly"
+      ],
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "11d346a475afbc1fb874fa94937d7071ef31b935347d9119da048c497e8741cd",
+      "size": 11941
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "skills/critique-machinery/scripts/critique.py",
+    "files": [
+      {
+        "path": "skills/critique-machinery/SKILL.md",
+        "sha256": "dad0cba45cb7089dc9d32681a811cd52893cf3fc1abe9cf16f90e7a912590f62",
+        "size": 2631
+      },
+      {
+        "path": "skills/critique-machinery/agents/openai.yaml",
+        "sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+        "size": 265
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "597b7e7d18de7954026ed995042da29ac8d5e46bc57aa1c4f1444311041de66c",
+        "size": 58441
+      },
+      {
+        "path": "skills/managed-skills.txt",
+        "sha256": "fc8d88c9ba405147122af29b66e6f8e786f341c1a7cb1e58145fe8ff807712c3",
+        "size": 456
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "b980358adc0ce282734636f337a9de020bb559fa2cd6c6ef61a1ed029656b7f4",
+        "size": 14101
+      },
+      {
+        "path": "working-agreement/client-skill-projections.json",
+        "sha256": "11d346a475afbc1fb874fa94937d7071ef31b935347d9119da048c497e8741cd",
+        "size": 11941
+      }
+    ],
+    "root": "source",
+    "sha256": "e87efb35da60ff60a1399b0a3e249dcc8c1bf19ebf5937e62be4037ffb4df058"
+  },
+  "status": "assembled"
+}

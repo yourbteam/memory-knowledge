@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "critique-owner-queue-document",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "3fcddeab54c7081f9fd8add292c0091db3d8f90b3fedf68cb861c20d15aa7976",
+  "experiment_assembly_sha256": "8eb53c3f9adbe4f52e67da654c5a6593699f3756f6c267115eb1079097b4fadd",
+  "changed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/agents/openai.yaml",
+    "skills/critique-machinery/scripts/critique.py",
+    "skills/managed-skills.txt",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "change_surface": {
+    "path": "change-surface.json",
+    "sha256": "a3add913de0e0735d6c731d45f38d16a30bfb88f1c27ea55151b166ff610a148"
+  },
+  "review": {
+    "path": "promotion-review.json",
+    "sha256": "94dcaa1f5480ef2cbbc9534aea56feef51ff50ee487a00d7fcdd483b14c61e3d"
+  },
+  "evidence": [
+    {
+      "case_id": "btm-roadmap-open-queue",
+      "path": "operator-validation/open-queue.json",
+      "sha256": "3b3617b0214888d62ec4fae8b4c0fa5db9fa0d24e5ddf2914b42f5e8aca4ce27"
+    },
+    {
+      "case_id": "btm-roadmap-resolved-queue",
+      "path": "operator-validation/resolved-queue.json",
+      "sha256": "d89ac13bba6a69cac6c94e64377acd90e4ec9b9a9a54a5fe772ff0d0b1b8a118"
+    }
+  ]
+}

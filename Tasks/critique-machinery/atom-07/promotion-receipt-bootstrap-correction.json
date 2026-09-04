@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "critique-managed-skill-count-correction",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "f6c738976221887452b6417b5a43e9b5a2f4db711b5d07f905d6edb07c651b4f",
+  "experiment_assembly_sha256": "b309dfc6fc6d47365c1d70e06431461c5abf040f5ff8f795115063f62dd24bce",
+  "changed_paths": [
+    "tests/test_codex_office_bootstrap.py"
+  ],
+  "change_surface": {
+    "path": "change-surface-bootstrap-correction.json",
+    "sha256": "2ec0c896bef7885deb9831d3829ee3394ce63211a41e3096902c5a271d70cdb5"
+  },
+  "review": {
+    "path": "promotion-review-bootstrap-correction.json",
+    "sha256": "80c02e21b0a35176a9196684f79cce103d1d1175b70630c8816fc303c7597c67"
+  },
+  "evidence": [
+    {
+      "case_id": "registered-critique-bootstrap-count",
+      "path": "experiment-bootstrap-correction-v2/comparison.json",
+      "sha256": "8490c1ea5f2d332da26130537f84ce18678c202b4356f0635ef00f592edf024f"
+    },
+    {
+      "case_id": "registered-critique-client-parity",
+      "path": "experiment-bootstrap-correction-v2/comparison.json",
+      "sha256": "8490c1ea5f2d332da26130537f84ce18678c202b4356f0635ef00f592edf024f"
+    }
+  ]
+}

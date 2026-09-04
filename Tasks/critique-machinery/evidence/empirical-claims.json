@@ -139,6 +139,41 @@
       },
       "operator_validation": "Tasks/critique-machinery/atom-06/operator-validation",
       "status": "promoted"
+    },
+    {
+      "atom_id": "critique-owner-queue-document",
+      "claim": "An owner-bound queue preserved five authentic BTM reader disagreements, refused a completed-looking document while they were open, retained every ruling verbatim, and assembled the full evidence document only after the queue emptied; machine-casting would have erased all five owner decisions.",
+      "criteria_frozen_at": "Tasks/critique-machinery/atom-07/spec.md",
+      "evidence": "Tasks/critique-machinery/atom-07/experiment/comparison.json",
+      "loser_preserved_at": "Tasks/critique-machinery/atom-07/experiment/comparison.json",
+      "metrics": {
+        "machine-cast": {
+          "authority-preservation": 0,
+          "exact-ruling-retention": 0,
+          "partial-output-refusal": 0,
+          "evidence-retention": 0,
+          "document-determinism": 1
+        },
+        "owner-bound": {
+          "authority-preservation": 5,
+          "exact-ruling-retention": 5,
+          "partial-output-refusal": 1,
+          "evidence-retention": 10,
+          "document-determinism": 1
+        }
+      },
+      "integration_corrections": [
+        {
+          "assembly_sha256": "64f81696660e56018c72f66fd0ce143d176af1227c3caf39b7b1b6edfca03554",
+          "purpose": "fail-closed installed client selection without a canonical host default"
+        },
+        {
+          "assembly_sha256": "b309dfc6fc6d47365c1d70e06431461c5abf040f5ff8f795115063f62dd24bce",
+          "purpose": "twenty-one-skill bootstrap count with exact parity preserved"
+        }
+      ],
+      "operator_validation": "Tasks/critique-machinery/atom-07/operator-validation",
+      "status": "promoted"
     }
   ],
   "schema_version": 1

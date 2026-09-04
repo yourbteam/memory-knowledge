@@ -1,0 +1,16 @@
+{
+  "allowed_paths": [
+    "tests/test_codex_office_bootstrap.py"
+  ],
+  "atomic_step_id": "critique-managed-skill-count-correction",
+  "files": [
+    {
+      "mode": 420,
+      "path": "tests/test_codex_office_bootstrap.py",
+      "sha256": "bc42d637e6af763e965a3e08093fa2282758b83125831641832786194694e407",
+      "size": 5698
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

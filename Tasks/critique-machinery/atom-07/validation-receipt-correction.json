@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-owner-queue-document",
+  "promotion_event_sha256": "99d48586e7194e1feb4356c29a0e6ade253e07c6d7df6631db5e34c211b1e635",
+  "cases": [
+    {
+      "case_id": "btm-roadmap-open-queue",
+      "verdict": "satisfied",
+      "reason": "The correction changes only installed client selection; the retained promoted public-path evidence still proves all 175 real reader cells expose five stable owner questions and refuse document assembly while open.",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap-open-queue",
+          "path": "operator-validation/open-queue.json",
+          "sha256": "3b3617b0214888d62ec4fae8b4c0fa5db9fa0d24e5ddf2914b42f5e8aca4ce27"
+        }
+      ]
+    },
+    {
+      "case_id": "btm-roadmap-resolved-queue",
+      "verdict": "satisfied",
+      "reason": "The corrected runtime retains the same owner-bound reducer, five verbatim owner rulings, and completed 175-cell, 30-finding document evidence.",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap-resolved-queue",
+          "path": "operator-validation/resolved-queue.json",
+          "sha256": "d89ac13bba6a69cac6c94e64377acd90e4ec9b9a9a54a5fe772ff0d0b1b8a118"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-managed-skill-count-correction",
+  "promotion_event_sha256": "2717c169c35a7003d5aa2d6014d364830e67346570e42192837359bb3dfb40fe",
+  "cases": [
+    {
+      "case_id": "registered-critique-bootstrap-count",
+      "verdict": "satisfied",
+      "reason": "The clean-install bootstrap test returned twenty-one managed skills and passed through the repository test wrapper.",
+      "evidence": [
+        {
+          "case_id": "registered-critique-bootstrap-count",
+          "path": "experiment-bootstrap-correction-v2/comparison.json",
+          "sha256": "8490c1ea5f2d332da26130537f84ce18678c202b4356f0635ef00f592edf024f"
+        }
+      ]
+    },
+    {
+      "case_id": "registered-critique-client-parity",
+      "verdict": "satisfied",
+      "reason": "The same focused run passed every dual-client projection and forbidden-host parity assertion with the new skill registered.",
+      "evidence": [
+        {
+          "case_id": "registered-critique-client-parity",
+          "path": "experiment-bootstrap-correction-v2/comparison.json",
+          "sha256": "8490c1ea5f2d332da26130537f84ce18678c202b4356f0635ef00f592edf024f"
+        }
+      ]
+    }
+  ]
+}

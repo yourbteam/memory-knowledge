@@ -1,0 +1,39 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/agents/openai.yaml",
+    "skills/managed-skills.txt",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-owner-queue-document",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "f8dbc4ca645e2db683bf51426ccccdb2c59a393b300e6b13608445c234346b91",
+      "size": 45374
+    },
+    {
+      "mode": 420,
+      "path": "skills/managed-skills.txt",
+      "sha256": "81f0090ca4c52442236bb6622bb51e4b582627de90da67424db409aa00710c7f",
+      "size": 437
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "ee3b58b493082772d17f652293a5b118ebb77848961ff5bcb08e29f61f42037c",
+      "size": 10403
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "a413338d1e41a0d0ca1e096a3b07aed22e8d3285439b9fb14ad7e4e78124d73d",
+      "size": 11117
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

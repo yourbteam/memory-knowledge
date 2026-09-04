@@ -144,3 +144,47 @@ route. The controller authorized the final atom at proof event
 
 **Cost.** Two unchanged real cases and no additional model calls; the isolated atom evaluates the
 reference-evidence boundary rather than repeating semantic judgment work already proven in Atom 3.
+
+## Atom 7 — owner queue and findings document — 2026-09-04
+
+**Outcome.** The machinery is now a managed dual-client skill. `read-run` resumes both blind seats
+across the full matrix; `ask-owner` exposes one unresolved judgment at a time; `answer-owner`
+accepts only offered verdicts and preserves the owner's exact words; `correct-owner` retains the
+prior ruling in history. `document` exists only after every cell is read and every owner question
+is resolved, and includes grounded defects, both reader records, traces, benchmarks, and disputes.
+
+**Experiment.** `atom-07/experiment/` compares machine-cast with owner-bound on the unchanged S12
+BTM roadmap. Sixty-four live Codex calls produced 175 cells: 145 agreement-clear, 25
+agreement-defect, and five authentic disagreements. Machine-cast would have silently erased all
+five. Owner-bound exposed them, refused the document, preserved Kamen's five rulings, and completed
+only after the queue emptied. A fuller third ruling arriving after its terse version exposed a real
+correction need; append-only correction preserved both.
+
+**Promotion and real operator path.** The verified assembly SHA-256 is
+`8eb53c3f9adbe4f52e67da654c5a6593699f3756f6c267115eb1079097b4fadd`.
+`atom-07/operator-validation/` replays the exact real reader responses through the public CLI:
+red-before records five open questions and a document refusal; green-after records five rulings,
+an empty queue, all 175 judged cells, and a 30-finding document. Both Codex and Claude skill
+projections pass. The controller closed at proof event
+`a9f36f794a0bae75de4e70cf2d333114b40a6d8c0d9a78253fe1c5262e5a29ea`.
+
+**Integration corrections.** Full-suite verification exposed a forbidden canonical client literal
+and the stale bootstrap expectation left by adding the twenty-first managed skill. The runtime now
+fails closed unless its installed projection names an allowed client, without embedding a host
+default in the canonical skill. Its correction assembly is
+`64f81696660e56018c72f66fd0ce143d176af1227c3caf39b7b1b6edfca03554` and closed at proof event
+`2b33e2e9d741d20fa740d301b0c303ab158e22e5c1506724115358c843306458`.
+The separate one-line bootstrap correction preserves every exact-parity assertion, uses assembly
+`b309dfc6fc6d47365c1d70e06431461c5abf040f5ff8f795115063f62dd24bce`, and closed at proof event
+`8eecea69432ccdb677c5aa6606cfa190396d58871ef0220d25f373c299ebde51`.
+
+**Cost.** Sixty-four Codex model calls, five owner decisions, one correction, and one exact replay
+of 350 reader responses through the public CLI. No synthetic page, verdict, disagreement, or owner
+ruling was used as promotion evidence.
+
+**Repository verification.** The Atom 7, projection, bootstrap, and forbidden-host suites pass
+27/27. The complete elevated repository suite passes 2,242 tests, 41 subtests, and skips one. Its
+only failure is the prevention owner-contract byte-stability check in this isolated worktree: that
+contract intentionally verifies sources under the absolute canonical checkout, which is currently
+on another revision. The same exact check passes 1/1 in `/Users/kamenkamenov/memory-knowledge`;
+the generated contract was therefore not rewritten from the isolated worktree.

@@ -1,0 +1,27 @@
+{
+  "assembly_sha256": "64f81696660e56018c72f66fd0ce143d176af1227c3caf39b7b1b6edfca03554",
+  "atomic_step_id": "critique-owner-queue-document",
+  "cases": [
+    {
+      "case_id": "btm-roadmap-open-queue",
+      "evidence_pointers": [
+        "operator-validation/open-queue.json"
+      ],
+      "reason": "The full real matrix exposed five disagreements and the public document route refused while they remained open.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-roadmap-resolved-queue",
+      "evidence_pointers": [
+        "operator-validation/resolved-queue.json",
+        "operator-validation/located-defects.md"
+      ],
+      "reason": "Five owner rulings were retained verbatim and the public route assembled all 175 cells into a 30-finding document only after the queue emptied.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

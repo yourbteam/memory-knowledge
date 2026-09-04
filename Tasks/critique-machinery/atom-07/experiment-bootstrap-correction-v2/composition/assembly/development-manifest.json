@@ -1,0 +1,108 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The empty-root bootstrap integration test accepts all 21 registered skills and still proves exact parity.",
+        "id": "registered-critique-bootstrap-count",
+        "kind": "failure",
+        "sha256": "fc8d88c9ba405147122af29b66e6f8e786f341c1a7cb1e58145fe8ff807712c3",
+        "source_ref": "skills/managed-skills.txt"
+      },
+      {
+        "expected_outcome": "The generated projection remains byte-exact for both supported clients after installing all 21 managed skills.",
+        "id": "registered-critique-client-parity",
+        "kind": "success",
+        "sha256": "df634ca838eae85d2bdb841e135178450ed86ff5232abe6d3475b654d4ffe8a6",
+        "source_ref": "working-agreement/client-skill-projections.json"
+      }
+    ],
+    "id": "critique-managed-skill-count-correction",
+    "outcome": "The bootstrap integration test recognizes the newly registered critique-machinery skill without weakening exact parity verification.",
+    "practical_value": "A clean installation proves that every managed skill, including critique-machinery, is installed and byte-exact.",
+    "stopping_condition": "The previously failing empty-root bootstrap test reports 21 managed skills and passes exact post-install parity."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Change only the stale count assertion and retain every exact-parity assertion.",
+    "consumes": [
+      {
+        "artifact": "bootstrap-count-expectation",
+        "probe_id": "registered-count"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "registered-critique-bootstrap-count",
+        "registered-critique-client-parity"
+      ],
+      "failure_criterion": "Any managed-skill count or byte-parity check fails.",
+      "operator_path": "Run the empty-root bootstrap and dual-client parity tests through scripts/run_pytest.sh.",
+      "success_criterion": "All fourteen focused bootstrap and parity checks pass."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "tests/test_codex_office_bootstrap.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "The old count remains valid after adding another managed skill.",
+          "id": "stale-count",
+          "implementation": "Keep the expected count at twenty.",
+          "predicted_tradeoff": "The clean-install integration test rejects a correct twenty-one-skill install."
+        },
+        {
+          "hypothesis": "The expected count must advance when the governed registry gains one skill.",
+          "id": "registered-count",
+          "implementation": "Expect twenty-one while preserving the existing exact-parity assertions.",
+          "predicted_tradeoff": "One mechanical assertion changes; all byte-parity gates remain intact."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "registry-alignment"
+          },
+          {
+            "method": "sum",
+            "name": "parity-preservation"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "registry-alignment"
+          },
+          {
+            "direction": "maximize",
+            "name": "parity-preservation"
+          }
+        ]
+      },
+      "goal": "Keep the clean-install integration expectation aligned with the governed managed-skill registry.",
+      "id": "registered-count",
+      "inputs": [
+        {
+          "case_id": "registered-critique-bootstrap-count"
+        },
+        {
+          "case_id": "registered-critique-client-parity"
+        }
+      ],
+      "practical_value": "A clean installation proves that every managed skill, including critique-machinery, is installed and byte-exact.",
+      "proof": {
+        "failure_criterion": "The install count differs from twenty-one or exact parity weakens.",
+        "success_criterion": "The empty-root bootstrap test and dual-client parity tests pass together."
+      },
+      "winner_output": {
+        "artifact": "bootstrap-count-expectation",
+        "description": "A twenty-one-skill count assertion with all existing parity checks unchanged."
+      },
+      "work_type": "code",
+      "work_type_reason": "The registry contains an exact count and the bootstrap returns that exact count."
+    }
+  ],
+  "schema_version": 2
+}

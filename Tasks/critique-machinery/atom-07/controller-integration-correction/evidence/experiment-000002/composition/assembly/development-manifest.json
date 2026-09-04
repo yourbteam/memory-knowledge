@@ -1,0 +1,137 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The full BTM matrix cannot produce a document while one real reader outcome remains unresolved.",
+        "id": "btm-roadmap-open-queue",
+        "kind": "failure",
+        "sha256": "10113814ebeb9d5f503fd1cffce8ac80e44f148ab13a495d3c989075160a7bbc",
+        "source_ref": "Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap/page.md"
+      },
+      {
+        "expected_outcome": "The same full BTM matrix produces the located-defects document after the real owner ruling is recorded.",
+        "id": "btm-roadmap-resolved-queue",
+        "kind": "success",
+        "sha256": "10113814ebeb9d5f503fd1cffce8ac80e44f148ab13a495d3c989075160a7bbc",
+        "source_ref": "Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap/page.md"
+      }
+    ],
+    "id": "critique-owner-queue-document",
+    "outcome": "Unresolved reader outcomes become immutable owner questions, only offered verdicts can be recorded with the owner's exact words, and a located-defects document exists only after the full matrix and queue are complete.",
+    "practical_value": "The machinery can finish a real 360-degree critique without silently casting the owner's vote or leaking a partial findings document.",
+    "stopping_condition": "On the unchanged S12 BTM roadmap, ask-owner exposes an unresolved real cell, document refuses before its ruling, answer-owner preserves the offered choice and verbatim ruling, and document completes only when every matrix cell is judged and the queue is empty; the repository skill projection validates for both clients."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use owner-bound unchanged and expose it through the managed dual-client skill.",
+    "consumes": [
+      {
+        "artifact": "owner-bound-findings-contract",
+        "probe_id": "owner-bound-assembly"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "btm-roadmap-open-queue",
+        "btm-roadmap-resolved-queue"
+      ],
+      "failure_criterion": "The queue is bypassed, evidence is replaced, or the installed skill projection fails either client.",
+      "operator_path": "Open S12 BTM, run both blind seats across all 175 cells, ask and answer five owner questions, then request document.",
+      "success_criterion": "Document refuses with the real queue open and completes with all exact rulings retained after the queue empties."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "tests/test_critique_machinery.py",
+        "skills/critique-machinery/SKILL.md",
+        "skills/critique-machinery/agents/openai.yaml",
+        "skills/managed-skills.txt",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "A deterministic reducer can choose one reader whenever two grounded readers disagree.",
+          "id": "machine-cast",
+          "implementation": "Select a verdict automatically and allow document assembly immediately.",
+          "predicted_tradeoff": "Fast completion, but the machine silently acquires owner authority and erases uncertainty."
+        },
+        {
+          "hypothesis": "Stable one-question rulings preserve authority without sacrificing deterministic completion.",
+          "id": "owner-bound",
+          "implementation": "Derive immutable questions, accept only offered verdicts with exact owner words, and gate the document on an empty queue.",
+          "predicted_tradeoff": "Requires owner attention for genuine disagreements, with all reader and ruling evidence retained."
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "sum",
+            "name": "authority-preservation"
+          },
+          {
+            "method": "sum",
+            "name": "exact-ruling-retention"
+          },
+          {
+            "method": "sum",
+            "name": "partial-output-refusal"
+          },
+          {
+            "method": "sum",
+            "name": "evidence-retention"
+          },
+          {
+            "method": "sum",
+            "name": "document-determinism"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "authority-preservation"
+          },
+          {
+            "direction": "maximize",
+            "name": "exact-ruling-retention"
+          },
+          {
+            "direction": "maximize",
+            "name": "partial-output-refusal"
+          },
+          {
+            "direction": "maximize",
+            "name": "evidence-retention"
+          },
+          {
+            "direction": "maximize",
+            "name": "document-determinism"
+          }
+        ]
+      },
+      "goal": "Keep every unresolved reader outcome with the owner and every incomplete state out of the findings document.",
+      "id": "owner-bound-assembly",
+      "inputs": [
+        {
+          "case_id": "btm-roadmap-open-queue"
+        },
+        {
+          "case_id": "btm-roadmap-resolved-queue"
+        }
+      ],
+      "practical_value": "The machinery can finish a real 360-degree critique without silently casting the owner's vote or leaking a partial findings document.",
+      "proof": {
+        "failure_criterion": "Any disagreement is machine-cast, an unoffered choice lands, owner words change, or a partial document exists.",
+        "success_criterion": "The real BTM run refuses before five rulings, preserves each exact ruling and both readers, then writes one deterministic document."
+      },
+      "winner_output": {
+        "artifact": "owner-bound-findings-contract",
+        "description": "One-question owner queue, append-only exact rulings, complete-matrix gate, and evidence-rich document assembly."
+      },
+      "work_type": "hybrid",
+      "work_type_reason": "Blind model readers create real uncertainty; code fixes the queue, offered choices, exact owner record, and document gates."
+    }
+  ],
+  "schema_version": 2
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "critique-owner-queue-document",
+  "promotion_event_sha256": "2af0411266201b27e99c0022ba3e038bca7325537c83a817cb3219aa9fc0bb60",
+  "cases": [
+    {
+      "case_id": "btm-roadmap-open-queue",
+      "verdict": "satisfied",
+      "reason": "The promoted public path replayed all 175 real reader cells, exposed five stable owner questions, and refused document assembly while they remained open.",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap-open-queue",
+          "path": "operator-validation/open-queue.json",
+          "sha256": "3b3617b0214888d62ec4fae8b4c0fa5db9fa0d24e5ddf2914b42f5e8aca4ce27"
+        }
+      ]
+    },
+    {
+      "case_id": "btm-roadmap-resolved-queue",
+      "verdict": "satisfied",
+      "reason": "The promoted public path retained all five exact owner rulings and assembled the 175-cell, 30-finding document only after the queue emptied.",
+      "evidence": [
+        {
+          "case_id": "btm-roadmap-resolved-queue",
+          "path": "operator-validation/resolved-queue.json",
+          "sha256": "d89ac13bba6a69cac6c94e64377acd90e4ec9b9a9a54a5fe772ff0d0b1b8a118"
+        }
+      ]
+    }
+  ]
+}

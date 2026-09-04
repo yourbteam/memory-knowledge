@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "critique-owner-queue-document",
+  "baseline_sha256": "daee971f614394415050bf2bb6ddacc6b684401e1ac11fd528231df5513eb77d",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "b3138652999bc71cb0f38e6bccca2b3fa4390481452eed3204cca2a0b3339475",
+      "before_mode": 420,
+      "before_sha256": "597b7e7d18de7954026ed995042da29ac8d5e46bc57aa1c4f1444311041de66c",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "df634ca838eae85d2bdb841e135178450ed86ff5232abe6d3475b654d4ffe8a6",
+      "before_mode": 420,
+      "before_sha256": "11d346a475afbc1fb874fa94937d7071ef31b935347d9119da048c497e8741cd",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

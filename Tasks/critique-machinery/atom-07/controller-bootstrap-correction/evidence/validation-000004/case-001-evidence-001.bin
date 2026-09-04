@@ -1,0 +1,35 @@
+{
+  "cases": {
+    "registered-critique-bootstrap-count": {
+      "expected_outcome": "The empty-root bootstrap integration test accepts all 21 registered skills and still proves exact parity.",
+      "status": "satisfied"
+    },
+    "registered-critique-client-parity": {
+      "expected_outcome": "The generated projection remains byte-exact for both supported clients after installing all 21 managed skills.",
+      "status": "satisfied"
+    }
+  },
+  "champion": "registered-count",
+  "criteria_frozen_at": "integration-test-request.json",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "approach_id": "registered-count",
+      "metrics": {
+        "parity-preservation": 1,
+        "registry-alignment": 1
+      },
+      "rank": 1
+    },
+    {
+      "approach_id": "stale-count",
+      "metrics": {
+        "parity-preservation": 1,
+        "registry-alignment": 0
+      },
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "atomic_step_id": "critique-owner-queue-document",
+  "baseline_sha256": "6469d6e2a2273c88014363a8f1126d80ff303c307798732a543f59f8217fb516",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "dad0cba45cb7089dc9d32681a811cd52893cf3fc1abe9cf16f90e7a912590f62",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/critique-machinery/SKILL.md"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/critique-machinery/agents/openai.yaml"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "597b7e7d18de7954026ed995042da29ac8d5e46bc57aa1c4f1444311041de66c",
+      "before_mode": 420,
+      "before_sha256": "f8dbc4ca645e2db683bf51426ccccdb2c59a393b300e6b13608445c234346b91",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "fc8d88c9ba405147122af29b66e6f8e786f341c1a7cb1e58145fe8ff807712c3",
+      "before_mode": 420,
+      "before_sha256": "81f0090ca4c52442236bb6622bb51e4b582627de90da67424db409aa00710c7f",
+      "kind": "changed",
+      "path": "skills/managed-skills.txt"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "b980358adc0ce282734636f337a9de020bb559fa2cd6c6ef61a1ed029656b7f4",
+      "before_mode": 420,
+      "before_sha256": "ee3b58b493082772d17f652293a5b118ebb77848961ff5bcb08e29f61f42037c",
+      "kind": "changed",
+      "path": "tests/test_critique_machinery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "11d346a475afbc1fb874fa94937d7071ef31b935347d9119da048c497e8741cd",
+      "before_mode": 420,
+      "before_sha256": "a413338d1e41a0d0ca1e096a3b07aed22e8d3285439b9fb14ad7e4e78124d73d",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

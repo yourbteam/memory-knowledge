@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "critique-managed-skill-count-correction",
+  "outcome": "The bootstrap integration test recognizes the newly registered critique-machinery skill without weakening exact parity verification.",
+  "practical_value": "A clean installation proves that every managed skill, including critique-machinery, is installed and byte-exact.",
+  "stopping_condition": "The previously failing empty-root bootstrap test reports 21 managed skills and passes exact post-install parity.",
+  "allowed_paths": [
+    "tests/test_codex_office_bootstrap.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "registered-critique-bootstrap-count",
+      "source_ref": "skills/managed-skills.txt",
+      "sha256": "fc8d88c9ba405147122af29b66e6f8e786f341c1a7cb1e58145fe8ff807712c3",
+      "kind": "failure",
+      "expected_outcome": "The empty-root bootstrap integration test accepts all 21 registered skills and still proves exact parity."
+    },
+    {
+      "case_id": "registered-critique-client-parity",
+      "source_ref": "working-agreement/client-skill-projections.json",
+      "sha256": "df634ca838eae85d2bdb841e135178450ed86ff5232abe6d3475b654d4ffe8a6",
+      "kind": "success",
+      "expected_outcome": "The generated projection remains byte-exact for both supported clients after installing all 21 managed skills."
+    }
+  ]
+}

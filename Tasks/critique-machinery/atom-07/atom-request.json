@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "critique-owner-queue-document",
+  "outcome": "Unresolved reader outcomes become immutable owner questions, only offered verdicts can be recorded with the owner's exact words, and a located-defects document exists only after the full matrix and queue are complete.",
+  "practical_value": "The machinery can finish a real 360-degree critique without silently casting the owner's vote or leaking a partial findings document.",
+  "stopping_condition": "On the unchanged S12 BTM roadmap, ask-owner exposes an unresolved real cell, document refuses before its ruling, answer-owner preserves the offered choice and verbatim ruling, and document completes only when every matrix cell is judged and the queue is empty; the repository skill projection validates for both clients.",
+  "allowed_paths": [
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/agents/openai.yaml",
+    "skills/managed-skills.txt",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "btm-roadmap-open-queue",
+      "source_ref": "Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap/page.md",
+      "sha256": "10113814ebeb9d5f503fd1cffce8ac80e44f148ab13a495d3c989075160a7bbc",
+      "kind": "failure",
+      "expected_outcome": "The full BTM matrix cannot produce a document while one real reader outcome remains unresolved."
+    },
+    {
+      "case_id": "btm-roadmap-resolved-queue",
+      "source_ref": "Tasks/critique-machinery/evidence/cases/atom-01/btm-roadmap/page.md",
+      "sha256": "10113814ebeb9d5f503fd1cffce8ac80e44f148ab13a495d3c989075160a7bbc",
+      "kind": "success",
+      "expected_outcome": "The same full BTM matrix produces the located-defects document after the real owner ruling is recorded."
+    }
+  ]
+}
