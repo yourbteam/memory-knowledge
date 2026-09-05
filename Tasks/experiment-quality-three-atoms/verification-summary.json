@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "source_revision": "f1bf80f",
+  "atoms": [
+    {
+      "atom": "experiment-independent-judging",
+      "outcome": "Official scores derive from judgments of selected raw outputs against a frozen independent reference, not candidate summary claims.",
+      "final_verdict": "passed",
+      "cases": [
+        {
+          "case_id": "recorded-grounded-output",
+          "verdict": "satisfied"
+        },
+        {
+          "case_id": "recorded-groundless-claims",
+          "verdict": "satisfied"
+        }
+      ],
+      "authorization": {
+        "local_evidence": "Tasks/experiment-quality-three-atoms/atom-01/authorize-next.json",
+        "sha256": "1658d54ecabade986d3f74d97815b159c6981ea594c96d439def1fa634c36cbe"
+      },
+      "final_validation": {
+        "local_evidence": "Tasks/experiment-quality-three-atoms/atom-01/run-004/validation/final-verdict.json",
+        "sha256": "69f486df8111aab1d4b4cbbffd5d337c8b0dc3b4ad4b191e2297ac4050fc7d88"
+      }
+    },
+    {
+      "atom": "experiment-qualified-winners",
+      "outcome": "Only quality-qualified candidates can win; ties explicitly report no demonstrated advantage.",
+      "final_verdict": "passed",
+      "cases": [
+        {
+          "case_id": "qualified-grounded-winner",
+          "verdict": "satisfied"
+        },
+        {
+          "case_id": "groundless-winner-refused",
+          "verdict": "satisfied"
+        }
+      ],
+      "authorization": {
+        "local_evidence": "Tasks/experiment-quality-three-atoms/atom-02/authorize-next.json",
+        "sha256": "0dd01a68e36c79872546a58e530c6d599f675e54b28e7c561dd1a61fce6d0948"
+      },
+      "final_validation": {
+        "local_evidence": "Tasks/experiment-quality-three-atoms/atom-02/run-003/validation/final-verdict.json",
+        "sha256": "ca0417859588936aedc30df1edeb9ed0baa3b8b0c4f3b303ff395eabb65b11aa"
+      }
+    },
+    {
+      "atom": "experiment-evaluator-preflight",
+      "outcome": "Calibrated experiments reject incompatible or indiscriminate evaluators before candidate execution.",
+      "final_verdict": "passed",
+      "cases": [
+        {
+          "case_id": "accepted-output",
+          "verdict": "satisfied"
+        },
+        {
+          "case_id": "rejected-output",
+          "verdict": "satisfied"
+        }
+      ],
+      "authorization": {
+        "local_evidence": "Tasks/experiment-quality-three-atoms/atom-03/authorize-next.json",
+        "sha256": "1eb8ceab9a4527c0d49e70058c20afca4534185a2176e8b777610eeb42b4a423"
+      },
+      "final_validation": {
+        "local_evidence": "Tasks/experiment-quality-three-atoms/atom-03/run-001/validation/final-verdict.json",
+        "sha256": "e0fa629ff9113de070c844a9d9f92b1822b0b5d93cb49adddbf27af21480bd17"
+      }
+    }
+  ],
+  "regression": {
+    "passed": 147,
+    "evidence": {
+      "local_evidence": "Tasks/experiment-quality-three-atoms/atom-03/regression.txt",
+      "sha256": "74c25817d5e10fa67a0e8782999a7be61bcf1ad8dcb3f69be20fe3d90c904e68"
+    }
+  },
+  "installed_verification": "Performed separately after publication; not claimed by this record.",
+  "evidence_retention": "Full immutable runs remain local; this publication deliberately excludes run snapshots and client output text."
+}

@@ -447,6 +447,14 @@ def _run_stage(
             f"stage {stage!r} failed: {detail}; inspect {relative_receipt}",
             relative_receipt,
         )
+    if stage == "run-probes" and evidence_sha256 is not None:
+        probe_evidence = _load(evidence_path, "run-probes evidence", stage)
+        if probe_evidence.get("status") == "no-recommendation":
+            reasons = probe_evidence.get("unavailable_probes", [])
+            raise DevelopmentProbeRunError(
+                stage, f"no recommendation; composition stopped: {reasons}",
+                str(receipt_path.relative_to(output)),
+            )
     if evidence_sha256 is None or result_sha256 is None:
         relative_receipt = str(receipt_path.relative_to(output))
         raise DevelopmentProbeRunError(

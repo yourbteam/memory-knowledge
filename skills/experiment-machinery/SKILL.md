@@ -51,8 +51,10 @@ Run one complete mini-probe comparison for one declared captured case with:
 python3 scripts/development_probe_experiment.py run <request.json> <new-output-directory>
 ```
 
-The public request supplies the validated development manifest, selected probe and case, and
-exactly one candidate-build request per declared approach. The cross-case controller instead
+For new quality work, each single-case/cross-case request supplies top-level assessment and
+calibration fields; all-probe/full-run orchestration preserves these from its referenced
+per-probe requests. The public request supplies the validated development manifest, selected
+probe and case, and exactly one candidate-build request per declared approach. The cross-case controller instead
 supplies its freshly verified shared bundle set. Code builds every candidate concurrently when
 the public single-case path is used, launches
 the real Experiment Machinery runner only after every approach completes, remains integrity valid,
@@ -169,7 +171,7 @@ once in the same declared order.
 1. Freeze one hypothesis, target machinery and phase, exact input file, constants, control,
    variations, ordered ranking metrics, every variant adapter, one independent evaluation
    adapter, and separate positive millisecond deadlines for variants and the evaluator in one
-   version 4 JSON specification. Bind every adapter by path and SHA-256. Do not edit the
+   version 5 JSON specification with assessment (a frozen independent reference, declared raw output fields, and observation criteria) and calibration (independently labeled positive and negative raw outputs). Every new quality experiment should supply both. See the adapter contract. Version 4 and version 5 without calibration remain available for historical replays only. Bind every adapter by path and SHA-256. Do not edit the
    specification after execution begins. Generate the target source-tree hash mechanically:
 
    ```bash
@@ -204,7 +206,7 @@ once in the same declared order.
   the frozen `execution_limits`. An overrun is terminated, its partial stdout and stderr are
   preserved, and the ledger plus terminal summary record the timeout. A timed-out variant is
   ineligible; a timed-out evaluator produces no champion.
-- Candidate adapters report outcomes and may preserve claimed metrics for audit, but neither
+- In historical version-4 experiments, candidate adapters report outcomes and may preserve claimed metrics for audit, but neither
   conclusions nor claimed metrics enter official scoring. The one frozen independent evaluator
   receives code-owned execution facts, the candidate result hash, and hash-bound stdout, stderr,
   and telemetry references; it never receives the candidate outcome object. It must derive and
@@ -224,11 +226,35 @@ once in the same declared order.
   candidate. Missing, malformed, misidentified, or non-monotonic telemetry makes the variant
   ineligible. A complete Development-Probe run also exposes one live `telemetry.jsonl` whose
   globally monotonic events identify the atom, probe, case, approach, state, and last work.
-- Select a champion only from completed, integrity-valid variants. Break a true metric tie by the
-  stable variant id so the same evidence yields the same recommendation.
+- Version 5 and experiments with explicit selection minimums choose only candidates meeting
+  essential quality gates. A metric tie means no demonstrated advantage, with no champion.
+  Historical version-4 experiments without selection retain their original stable-id tie behavior.
 - Treat a recommendation as evidence for a later implementation decision, not as a machinery
   verdict or permission to change canonical behavior.
 
 For the first proven adapter, run `scripts/intake_purpose_probe.py` through the generic runner. It
 drives Info Intake's existing purpose-assessment functions and records their real downstream
 boundary; it does not implement purpose assessment itself.
+
+
+New version-5 experiments use observation-only judging: code presents selected raw outputs with a
+frozen independent reference, validates complete evidence-bound judgments, and derives satisfaction
+fractions itself. Candidate-reported scores never enter those calculations. Configure raw-output
+fields carefully and calibrate the semantic evaluator with known positive and negative cases;
+structural validation does not establish semantic honesty. See the adapter contract for the exact
+request and response shape. A `cannot-assess` observation fails evaluation without a recommendation.
+
+
+Quality minimums apply to every captured case separately, before aggregate ranking. Version 5
+requires all satisfaction fractions to reach 1 by default; explicit `selection.minimums` can name
+only the essential metrics. Keep completed inconclusive case comparisons so the full case set can
+still distinguish approaches. When the complete comparison has no qualified winner or an exact
+tie, preserve its explicit no-recommendation outcome and do not compose or promote arbitrary picks.
+
+
+Before a calibrated experiment launches candidates, the same evaluator must reproduce independent
+positive and negative expected scores through its actual observation protocol. This adds one
+evaluator invocation per captured case and rejects incompatible judges before candidate work.
+Preserve the measured number of avoided candidate launches; do not infer production speedup from
+these early refusals. Calibrated examples improve confidence without guaranteeing unseen semantic
+judgments. Legacy uncalibrated requests retain their historical meaning.

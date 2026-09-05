@@ -6,7 +6,7 @@ copy or approximate the phase logic.
 
 ## Experiment specification
 
-The runner accepts one JSON object:
+For new experiments use specification version 5 with the observation contract below. Version 4 remains runnable for replaying historical numeric evaluators; it does not provide independent observation scoring. This legacy example documents the version-4 shape:
 
 ```json
 {
@@ -128,3 +128,142 @@ candidate without work or decision evidence, or any malformed or non-monotonic f
 
 The runner produces `summary.json`, a hash-chained `ledger.jsonl`, captured stdout/stderr, and every
 variant directory. It always records `promotion_applied: false`.
+
+
+## Version 5 independent observations
+
+New experiments use `schema_version: 5` and add `evaluation.assessment`:
+
+```json
+{
+  "reference": {"path": "reference.json", "sha256": "64 lowercase hex characters"},
+  "output_fields": ["judgments"],
+  "criteria": [
+    {"id": "grounding", "metric": "quality-score", "reference_pointer": "/grounding"}
+  ]
+}
+```
+
+Freeze a JSON reference with independently established expectations before execution. Every
+criterion references an existing JSON Pointer in that document and names one declared metric.
+Every metric must have at least one criterion and use `maximize`: code scores the fraction of its
+criteria satisfied. `output_fields` selects the actual top-level outcome artifacts the judge must
+inspect; select raw judgments or outputs, never candidate scores, claimed correctness, or summary
+counts. These selections are an explicit experiment-design responsibility, not a blacklist of names.
+The reference bytes are hash-checked in preflight and copied before candidates execute. Scoring
+uses that frozen copy, never a subsequently edited source reference.
+
+The evaluator receives request version 2 containing `experiment_id`, `metrics`, `reference`,
+`criteria`, and ordered `candidates`. Each candidate contains only `variant_id`, execution facts,
+and `output` with the declared raw fields. It receives no candidate paths, result hash, metrics,
+other outcome fields, or telemetry references. This is a controlled input contract, not an operating
+system sandbox for an arbitrary evaluator executable.
+
+Return exactly:
+
+```json
+{
+  "schema_version": 2,
+  "judgments": [{
+    "variant_id": "control",
+    "observations": [{
+      "criterion_id": "grounding",
+      "verdict": "satisfied",
+      "output_pointer": "/judgments/0",
+      "reference_pointer": "/grounding",
+      "reason": "Explain how the presented output satisfies this reference criterion."
+    }]
+  }]
+}
+```
+
+Candidate and criterion coverage must be complete and preserve request order. Both pointers must
+resolve in the presented documents, and the reference pointer must match the criterion. The empty
+output pointer addresses the whole output and can ground a finding about absence. Verdicts are
+`satisfied`, `not-satisfied`, or `cannot-assess`; the latter fails evaluation explicitly with no
+recommendation. Numeric score responses are rejected. The runner derives official fractions from
+validated observations and preserves the evaluator response for audit.
+
+This validates evidence provenance, completeness, and arithmetic. It cannot prove that a semantic
+judge is honest or correct. Calibrate each judge on independent positive and negative examples,
+including claim-only mutations and plausible but irrelevant evidence. A long quote alone cannot
+establish that advice is useful. Supply an explicit semantic criterion and assess the actual output;
+if needed evidence is absent, record failure or inability to assess. Legacy version-4 scores retain
+their old interpretation and must not be presented as version-5 independent observations.
+
+
+## Quality qualification and inconclusive comparisons
+
+Add `evaluation.selection` to a generic specification, or `selection` to a Development-Probe
+single-case/cross-case request:
+
+```json
+{"minimums": {"grounded-verdicts": 1}}
+```
+
+Each minimum must be finite and name a declared maximize metric. An explicit selection must
+contain at least one minimum. Version 5 defaults to a minimum of 1 for every satisfaction metric;
+explicit minima replace that default and may gate only essential metrics. Version-5 fractions
+require minima between 0 and 1. Version 4 without selection retains historical ranking behavior.
+
+Execution `eligible` remains separate from quality `qualified`. Every variant keeps its original
+scores and unmet minimum details. Only qualified candidates enter winner ranking. A tie across
+all ordered metrics returns null champion with `selection_outcome: no-demonstrated-advantage`;
+if none qualify, it returns `no-qualified-candidate`. Completed comparisons return success from
+the CLI even when they deliberately make no recommendation. Execution/evaluation failures remain
+failures. No recommendation file is written for an inconclusive single-case comparison.
+
+Cross-case selection checks the minimums separately on every original case before ranking
+aggregate metrics. Summing or averaging cannot hide a failed case. A single-case tie is retained
+as evidence and does not stop the other cases: aggregate evidence can still distinguish a winner.
+An aggregate tie or absence of a universally qualified approach returns an explicit
+`no-recommendation` summary. All-probe orchestration preserves those outcomes and produces no
+promotion-candidates artifact when any probe has no recommendation.
+
+
+## Calibrate the judge before candidate execution
+
+Every new quality experiment should include version-5 `assessment` and hash-bound `calibration`.
+In generic specifications use `evaluation.calibration`; in Development-Probe single-case and
+cross-case requests use top-level `calibration` beside `assessment`. All-probe and full-run
+requests reference those per-probe requests and preserve their assessment/calibration fields.
+Both reference and calibration paths resolve relative to the declaring request, even when the
+orchestration copies requests into other directories.
+
+```json
+{"calibration": {"path": "calibration.json", "sha256": "64 lowercase hex characters"}}
+```
+
+The calibration file contains independently labeled raw-output examples:
+
+```json
+{
+  "schema_version": 1,
+  "cases": [
+    {"id": "positive", "outcome": {"judgments": []}, "expected_metrics": {"quality-score": 1}},
+    {"id": "negative", "outcome": {"judgments": []}, "expected_metrics": {"quality-score": 0}}
+  ]
+}
+```
+
+The empty judgments above show the shape only: supply actual independently checked positive and
+negative outputs appropriate to the frozen reference and criteria. Cases need unique IDs, every
+selected raw-output field, and exact finite satisfaction metrics. Every metric must have both an
+expected 1 and expected 0 case. This rejects an all-positive self-test that cannot detect an
+always-pass judge.
+
+Code validates and freezes calibration bytes before execution. It invokes the same observation
+evaluator against all calibration cases using the same raw-output projection, reference,
+criteria, response validation, and code-owned score calculation used for real candidates.
+Expected scores are withheld from the evaluator. Candidate execution starts only after observed
+scores equal the frozen expectations. A malformed response, mismatch, timeout, or tamper writes
+a terminal failure at `evaluator-preflight` with zero candidate executions. The calibration
+request, response, errors, and ledger events are retained under the experiment's `calibration/`.
+Invalid specifications, including a bad declared hash, remain output-free preflight refusals.
+
+Calibration adds one evaluator invocation per experiment/captured case. It can avoid all candidate
+work for an incompatible judge; this does not establish a production speedup. Semantic confidence
+is limited to the independently chosen cases. An evaluator that passes these examples can still
+make mistakes on unseen outputs. Add real failure examples when they reveal new judging gaps.
+Historical version-4 and uncalibrated version-5 requests remain runnable for replay, but absence of
+calibration must not be described as a checked judge. Version 4 cannot declare observation calibration.

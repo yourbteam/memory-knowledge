@@ -13,6 +13,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
+from winner_selection import validate as validate_selection, failures as selection_failures, choose as choose_winner
+from evaluator_calibration import normalize_calibration
+from independent_evaluation import normalize_reference
 
 sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -38,6 +41,20 @@ def _canonical(value: object) -> bytes:
 
 def _document(value: object) -> bytes:
     return json.dumps(value, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+
+
+def _normalize_observation_assessment(value, base):
+    try:
+        return normalize_reference(value, base)
+    except (ValueError, OSError) as error:
+        raise CrossCaseError("validate-request", f"assessment is invalid: {error}; correct the assessment reference before retrying") from error
+
+
+def _normalize_calibration(value, base):
+    try:
+        return normalize_calibration(value, base)
+    except (ValueError, OSError) as error:
+        raise CrossCaseError("validate-request", f"calibration is invalid: {error}; correct its path and hash before retrying") from error
 
 
 def _digest(payload: bytes) -> str:
@@ -203,6 +220,9 @@ def _run_cases(
     probe: dict[str, Any],
     approach_bundles: list[dict[str, Any]],
     evaluator: object,
+    assessment: dict[str, Any] | None = None,
+    selection: dict[str, Any] | None = None,
+    calibration: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     launcher = Path(__file__).with_name("development_probe_experiment.py")
     case_ids = [item["case_id"] for item in probe["inputs"]]
@@ -227,6 +247,9 @@ def _run_cases(
                     for item in approach_bundles
                 ],
                 "evaluator": evaluator,
+                **({"assessment": assessment} if assessment is not None else {}),
+                **({"selection": selection} if selection is not None else {}),
+                **({"calibration": calibration} if calibration is not None else {}),
             },
         )
         tasks.append((index, case_id, request_path))
@@ -357,6 +380,7 @@ def _aggregate(
     probe: dict[str, Any],
     case_ids: list[str],
     scores: dict[str, dict[str, dict[str, float]]],
+    selection: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     metrics = probe["evaluation"]["metrics"]
     methods = {
@@ -394,14 +418,26 @@ def _aggregate(
         values.append(approach_id)
         return tuple(values)
 
-    ordered = sorted(aggregate, key=rank_key)
+    minimums = validate_selection(selection, metrics)
+    rows = []
+    for approach_id in aggregate:
+        unmet = [{"case_id":case, **failure} for case in case_ids
+                 for failure in selection_failures(scores[case][approach_id], minimums)]
+        rows.append({"variant_id":approach_id, "metrics":aggregate[approach_id],
+                     "eligible":True, "qualified":not unmet, "qualification_failures":unmet})
+    # Gates apply to each original case. Never compare summed or mean values to case minima.
+    decision = choose_winner(rows, metrics, {} if minimums is not None else None)
+    ordered = [row["variant_id"] for row in decision["ranking"]]
     return {
         "schema_version": CONTRACT,
         "status": "completed",
         "probe_id": probe["id"],
         "case_ids": case_ids,
         "evaluation": {"metrics": descriptors},
-        "champion": ordered[0],
+        "champion": decision["champion"],
+        "selection_outcome": decision["selection_outcome"],
+        "qualifications": [{"approach_id": row["variant_id"], "qualified":row["qualified"],
+                            "failures":row["qualification_failures"], "aggregated_metrics":row["metrics"]} for row in rows],
         "ranking": [
             {
                 "rank": index,
@@ -489,8 +525,9 @@ def _bind_recommendation(
 
 def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
     request_path = request_path.absolute()
+    raw_request = _load(request_path, "cross-case experiment request", "validate-request")
     request = _exact(
-        _load(request_path, "cross-case experiment request", "validate-request"),
+        raw_request,
         "cross-case experiment request",
         {
             "schema_version",
@@ -498,7 +535,7 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
             "probe_id",
             "approach_build_requests",
             "evaluator",
-        },
+        } | ({"assessment"} if "assessment" in raw_request else set()) | ({"selection"} if "selection" in raw_request else set()) | ({"calibration"} if "calibration" in raw_request else set()),
     )
     if type(request["schema_version"]) is not int or request["schema_version"] != CONTRACT:
         raise CrossCaseError(
@@ -550,10 +587,23 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
             "command": evaluator["command"],
         }
         case_ids = [item["case_id"] for item in probe["inputs"]]
-        _run_cases(output, manifest_path, probe, approach_bundles, normalized_evaluator)
+        try:
+            minimums = validate_selection(request.get("selection"), probe["evaluation"]["metrics"], "assessment" in request)
+        except ValueError as error:
+            raise CrossCaseError("validate-request", str(error)) from error
+        selection = {"minimums":minimums} if minimums is not None else None
+        _run_cases(output, manifest_path, probe, approach_bundles, normalized_evaluator,
+                   _normalize_observation_assessment(request["assessment"], request_path.parent) if "assessment" in request else None, selection,
+                   _normalize_calibration(request["calibration"], request_path.parent) if "calibration" in request else None)
         scores, mappings = _case_metrics(output, probe, case_ids)
-        aggregate = _aggregate(probe, case_ids, scores)
+        aggregate = _aggregate(probe, case_ids, scores, selection)
         aggregate_sha256 = _write_once(output / "aggregated-summary.json", aggregate)
+        if aggregate["champion"] is None:
+            result = {"schema_version":CONTRACT, "status":"no-recommendation", "recommendation":None,
+                "selection_outcome":aggregate["selection_outcome"], "probe_id":probe["id"],
+                "case_ids":case_ids, "aggregated_summary_sha256":aggregate_sha256, "promotion_applied":False}
+            _write_once(output / "cross-case-summary.json", result)
+            return result
         recommendation = _bind_recommendation(
             output, manifest, probe, case_ids, aggregate, mappings
         )

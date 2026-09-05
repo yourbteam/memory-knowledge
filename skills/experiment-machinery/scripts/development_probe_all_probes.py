@@ -13,6 +13,8 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
+from evaluator_calibration import normalize_calibration
+from independent_evaluation import normalize_reference
 
 sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -33,6 +35,20 @@ class AllProbeError(RuntimeError):
 
 def _document(value: object) -> bytes:
     return json.dumps(value, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+
+
+def _normalize_observation_assessment(value, base):
+    try:
+        return normalize_reference(value, base)
+    except (ValueError, OSError) as error:
+        raise AllProbeError("validate-request", f"assessment is invalid: {error}; correct the assessment reference before retrying") from error
+
+
+def _normalize_calibration(value, base):
+    try:
+        return normalize_calibration(value, base)
+    except (ValueError, OSError) as error:
+        raise AllProbeError("validate-request", f"calibration is invalid: {error}; correct its path and hash before retrying") from error
 
 
 def _digest(payload: bytes) -> str:
@@ -150,8 +166,9 @@ def _normalize_cross_request(
     task: dict[str, Any], manifest_path: Path
 ) -> dict[str, Any]:
     source_path = task["request"]
+    raw_value = _load(source_path, f"probe {task['probe_id']!r} request", "validate-request")
     value = _exact(
-        _load(source_path, f"probe {task['probe_id']!r} request", "validate-request"),
+        raw_value,
         f"probe {task['probe_id']!r} request",
         {
             "schema_version",
@@ -159,7 +176,7 @@ def _normalize_cross_request(
             "probe_id",
             "approach_build_requests",
             "evaluator",
-        },
+        } | ({"assessment"} if "assessment" in raw_value else set()) | ({"selection"} if "selection" in raw_value else set()) | ({"calibration"} if "calibration" in raw_value else set()),
     )
     if value["schema_version"] != CONTRACT or type(value["schema_version"]) is not int:
         raise AllProbeError(
@@ -225,6 +242,9 @@ def _normalize_cross_request(
         "development_manifest": str(manifest_path),
         "probe_id": task["probe_id"],
         "approach_build_requests": normalized,
+        **({"selection": value["selection"]} if "selection" in value else {}),
+        **({"calibration": _normalize_calibration(value["calibration"], source_path.parent)} if "calibration" in value else {}),
+        **({"assessment": _normalize_observation_assessment(value["assessment"], source_path.parent)} if "assessment" in value else {}),
         "evaluator": {
             "adapter": {
                 "path": str(
@@ -540,6 +560,16 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
             _write_once(normalized_path, _normalize_cross_request(task, manifest_path))
             normalized_tasks.append({"probe_id": task["probe_id"], "request": normalized_path})
         results = _run_probes(output, normalized_tasks)
+        unavailable = []
+        for probe in manifest["mini_probes"]:
+            result = _load(output / "probes" / probe["id"] / "cross-case-summary.json", "cross-case summary", "bind-candidates")
+            if result.get("status") == "no-recommendation":
+                unavailable.append({"probe_id":probe["id"], "selection_outcome":result["selection_outcome"]})
+        if unavailable:
+            result = {"schema_version":CONTRACT, "status":"no-recommendation", "recommendation":None,
+                "unavailable_probes":unavailable, "promotion_applied":False}
+            _write_once(output / "all-probes-summary.json", result)
+            return result
         candidates = _bind_candidates(output, manifest, results)
         candidates_sha256 = _write_once(output / "promotion-candidates.json", candidates)
         _write_once(

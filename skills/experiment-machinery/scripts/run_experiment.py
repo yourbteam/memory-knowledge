@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import asyncio
 import hashlib
 import json
@@ -22,7 +23,19 @@ sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 CONTRACT = 1
-SPEC_CONTRACT = 4
+SPEC_CONTRACT = 5
+_independent_spec = importlib.util.spec_from_file_location(
+    "independent_evaluation", Path(__file__).with_name("independent_evaluation.py"))
+_independent = importlib.util.module_from_spec(_independent_spec)
+_independent_spec.loader.exec_module(_independent)
+_selection_spec = importlib.util.spec_from_file_location(
+    "winner_selection", Path(__file__).with_name("winner_selection.py"))
+_selection = importlib.util.module_from_spec(_selection_spec)
+_selection_spec.loader.exec_module(_selection)
+_calibration_spec = importlib.util.spec_from_file_location(
+    "evaluator_calibration", Path(__file__).with_name("evaluator_calibration.py"))
+_calibration = importlib.util.module_from_spec(_calibration_spec)
+_calibration_spec.loader.exec_module(_calibration)
 _IDENTITY = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -248,7 +261,7 @@ def _validate_spec(
         },
         "experiment specification",
     )
-    if spec["schema_version"] != SPEC_CONTRACT:
+    if type(spec["schema_version"]) is not int or spec["schema_version"] not in (4, SPEC_CONTRACT):
         raise ExperimentError(
             f"experiment specification schema_version is {spec['schema_version']!r}; expected "
             f"{SPEC_CONTRACT}, whose variants and evaluator are hash-bound"
@@ -357,7 +370,7 @@ def _validate_spec(
     evaluation = spec["evaluation"]
     if not isinstance(evaluation, dict):
         raise ExperimentError("evaluation must be an object")
-    _require_exact_keys(evaluation, {"metrics", "evaluator"}, "evaluation")
+    _require_exact_keys(evaluation, ({"metrics", "evaluator", "assessment"} if spec["schema_version"] == 5 else {"metrics", "evaluator"}) | ({"selection"} if "selection" in evaluation else set()) | ({"calibration"} if spec["schema_version"] == 5 and "calibration" in evaluation else set()), "evaluation")
     metrics = evaluation["metrics"]
     if not isinstance(metrics, list) or not metrics:
         raise ExperimentError("evaluation.metrics must be a non-empty array")
@@ -374,7 +387,18 @@ def _validate_spec(
     duplicates = sorted({name for name in metric_names if metric_names.count(name) > 1})
     if duplicates:
         raise ExperimentError(f"evaluation metric names must be unique; duplicates: {duplicates}")
+    try:
+        _selection.validate(evaluation.get("selection"), metrics, spec["schema_version"] == 5)
+    except ValueError as error:
+        raise ExperimentError(str(error)) from error
     evaluator = _validate_evaluator(evaluation["evaluator"], spec_path)
+    if spec["schema_version"] == 5:
+        try:
+            evaluator["assessment"] = _independent.validate(evaluation["assessment"], metrics, spec_path)
+            if "calibration" in evaluation:
+                evaluator["calibration"] = _calibration.validate(evaluation["calibration"], metrics, evaluation["assessment"], spec_path)
+        except (ValueError, OSError) as error:
+            raise ExperimentError(str(error)) from error
     return (
         input_bytes,
         input_sha256,
@@ -913,6 +937,14 @@ def _invoke_evaluator(
             for row in eligible
         ],
     }
+    if spec["schema_version"] == 5:
+        try:
+            reference_path = output / "assessment-reference.json"
+            if _digest_file(reference_path) != evaluator["assessment"]["sha256"]:
+                raise ExperimentError("frozen assessment reference changed before scoring")
+            request = _independent.project(spec, results, evaluator["assessment"]["reference"])
+        except ValueError as error:
+            raise ExperimentError(str(error)) from error
     evaluation_root = output / "evaluation"
     evaluation_root.mkdir()
     request_path = evaluation_root / "request.json"
@@ -987,13 +1019,15 @@ def _invoke_evaluator(
         raise EvaluatorTimeout(
             spec["execution_limits"]["evaluator_timeout_ms"], evidence_sha256
         )
+    if spec["schema_version"] == 5 and _digest_file(request_path) != request_sha256:
+        raise ExperimentError("presented observation request changed during scoring")
     adapter = evaluator["adapter"]
     if _digest_file(adapter["path"]) != adapter["sha256"]:
         raise ExperimentError("independent evaluator changed during evaluation; no ranking was produced")
     if _digest_file(evaluator_snapshot) != adapter["sha256"]:
         raise ExperimentError("executed evaluator snapshot changed during evaluation; no ranking was produced")
     for candidate in request["candidates"]:
-        for evidence in candidate["evidence"]:
+        for evidence in candidate.get("evidence", []):
             if _digest_file(Path(evidence["path"])) != evidence["sha256"]:
                 raise ExperimentError(
                     f"variant {candidate['variant_id']!r} changed {evidence['id']} evidence "
@@ -1005,39 +1039,47 @@ def _invoke_evaluator(
             f"{stderr.strip() or 'no diagnostic'}"
         )
     response, _ = _load_object(response_path, "independent evaluator response")
-    _require_exact_keys(response, {"schema_version", "scores"}, "evaluator response")
-    if response["schema_version"] != CONTRACT:
-        raise ExperimentError(f"evaluator response schema_version must be {CONTRACT}")
-    scores = response["scores"]
-    if not isinstance(scores, list):
-        raise ExperimentError("evaluator response scores must be an array")
-    metric_names = [metric["name"] for metric in metrics]
-    expected_ids = [row["variant_id"] for row in eligible]
-    accepted: dict[str, dict[str, float]] = {}
-    for index, raw in enumerate(scores):
-        label = f"evaluator response scores[{index}]"
-        if not isinstance(raw, dict):
-            raise ExperimentError(f"{label} must be an object")
-        _require_exact_keys(raw, {"variant_id", "metrics"}, label)
-        variant_id = raw["variant_id"]
-        if variant_id in accepted:
-            raise ExperimentError(f"{label} repeats variant_id {variant_id!r}")
-        if variant_id not in expected_ids:
-            raise ExperimentError(f"{label} names unknown variant_id {variant_id!r}")
-        values = raw["metrics"]
-        if not isinstance(values, dict) or set(values) != set(metric_names):
-            raise ExperimentError(f"{label}.metrics must contain exactly {metric_names!r}")
-        normalized: dict[str, float] = {}
-        for name in metric_names:
-            numeric = _metric_value(values[name])
-            if numeric is None:
-                raise ExperimentError(f"{label}.metrics[{name!r}] must be finite and numeric")
-            normalized[name] = numeric
-        accepted[variant_id] = normalized
-    if list(accepted) != expected_ids:
-        raise ExperimentError(
-            f"evaluator response variant order is {list(accepted)!r}; require {expected_ids!r}"
-        )
+    if spec["schema_version"] == 5:
+        if _digest_file(output / "assessment-reference.json") != evaluator["assessment"]["sha256"]:
+            raise ExperimentError("frozen assessment reference changed during scoring")
+        try:
+            accepted = _independent.score(response, request)
+        except ValueError as error:
+            raise ExperimentError(str(error)) from error
+    else:
+        _require_exact_keys(response, {"schema_version", "scores"}, "evaluator response")
+        if response["schema_version"] != CONTRACT:
+            raise ExperimentError(f"evaluator response schema_version must be {CONTRACT}")
+        scores = response["scores"]
+        if not isinstance(scores, list):
+            raise ExperimentError("evaluator response scores must be an array")
+        metric_names = [metric["name"] for metric in metrics]
+        expected_ids = [row["variant_id"] for row in eligible]
+        accepted: dict[str, dict[str, float]] = {}
+        for index, raw in enumerate(scores):
+            label = f"evaluator response scores[{index}]"
+            if not isinstance(raw, dict):
+                raise ExperimentError(f"{label} must be an object")
+            _require_exact_keys(raw, {"variant_id", "metrics"}, label)
+            variant_id = raw["variant_id"]
+            if variant_id in accepted:
+                raise ExperimentError(f"{label} repeats variant_id {variant_id!r}")
+            if variant_id not in expected_ids:
+                raise ExperimentError(f"{label} names unknown variant_id {variant_id!r}")
+            values = raw["metrics"]
+            if not isinstance(values, dict) or set(values) != set(metric_names):
+                raise ExperimentError(f"{label}.metrics must contain exactly {metric_names!r}")
+            normalized: dict[str, float] = {}
+            for name in metric_names:
+                numeric = _metric_value(values[name])
+                if numeric is None:
+                    raise ExperimentError(f"{label}.metrics[{name!r}] must be finite and numeric")
+                normalized[name] = numeric
+            accepted[variant_id] = normalized
+        if list(accepted) != expected_ids:
+            raise ExperimentError(
+                f"evaluator response variant order is {list(accepted)!r}; require {expected_ids!r}"
+            )
     response_sha256 = _digest_file(response_path)
     ledger.append(
         "evaluator_finished",
@@ -1060,24 +1102,9 @@ def _evaluate(
         if result["variant_id"] in scores:
             result["metrics"] = scores[result["variant_id"]]
 
-    def rank_key(result: dict[str, Any]) -> tuple[object, ...]:
-        values: list[object] = []
-        for metric in metrics:
-            value = result["metrics"][metric["name"]]
-            values.append(-value if metric["direction"] == "maximize" else value)
-        values.append(result["variant_id"])
-        return tuple(values)
-
-    eligible = sorted((row for row in results if row["eligible"]), key=rank_key)
-    ranking = [
-        {
-            "rank": index,
-            "variant_id": row["variant_id"],
-            "metrics": row["metrics"],
-        }
-        for index, row in enumerate(eligible, start=1)
-    ]
-    return (eligible[0]["variant_id"] if eligible else None), ranking
+    minimums = _selection.validate(spec["evaluation"].get("selection"), metrics, spec["schema_version"] == 5)
+    decision = _selection.choose(results, metrics, minimums)
+    return decision["champion"], decision["ranking"]
 
 
 async def run(spec_path: Path, output: Path) -> dict[str, Any]:
@@ -1097,6 +1124,14 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
     frozen_root = output / "frozen-input.bin"
     _write_exclusive_bytes(frozen_root, input_bytes)
     frozen_root.chmod(0o444)
+    if spec["schema_version"] == 5:
+        reference_copy = output / "assessment-reference.json"
+        _write_exclusive_bytes(reference_copy, evaluator["assessment"]["bytes"])
+        reference_copy.chmod(0o444)
+    if "calibration" in evaluator:
+        calibration_copy = output / "calibration.json"
+        _write_exclusive_bytes(calibration_copy, evaluator["calibration"]["bytes"])
+        calibration_copy.chmod(0o444)
     spec_copy = output / "experiment-spec.json"
     _write_exclusive_bytes(spec_copy, spec_bytes)
     spec_copy.chmod(0o444)
@@ -1134,6 +1169,26 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
             raise ExperimentError(
                 "independent evaluator changed before variant execution; no experiment result was produced"
             )
+        if "calibration" in evaluator:
+            failure_stage = "evaluator-preflight"
+            calibration_root = output / "calibration"
+            calibration_root.mkdir()
+            _write_exclusive_bytes(calibration_root / "assessment-reference.json", evaluator["assessment"]["bytes"])
+            (calibration_root / "assessment-reference.json").chmod(0o444)
+            ledger.append("evaluator_preflight_started", {"experiment_id":spec["experiment_id"],
+                "calibration_sha256":evaluator["calibration"]["sha256"]})
+            observed = _invoke_evaluator(spec, _calibration.candidate_rows(evaluator["calibration"]["document"]),
+                calibration_root, evaluator, evaluator_snapshot, ledger)
+            if _digest_file(output / "calibration.json") != evaluator["calibration"]["sha256"]:
+                raise ExperimentError("frozen calibration cases changed during evaluator preflight")
+            if _digest_file(output / "assessment-reference.json") != evaluator["assessment"]["sha256"]:
+                raise ExperimentError("frozen assessment reference changed during evaluator preflight")
+            if _digest_file(frozen_root) != input_sha256:
+                raise ExperimentError("frozen input changed during evaluator preflight")
+            # This equality is the semantic calibration gate, separate from response shape validity.
+            _calibration.verify_scores(evaluator["calibration"]["document"], observed)
+            ledger.append("evaluator_preflight_passed", {"experiment_id":spec["experiment_id"],
+                "case_count":len(observed), "calibration_sha256":evaluator["calibration"]["sha256"]})
         failure_stage = "execute-variants"
         results = await _execute(
             spec,
@@ -1149,6 +1204,8 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
         if _digest_file(frozen_root) != input_sha256:
             raise ExperimentError("the root frozen input changed during the experiment")
         failure_stage = "evaluation-integrity"
+        if "calibration" in evaluator and _digest_file(output / "calibration.json") != evaluator["calibration"]["sha256"]:
+            raise ExperimentError("frozen calibration cases changed during candidate execution")
         if _digest_file(evaluator["adapter"]["path"]) != evaluator["adapter"]["sha256"]:
             raise ExperimentError(
                 "independent evaluator changed before scoring; no experiment recommendation was produced"
@@ -1160,13 +1217,15 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
             if eligible
             else {}
         )
+        if "calibration" in evaluator and _digest_file(output / "calibration.json") != evaluator["calibration"]["sha256"]:
+            raise ExperimentError("frozen calibration cases changed during final evaluation")
         champion, ranking = _evaluate(spec, results, scores)
     except EvaluatorTimeout as error:
         scores = {}
         champion, ranking = None, []
         evaluation_error = {
             "kind": "timeout",
-            "stage": "evaluate",
+            "stage": failure_stage,
             "message": str(error),
             "timeout_ms": error.timeout_ms,
             "evidence_sha256": error.evidence_sha256,
@@ -1181,7 +1240,7 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
             "error_type": type(error).__name__,
         }
     status = (
-        ("completed" if champion is not None else "no-eligible-variant")
+        ("completed" if eligible else "no-eligible-variant")
         if evaluation_error is None
         else ("evaluator-timeout" if evaluation_error["kind"] == "timeout" else "failed")
     )
@@ -1197,6 +1256,9 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
         "status": status,
         "evaluation_error": evaluation_error,
         "champion": champion,
+        "selection_outcome": ("evaluation-failed" if evaluation_error else
+            "selected" if champion else
+            "no-demonstrated-advantage" if ranking else "no-qualified-candidate"),
         "ranking": ranking,
         "variants": results,
         "promotion_applied": False,
@@ -1240,7 +1302,7 @@ def main() -> int:
         print(f"Experiment refused: {error}", file=sys.stderr)
         return 2
     print(json.dumps(summary, indent=2, sort_keys=True))
-    return 0 if summary["champion"] is not None else 3
+    return 0 if summary["status"] == "completed" else 3
 
 
 if __name__ == "__main__":
