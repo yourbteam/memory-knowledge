@@ -1,0 +1,66 @@
+{
+  "case_ids": [
+    "resolved-introduced-run-loads",
+    "introduced-flag-on-existing-field-refused",
+    "introduced-leaf-starts-and-gates",
+    "existing-field-declaration-still-starts"
+  ],
+  "champion": "already-resolves-is-a-start-check",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "start-verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "promotion-gate-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "load-verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "frozen-input-unchanged": 1.0,
+        "load-verdict-correct": 1.0,
+        "promotion-gate-correct": 1.0,
+        "refusal-actionable": 1.0,
+        "start-verdict-correct": 1.0
+      },
+      "approach_id": "already-resolves-is-a-start-check",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "frozen-input-unchanged": 1.0,
+        "load-verdict-correct": 1.0,
+        "promotion-gate-correct": 1.0,
+        "refusal-actionable": 0.0,
+        "start-verdict-correct": 0.0
+      },
+      "approach_id": "already-resolves-tolerated-everywhere",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

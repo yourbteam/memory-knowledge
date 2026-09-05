@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+  "atomic_outcome": "A started atom run whose introduced contract field has since landed in the canonical module keeps loading and promotes; the 'introduced field already resolves' refusal applies only when a new run starts.",
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "existing-field-declaration-still-starts",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/existing-field-declaration-still-starts/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/existing-field-declaration-still-starts/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/existing-field-declaration-still-starts/telemetry.jsonl",
+      "sha256": "0db01a3b8f7c64b19ea9cdc2f691a2d7cde4c158a86eb5ff781561a5d41a8e9a"
+    }
+  ],
+  "expected_outcome": "The real structured-KPI request without any introduced flag still starts exactly as before.",
+  "operator_path": "Run the candidate controller's real start against the real United Partners repository for every frozen request and its promotion-time validation for the introduced field; promoted validation then starts the real round-5 request through the installed controller.",
+  "overall_criterion": "The real D run loads at stage promotion through the corrected controller; a new start declaring an existing field as introduced is still refused; the real E request with an introduced rollout leaf still starts and is still gated at promotion; the round-4 request still starts.",
+  "schema_version": 1
+}

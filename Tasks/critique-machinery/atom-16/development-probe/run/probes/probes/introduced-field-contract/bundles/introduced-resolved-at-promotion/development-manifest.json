@@ -1,0 +1,148 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The real round-5 request declaring activation_cards[].approver as introduced starts, and promotion refuses until the canonical module carries the field.",
+        "id": "introduced-approver-field-starts",
+        "kind": "failure",
+        "sha256": "86b921a47f113df973f7e164a3c8e1a22585e1b8351e1420875550f107a1e787",
+        "source_ref": "Tasks/critique-machinery/atom-16/cases/introduced-approver-field-starts.json"
+      },
+      {
+        "expected_outcome": "The real misspelled request is still refused at start with the available keys.",
+        "id": "misspelled-field-still-refused",
+        "kind": "failure",
+        "sha256": "1388e49eedbbf6b5c595b60160dddd4ae915d877734881f60bcb05a3afb83db4",
+        "source_ref": "Tasks/critique-machinery/atom-16/cases/misspelled-field-still-refused.json"
+      },
+      {
+        "expected_outcome": "An introduced flag on a field the module already carries is refused by name.",
+        "id": "introduced-flag-on-existing-field-refused",
+        "kind": "failure",
+        "sha256": "5b0a1371f9f0b91b0ce58535b37f21cb9a1d5722ec471930f7edc8ecbd134841",
+        "source_ref": "Tasks/critique-machinery/atom-16/cases/introduced-flag-on-existing-field-refused.json"
+      },
+      {
+        "expected_outcome": "The real structured-KPI request without any introduced flag still starts exactly as before.",
+        "id": "existing-field-declaration-still-starts",
+        "kind": "success",
+        "sha256": "9e5c89ae66fc50ff3700a26772fe9b5ea1768d7ff7cdf488b0b6150a07e80bd8",
+        "source_ref": "Tasks/critique-machinery/atom-16/cases/existing-field-declaration-still-starts.json"
+      }
+    ],
+    "id": "introduced-field-declaration",
+    "outcome": "An atom may declare a structured field it introduces: start accepts it when the field's parent resolves and the leaf does not exist yet, records it as introduced, and record-promotion refuses until the canonical module carries the leaf; a misspelled field and an introduced flag on an existing field are refused at start by name.",
+    "practical_value": "Round 5 of the S12 roadmap adds three structured fields; the machinery can build those atoms without hiding the field's addition from the atom's own change record.",
+    "stopping_condition": "The real refused round-5 request starts through the candidate controller and its promotion gate refuses until the field exists; the real misspelled request and an introduced-on-existing field are refused by name; the real structured-KPI request still starts; the promoted controller is installed to both projections at parity and the real request starts through the installed controller."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "Use only the winner's three declared paths and preserve every unrelated lifecycle boundary.",
+    "consumes": [
+      {
+        "artifact": "introduced-field-winner",
+        "probe_id": "introduced-field-contract"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "introduced-approver-field-starts",
+        "misspelled-field-still-refused",
+        "introduced-flag-on-existing-field-refused",
+        "existing-field-declaration-still-starts"
+      ],
+      "failure_criterion": "Any metric fails on any case, or the promoted controller refuses the real request.",
+      "operator_path": "Run the candidate controller's real start against the real United Partners repository for every frozen request and its promotion-time validation for the introduced field; promoted validation then starts the real round-5 request through the installed controller.",
+      "success_criterion": "All four candidate metrics pass every case, followed by the promoted real operator path."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/atom-building-machinery/SKILL.md",
+        "skills/atom-building-machinery/scripts/atom_controller.py",
+        "tests/test_atom_building_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "An explicit introduced marker lets start admit the field on its parent alone while keeping every other declaration exactly resolved, and promotion resolves the leaf.",
+          "id": "introduced-resolved-at-promotion",
+          "implementation": "contract_surface.fields[].introduced: parent-only resolution at start, leaf refused if it already exists, full resolution required at record-promotion.",
+          "predicted_tradeoff": "the atom author names the new field explicitly in the request"
+        },
+        {
+          "hypothesis": "Tolerating any unresolved leaf at start and resolving only at promotion is enough.",
+          "id": "unresolved-tolerated",
+          "implementation": "start records an unresolved leaf instead of refusing; record-promotion resolves every field.",
+          "predicted_tradeoff": "a misspelled field passes start and is caught only at promotion"
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "worst",
+            "name": "start-verdict-correct"
+          },
+          {
+            "method": "worst",
+            "name": "refusal-actionable"
+          },
+          {
+            "method": "worst",
+            "name": "promotion-gate-correct"
+          },
+          {
+            "method": "worst",
+            "name": "frozen-input-unchanged"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "start-verdict-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "refusal-actionable"
+          },
+          {
+            "direction": "maximize",
+            "name": "promotion-gate-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "frozen-input-unchanged"
+          }
+        ]
+      },
+      "goal": "Decide how a field the atom introduces is admitted at start and gated at promotion.",
+      "id": "introduced-field-contract",
+      "inputs": [
+        {
+          "case_id": "introduced-approver-field-starts"
+        },
+        {
+          "case_id": "misspelled-field-still-refused"
+        },
+        {
+          "case_id": "introduced-flag-on-existing-field-refused"
+        },
+        {
+          "case_id": "existing-field-declaration-still-starts"
+        }
+      ],
+      "practical_value": "Field-adding atoms can be built through the machinery while misspellings stay refused.",
+      "proof": {
+        "failure_criterion": "Any ordered metric is not one on any frozen case.",
+        "success_criterion": "All four ordered metrics equal one on every frozen case."
+      },
+      "winner_output": {
+        "artifact": "introduced-field-winner",
+        "description": "The measured controller, skill text and tests for introduced-field declarations."
+      },
+      "work_type": "code",
+      "work_type_reason": "Field resolution, refusals and the promotion gate are deterministic code decisions; no model judgement is involved."
+    }
+  ],
+  "schema_version": 2
+}

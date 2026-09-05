@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "introduced-leaf-starts-and-gates",
+  "experiment_id": "development-probe-fc3f3c87962f249a82cc",
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "5fbbb36ecb6ae5b5c1da23a43cff5a67a316a50e9bb68521b6d9bb3716486467",
+  "schema_version": 1,
+  "status": "completed"
+}

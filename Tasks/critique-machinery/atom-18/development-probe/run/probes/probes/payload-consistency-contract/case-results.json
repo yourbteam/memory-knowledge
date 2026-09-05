@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "case_id": "btm-v6-map-contradicts-spans",
+      "output": "cases/btm-v6-map-contradicts-spans",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "viv-v6-page-consistent",
+      "output": "cases/viv-v6-page-consistent",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "btm-v5-page-without-span-fields",
+      "output": "cases/btm-v5-page-without-span-fields",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "btm-v6-opened-without-profile",
+      "output": "cases/btm-v6-opened-without-profile",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

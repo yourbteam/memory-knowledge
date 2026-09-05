@@ -1,0 +1,56 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "atomic_step_id": "introduced-field-declaration",
+ "promotion_event_sha256": "22013fd26772a4ec7fc03b476b4d82d8c0b1f6a2368c972949b0397fd02e63ba",
+ "cases": [
+  {
+   "case_id": "introduced-approver-field-starts",
+   "verdict": "satisfied",
+   "reason": "The real S12 approver request with 'introduced': true started through the canonical controller from the united-partners root, and the promotion-time validation refused it naming activation_cards[].approver because tactical_roadmap.py does not carry the field yet.",
+   "evidence": [
+    {
+     "case_id": "introduced-approver-field-starts",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/validation/cases/introduced-approver-field-starts.json",
+     "sha256": "d43a3e655949a25e6d8dcc92c831946e9b60f23aded933fb6b4acec4b5eb72b8"
+    }
+   ]
+  },
+  {
+   "case_id": "misspelled-field-still-refused",
+   "verdict": "satisfied",
+   "reason": "The real misspelled named-assigner request is still refused at start with the available keys named; the introduced door does not open for a typo.",
+   "evidence": [
+    {
+     "case_id": "misspelled-field-still-refused",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/validation/cases/misspelled-field-still-refused.json",
+     "sha256": "3d4b2a822e1efb8442bdab0de8b70ad8f07e84942f8f67f6b0256358061c420d"
+    }
+   ]
+  },
+  {
+   "case_id": "introduced-flag-on-existing-field-refused",
+   "verdict": "satisfied",
+   "reason": "A request marking the existing structured kpi field as introduced is refused at start and told to declare it without 'introduced'.",
+   "evidence": [
+    {
+     "case_id": "introduced-flag-on-existing-field-refused",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/validation/cases/introduced-flag-on-existing-field-refused.json",
+     "sha256": "c316a38bdf8ceb9b7593c7e9efae3a2ff001248bb8c5bdea3b77487e3268f5f6"
+    }
+   ]
+  },
+  {
+   "case_id": "existing-field-declaration-still-starts",
+   "verdict": "satisfied",
+   "reason": "The real round-4 structured-kpis request without the flag starts exactly as before the atom.",
+   "evidence": [
+    {
+     "case_id": "existing-field-declaration-still-starts",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/validation/cases/existing-field-declaration-still-starts.json",
+     "sha256": "5fbac71a276d77c06fd6efb0c07fea9445a297aa2cc2b26d88b514aeb8f0a6b6"
+    }
+   ]
+  }
+ ]
+}

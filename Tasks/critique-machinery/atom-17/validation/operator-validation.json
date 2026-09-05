@@ -1,0 +1,56 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "atomic_step_id": "introduced-field-resolves-on-resume",
+ "promotion_event_sha256": "c8486246d508fa658ed41027a0b40842bde56ff978825ccbe51c8ddc01cc5ab0",
+ "cases": [
+  {
+   "case_id": "resolved-introduced-run-loads",
+   "verdict": "satisfied",
+   "reason": "The byte copy of the real round-5 atom D run and the real run itself both load at stage promotion through the canonical controller from the united-partners root, now that tactical_roadmap.py carries approver.",
+   "evidence": [
+    {
+     "case_id": "resolved-introduced-run-loads",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/validation/cases/resolved-introduced-run-loads.json",
+     "sha256": "875e0d05b4638a7bb0636698fc29d18eb683c561faa84f8296bbeadf7c672f0b"
+    }
+   ]
+  },
+  {
+   "case_id": "introduced-flag-on-existing-field-refused",
+   "verdict": "satisfied",
+   "reason": "A new start marking the existing structured kpi field as introduced is still refused and told to declare it without 'introduced'.",
+   "evidence": [
+    {
+     "case_id": "introduced-flag-on-existing-field-refused",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/validation/cases/introduced-flag-on-existing-field-refused.json",
+     "sha256": "c316a38bdf8ceb9b7593c7e9efae3a2ff001248bb8c5bdea3b77487e3268f5f6"
+    }
+   ]
+  },
+  {
+   "case_id": "introduced-leaf-starts-and-gates",
+   "verdict": "satisfied",
+   "reason": "The real round-5 atom E request declaring rollout.widening_month as introduced starts, and the promotion-time validation still refuses it naming the leaf until the module carries it.",
+   "evidence": [
+    {
+     "case_id": "introduced-leaf-starts-and-gates",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/validation/cases/introduced-leaf-starts-and-gates.json",
+     "sha256": "9c431e4748c3d713c1fdb722261e03c10488087e937a27eea80f670ee4069b9f"
+    }
+   ]
+  },
+  {
+   "case_id": "existing-field-declaration-still-starts",
+   "verdict": "satisfied",
+   "reason": "The real round-4 structured-kpis request without the flag starts exactly as before.",
+   "evidence": [
+    {
+     "case_id": "existing-field-declaration-still-starts",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/validation/cases/existing-field-declaration-still-starts.json",
+     "sha256": "5fbac71a276d77c06fd6efb0c07fea9445a297aa2cc2b26d88b514aeb8f0a6b6"
+    }
+   ]
+  }
+ ]
+}

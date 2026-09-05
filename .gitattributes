@@ -1,0 +1,2 @@
+# Frozen real inputs of machinery atoms are committed byte-exact; their whitespace is evidence, not style.
+Tasks/critique-machinery/*/frozen-real/** -whitespace

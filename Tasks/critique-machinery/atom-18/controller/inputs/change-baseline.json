@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "payload-consistency-lens",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "6f4134d792558bbbec77e4f0bc5f25cff0167d171ec84b2b7204775b6d91d9a7",
+      "size": 7006
+    },
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "86dc78cde6cc7c0ddb60980bec1f51006e2853f4e22b8075e1dc66aff77b20b3",
+      "size": 116411
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "2c4e0100119ef57cf66f048b305ce165f2df0152db49728a5ffa093fbef22d4e",
+      "size": 43484
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "a20c0d515c3272e2afbae06ec7a7914beaf901d591f01e1c6e94d7caa1765524",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

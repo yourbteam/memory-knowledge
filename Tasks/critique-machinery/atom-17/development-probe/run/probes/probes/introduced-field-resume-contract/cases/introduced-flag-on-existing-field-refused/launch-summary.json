@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "introduced-flag-on-existing-field-refused",
+  "experiment_id": "development-probe-771a85b0a146c5ba09d6",
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "344cf77afe4881313263b235b99e7b07e565ab7e98061fc2f2518ed2c84c074b",
+  "schema_version": 1,
+  "status": "completed"
+}

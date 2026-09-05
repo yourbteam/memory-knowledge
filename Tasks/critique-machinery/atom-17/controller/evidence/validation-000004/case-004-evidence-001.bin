@@ -1,0 +1,14 @@
+{
+ "case_id": "existing-field-declaration-still-starts",
+ "controller": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/atom_controller.py",
+ "repository_root": "/Users/kamenkamenov/united-partners",
+ "expected": {
+  "promotion": "not-applicable",
+  "start": "started"
+ },
+ "start_verdict": "started",
+ "start_stderr": "",
+ "promotion_observed": "not-applicable",
+ "promotion_message": "",
+ "satisfied": true
+}

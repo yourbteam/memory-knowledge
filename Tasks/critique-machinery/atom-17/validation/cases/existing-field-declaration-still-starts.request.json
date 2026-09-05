@@ -1,0 +1,52 @@
+{
+ "allowed_paths": [
+  "src/up_harness/tactical_roadmap.py",
+  "tests/unit"
+ ],
+ "atomic_step_id": "s12-structured-kpis",
+ "captured_cases": [
+  {
+   "case_id": "case-btm-v3-prose-kpis",
+   "expected_outcome": "the real v3 pack's prose KPIs are refused naming every card and the required shape",
+   "kind": "failure",
+   "sha256": "ffb1256f873dbcfd81a3799f924a9acb5f4c32bef6a04715287b05a6879a7b6b",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-structured-kpis/cases/case-btm-v3-prose-kpis.json"
+  },
+  {
+   "case_id": "case-btm-v3-structured-kpis",
+   "expected_outcome": "the same pack with each KPI read into metric, scale and instrument is accepted and rendered",
+   "kind": "success",
+   "sha256": "15a595f432d4ae6a05922d941c0aa4149fc8e63e036963615916d13f61c7dd34",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-structured-kpis/cases/case-btm-v3-structured-kpis.json"
+  },
+  {
+   "case_id": "case-viv-refused-fragment-empty-parts",
+   "expected_outcome": "the fragment the Vivacom run was refused on, with no scale and no instrument, is refused naming the card, the item and the empty parts",
+   "kind": "failure",
+   "sha256": "79d10357638486b903247d26dd3152fc33775c56847751e4a1202ade323ab29f",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-structured-kpis/cases/case-viv-refused-fragment-empty-parts.json"
+  },
+  {
+   "case_id": "case-btm-prose-item-inside-list",
+   "expected_outcome": "a prose item inside a structured list is refused naming the card and the item",
+   "kind": "failure",
+   "sha256": "604925819fa0c9ab017e126f30b6e9effd77625eccb21fac120a76789f2d6bc0",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-structured-kpis/cases/case-btm-prose-item-inside-list.json"
+  }
+ ],
+ "contract_surface": {
+  "deliverable": "tactical_roadmap",
+  "fields": [
+   {
+    "field": "activation_cards[].kpi",
+    "shape": "list",
+    "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+   }
+  ],
+  "kind": "validation"
+ },
+ "outcome": "An Activation Card's KPI is a structured field \u2014 a JSON array of metric, scale and instrument \u2014 validated by fields; a prose KPI, a non-object item or an empty part is refused naming every offending card at once; the page and Word twin render each KPI as metric, scale and instrument.",
+ "practical_value": "The quality-KPI rule misread honest prose four times (CM-B7, B8, B9, B11); the Vivacom version 4 relaunch up-run-9444fa9c2cc0 died with 'Measure: Claim Boundary Quality Score' refused twice. With named parts there is nothing to cut and nothing to guess.",
+ "schema_version": 1,
+ "stopping_condition": "The real v3 pack (prose KPIs) is refused naming every card and the required shape; the same pack with each KPI read into metric, scale, instrument is accepted and rendered; the real refused fragment with empty scale and instrument is refused naming the card, the item and the empty parts; a prose item inside a structured list is refused."
+}

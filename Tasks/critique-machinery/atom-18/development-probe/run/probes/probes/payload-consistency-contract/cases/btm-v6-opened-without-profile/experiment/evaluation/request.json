@@ -1,0 +1,90 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/btm-v6-opened-without-profile/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/btm-v6-opened-without-profile/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/btm-v6-opened-without-profile/experiment/variants/control/telemetry.jsonl",
+          "sha256": "ca4fd3b8f8abd0a425d077599bf7f3230924eb846c1e49737a4b8006da240ac0"
+        }
+      ],
+      "execution": {
+        "duration_ms": 418,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "11073e6fe9bdf473419ac648b867c670e557b576ad994b5cfc82c8a401335174",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/btm-v6-opened-without-profile/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/btm-v6-opened-without-profile/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/btm-v6-opened-without-profile/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "bd7732697b4719b6f7fffd57667e53bfb6001465c1388aac1c3ee1bc6b882cf6"
+        }
+      ],
+      "execution": {
+        "duration_ms": 407,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "2c77d282b1b8a6e654d0fd561be7f5c41ed3826c7d1affb0f54fc93f4d52f047",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-341559595133c367779c",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "map-cell-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "defect-subjects-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "clear-units-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "not-applicable-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "no-owner-question"
+    },
+    {
+      "direction": "maximize",
+      "name": "located-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "frozen-input-unchanged"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,82 @@
+{
+  "baseline_sha256": "6a2e3b4ede7c04b4b59b113ed905441bea3cc77b4edc56847ef318c6fb6ca017",
+  "candidates": [
+    {
+      "approach_id": "named-person-not-audience",
+      "artifact": "s12-card-approver-scripts",
+      "bundle_sha256": "d9376baad7e69e0f92ab8987d74ff279d0115fca198b99dc39cd474429bad77b",
+      "probe_id": "s12-card-approver-contract"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "s12-card-approver",
+    "development_manifest_sha256": "3410364cd069c20a7a5fa452f303061208e9c35b4aae57f5917b521f6b5729d9"
+  },
+  "inputs": [
+    {
+      "case_id": "case-btm-v5-no-approver",
+      "path": "case-btm-v5-no-approver.input",
+      "sha256": "94f3366fc7156ad00158f70054dbe4d2fd141c93f6b880d9a3f0b11fbd20b780",
+      "size": 38533
+    },
+    {
+      "case_id": "case-btm-v5-named-approvers",
+      "path": "case-btm-v5-named-approvers.input",
+      "sha256": "05e5ffeaa78de06eda7bdfbe731fbdb913fa445c72b8401188757e4b8dede03a",
+      "size": 38979
+    },
+    {
+      "case_id": "case-btm-v5-audience-as-approver",
+      "path": "case-btm-v5-audience-as-approver.input",
+      "sha256": "df1df23f751bcb82f393e24930ee166868b80a1defb41ca8aefe13b46c59f24c",
+      "size": 39047
+    },
+    {
+      "case_id": "case-viv-v5-decider-approves",
+      "path": "case-viv-v5-decider-approves.input",
+      "sha256": "ccf39f00415b5a45544d49c9f04b9d21455fe5ba580a783a4137156fd425a44a",
+      "size": 41383
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "s12-card-approver-contract"
+      ],
+      "path": "scripts/atom_check.py",
+      "sha256": "d4bdf36017894bbf3f6b6b8a2c811de43efa740e0609871660433a5e193afd2a",
+      "size": 2327
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "920236ed16827a80c5633f5b13597f2eb3da5eaad3133bc02af2bad29ee5e4d0",
+        "size": 6122
+      },
+      {
+        "path": "scripts/atom_check.py",
+        "sha256": "d4bdf36017894bbf3f6b6b8a2c811de43efa740e0609871660433a5e193afd2a",
+        "size": 2327
+      }
+    ],
+    "root": "source",
+    "sha256": "4df773102c41b42064fab07fccb826cbf5d7b2ff415f4708ebb9a449e0ffb9aa"
+  },
+  "status": "assembled"
+}

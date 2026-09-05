@@ -1,0 +1,40 @@
+{
+  "atomic_step_id": "payload-consistency-lens",
+  "baseline_sha256": "856fb54ea3e7e143854fb576c83171302fa3f1eac14a82660228ea166e912d83",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "6c0132d7c04af0d99d1e2a46207903f49d4f6c51c4abd28f6ac242c3544ad168",
+      "before_mode": 420,
+      "before_sha256": "6f4134d792558bbbec77e4f0bc5f25cff0167d171ec84b2b7204775b6d91d9a7",
+      "kind": "changed",
+      "path": "skills/critique-machinery/SKILL.md"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+      "before_mode": 420,
+      "before_sha256": "86dc78cde6cc7c0ddb60980bec1f51006e2853f4e22b8075e1dc66aff77b20b3",
+      "kind": "changed",
+      "path": "skills/critique-machinery/scripts/critique.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "d72e83dd347f52dfc47978266ca0ecf851163fc24572834d0c62e0dbf78f1287",
+      "before_mode": 420,
+      "before_sha256": "2c4e0100119ef57cf66f048b305ce165f2df0152db49728a5ffa093fbef22d4e",
+      "kind": "changed",
+      "path": "tests/test_critique_machinery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "22953046aeab8da4c913517cfd033d73aa5cfc71a2bf4e753a2f7c62bc5c3e66",
+      "before_mode": 420,
+      "before_sha256": "a20c0d515c3272e2afbae06ec7a7914beaf901d591f01e1c6e94d7caa1765524",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

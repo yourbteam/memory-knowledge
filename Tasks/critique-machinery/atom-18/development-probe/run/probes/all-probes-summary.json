@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "payload-consistency-lens",
+  "probe_ids": [
+    "payload-consistency-contract"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "ffcba5116141758d4655218ca6a3517e68785a7eb4d69a6f954946b310022850",
+  "schema_version": 1,
+  "status": "completed"
+}

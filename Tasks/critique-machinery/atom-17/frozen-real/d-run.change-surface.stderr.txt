@@ -1,0 +1,1 @@
+Atom Building Machinery refused at load-run: introduced field 'activation_cards[].approver' already resolves at 'approver'; declare it without 'introduced'

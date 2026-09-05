@@ -1,0 +1,14 @@
+{
+ "case_id": "btm-v5-page-without-span-fields",
+ "script": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/critique-machinery/scripts/critique.py",
+ "open_exit": 0,
+ "consistency_exit": 0,
+ "consistency_stdout": "{\"defects\": [], \"deliverable\": \"tactical_roadmap\", \"not_applicable\": [\"u-001-67522c23::payload-consistency\", \"u-002-d9a493d9::payload-consistency\", \"u-003-f2988147::payload-consistency\", \"u-004-0f0ba629::payload-consistency\", \"u-005-49a6759a::payload-consistency\", \"u-006-c98ebcbb::payload-consistency\", \"u-007-3470ed7f::payload-consistency\", \"u-008-cb5409e1::payload-consistency\", \"u-009-ad883569::payload-consistency\", \"u-010-232375c1::payload-consistency\", \"u-011-defefc80::payload-consistency\", \"",
+ "consistency_stderr": "",
+ "map_outcome": "not-applicable",
+ "map_defects": [],
+ "code_cells": 25,
+ "owner_open_count": 0,
+ "located_head": "",
+ "satisfied": true
+}

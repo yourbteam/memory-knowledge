@@ -1,0 +1,124 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "map-cell-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "defect-subjects-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "clear-units-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "not-applicable-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "no-owner-question"
+      },
+      {
+        "direction": "maximize",
+        "name": "located-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "code-owned-lens-both-seats",
+    "atomic_step_id": "payload-consistency-lens",
+    "development_manifest_sha256": "dac90557f02843658bf202df72f198141425237a47ba4cd0c1ea29f271821036",
+    "probe_id": "payload-consistency-contract"
+  },
+  "inputs": {
+    "case_ids": [
+      "btm-v6-map-contradicts-spans",
+      "viv-v6-page-consistent",
+      "btm-v5-page-without-span-fields",
+      "btm-v6-opened-without-profile"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "d773b478155fff444a3b3ccb94043ac4025f3d67d9ea9f19e53098af2743844a",
+        "size": 7133
+      },
+      {
+        "path": "skills/critique-machinery/SKILL.md",
+        "sha256": "6f4134d792558bbbec77e4f0bc5f25cff0167d171ec84b2b7204775b6d91d9a7",
+        "size": 7006
+      },
+      {
+        "path": "skills/critique-machinery/agents/openai.yaml",
+        "sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+        "size": 265
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "86dc78cde6cc7c0ddb60980bec1f51006e2853f4e22b8075e1dc66aff77b20b3",
+        "size": 116411
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "2c4e0100119ef57cf66f048b305ce165f2df0152db49728a5ffa093fbef22d4e",
+        "size": 43484
+      }
+    ],
+    "baseline_sha256": "b35b23c8ca0ac1ede0ea68750e2e01f7623670f4ee3b2b344c3511796c42b205",
+    "candidate_sha256": "1a73293daae8269092fe33795a6332a9fc72a1248db96f2ad56377f1919421b6",
+    "changed_paths": [
+      "skills/critique-machinery/SKILL.md",
+      "skills/critique-machinery/scripts/critique.py",
+      "tests/test_critique_machinery.py"
+    ],
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "d773b478155fff444a3b3ccb94043ac4025f3d67d9ea9f19e53098af2743844a",
+        "size": 7133
+      },
+      {
+        "path": "skills/critique-machinery/SKILL.md",
+        "sha256": "6c0132d7c04af0d99d1e2a46207903f49d4f6c51c4abd28f6ac242c3544ad168",
+        "size": 8570
+      },
+      {
+        "path": "skills/critique-machinery/agents/openai.yaml",
+        "sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+        "size": 265
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+        "size": 131976
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "d72e83dd347f52dfc47978266ca0ecf851163fc24572834d0c62e0dbf78f1287",
+        "size": 48084
+      }
+    ],
+    "root": "source"
+  }
+}

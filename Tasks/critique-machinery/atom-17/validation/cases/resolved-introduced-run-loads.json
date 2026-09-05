@@ -1,0 +1,15 @@
+{
+ "case_id": "resolved-introduced-run-loads",
+ "controller": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/atom_controller.py",
+ "repository_root": "/Users/kamenkamenov/united-partners",
+ "expected": {
+  "load": "loads",
+  "stage": "promotion"
+ },
+ "copy_loads": true,
+ "copy_stage": "promotion",
+ "real_run_loads": true,
+ "real_run_stage": "promotion",
+ "stderr": "",
+ "satisfied": true
+}

@@ -1,0 +1,1 @@
+{"schema_version": 1, "scores": [{"metrics": {"frozen-input-unchanged": 1.0, "promotion-gate-correct": 1.0, "refusal-actionable": 1.0, "start-verdict-correct": 1.0}, "variant_id": "control"}, {"metrics": {"frozen-input-unchanged": 1.0, "promotion-gate-correct": 1.0, "refusal-actionable": 1.0, "start-verdict-correct": 1.0}, "variant_id": "variation-2"}]}

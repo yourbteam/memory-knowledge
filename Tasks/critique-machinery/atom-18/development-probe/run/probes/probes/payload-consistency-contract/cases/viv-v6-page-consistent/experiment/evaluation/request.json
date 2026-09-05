@@ -1,0 +1,90 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/viv-v6-page-consistent/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/viv-v6-page-consistent/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/viv-v6-page-consistent/experiment/variants/control/telemetry.jsonl",
+          "sha256": "ca8fa9fcccafbf60f9cc33d4a683fe3490aa627530e9436a59a68d64608df6bb"
+        }
+      ],
+      "execution": {
+        "duration_ms": 500,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "5ed1d392564fa97a86ea75987752b5eb945812926338f4226fcd759ceb484839",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/viv-v6-page-consistent/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/viv-v6-page-consistent/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/cases/viv-v6-page-consistent/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "442281c0b4e82f2e803dd95398603a51625650b38792399c1808605ef2a4d20f"
+        }
+      ],
+      "execution": {
+        "duration_ms": 504,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "1c8673a20930d944499ac26f53fef0c2267da3e8ac75290b5835f215173d3de1",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-973b094d5ac1940480a8",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "map-cell-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "defect-subjects-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "clear-units-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "not-applicable-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "no-owner-question"
+    },
+    {
+      "direction": "maximize",
+      "name": "located-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "frozen-input-unchanged"
+    }
+  ],
+  "schema_version": 1
+}

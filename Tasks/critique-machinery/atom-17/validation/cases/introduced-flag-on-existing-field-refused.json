@@ -1,0 +1,19 @@
+{
+ "case_id": "introduced-flag-on-existing-field-refused",
+ "controller": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/atom_controller.py",
+ "repository_root": "/Users/kamenkamenov/united-partners",
+ "expected": {
+  "promotion": "not-applicable",
+  "refusal_contains": [
+   "activation_cards[].kpi",
+   "already resolves",
+   "declare it without 'introduced'"
+  ],
+  "start": "refused"
+ },
+ "start_verdict": "refused",
+ "start_stderr": "Atom Building Machinery refused at start: introduced field 'activation_cards[].kpi' already resolves at 'kpi'; declare it without 'introduced'",
+ "promotion_observed": "not-applicable",
+ "promotion_message": "",
+ "satisfied": true
+}

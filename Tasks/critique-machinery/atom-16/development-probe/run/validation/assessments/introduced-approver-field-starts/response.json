@@ -1,0 +1,9 @@
+{
+  "case_id": "introduced-approver-field-starts",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 16 candidate facts passed",
+  "verdict": "satisfied"
+}

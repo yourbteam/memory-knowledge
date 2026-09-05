@@ -1,0 +1,80 @@
+{
+  "case_ids": [
+    "btm-v6-map-contradicts-spans",
+    "viv-v6-page-consistent",
+    "btm-v5-page-without-span-fields",
+    "btm-v6-opened-without-profile"
+  ],
+  "champion": "code-owned-lens-both-seats",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "map-cell-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "defect-subjects-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "clear-units-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "not-applicable-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "no-owner-question"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "located-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "probe_id": "payload-consistency-contract",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "approach_id": "code-owned-lens-both-seats",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "clear-units-correct": 0.0,
+        "defect-subjects-correct": 0.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 0.0,
+        "map-cell-correct": 0.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "approach_id": "advisory-report-only",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

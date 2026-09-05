@@ -1,0 +1,9 @@
+{
+  "case_id": "introduced-leaf-starts-and-gates",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 17 candidate facts passed",
+  "verdict": "satisfied"
+}

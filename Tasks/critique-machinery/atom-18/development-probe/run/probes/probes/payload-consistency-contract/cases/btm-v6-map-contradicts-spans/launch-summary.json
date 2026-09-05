@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "payload-consistency-lens",
+  "case_id": "btm-v6-map-contradicts-spans",
+  "experiment_id": "development-probe-b2aa3e173a63bb7d11c3",
+  "probe_id": "payload-consistency-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "d168c3268cb004fb7c1e36f807585c49643726e5d14ff0cb23ad9d03b6522cb2",
+  "schema_version": 1,
+  "status": "completed"
+}

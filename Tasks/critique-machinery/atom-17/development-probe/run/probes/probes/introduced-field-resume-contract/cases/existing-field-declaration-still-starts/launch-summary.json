@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "existing-field-declaration-still-starts",
+  "experiment_id": "development-probe-50c5058bf7ff7789a605",
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "f8e2e70f3a07f62fe79e23c92ad5c8c0dbe88f51d1196a2069208520a1532d66",
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "development_manifest": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/development-manifest.json",
+  "sha256": "85f83baab6ae9dfb57332f012e4d8ec6b6405a46ac6ab3dccd87230150728e92"
+ },
+ "baseline": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/baseline",
+  "sha256": "b35b23c8ca0ac1ede0ea68750e2e01f7623670f4ee3b2b344c3511796c42b205"
+ },
+ "probe_requests": [
+  {
+   "probe_id": "payload-consistency-contract",
+   "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/requests/cross-case.json",
+   "request_sha256": "f8d9512f8dda99914de96c713929ea913d7e92c779926f6b0388b735aa1ecea7"
+  }
+ ],
+ "assessment": {
+  "adapter": {
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/assessment_adapter.py",
+   "sha256": "dd76ef704a97ef6eee224aa6732bd6f7438379320968efd01a343c2fc45e83a9"
+  },
+  "command": [
+   "{python}",
+   "{assessment-adapter}",
+   "{assessment-request}",
+   "{assessment-response}"
+  ]
+ }
+}

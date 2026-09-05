@@ -1,0 +1,9 @@
+{
+ "case_id": "resolved-introduced-run-loads",
+ "expect": {
+  "load": "loads",
+  "stage": "promotion"
+ },
+ "kind": "load",
+ "run_copy": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/frozen-real/s12-card-approver.controller-run"
+}

@@ -1,0 +1,100 @@
+{
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/evaluator_adapter.py",
+        "sha256": "f62b9f1304123018fd873d77705cfb28ac16d33be01c855a0f4bf94fb0320c08"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "map-cell-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "defect-subjects-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "clear-units-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "not-applicable-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "no-owner-question"
+      },
+      {
+        "direction": "maximize",
+        "name": "located-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-341559595133c367779c",
+  "frozen_input": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/cases/btm-v6-opened-without-profile.json",
+    "sha256": "e7504fd1536c64befe35768ead26f1db8b4276d0c13a59fee9e29701e4e39f51"
+  },
+  "hypothesis": "Every approach declared by mini-probe 'payload-consistency-contract' can run against captured case 'btm-v6-opened-without-profile', and the declared metrics recommend one bundle.",
+  "schema_version": 4,
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "variants": [
+    {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/bundles/code-owned-lens-both-seats"
+      ],
+      "configuration": {
+        "case_id": "btm-v6-opened-without-profile"
+      },
+      "id": "control"
+    },
+    {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/bundles/advisory-report-only"
+      ],
+      "configuration": {
+        "case_id": "btm-v6-opened-without-profile"
+      },
+      "id": "variation-2"
+    }
+  ]
+}

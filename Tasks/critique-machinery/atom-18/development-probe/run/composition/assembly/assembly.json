@@ -1,0 +1,115 @@
+{
+  "baseline_sha256": "b35b23c8ca0ac1ede0ea68750e2e01f7623670f4ee3b2b344c3511796c42b205",
+  "candidates": [
+    {
+      "approach_id": "code-owned-lens-both-seats",
+      "artifact": "introduced-field-winner",
+      "bundle_sha256": "29cba52461d806e30ec3d69f14a7ceef01ab84487b9eeee10731eacbdc7069ae",
+      "probe_id": "payload-consistency-contract"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "payload-consistency-lens",
+    "development_manifest_sha256": "dac90557f02843658bf202df72f198141425237a47ba4cd0c1ea29f271821036"
+  },
+  "inputs": [
+    {
+      "case_id": "btm-v6-map-contradicts-spans",
+      "path": "btm-v6-map-contradicts-spans.input",
+      "sha256": "687b65608f072d8359fecdae37b83f1bd99d9d11e3bee8101722e87b2ce3811e",
+      "size": 904
+    },
+    {
+      "case_id": "viv-v6-page-consistent",
+      "path": "viv-v6-page-consistent.input",
+      "sha256": "39acbf61146be5d33a27dccb8fff66b4fe5fa8b41c53421cd767e2cf4aa52104",
+      "size": 722
+    },
+    {
+      "case_id": "btm-v5-page-without-span-fields",
+      "path": "btm-v5-page-without-span-fields.input",
+      "sha256": "71f652c7f1ba317d2d7c983e69a5a18fc3c2c6d2e50ec787c908b6877f4a738e",
+      "size": 602
+    },
+    {
+      "case_id": "btm-v6-opened-without-profile",
+      "path": "btm-v6-opened-without-profile.input",
+      "sha256": "e7504fd1536c64befe35768ead26f1db8b4276d0c13a59fee9e29701e4e39f51",
+      "size": 580
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "payload-consistency-contract"
+      ],
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "6c0132d7c04af0d99d1e2a46207903f49d4f6c51c4abd28f6ac242c3544ad168",
+      "size": 8570
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "payload-consistency-contract"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+      "size": 131976
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "payload-consistency-contract"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "d72e83dd347f52dfc47978266ca0ecf851163fc24572834d0c62e0dbf78f1287",
+      "size": 48084
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "d773b478155fff444a3b3ccb94043ac4025f3d67d9ea9f19e53098af2743844a",
+        "size": 7133
+      },
+      {
+        "path": "skills/critique-machinery/SKILL.md",
+        "sha256": "6c0132d7c04af0d99d1e2a46207903f49d4f6c51c4abd28f6ac242c3544ad168",
+        "size": 8570
+      },
+      {
+        "path": "skills/critique-machinery/agents/openai.yaml",
+        "sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+        "size": 265
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+        "size": 131976
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "d72e83dd347f52dfc47978266ca0ecf851163fc24572834d0c62e0dbf78f1287",
+        "size": 48084
+      }
+    ],
+    "root": "source",
+    "sha256": "1a73293daae8269092fe33795a6332a9fc72a1248db96f2ad56377f1919421b6"
+  },
+  "status": "assembled"
+}

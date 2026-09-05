@@ -1,0 +1,40 @@
+{
+  "atomic_step_id": "introduced-field-declaration",
+  "baseline_sha256": "e603df36f101beb450e9614ce52535c08f013bdd17ae5c6b36f7feae5f2434eb",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "0e14b57858134628a00be231d413d1b28b5c51a680f7f0ed217fa024e784ba67",
+      "before_mode": 420,
+      "before_sha256": "fcbfcb47c1be7f888b8ed569ddee17750e0b93e5c3efa8b29bf98ce703d2d1cc",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/SKILL.md"
+    },
+    {
+      "after_mode": 493,
+      "after_sha256": "65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83",
+      "before_mode": 493,
+      "before_sha256": "ab6d3b0d3f84af5ac1ba85b48c5f3ae82627c4aef6cfdc6cb63674958e6c0259",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "2c229cf939323933c02fce00779d0a4cf2fb4450b537e24fe517b57a2b3113ff",
+      "before_mode": 420,
+      "before_sha256": "8e55d005fe2e47f3986f2ff155593a0a9b15ddeebb9714f81ac38207a0059b3e",
+      "kind": "changed",
+      "path": "tests/test_atom_building_machinery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "52d411b2b986548fc7ac63e019cb6b306dc89ea1e2bb77781fc0ebe6e11f6f37",
+      "before_mode": 420,
+      "before_sha256": "7f3c7a887940e15ba829632b755c2ecd236bad58f1e240c15e9beae16ed1f392",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

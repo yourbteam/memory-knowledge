@@ -1,0 +1,8 @@
+{
+  "assembly_sha256": "a77598710a41b57fa4792ad66cd868c1135e91ba74552ed2c9553e71aaf0b2e1",
+  "atomic_step_id": "introduced-field-declaration",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source_sha256": "fb8e1db53fadf75e9f28ee6033f1e9e2716ac5f2d197578cefc61b752a080cdb",
+  "status": "completed"
+}

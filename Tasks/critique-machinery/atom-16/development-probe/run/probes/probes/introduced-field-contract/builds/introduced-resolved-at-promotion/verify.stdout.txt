@@ -1,0 +1,1 @@
+{"approach_id": "introduced-resolved-at-promotion", "atomic_step_id": "introduced-field-declaration", "bundle_sha256": "74b928d523a848ab97768e2836cff8e6e3af50887b65ebf5a78d2d069cdae6d3", "probe_id": "introduced-field-contract", "status": "verified"}

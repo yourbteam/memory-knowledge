@@ -1,0 +1,14 @@
+{
+ "case_id": "viv-v6-page-consistent",
+ "script": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/critique-machinery/scripts/critique.py",
+ "open_exit": 0,
+ "consistency_exit": 0,
+ "consistency_stdout": "{\"defects\": [], \"deliverable\": \"tactical_roadmap\", \"not_applicable\": [\"u-001-67522c23::payload-consistency\", \"u-002-43fbd923::payload-consistency\", \"u-004-0f0ba629::payload-consistency\", \"u-005-89eab2a6::payload-consistency\", \"u-006-435e9e2a::payload-consistency\", \"u-007-b6a22836::payload-consistency\", \"u-008-75bafe33::payload-consistency\", \"u-009-d7637ccf::payload-consistency\", \"u-010-efb7bc28::payload-consistency\", \"u-011-f9a36dcb::payload-consistency\", \"u-012-602f27dc::payload-consistency\", \"",
+ "consistency_stderr": "",
+ "map_outcome": "agreement-clear",
+ "map_defects": [],
+ "code_cells": 26,
+ "owner_open_count": 0,
+ "located_head": "",
+ "satisfied": true
+}

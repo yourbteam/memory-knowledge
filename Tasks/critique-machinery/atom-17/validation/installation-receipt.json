@@ -1,0 +1,17 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "skill": "atom-building-machinery",
+ "canonical_controller_sha256": "128587cac0f2c6a7c908b762c601d3e503b2d9789a2a19ce62250ec44ab6b00b",
+ "codex_projection_sha256": "69cd73583b479b37b0031009bd0433335d500e51e754d9fa508f6693e9c47410",
+ "claude_projection_sha256": "3bbc89a19ccef19ce45da9257e257b54b89340176a0d5101a28844c495be431b",
+ "registry_matches": {
+  "codex": true,
+  "claude": true
+ },
+ "installed_controller_sha256": {
+  "codex": "128587cac0f2c6a7c908b762c601d3e503b2d9789a2a19ce62250ec44ab6b00b",
+  "claude": "128587cac0f2c6a7c908b762c601d3e503b2d9789a2a19ce62250ec44ab6b00b"
+ },
+ "live_confirmation": "both installed controllers load united-partners Tasks/step6-feedback-closure/runs/atom-s12-card-approver/controller-run at stage promotion"
+}

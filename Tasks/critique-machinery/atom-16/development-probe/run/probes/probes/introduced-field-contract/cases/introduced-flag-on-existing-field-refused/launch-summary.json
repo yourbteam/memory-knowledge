@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-declaration",
+  "case_id": "introduced-flag-on-existing-field-refused",
+  "experiment_id": "development-probe-7b5788d0da5b5b500c70",
+  "probe_id": "introduced-field-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "d34114a659e603684b07d3d17b0012a0abbfe0eb410b8a20c5d31d06529849e2",
+  "schema_version": 1,
+  "status": "completed"
+}

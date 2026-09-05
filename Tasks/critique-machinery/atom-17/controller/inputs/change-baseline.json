@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "0e14b57858134628a00be231d413d1b28b5c51a680f7f0ed217fa024e784ba67",
+      "size": 14075
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83",
+      "size": 128523
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "2c229cf939323933c02fce00779d0a4cf2fb4450b537e24fe517b57a2b3113ff",
+      "size": 60610
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "52d411b2b986548fc7ac63e019cb6b306dc89ea1e2bb77781fc0ebe6e11f6f37",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

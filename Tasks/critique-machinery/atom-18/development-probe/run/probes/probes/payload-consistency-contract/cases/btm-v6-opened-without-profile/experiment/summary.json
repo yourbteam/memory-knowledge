@@ -1,0 +1,210 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/evaluator_adapter.py",
+        "sha256": "f62b9f1304123018fd873d77705cfb28ac16d33be01c855a0f4bf94fb0320c08"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "map-cell-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "defect-subjects-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "clear-units-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "not-applicable-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "no-owner-question"
+      },
+      {
+        "direction": "maximize",
+        "name": "located-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-341559595133c367779c",
+  "frozen_input_sha256": "e7504fd1536c64befe35768ead26f1db8b4276d0c13a59fee9e29701e4e39f51",
+  "hypothesis": "Every approach declared by mini-probe 'payload-consistency-contract' can run against captured case 'btm-v6-opened-without-profile', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 418,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "outcome": {
+        "case_id": "btm-v6-opened-without-profile",
+        "case_sha256": "e7504fd1536c64befe35768ead26f1db8b4276d0c13a59fee9e29701e4e39f51",
+        "code_cells": 24,
+        "consistency_exit": 2,
+        "consistency_stderr": "critique refused: consistency has nothing to read: the run was opened without a deliverable profile that declares checks, and its payload-consistency cells are already recorded as not applicable.",
+        "consistency_stdout": "",
+        "defect_subjects": [],
+        "located_head": "",
+        "map_outcome": "not-applicable",
+        "metrics": {
+          "clear-units-correct": 1,
+          "defect-subjects-correct": 1,
+          "frozen-input-unchanged": 1,
+          "located-correct": 1,
+          "map-cell-correct": 1,
+          "no-owner-question": 1,
+          "not-applicable-correct": 1
+        },
+        "open_exit": 0,
+        "open_stderr": "",
+        "owner_open_count": 0
+      },
+      "reported_metrics": {
+        "clear-units-correct": 1,
+        "defect-subjects-correct": 1,
+        "frozen-input-unchanged": 1,
+        "located-correct": 1,
+        "map-cell-correct": 1,
+        "no-owner-question": 1,
+        "not-applicable-correct": 1
+      },
+      "result_sha256": "11073e6fe9bdf473419ac648b867c670e557b576ad994b5cfc82c8a401335174",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "ca4fd3b8f8abd0a425d077599bf7f3230924eb846c1e49737a4b8006da240ac0",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 407,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "outcome": {
+        "case_id": "btm-v6-opened-without-profile",
+        "case_sha256": "e7504fd1536c64befe35768ead26f1db8b4276d0c13a59fee9e29701e4e39f51",
+        "code_cells": 24,
+        "consistency_exit": 2,
+        "consistency_stderr": "critique refused: consistency has nothing to read: the run was opened without a deliverable profile that declares checks, and its payload-consistency cells are already recorded as not applicable.",
+        "consistency_stdout": "",
+        "defect_subjects": [],
+        "located_head": "",
+        "map_outcome": "not-applicable",
+        "metrics": {
+          "clear-units-correct": 1,
+          "defect-subjects-correct": 1,
+          "frozen-input-unchanged": 1,
+          "located-correct": 1,
+          "map-cell-correct": 1,
+          "no-owner-question": 1,
+          "not-applicable-correct": 1
+        },
+        "open_exit": 0,
+        "open_stderr": "",
+        "owner_open_count": 0
+      },
+      "reported_metrics": {
+        "clear-units-correct": 1,
+        "defect-subjects-correct": 1,
+        "frozen-input-unchanged": 1,
+        "located-correct": 1,
+        "map-cell-correct": 1,
+        "no-owner-question": 1,
+        "not-applicable-correct": 1
+      },
+      "result_sha256": "2c77d282b1b8a6e654d0fd561be7f5c41ed3826c7d1affb0f54fc93f4d52f047",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "bd7732697b4719b6f7fffd57667e53bfb6001465c1388aac1c3ee1bc6b882cf6",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

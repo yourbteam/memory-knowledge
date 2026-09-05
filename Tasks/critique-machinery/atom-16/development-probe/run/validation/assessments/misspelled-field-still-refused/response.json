@@ -1,0 +1,9 @@
+{
+  "case_id": "misspelled-field-still-refused",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 16 candidate facts passed",
+  "verdict": "satisfied"
+}

@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "a77598710a41b57fa4792ad66cd868c1135e91ba74552ed2c9553e71aaf0b2e1",
+  "atomic_outcome": "An atom may declare a structured field it introduces: start accepts it when the field's parent resolves and the leaf does not exist yet, records it as introduced, and record-promotion refuses until the canonical module carries the leaf; a misspelled field and an introduced flag on an existing field are refused at start by name.",
+  "atomic_step_id": "introduced-field-declaration",
+  "case_id": "introduced-approver-field-starts",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-approver-field-starts/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-approver-field-starts/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-approver-field-starts/telemetry.jsonl",
+      "sha256": "1e534ea481b90af0febb78dabb414819e90210500bef51e1000cd950b9c29e82"
+    }
+  ],
+  "expected_outcome": "The real round-5 request declaring activation_cards[].approver as introduced starts, and promotion refuses until the canonical module carries the field.",
+  "operator_path": "Run the candidate controller's real start against the real United Partners repository for every frozen request and its promotion-time validation for the introduced field; promoted validation then starts the real round-5 request through the installed controller.",
+  "overall_criterion": "Any metric fails on any case, or the promoted controller refuses the real request.",
+  "schema_version": 1
+}

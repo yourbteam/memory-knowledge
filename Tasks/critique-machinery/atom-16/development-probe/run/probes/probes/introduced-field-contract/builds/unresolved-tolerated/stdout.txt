@@ -1,0 +1,1 @@
+{"approach_id": "unresolved-tolerated", "atomic_step_id": "introduced-field-declaration", "bundle_sha256": "d06576024cf51292d189bc3a6cb0846a48ddb1cee226494ff4502f6d7a282482", "probe_id": "introduced-field-contract", "status": "built"}

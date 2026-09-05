@@ -1,0 +1,21 @@
+{
+ "schema_version": 1,
+ "probe_id": "payload-consistency-contract",
+ "approach_id": "code-owned-lens-both-seats",
+ "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/development-manifest.json",
+ "source": {
+  "baseline": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/baseline",
+  "candidate": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/candidates/code-owned-lens-both-seats",
+  "entrypoint": "probe_entry.py"
+ },
+ "execution": {
+  "protocol": "experiment-result-v1",
+  "command": [
+   "{python}",
+   "{candidate-entrypoint}",
+   "{frozen-input}",
+   "{result-path}",
+   "{telemetry-path}"
+  ]
+ }
+}

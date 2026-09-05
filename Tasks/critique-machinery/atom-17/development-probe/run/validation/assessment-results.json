@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+        "atomic_step_id": "introduced-field-resolves-on-resume",
+        "case_id": "resolved-introduced-run-loads",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 17 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "resolved-introduced-run-loads",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+        "atomic_step_id": "introduced-field-resolves-on-resume",
+        "case_id": "introduced-flag-on-existing-field-refused",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 17 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "introduced-flag-on-existing-field-refused",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+        "atomic_step_id": "introduced-field-resolves-on-resume",
+        "case_id": "introduced-leaf-starts-and-gates",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 17 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "introduced-leaf-starts-and-gates",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+        "atomic_step_id": "introduced-field-resolves-on-resume",
+        "case_id": "existing-field-declaration-still-starts",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 17 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "existing-field-declaration-still-starts",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

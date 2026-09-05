@@ -1,0 +1,218 @@
+{
+  "completion_order": [
+    "introduced-flag-on-existing-field-refused",
+    "resolved-introduced-run-loads",
+    "existing-field-declaration-still-starts",
+    "introduced-leaf-starts-and-gates"
+  ],
+  "results": [
+    {
+      "case_id": "resolved-introduced-run-loads",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/resolved-introduced-run-loads/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/resolved-introduced-run-loads/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/resolved-introduced-run-loads/telemetry.jsonl",
+          "sha256": "2759488548a920ab69d0678b3428fa57740f8c257c8503894a142e55d648f79d"
+        }
+      ],
+      "output": "executions/resolved-introduced-run-loads",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "load-verdict-correct": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "resolved-introduced-run-loads",
+          "case_sha256": "699f984f567d7a4c5a109157387eca3348dad682430d6fc6dc810a60ff8a7357",
+          "load_stderr": "",
+          "load_verdict": "loads",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "load-verdict-correct": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "stage": "promotion"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "introduced-flag-on-existing-field-refused",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/telemetry.jsonl",
+          "sha256": "2108b949a3a1aaab31861619e776be6f34f763f5dd9d9b942bd310af1a1c072d"
+        }
+      ],
+      "output": "executions/introduced-flag-on-existing-field-refused",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "load-verdict-correct": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "introduced-flag-on-existing-field-refused",
+          "case_sha256": "5b0a1371f9f0b91b0ce58535b37f21cb9a1d5722ec471930f7edc8ecbd134841",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "load-verdict-correct": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "",
+          "promotion_observed": "not-applicable",
+          "start_refusal": "Atom Building Machinery refused at start: introduced field 'activation_cards[].kpi' already resolves at 'kpi'; declare it without 'introduced'",
+          "start_verdict": "refused"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "introduced-leaf-starts-and-gates",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-leaf-starts-and-gates/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-leaf-starts-and-gates/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-leaf-starts-and-gates/telemetry.jsonl",
+          "sha256": "18d019f0a48c5cd4f4513743de172c37c8fa365ebeafc0ae1591631544cfa999"
+        }
+      ],
+      "output": "executions/introduced-leaf-starts-and-gates",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "load-verdict-correct": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "introduced-leaf-starts-and-gates",
+          "case_sha256": "fc7b4579d0c600908a05e6ddaa02be6520601bc306ff550ea27a538f13071560",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "load-verdict-correct": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "introduced field 'rollout.widening_month' still does not resolve at 'widening_month' at record-promotion; the canonical module must carry it before the promotion receipt is recorded; available keys are []",
+          "promotion_observed": "refused-naming-field",
+          "start_refusal": "",
+          "start_verdict": "started"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "existing-field-declaration-still-starts",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/existing-field-declaration-still-starts/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/existing-field-declaration-still-starts/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/existing-field-declaration-still-starts/telemetry.jsonl",
+          "sha256": "0db01a3b8f7c64b19ea9cdc2f691a2d7cde4c158a86eb5ff781561a5d41a8e9a"
+        }
+      ],
+      "output": "executions/existing-field-declaration-still-starts",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "load-verdict-correct": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "existing-field-declaration-still-starts",
+          "case_sha256": "9e5c89ae66fc50ff3700a26772fe9b5ea1768d7ff7cdf488b0b6150a07e80bd8",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "load-verdict-correct": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "",
+          "promotion_observed": "not-applicable",
+          "start_refusal": "",
+          "start_verdict": "started"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

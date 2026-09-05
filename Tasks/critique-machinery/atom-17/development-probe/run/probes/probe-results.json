@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/introduced-field-resume-contract",
+      "probe_id": "introduced-field-resume-contract",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,14 @@
+{
+ "case_id": "introduced-leaf-starts-and-gates",
+ "controller": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/atom_controller.py",
+ "repository_root": "/Users/kamenkamenov/united-partners",
+ "expected": {
+  "promotion": "refused-naming-field",
+  "start": "started"
+ },
+ "start_verdict": "started",
+ "start_stderr": "",
+ "promotion_observed": "refused-naming-field",
+ "promotion_message": "introduced field 'rollout.widening_month' still does not resolve at 'widening_month' at record-promotion; the canonical module must carry it before the promotion receipt is recorded; available keys are []",
+ "satisfied": true
+}

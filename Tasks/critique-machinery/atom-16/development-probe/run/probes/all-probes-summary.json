@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-declaration",
+  "probe_ids": [
+    "introduced-field-contract"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "5dd8e79e0f46492ef6af88d1fcc090e32ecf1cc80c35b5c3df8b3318f7140f01",
+  "schema_version": 1,
+  "status": "completed"
+}

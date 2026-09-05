@@ -1,0 +1,55 @@
+{
+ "schema_version": 1,
+ "status": "promoted",
+ "atomic_step_id": "introduced-field-declaration",
+ "controller": "prototype-driven-implementation",
+ "experiment_event_sha256": "11865bbae42f0b92a07481da1265b3a28a1a2ea43e6363c07e60fbd818665ec0",
+ "experiment_assembly_sha256": "a77598710a41b57fa4792ad66cd868c1135e91ba74552ed2c9553e71aaf0b2e1",
+ "changed_paths": [
+  "skills/atom-building-machinery/SKILL.md",
+  "skills/atom-building-machinery/scripts/atom_controller.py",
+  "tests/test_atom_building_machinery.py",
+  "working-agreement/client-skill-projections.json"
+ ],
+ "change_surface": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/promotion/change-surface.json",
+  "sha256": "a049ccb80a1410e59560e6d1fefb2370e055216fce26e900fe8f24f42f99cff8"
+ },
+ "review": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/promotion/review.json",
+  "sha256": "111e9285ddda9d000f6f476f6a3f0d1f2e6778b7b3193916f98e496e6cfd8dc9"
+ },
+ "evidence": [
+  {
+   "case_id": "introduced-approver-field-starts",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/cases/introduced-approver-field-starts.json",
+   "sha256": "86b921a47f113df973f7e164a3c8e1a22585e1b8351e1420875550f107a1e787"
+  },
+  {
+   "case_id": "misspelled-field-still-refused",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/cases/misspelled-field-still-refused.json",
+   "sha256": "1388e49eedbbf6b5c595b60160dddd4ae915d877734881f60bcb05a3afb83db4"
+  },
+  {
+   "case_id": "introduced-flag-on-existing-field-refused",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/cases/introduced-flag-on-existing-field-refused.json",
+   "sha256": "5b0a1371f9f0b91b0ce58535b37f21cb9a1d5722ec471930f7edc8ecbd134841"
+  },
+  {
+   "case_id": "existing-field-declaration-still-starts",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/cases/existing-field-declaration-still-starts.json",
+   "sha256": "9e5c89ae66fc50ff3700a26772fe9b5ea1768d7ff7cdf488b0b6150a07e80bd8"
+  }
+ ],
+ "contract_surface": {
+  "kind": "validation",
+  "deliverable": "atom_controller",
+  "fields": [
+   {
+    "field": "contract_surface",
+    "shape": "object",
+    "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS"
+   }
+  ]
+ }
+}

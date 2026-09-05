@@ -1,0 +1,24 @@
+{
+  "aggregated_metrics": {
+    "frozen-input-unchanged": 1.0,
+    "load-verdict-correct": 1.0,
+    "promotion-gate-correct": 1.0,
+    "refusal-actionable": 1.0,
+    "start-verdict-correct": 1.0
+  },
+  "approach_id": "already-resolves-is-a-start-check",
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "bundle_sha256": "6a46b3d72a011bd0a6496eb1e5b1d90cd6e2225f12be6c6739b83c19c51340e6",
+  "case_count": 4,
+  "case_ids": [
+    "resolved-introduced-run-loads",
+    "introduced-flag-on-existing-field-refused",
+    "introduced-leaf-starts-and-gates",
+    "existing-field-declaration-still-starts"
+  ],
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended"
+}

@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/misspelled-field-still-refused/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/misspelled-field-still-refused/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/misspelled-field-still-refused/experiment/variants/control/telemetry.jsonl",
+          "sha256": "9199fa14942667b72630fc861352a1d507466151c9b8b772f05811a897b7dc3e"
+        }
+      ],
+      "execution": {
+        "duration_ms": 221,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "7ed412e02b7be1eb4a180767273a62aa0c139c0b458d9ff99001347ab0d719b6",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/misspelled-field-still-refused/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/misspelled-field-still-refused/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/misspelled-field-still-refused/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "01a3ede7c9809c3f701a4817c9fd99c733289932c5a1ec3bdc6da3537ebb9f21"
+        }
+      ],
+      "execution": {
+        "duration_ms": 332,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "9dd53187728d5374fcb9193d5ca3a488fa744a1ced4e5e3f8f3000f3048c36e2",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-74b95d8a6c1a6bc3d094",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "start-verdict-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "refusal-actionable"
+    },
+    {
+      "direction": "maximize",
+      "name": "promotion-gate-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "frozen-input-unchanged"
+    }
+  ],
+  "schema_version": 1
+}

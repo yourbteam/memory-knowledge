@@ -1,0 +1,14 @@
+{
+  "approach_id": "already-resolves-is-a-start-check",
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "bundle": "../../bundles/already-resolves-is-a-start-check",
+  "bundle_sha256": "6a46b3d72a011bd0a6496eb1e5b1d90cd6e2225f12be6c6739b83c19c51340e6",
+  "case_id": "introduced-flag-on-existing-field-refused",
+  "experiment_id": "development-probe-771a85b0a146c5ba09d6",
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

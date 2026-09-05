@@ -1,0 +1,54 @@
+{
+ "schema_version": 1,
+ "atomic_step_id": "introduced-field-declaration",
+ "outcome": "An atom may declare a structured field it introduces: start accepts it when the field's parent resolves and the leaf does not exist yet, records it as introduced, and record-promotion refuses until the canonical module carries the leaf; a misspelled field and an introduced flag on an existing field are refused at start by name.",
+ "practical_value": "Round 5 of the S12 roadmap adds three structured fields; the machinery can build those atoms without hiding the field's addition from the atom's own change record.",
+ "stopping_condition": "The real refused round-5 request starts through the candidate controller and its promotion gate refuses until the field exists; the real misspelled request and an introduced-on-existing field are refused by name; the real structured-KPI request still starts; the promoted controller is installed to both projections at parity and the real request starts through the installed controller.",
+ "allowed_paths": [
+  "skills/atom-building-machinery/SKILL.md",
+  "skills/atom-building-machinery/scripts/atom_controller.py",
+  "tests/test_atom_building_machinery.py",
+  "working-agreement/client-skill-projections.json"
+ ],
+ "captured_cases": [
+  {
+   "case_id": "introduced-approver-field-starts",
+   "source_ref": "Tasks/critique-machinery/atom-16/cases/introduced-approver-field-starts.json",
+   "sha256": "86b921a47f113df973f7e164a3c8e1a22585e1b8351e1420875550f107a1e787",
+   "kind": "failure",
+   "expected_outcome": "The real round-5 request declaring activation_cards[].approver as introduced starts, and promotion refuses until the canonical module carries the field."
+  },
+  {
+   "case_id": "misspelled-field-still-refused",
+   "source_ref": "Tasks/critique-machinery/atom-16/cases/misspelled-field-still-refused.json",
+   "sha256": "1388e49eedbbf6b5c595b60160dddd4ae915d877734881f60bcb05a3afb83db4",
+   "kind": "failure",
+   "expected_outcome": "The real misspelled request is still refused at start with the available keys."
+  },
+  {
+   "case_id": "introduced-flag-on-existing-field-refused",
+   "source_ref": "Tasks/critique-machinery/atom-16/cases/introduced-flag-on-existing-field-refused.json",
+   "sha256": "5b0a1371f9f0b91b0ce58535b37f21cb9a1d5722ec471930f7edc8ecbd134841",
+   "kind": "failure",
+   "expected_outcome": "An introduced flag on a field the module already carries is refused by name."
+  },
+  {
+   "case_id": "existing-field-declaration-still-starts",
+   "source_ref": "Tasks/critique-machinery/atom-16/cases/existing-field-declaration-still-starts.json",
+   "sha256": "9e5c89ae66fc50ff3700a26772fe9b5ea1768d7ff7cdf488b0b6150a07e80bd8",
+   "kind": "success",
+   "expected_outcome": "The real structured-KPI request without any introduced flag still starts exactly as before."
+  }
+ ],
+ "contract_surface": {
+  "kind": "validation",
+  "deliverable": "atom_controller",
+  "fields": [
+   {
+    "field": "contract_surface",
+    "shape": "object",
+    "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS"
+   }
+  ]
+ }
+}

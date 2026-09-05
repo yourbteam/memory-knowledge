@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "a77598710a41b57fa4792ad66cd868c1135e91ba74552ed2c9553e71aaf0b2e1",
+  "assessment_adapter_sha256": "931f27cf05f3e9bb4d50b1fecc39945ab0d4cf9caeb26b18f4e1c854324e7758",
+  "atomic_step_id": "introduced-field-declaration",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

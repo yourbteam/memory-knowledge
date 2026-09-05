@@ -1,0 +1,60 @@
+{
+ "case_id": "introduced-leaf-starts-and-gates",
+ "expect": {
+  "promotion": "refused-naming-field",
+  "start": "started"
+ },
+ "request": {
+  "allowed_paths": [
+   "src/up_harness/tactical_roadmap.py",
+   "tests/unit"
+  ],
+  "atomic_step_id": "s12-rollout-widening-month",
+  "captured_cases": [
+   {
+    "case_id": "case-btm-v5-no-widening-month",
+    "expected_outcome": "the real v5 rollout carries no widening month and is refused naming the shape",
+    "kind": "failure",
+    "sha256": "b62cf5253f7fe609856f34bf50ba48c40152a5309558dd4232b77e4382fbc204",
+    "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-rollout-widening-month/cases/case-btm-v5-no-widening-month.json"
+   },
+   {
+    "case_id": "case-btm-v5-widen-month-4",
+    "expected_outcome": "the rollout widening at the Month 4 proof launch is accepted and rendered",
+    "kind": "success",
+    "sha256": "63cd4373ddf159d4e89a0db1cb431f70db6f9d835287aeb7c5b632e7bf854051",
+    "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-rollout-widening-month/cases/case-btm-v5-widen-month-4.json"
+   },
+   {
+    "case_id": "case-btm-v5-widen-month-8",
+    "expected_outcome": "a widening in Month 8 is refused naming the Launch months",
+    "kind": "failure",
+    "sha256": "1b7fb5091854e2a2d6b5af93c03300dc54658b4a129477a776960da0837bb9f9",
+    "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-rollout-widening-month/cases/case-btm-v5-widen-month-8.json"
+   },
+   {
+    "case_id": "case-viv-v5-widen-month-3",
+    "expected_outcome": "the Vivacom rollout widening at its Month 3 launch is accepted",
+    "kind": "success",
+    "sha256": "44404f4329f5fa868cf1fc0dfc39b3d142b6269a7fa797e2d669702f2fe31583",
+    "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-rollout-widening-month/cases/case-viv-v5-widen-month-3.json"
+   }
+  ],
+  "contract_surface": {
+   "deliverable": "tactical_roadmap",
+   "fields": [
+    {
+     "field": "rollout.widening_month",
+     "introduced": true,
+     "shape": "integer",
+     "shape_source": "src/up_harness/tactical_roadmap.py::SECTION_KEYS"
+    }
+   ],
+   "kind": "validation"
+  },
+  "outcome": "rollout carries widening_month \u2014 the month the rollout widens past its first audience, an integer that is the month of a Launch-phase card \u2014 and the page renders 'Then widen \u2014 from Month N to Month 12'.",
+  "practical_value": "The version 5 B Team rollout names the audiences and assets it widens to but not when the widening starts or how long it runs (critique cells u-022, two seats), so a funder cannot place the spend on the calendar.",
+  "schema_version": 1,
+  "stopping_condition": "The real v5 rollouts without the field are refused naming the shape; Month 4 (a Launch card's month) is accepted and rendered; Month 8 is refused naming the Launch months 4 and 5; the Vivacom rollout with Month 3 is accepted."
+ }
+}

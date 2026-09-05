@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/introduced-flag-on-existing-field-refused/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/introduced-flag-on-existing-field-refused/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/introduced-flag-on-existing-field-refused/experiment/variants/control/telemetry.jsonl",
+          "sha256": "551b48141b0fbb866eb238796c526a18a91354d3c062b39f115a8d6a53d09da9"
+        }
+      ],
+      "execution": {
+        "duration_ms": 220,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "f4c7575829e9525850a286ceecfe46ed5970de064eb4ba1daa84507cd69c1cfd",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/introduced-flag-on-existing-field-refused/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/introduced-flag-on-existing-field-refused/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/cases/introduced-flag-on-existing-field-refused/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "fd1728d8ace258a5dde8e6bf6d685cb04040e71e7c63d312f43c860768f6764b"
+        }
+      ],
+      "execution": {
+        "duration_ms": 188,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "c1f6b7f8bde16f9a3ff4a2d1f8935a301c23e05b95f3ed86bc7a1daba114c691",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-7b5788d0da5b5b500c70",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "start-verdict-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "refusal-actionable"
+    },
+    {
+      "direction": "maximize",
+      "name": "promotion-gate-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "frozen-input-unchanged"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "existing-field-declaration-still-starts",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 16 candidate facts passed",
+  "verdict": "satisfied"
+}

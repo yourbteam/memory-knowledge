@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "case_id": "resolved-introduced-run-loads",
+      "output": "cases/resolved-introduced-run-loads",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "introduced-flag-on-existing-field-refused",
+      "output": "cases/introduced-flag-on-existing-field-refused",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "introduced-leaf-starts-and-gates",
+      "output": "cases/introduced-leaf-starts-and-gates",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "existing-field-declaration-still-starts",
+      "output": "cases/existing-field-declaration-still-starts",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,46 @@
+{
+  "assembly_sha256": "b0e6aea8df0256dce98d54887d9ef35e3a3794f24bba3a88e031e5936cf45ff1",
+  "atomic_step_id": "s12-card-approver",
+  "cases": [
+    {
+      "case_id": "case-btm-v5-no-approver",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case refused actionably with the prose untouched",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "case-btm-v5-named-approvers",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case passed and rendered the declared fragments in order",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "case-btm-v5-audience-as-approver",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case refused actionably with the prose untouched",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "case-viv-v5-decider-approves",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "the case passed and rendered the declared fragments in order",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

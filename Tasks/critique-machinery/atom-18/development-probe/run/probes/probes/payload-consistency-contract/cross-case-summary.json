@@ -1,0 +1,15 @@
+{
+  "aggregated_summary_sha256": "a42c45a748ca83b49a3473b7abb3ad636e03e8bd57e69f1452c7216849cc990f",
+  "atomic_step_id": "payload-consistency-lens",
+  "case_ids": [
+    "btm-v6-map-contradicts-spans",
+    "viv-v6-page-consistent",
+    "btm-v5-page-without-span-fields",
+    "btm-v6-opened-without-profile"
+  ],
+  "probe_id": "payload-consistency-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "f44a16d7f6bc4a2d9aa11bf50e8c5696000768d33883eebaad67e22a1c5fd56d",
+  "schema_version": 1,
+  "status": "completed"
+}

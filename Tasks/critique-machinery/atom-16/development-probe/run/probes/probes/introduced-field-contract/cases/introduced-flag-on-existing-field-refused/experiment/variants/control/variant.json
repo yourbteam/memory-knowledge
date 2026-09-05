@@ -1,0 +1,7 @@
+{
+  "configuration": {
+    "case_id": "introduced-flag-on-existing-field-refused"
+  },
+  "schema_version": 1,
+  "variant_id": "control"
+}

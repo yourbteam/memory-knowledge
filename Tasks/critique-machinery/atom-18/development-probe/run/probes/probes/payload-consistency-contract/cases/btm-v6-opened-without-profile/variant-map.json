@@ -1,0 +1,32 @@
+{
+  "experiment_id": "development-probe-341559595133c367779c",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "code-owned-lens-both-seats",
+      "bundle": "../../bundles/code-owned-lens-both-seats",
+      "bundle_sha256": "29cba52461d806e30ec3d69f14a7ceef01ab84487b9eeee10731eacbdc7069ae",
+      "case_ids": [
+        "btm-v6-map-contradicts-spans",
+        "viv-v6-page-consistent",
+        "btm-v5-page-without-span-fields",
+        "btm-v6-opened-without-profile"
+      ],
+      "probe_id": "payload-consistency-contract",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "advisory-report-only",
+      "bundle": "../../bundles/advisory-report-only",
+      "bundle_sha256": "5331eb257dba106a3fce5a090e3a894261d993cb1734d72e86287658f1db49d8",
+      "case_ids": [
+        "btm-v6-map-contradicts-spans",
+        "viv-v6-page-consistent",
+        "btm-v5-page-without-span-fields",
+        "btm-v6-opened-without-profile"
+      ],
+      "probe_id": "payload-consistency-contract",
+      "variant_id": "variation-2"
+    }
+  ]
+}

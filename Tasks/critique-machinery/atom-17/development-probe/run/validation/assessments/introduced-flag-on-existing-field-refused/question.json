@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+  "atomic_outcome": "A started atom run whose introduced contract field has since landed in the canonical module keeps loading and promotes; the 'introduced field already resolves' refusal applies only when a new run starts.",
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "introduced-flag-on-existing-field-refused",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/telemetry.jsonl",
+      "sha256": "2108b949a3a1aaab31861619e776be6f34f763f5dd9d9b942bd310af1a1c072d"
+    }
+  ],
+  "expected_outcome": "An introduced flag on a field the module already carries is still refused at start by name.",
+  "operator_path": "Run the candidate controller's real start against the real United Partners repository for every frozen request and its promotion-time validation for the introduced field; promoted validation then starts the real round-5 request through the installed controller.",
+  "overall_criterion": "Any metric fails on any case, or the promoted controller refuses the real request.",
+  "schema_version": 1
+}

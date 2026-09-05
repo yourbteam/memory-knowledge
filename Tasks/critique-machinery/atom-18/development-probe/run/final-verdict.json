@@ -1,0 +1,46 @@
+{
+  "assembly_sha256": "acd9787b9178fdd7f7806aff8641a94a8127b7bccaf45901cdd72b552cf3d172",
+  "atomic_step_id": "payload-consistency-lens",
+  "cases": [
+    {
+      "case_id": "btm-v6-map-contradicts-spans",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all declared Atom 18 candidate facts passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "viv-v6-page-consistent",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all declared Atom 18 candidate facts passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-v5-page-without-span-fields",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all declared Atom 18 candidate facts passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-v6-opened-without-profile",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all declared Atom 18 candidate facts passed",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

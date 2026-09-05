@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "payload-consistency-lens",
+  "case_id": "viv-v6-page-consistent",
+  "experiment_id": "development-probe-973b094d5ac1940480a8",
+  "probe_id": "payload-consistency-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "438e1e752ec27943e029ccdcff5e7a4c02985d7e3f28f1ecc15502b6ad3ef909",
+  "schema_version": 1,
+  "status": "completed"
+}

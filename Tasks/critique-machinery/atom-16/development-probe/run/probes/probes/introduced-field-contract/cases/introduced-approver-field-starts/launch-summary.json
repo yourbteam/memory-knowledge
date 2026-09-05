@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-declaration",
+  "case_id": "introduced-approver-field-starts",
+  "experiment_id": "development-probe-6d3a76eb2b1b6795184c",
+  "probe_id": "introduced-field-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "a578f2112684ebe0ebfd8f544a2c84e08b61418b7f788f67bfaae524bd0e92a0",
+  "schema_version": 1,
+  "status": "completed"
+}

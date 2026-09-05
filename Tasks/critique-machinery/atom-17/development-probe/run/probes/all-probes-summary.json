@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "probe_ids": [
+    "introduced-field-resume-contract"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "77a655179cbef6f2af295980105df8eeb84487dcedff9e079eaf9216beb1f151",
+  "schema_version": 1,
+  "status": "completed"
+}

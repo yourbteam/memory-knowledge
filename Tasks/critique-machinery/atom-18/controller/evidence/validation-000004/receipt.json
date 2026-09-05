@@ -1,0 +1,56 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "atomic_step_id": "payload-consistency-lens",
+ "promotion_event_sha256": "148d6483c2a17abdb551f0b80a33869f5f47a25e0903f4f2e384fef741046e5a",
+ "cases": [
+  {
+   "case_id": "btm-v6-map-contradicts-spans",
+   "verdict": "satisfied",
+   "reason": "The real B Team version 6 run, reopened through the canonical script, records the map cell as an agreement defect naming its five contradicted rows, clear on the four other read units, not-applicable elsewhere, no owner question, and located prints the craft series row.",
+   "evidence": [
+    {
+     "case_id": "btm-v6-map-contradicts-spans",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/validation/cases/btm-v6-map-contradicts-spans.json",
+     "sha256": "97d63c67aa41c76ff9e9bce7abd31df34b10cd327d0cc50e8d32b50687e303af"
+    }
+   ]
+  },
+  {
+   "case_id": "viv-v6-page-consistent",
+   "verdict": "satisfied",
+   "reason": "The real Vivacom version 6 run records clear on every read unit and not-applicable elsewhere.",
+   "evidence": [
+    {
+     "case_id": "viv-v6-page-consistent",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/validation/cases/viv-v6-page-consistent.json",
+     "sha256": "eb3323850e1639bc9995d39f9a221ea4a230e550dc05538b60136e9db05c7dfd"
+    }
+   ]
+  },
+  {
+   "case_id": "btm-v5-page-without-span-fields",
+   "verdict": "satisfied",
+   "reason": "The version 5 page rendered from its state carries no span fields, stage list, deploy month or widening month: every lens cell is not applicable with reason no-check.",
+   "evidence": [
+    {
+     "case_id": "btm-v5-page-without-span-fields",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/validation/cases/btm-v5-page-without-span-fields.json",
+     "sha256": "6272f59a2cb046ce7b30e50db2098beb1929018eb882494d95fb41ee9da4b8a0"
+    }
+   ]
+  },
+  {
+   "case_id": "btm-v6-opened-without-profile",
+   "verdict": "satisfied",
+   "reason": "The same page opened with explicit payload flags records every lens cell as not applicable with reason no-profile and consistency refuses with that reason.",
+   "evidence": [
+    {
+     "case_id": "btm-v6-opened-without-profile",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/validation/cases/btm-v6-opened-without-profile.json",
+     "sha256": "7c32dff1e04203c4fd73c559eeef97b43fe5cf9f9e2fc7d9fb961d1dffa690ef"
+    }
+   ]
+  }
+ ]
+}

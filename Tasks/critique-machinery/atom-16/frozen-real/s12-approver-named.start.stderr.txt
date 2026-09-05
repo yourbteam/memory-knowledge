@@ -1,0 +1,1 @@
+Atom Building Machinery refused at start: field 'activation_cards[].approver' does not resolve at 'approver'; available keys are ['audience', 'desired_outcome', 'engagement_mechanic', 'hashtag_or_signature', 'hero_hub_hygiene', 'idea', 'insight', 'kpi', 'message_pillar', 'month', 'name', 'peso_channel', 'phase', 'targets']

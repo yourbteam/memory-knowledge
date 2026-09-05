@@ -1,0 +1,9 @@
+{
+  "case_id": "resolved-introduced-run-loads",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 17 candidate facts passed",
+  "verdict": "satisfied"
+}

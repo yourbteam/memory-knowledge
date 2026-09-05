@@ -1,0 +1,30 @@
+{
+  "approach_bundles": [
+    {
+      "approach_id": "code-owned-lens-both-seats",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/bundles/code-owned-lens-both-seats",
+      "bundle_sha256": "29cba52461d806e30ec3d69f14a7ceef01ab84487b9eeee10731eacbdc7069ae"
+    },
+    {
+      "approach_id": "advisory-report-only",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run/probes/probes/payload-consistency-contract/bundles/advisory-report-only",
+      "bundle_sha256": "5331eb257dba106a3fce5a090e3a894261d993cb1734d72e86287658f1db49d8"
+    }
+  ],
+  "case_id": "btm-v6-opened-without-profile",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/run-inputs/development-manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/evaluator_adapter.py",
+      "sha256": "f62b9f1304123018fd873d77705cfb28ac16d33be01c855a0f4bf94fb0320c08"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "payload-consistency-contract",
+  "schema_version": 1
+}

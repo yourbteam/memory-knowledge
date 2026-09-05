@@ -1,0 +1,9 @@
+{
+  "case_id": "btm-v5-page-without-span-fields",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 18 candidate facts passed",
+  "verdict": "satisfied"
+}

@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "resolved-introduced-run-loads",
+  "experiment_id": "development-probe-3dbcfe6c40562541e2d7",
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "3ab95fa287e95ff9ade9cebb8f4d7ce360b0d1e657772e06e697cd777dbc8e3b",
+  "schema_version": 1,
+  "status": "completed"
+}

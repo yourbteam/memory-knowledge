@@ -1,0 +1,15 @@
+{
+  "aggregated_summary_sha256": "dbf5987477f66e29ca7dc3a805a9c0dbbafdb233d8f20118fd0ef6572b33766f",
+  "atomic_step_id": "introduced-field-declaration",
+  "case_ids": [
+    "introduced-approver-field-starts",
+    "misspelled-field-still-refused",
+    "introduced-flag-on-existing-field-refused",
+    "existing-field-declaration-still-starts"
+  ],
+  "probe_id": "introduced-field-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "7d26aa539545d930f983b7b558f169bca80ec118b740ce3e6d9da9da9078b60b",
+  "schema_version": 1,
+  "status": "completed"
+}

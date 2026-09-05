@@ -1,0 +1,4 @@
+interface:
+  display_name: "Experiment Machinery"
+  short_description: "Run controlled machinery phase experiments"
+  default_prompt: "Use $experiment-machinery to compare controlled variants of one machinery phase and recommend a winner from recorded evidence."

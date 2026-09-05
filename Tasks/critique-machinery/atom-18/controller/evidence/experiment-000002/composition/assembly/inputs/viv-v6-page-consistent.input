@@ -1,0 +1,24 @@
+{
+ "case_id": "viv-v6-page-consistent",
+ "deliverable": "tactical_roadmap",
+ "expect": {
+  "clear_units": [
+   "The activation map",
+   "The proof-building order",
+   "The twelve-month calendar",
+   "The always-on loop",
+   "The rollout"
+  ],
+  "map_cell": "agreement-clear",
+  "map_defect_cards": [],
+  "not_applicable_reason": "no-check",
+  "owner_queue_from_lens": 0
+ },
+ "inputs_sha256": {
+  "page": "1109d0a91bf2570599c036fa9e336680e73172bdee29fcba4f20dce040dddaa6",
+  "state": "666773fa6c48e279aa01c42a58e9f127908027367ced7f9340a1a0f645fc06b2"
+ },
+ "mode": "derived",
+ "page": "Tasks/critique-machinery/atom-18/frozen-real/viv-v6-page.md",
+ "state": "Tasks/critique-machinery/atom-18/frozen-real/viv-v6-state.json"
+}

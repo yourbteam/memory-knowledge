@@ -1,0 +1,54 @@
+{
+ "schema_version": 1,
+ "atomic_step_id": "introduced-field-resolves-on-resume",
+ "outcome": "A started atom run whose introduced contract field has since landed in the canonical module keeps loading and promotes; the 'introduced field already resolves' refusal applies only when a new run starts.",
+ "practical_value": "CM-B13 (2026-09-05): round-5 atom D started through the Atom 16 door, its experiment was recorded, the canonical module gained the approver field, and every command that loaded the run refused it \u2014 atoms D, E and F cannot reach promotion.",
+ "stopping_condition": "The real D run loads at stage promotion through the corrected controller; a new start declaring an existing field as introduced is still refused; the real E request with an introduced rollout leaf still starts and is still gated at promotion; the round-4 request still starts.",
+ "allowed_paths": [
+  "skills/atom-building-machinery/SKILL.md",
+  "skills/atom-building-machinery/scripts/atom_controller.py",
+  "tests/test_atom_building_machinery.py",
+  "working-agreement/client-skill-projections.json"
+ ],
+ "captured_cases": [
+  {
+   "case_id": "resolved-introduced-run-loads",
+   "source_ref": "Tasks/critique-machinery/atom-17/cases/resolved-introduced-run-loads.json",
+   "sha256": "699f984f567d7a4c5a109157387eca3348dad682430d6fc6dc810a60ff8a7357",
+   "kind": "success",
+   "expected_outcome": "The real round-5 atom D run, copied byte for byte after the canonical module gained approver, loads at stage promotion."
+  },
+  {
+   "case_id": "introduced-flag-on-existing-field-refused",
+   "source_ref": "Tasks/critique-machinery/atom-17/cases/introduced-flag-on-existing-field-refused.json",
+   "sha256": "5b0a1371f9f0b91b0ce58535b37f21cb9a1d5722ec471930f7edc8ecbd134841",
+   "kind": "failure",
+   "expected_outcome": "An introduced flag on a field the module already carries is still refused at start by name."
+  },
+  {
+   "case_id": "introduced-leaf-starts-and-gates",
+   "source_ref": "Tasks/critique-machinery/atom-17/cases/introduced-leaf-starts-and-gates.json",
+   "sha256": "fc7b4579d0c600908a05e6ddaa02be6520601bc306ff550ea27a538f13071560",
+   "kind": "failure",
+   "expected_outcome": "The real round-5 atom E request declaring rollout.widening_month as introduced starts, and promotion refuses until the canonical module carries the leaf."
+  },
+  {
+   "case_id": "existing-field-declaration-still-starts",
+   "source_ref": "Tasks/critique-machinery/atom-17/cases/existing-field-declaration-still-starts.json",
+   "sha256": "9e5c89ae66fc50ff3700a26772fe9b5ea1768d7ff7cdf488b0b6150a07e80bd8",
+   "kind": "success",
+   "expected_outcome": "The real structured-KPI request without any introduced flag still starts exactly as before."
+  }
+ ],
+ "contract_surface": {
+  "kind": "validation",
+  "deliverable": "atom_controller",
+  "fields": [
+   {
+    "field": "contract_surface",
+    "shape": "object",
+    "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS"
+   }
+  ]
+ }
+}

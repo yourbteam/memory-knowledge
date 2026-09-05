@@ -1,0 +1,210 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/development-probe/evaluator_adapter.py",
+        "sha256": "f62b9f1304123018fd873d77705cfb28ac16d33be01c855a0f4bf94fb0320c08"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "map-cell-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "defect-subjects-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "clear-units-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "not-applicable-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "no-owner-question"
+      },
+      {
+        "direction": "maximize",
+        "name": "located-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-b17b878f93da4fe23b2f",
+  "frozen_input_sha256": "71f652c7f1ba317d2d7c983e69a5a18fc3c2c6d2e50ec787c908b6877f4a738e",
+  "hypothesis": "Every approach declared by mini-probe 'payload-consistency-contract' can run against captured case 'btm-v5-page-without-span-fields', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 514,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "outcome": {
+        "case_id": "btm-v5-page-without-span-fields",
+        "case_sha256": "71f652c7f1ba317d2d7c983e69a5a18fc3c2c6d2e50ec787c908b6877f4a738e",
+        "code_cells": 25,
+        "consistency_exit": 0,
+        "consistency_stderr": "",
+        "consistency_stdout": "{\"defects\": [], \"deliverable\": \"tactical_roadmap\", \"not_applicable\": [\"u-001-67522c23::payload-consistency\", \"u-002-d9a493d9::payload-consistency\", \"u-003-f2988147::payload-consistency\", \"u-004-0f0ba629::payload-consistency\", \"u-005-49a6759a::payload-consistency\", \"u-006-c98ebcbb::payload-consistency\", \"u-007-3470ed7f::payload-consistency\", \"u-008-cb5409e1::payload-consistency\", \"u-009-ad883569::p",
+        "defect_subjects": [],
+        "located_head": "",
+        "map_outcome": "not-applicable",
+        "metrics": {
+          "clear-units-correct": 1,
+          "defect-subjects-correct": 1,
+          "frozen-input-unchanged": 1,
+          "located-correct": 1,
+          "map-cell-correct": 1,
+          "no-owner-question": 1,
+          "not-applicable-correct": 1
+        },
+        "open_exit": 0,
+        "open_stderr": "",
+        "owner_open_count": 0
+      },
+      "reported_metrics": {
+        "clear-units-correct": 1,
+        "defect-subjects-correct": 1,
+        "frozen-input-unchanged": 1,
+        "located-correct": 1,
+        "map-cell-correct": 1,
+        "no-owner-question": 1,
+        "not-applicable-correct": 1
+      },
+      "result_sha256": "c604a0f44e31223319a673eb0b4befdb6d4b0ebcf65a08fff071d0fcf0250a09",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "5d29cc6563fdb576a115f42b1f6e6aa2ef992e1d5108025395626d66e5cc999a",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 509,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "clear-units-correct": 1.0,
+        "defect-subjects-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "located-correct": 1.0,
+        "map-cell-correct": 1.0,
+        "no-owner-question": 1.0,
+        "not-applicable-correct": 1.0
+      },
+      "outcome": {
+        "case_id": "btm-v5-page-without-span-fields",
+        "case_sha256": "71f652c7f1ba317d2d7c983e69a5a18fc3c2c6d2e50ec787c908b6877f4a738e",
+        "code_cells": 25,
+        "consistency_exit": 0,
+        "consistency_stderr": "",
+        "consistency_stdout": "{\"defects\": [], \"deliverable\": \"tactical_roadmap\", \"not_applicable\": [\"u-001-67522c23::payload-consistency\", \"u-002-d9a493d9::payload-consistency\", \"u-003-f2988147::payload-consistency\", \"u-004-0f0ba629::payload-consistency\", \"u-005-49a6759a::payload-consistency\", \"u-006-c98ebcbb::payload-consistency\", \"u-007-3470ed7f::payload-consistency\", \"u-008-cb5409e1::payload-consistency\", \"u-009-ad883569::p",
+        "defect_subjects": [],
+        "located_head": "",
+        "map_outcome": "not-applicable",
+        "metrics": {
+          "clear-units-correct": 1,
+          "defect-subjects-correct": 1,
+          "frozen-input-unchanged": 1,
+          "located-correct": 1,
+          "map-cell-correct": 1,
+          "no-owner-question": 1,
+          "not-applicable-correct": 1
+        },
+        "open_exit": 0,
+        "open_stderr": "",
+        "owner_open_count": 0
+      },
+      "reported_metrics": {
+        "clear-units-correct": 1,
+        "defect-subjects-correct": 1,
+        "frozen-input-unchanged": 1,
+        "located-correct": 1,
+        "map-cell-correct": 1,
+        "no-owner-question": 1,
+        "not-applicable-correct": 1
+      },
+      "result_sha256": "f6b1c2f420ba96147ea91ea60052e267cea782ee504efe84bbab4fbb69990a02",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "3ac63a4094303b2d77f08439c6efb232f210c43857b270576577cfa6b3447766",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

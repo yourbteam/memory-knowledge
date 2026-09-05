@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "approach_id": "code-owned-lens-both-seats",
+      "bundle": "../../bundles/code-owned-lens-both-seats",
+      "bundle_sha256": "29cba52461d806e30ec3d69f14a7ceef01ab84487b9eeee10731eacbdc7069ae",
+      "candidate_sha256": "1a73293daae8269092fe33795a6332a9fc72a1248db96f2ad56377f1919421b6",
+      "case_ids": [
+        "btm-v6-map-contradicts-spans",
+        "viv-v6-page-consistent",
+        "btm-v5-page-without-span-fields",
+        "btm-v6-opened-without-profile"
+      ],
+      "error": null,
+      "probe_id": "payload-consistency-contract",
+      "status": "reused"
+    },
+    {
+      "approach_id": "advisory-report-only",
+      "bundle": "../../bundles/advisory-report-only",
+      "bundle_sha256": "5331eb257dba106a3fce5a090e3a894261d993cb1734d72e86287658f1db49d8",
+      "candidate_sha256": "d162d29da559cb91ce7160be06ca4f27e2c898d60649d704f3640b62e665c264",
+      "case_ids": [
+        "btm-v6-map-contradicts-spans",
+        "viv-v6-page-consistent",
+        "btm-v5-page-without-span-fields",
+        "btm-v6-opened-without-profile"
+      ],
+      "error": null,
+      "probe_id": "payload-consistency-contract",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

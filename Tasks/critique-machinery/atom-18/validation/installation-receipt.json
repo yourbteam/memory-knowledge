@@ -1,0 +1,27 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "skill": "critique-machinery",
+ "canonical_script_sha256": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+ "codex_projection_sha256": "f41f58ee3112972b56c5a3ca0b9a450b0d2a0ddd7e48cd1509e9e9d39018e024",
+ "claude_projection_sha256": "d22b21ba300d5f37133b4e7d35c44adfcbe2b0467b067810154614e3c0d44fbd",
+ "registry_matches": {
+  "codex": true,
+  "claude": true
+ },
+ "installed_script_sha256": {
+  "codex": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+  "claude": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4"
+ },
+ "live_confirmation": {
+  "work": "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v6-consistency",
+  "map_cell_outcome": "agreement-defect",
+  "defect_rows": [
+   "Earned validation outreach",
+   "Employee advocacy push",
+   "Partner proof pack",
+   "Public identity and proof lock",
+   "Senior craft story series"
+  ]
+ }
+}

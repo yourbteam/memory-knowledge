@@ -1,0 +1,12 @@
+{
+  "atom_request_sha256": "08e6ae60b992a1b0c67853fb83192ce731a8d96ef45812239b8c8e8666c5b85c",
+  "atom_run_id": "09710300a4f6c6a15c78c33d62483e091f26ca3420c3d04e279fb08a603ae7bc",
+  "atomic_step_id": "introduced-field-declaration",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [],
+  "linked_occurrence_count": 0,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "da02d8ca0ee560478a4fb2e08f1f6da67b867d79da473a620070e78887e534eb"
+}

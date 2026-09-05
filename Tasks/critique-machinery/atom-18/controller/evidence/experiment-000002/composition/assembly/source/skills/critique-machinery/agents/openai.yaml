@@ -1,0 +1,4 @@
+interface:
+  display_name: "Critique Machinery"
+  short_description: "Find grounded defects across a complete client page"
+  default_prompt: "Use $critique-machinery to inspect this delivered page completely and produce an evidence-bound located-defects document."

@@ -1,0 +1,59 @@
+{
+  "case_ids": [
+    "introduced-approver-field-starts",
+    "misspelled-field-still-refused",
+    "introduced-flag-on-existing-field-refused",
+    "existing-field-declaration-still-starts"
+  ],
+  "champion": "introduced-resolved-at-promotion",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "start-verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "promotion-gate-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "probe_id": "introduced-field-contract",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "frozen-input-unchanged": 1.0,
+        "promotion-gate-correct": 1.0,
+        "refusal-actionable": 1.0,
+        "start-verdict-correct": 1.0
+      },
+      "approach_id": "introduced-resolved-at-promotion",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "frozen-input-unchanged": 1.0,
+        "promotion-gate-correct": 0.0,
+        "refusal-actionable": 0.0,
+        "start-verdict-correct": 0.0
+      },
+      "approach_id": "unresolved-tolerated",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

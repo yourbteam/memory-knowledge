@@ -1,0 +1,16 @@
+{
+ "case_id": "btm-v6-opened-without-profile",
+ "expect": {
+  "all_lens_cells_not_applicable": true,
+  "not_applicable_reason": "no-profile",
+  "owner_queue_from_lens": 0
+ },
+ "inputs_sha256": {
+  "page": "f9d468f6f1360e9af3c86b0797baa0b207f21cca7cd00f5b27f14fa96cdc96a0",
+  "state": "1eef1172f0ec5af7bc9e5c6c262e07d17ef762834f2e91acafbcda80a0ee09ec"
+ },
+ "mode": "explicit",
+ "page": "Tasks/critique-machinery/atom-18/frozen-real/btm-v6-page.md",
+ "payload_key": "context.up.cd_s_002.tactical_roadmap",
+ "state": "Tasks/critique-machinery/atom-18/frozen-real/btm-v6-state.json"
+}

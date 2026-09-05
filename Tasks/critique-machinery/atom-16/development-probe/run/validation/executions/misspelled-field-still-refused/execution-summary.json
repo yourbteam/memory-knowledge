@@ -1,0 +1,7 @@
+{
+  "assembly_sha256": "a77598710a41b57fa4792ad66cd868c1135e91ba74552ed2c9553e71aaf0b2e1",
+  "atomic_step_id": "introduced-field-declaration",
+  "case_id": "misspelled-field-still-refused",
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,27 @@
+{
+ "schema_version": 1,
+ "probe_id": "introduced-field-resume-contract",
+ "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run-inputs/development-manifest.json",
+ "approach_build_requests": [
+  {
+   "approach_id": "already-resolves-is-a-start-check",
+   "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run-inputs/requests/build-already-resolves-is-a-start-check.json"
+  },
+  {
+   "approach_id": "already-resolves-tolerated-everywhere",
+   "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/run-inputs/requests/build-already-resolves-tolerated-everywhere.json"
+  }
+ ],
+ "evaluator": {
+  "adapter": {
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-17/development-probe/evaluator_adapter.py",
+   "sha256": "02700431eb57e9e81259cc2c8820e0417057c6005958f81452665fa75ebd77df"
+  },
+  "command": [
+   "{python}",
+   "{evaluation-adapter}",
+   "{evaluation-request}",
+   "{evaluation-response}"
+  ]
+ }
+}

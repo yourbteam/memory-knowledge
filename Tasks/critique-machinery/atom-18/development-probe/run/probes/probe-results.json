@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/payload-consistency-contract",
+      "probe_id": "payload-consistency-contract",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

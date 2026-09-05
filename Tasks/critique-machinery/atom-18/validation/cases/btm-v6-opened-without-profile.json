@@ -1,0 +1,14 @@
+{
+ "case_id": "btm-v6-opened-without-profile",
+ "script": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/critique-machinery/scripts/critique.py",
+ "open_exit": 0,
+ "consistency_exit": 2,
+ "consistency_stdout": "",
+ "consistency_stderr": "critique refused: consistency has nothing to read: the run was opened without a deliverable profile that declares checks, and its payload-consistency cells are already recorded as not applicable.",
+ "map_outcome": "not-applicable",
+ "map_defects": [],
+ "code_cells": 24,
+ "owner_open_count": 0,
+ "located_head": "",
+ "satisfied": true
+}

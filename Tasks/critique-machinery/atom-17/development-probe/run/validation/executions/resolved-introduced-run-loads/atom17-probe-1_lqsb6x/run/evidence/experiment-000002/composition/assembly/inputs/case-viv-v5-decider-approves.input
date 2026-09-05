@@ -1,0 +1,652 @@
+{
+ "case_id": "case-viv-v5-decider-approves",
+ "pack": {
+  "phases": [
+   {
+    "phase": "Pre-Seed",
+    "objective": "Lock the proof, claim boundaries, response lines and internal advocacy discipline before So You Can and The Invisible Thread become public.",
+    "months": "1 · 2"
+   },
+   {
+    "phase": "Launch",
+    "objective": "Introduce So You Can through The Invisible Thread with an earned-led household story that starts with Maya and existing customers.",
+    "months": "3 · 4"
+   },
+   {
+    "phase": "Sustain",
+    "objective": "Keep the idea visible through recurring household, reach and service proof while the always-on listening and newsroom system holds the baseline.",
+    "months": "5 · 6 · 7 · 8 · 9"
+   },
+   {
+    "phase": "Amplify",
+    "objective": "Extend the proof from homes to workplaces, municipalities, public services and credible third parties once cases and claims are cleared.",
+    "months": "10 · 11 · 12"
+   }
+  ],
+  "activation_cards": [
+   {
+    "name": "Proof Lock and Claim Boundary Room",
+    "insight": "The Invisible Thread can only build trust if every reach, service and household claim stays inside named proof.",
+    "idea": "Build the approved proof map for So You Can and The Invisible Thread before any public activity, with reach limited to OpenSignal coverage-experience proof and service friction treated as part of the promise.",
+    "engagement_mechanic": "Legal and Regulatory Affairs reviews the Key-Message Table, do-not-say lines, proof notes and comparison language before internal teams use them.",
+    "desired_outcome": "The year starts with a cleared language base that stops the platform becoming a broad network or size claim.",
+    "targets": "Legal and Regulatory Affairs reads its claim-clearance register each week in Month 1 and confirms in writing before the Month 2 internal briefing which claims the team may use next.",
+    "hashtag_or_signature": "So You Can / The Invisible Thread",
+    "audience": "Legal and Regulatory Affairs, leaders, media-preparation contacts, regulators and parent-group stakeholders.",
+    "message_pillar": "Reach is proved carefully, not claimed broadly.",
+    "peso_channel": "Owned and internal, with earned lines prepared but not released.",
+    "phase": "Pre-Seed",
+    "hero_hub_hygiene": "Hygiene",
+    "month": 1,
+    "kpi": [
+     {
+      "metric": "priority platform claims with approved proof pair",
+      "scale": "percentage",
+      "instrument": "Month 1 Legal and Regulatory Affairs claim-clearance register"
+     },
+     {
+      "metric": "do-not-say breaches found before publication",
+      "scale": "count",
+      "instrument": "pre-publish guardrail checklist"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Conversation Management Loop",
+    "insight": "Customers judge The Invisible Thread most sharply when service, billing, app payment or outage questions appear in public.",
+    "idea": "Run the always-on listen, triage, respond and escalate loop under So You Can so service friction is answered as proof of the platform, not treated as a side issue.",
+    "engagement_mechanic": "Daily monitoring routes live customer themes to approved service lines, escalation owners and owned-channel updates.",
+    "desired_outcome": "Vivacom has a visible, disciplined answer when daily digital life is tested.",
+    "targets": "Conversation themes, escalation decisions and response-line use are read daily from Month 1 through Month 12, with a weekly service-friction readout.",
+    "hashtag_or_signature": "The Invisible Thread in service moments",
+    "audience": "Existing customers, service teams, employees and leaders.",
+    "message_pillar": "Every service moment is where The Invisible Thread is either proved or broken in public.",
+    "peso_channel": "Owned, shared and earned response lines.",
+    "phase": "Pre-Seed",
+    "hero_hub_hygiene": "Hygiene",
+    "month": 1,
+    "kpi": [
+     {
+      "metric": "priority service themes answered with approved line",
+      "scale": "percentage",
+      "instrument": "Conversation Management weekly response register"
+     },
+     {
+      "metric": "repeated unanswered customer-friction themes",
+      "scale": "count",
+      "instrument": "service-friction theme log"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "The Observatory Newsroom Watch",
+    "insight": "Corporate reputation moments close quickly, and the platform needs cleared proof ready before Vivacom enters them.",
+    "idea": "Use The Observatory newsroom to watch for moments where So You Can and The Invisible Thread can enter with approved household, reach or service proof.",
+    "engagement_mechanic": "The newsroom logs relevant market, service, media and stakeholder moments, then recommends whether to enter, hold or escalate.",
+    "desired_outcome": "Vivacom joins the right moments with proof-led lines instead of reactive broad claims.",
+    "targets": "The Observatory register is read weekly from Month 1 through Month 12, and every recommended entry is checked against the claim boundary before use.",
+    "hashtag_or_signature": "The Invisible Thread, clearly proved",
+    "audience": "Media, regulators, government stakeholders, parent-group stakeholders and communications teams.",
+    "message_pillar": "The Invisible Thread works when proof is visible.",
+    "peso_channel": "Earned, owned and stakeholder briefings.",
+    "phase": "Pre-Seed",
+    "hero_hub_hygiene": "Hub",
+    "month": 1,
+    "kpi": [
+     {
+      "metric": "newsroom recommendations cleared for use",
+      "scale": "count",
+      "instrument": "The Observatory weekly moment register"
+     },
+     {
+      "metric": "recommended entries using approved proof source",
+      "scale": "percentage",
+      "instrument": "newsroom claim-boundary checklist"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Advocacy Briefing for Service and Employee Voices",
+    "insight": "Employees and service teams can carry the story only after they understand how service moments prove or break the promise.",
+    "idea": "Equip the employee advocates and service-team voices trained by the Conversation Management loop with approved advocacy lines for So You Can and The Invisible Thread.",
+    "engagement_mechanic": "Run spokesperson and advocate rehearsals using the message tracks, service response lines, disclosure rules and do-not-say guardrails.",
+    "desired_outcome": "Internal voices can explain the platform consistently before customers and media hear it.",
+    "targets": "The spokesperson rehearsal rubric and advocate question log are read at the end of Month 2, before the Launch moment in Month 3.",
+    "hashtag_or_signature": "So You Can, said the same way",
+    "audience": "Employees, service teams, leaders, spokespeople and Super Fans & Employees who already carry the story.",
+    "message_pillar": "Service moments prove the idea in public.",
+    "peso_channel": "Owned, internal and shared advocacy preparation.",
+    "phase": "Pre-Seed",
+    "hero_hub_hygiene": "Hub",
+    "month": 2,
+    "kpi": [
+     {
+      "metric": "advocate briefing questions resolved before launch",
+      "scale": "percentage",
+      "instrument": "Month 2 advocate question log"
+     },
+     {
+      "metric": "approved-language confidence after rehearsal",
+      "scale": "1-5 score",
+      "instrument": "spokesperson and advocate rehearsal rubric"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "The Invisible Thread at Home",
+    "insight": "Existing customers judge Vivacom first through ordinary home moments: internet, television, bills, app payments, outages and help.",
+    "idea": "Launch So You Can through The Invisible Thread with one named household story that shows Vivacom helping daily life continue without asking people to admire the system behind it.",
+    "engagement_mechanic": "Lead with earned media, then send readers to owned proof explaining the services and support behind the moment, with shared and selective paid support.",
+    "desired_outcome": "Maya and existing customers see Vivacom as useful and warmer because the platform is shown through daily household proof.",
+    "targets": "Earned coverage, owned proof-page analytics and launch message recall are read weekly in Months 3 and 4, with a Launch close read at the end of Month 4.",
+    "hashtag_or_signature": "So You Can / The Invisible Thread starts at home",
+    "audience": "Existing customers, with Maya as the first believer, plus media and consumer audiences.",
+    "message_pillar": "Vivacom keeps The Invisible Thread working, So You Can get on with daily life.",
+    "peso_channel": "Earned, owned, shared and selective paid.",
+    "phase": "Launch",
+    "hero_hub_hygiene": "Hero",
+    "month": 3,
+    "kpi": [
+     {
+      "metric": "earned stories carrying the household proof message",
+      "scale": "count",
+      "instrument": "launch earned-attention quality log"
+     },
+     {
+      "metric": "message recall tied to The Invisible Thread at Home",
+      "scale": "percentage",
+      "instrument": "post-launch message-recall pulse"
+     },
+     {
+      "metric": "owned proof-page visits from launch routes",
+      "scale": "count",
+      "instrument": "launch owned-channel analytics report"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Household Launch Reinforcement",
+    "insight": "The launch story needs immediate repetition in the places customers already see Vivacom, or the idea stays as a press moment.",
+    "idea": "Keep So You Can and The Invisible Thread visible after launch through proof-page updates, approved social posts and service-aware household assets.",
+    "engagement_mechanic": "Use owned proof pages and shared social assets to repeat the household proof and point customer questions back to clear service explanations.",
+    "desired_outcome": "The platform becomes understandable in customer-facing channels, not only in earned coverage.",
+    "targets": "Owned-page return visits, approved social engagement and service-friction themes are read weekly in Month 4.",
+    "hashtag_or_signature": "The Invisible Thread starts at home",
+    "audience": "Existing customers and consumer audiences.",
+    "message_pillar": "The Invisible Thread starts at home.",
+    "peso_channel": "Owned, shared and paid.",
+    "phase": "Launch",
+    "hero_hub_hygiene": "Hub",
+    "month": 4,
+    "kpi": [
+     {
+      "metric": "approved social assets used without wording drift",
+      "scale": "percentage",
+      "instrument": "Month 4 social-pack compliance check"
+     },
+     {
+      "metric": "repeat visits to launch proof pages",
+      "scale": "count",
+      "instrument": "owned proof-page analytics report"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Household Proof Series",
+    "insight": "Vivacom is most believable when it proves the relationship customers already use every day.",
+    "idea": "Publish a recurring hub series under The Invisible Thread that connects fixed internet, television, coverage-experience reach and help as one So You Can household relationship.",
+    "engagement_mechanic": "Owned stories act as the home of the series, shared posts carry the proofs, influencers receive approved facts and paid media selectively drives people back to the hub.",
+    "desired_outcome": "The household relationship becomes the repeatable proof of So You Can, not a one-off launch story.",
+    "targets": "Owned analytics, shared engagement, influencer proof use and the affinity tracker are read monthly from Month 5 through Month 11.",
+    "hashtag_or_signature": "The Invisible Thread at home",
+    "audience": "Consumer customers and the critical urban audience.",
+    "message_pillar": "Vivacom is strongest when it proves the household relationship people already use.",
+    "peso_channel": "Owned, shared, earned and paid.",
+    "phase": "Sustain",
+    "hero_hub_hygiene": "Hub",
+    "month": 5,
+    "kpi": [
+     {
+      "metric": "returning readers to Household Proof Series pages",
+      "scale": "count",
+      "instrument": "monthly household-hub analytics report"
+     },
+     {
+      "metric": "approved household proof reused by influencers or creators",
+      "scale": "count",
+      "instrument": "influencer proof-use register"
+     },
+     {
+      "metric": "affinity movement among critical urban audience",
+      "scale": "percentage",
+      "instrument": "brand tracker affinity read"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Reach, Clearly Explained",
+    "insight": "Coverage-experience proof can support reach, but it cannot support claims about speed, reliability or overall quality.",
+    "idea": "Create claim-cleared explainers and media lines showing how So You Can proves reach through The Invisible Thread while staying inside the approved evidence.",
+    "engagement_mechanic": "Brief media and stakeholders with the source boundary visible, then amplify the cleared explanation through owned and paid channels.",
+    "desired_outcome": "Regulators, media and parent-group stakeholders see a disciplined proof story instead of a broad network claim.",
+    "targets": "The reach wording audit and do-not-say breach register are read during Month 6 and re-read whenever reach is used after Month 6.",
+    "hashtag_or_signature": "Reach, clearly proved",
+    "audience": "Regulators, media, government and parent-group stakeholders.",
+    "message_pillar": "Vivacom can show reach through coverage-experience proof, not through broad network claims.",
+    "peso_channel": "Earned, owned and paid amplification.",
+    "phase": "Sustain",
+    "hero_hub_hygiene": "Hygiene",
+    "month": 6,
+    "kpi": [
+     {
+      "metric": "earned coverage using approved reach wording",
+      "scale": "percentage",
+      "instrument": "Month 6 earned coverage wording audit"
+     },
+     {
+      "metric": "unsupported speed, reliability or quality claims",
+      "scale": "count",
+      "instrument": "do-not-say breach register"
+     },
+     {
+      "metric": "public reach materials cleared before release",
+      "scale": "percentage",
+      "instrument": "Legal and Regulatory Affairs clearance register"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Service Moment Response Lines",
+    "insight": "A service issue can prove or break The Invisible Thread in public.",
+    "idea": "Build plain-language service updates that say what happened, who it affects, what Vivacom is doing and what changes for customers under So You Can.",
+    "engagement_mechanic": "Use owned service channels first, then support with shared updates and earned response lines when an issue becomes public.",
+    "desired_outcome": "Vivacom treats service friction as part of the promise and gives customers clear answers when the promise is tested.",
+    "targets": "Response elapsed time, customer understanding and repeated issue themes are read monthly from Month 7 through Month 12 and after any escalated service moment.",
+    "hashtag_or_signature": "The Invisible Thread when it matters",
+    "audience": "Existing customers, employees, service teams and leaders.",
+    "message_pillar": "Service moments prove the idea in public.",
+    "peso_channel": "Owned, shared and earned response.",
+    "phase": "Sustain",
+    "hero_hub_hygiene": "Hygiene",
+    "month": 7,
+    "kpi": [
+     {
+      "metric": "approved response elapsed time",
+      "scale": "count of hours",
+      "instrument": "service-response timing log"
+     },
+     {
+      "metric": "customers understanding the update after exposure",
+      "scale": "percentage",
+      "instrument": "service-update understanding pulse"
+     },
+     {
+      "metric": "recurring issue themes after response",
+      "scale": "count",
+      "instrument": "monthly service-friction theme register"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Credible Expert Proof Moment",
+    "insight": "Third-party credibility makes the household proof more trusted than a paid corporate claim.",
+    "idea": "Use an advertorial outline and expert briefing to show how The Invisible Thread supports So You Can through approved household proof and careful reach evidence.",
+    "engagement_mechanic": "Give journalists, analysts and sector voices the approved proof pack, then point their audiences back to owned explanations.",
+    "desired_outcome": "The household relationship gains credible validation without drifting into unsupported network leadership claims.",
+    "targets": "Expert proof use, time on owned explanation pages and message recall are read during Month 8 and compared again in Month 9.",
+    "hashtag_or_signature": "Proof behind So You Can",
+    "audience": "Consumer customers, professional influencers, analysts, editors and sector voices.",
+    "message_pillar": "The household relationship is Vivacom's first proof.",
+    "peso_channel": "Earned, owned and paid.",
+    "phase": "Sustain",
+    "hero_hub_hygiene": "Hub",
+    "month": 8,
+    "kpi": [
+     {
+      "metric": "expert or media pieces using approved household proof",
+      "scale": "count",
+      "instrument": "third-party proof-use register"
+     },
+     {
+      "metric": "completion of owned explanation-page reading",
+      "scale": "percentage",
+      "instrument": "Month 8 owned explanation analytics report"
+     },
+     {
+      "metric": "message recall after expert proof exposure",
+      "scale": "percentage",
+      "instrument": "Month 8 proof-message recall pulse"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Beyond the Home Cleared Cases",
+    "insight": "The proof logic can travel beyond the household only when workplace, municipal and public-service examples are named, current and cleared.",
+    "idea": "Extend So You Can and The Invisible Thread through cleared cases that show daily digital life working in workplaces, municipalities and public services.",
+    "engagement_mechanic": "Publish named case stories after partner and claim clearance, then use events and stakeholder briefings to show how the proof travels.",
+    "desired_outcome": "Business buyers, public-sector customers and municipalities see the platform as useful relationship proof, not a broad scale claim.",
+    "targets": "Partner approvals, case-clearance status, stakeholder engagement and qualified interest are read in Month 10 before any case is amplified.",
+    "hashtag_or_signature": "The Invisible Thread beyond the home",
+    "audience": "Business buyers, public-sector customers, municipalities, employees and parent-group stakeholders.",
+    "message_pillar": "The same proof logic carries from the home to workplaces, municipalities and public services.",
+    "peso_channel": "Earned, owned, events and stakeholder briefings.",
+    "phase": "Amplify",
+    "hero_hub_hygiene": "Hero",
+    "month": 10,
+    "kpi": [
+     {
+      "metric": "named cases with partner and claim clearance",
+      "scale": "count",
+      "instrument": "Beyond the Home case-clearance register"
+     },
+     {
+      "metric": "qualified business or public-sector follow-ups",
+      "scale": "count",
+      "instrument": "stakeholder briefing and event follow-up log"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Third-Party Advocate Amplification",
+    "insight": "The year widens only when credible voices can repeat the proof without drifting into scale or best-network language.",
+    "idea": "Equip professional influencers, credible third parties and approved advocates with the 30-second pitch, proof notes and disclosure rules for So You Can and The Invisible Thread.",
+    "engagement_mechanic": "Run briefings with journalists, analysts, partners, respected alumni and employee advocates, then amplify cleared language through earned and shared routes.",
+    "desired_outcome": "Credible voices carry the platform in their own channels while staying inside the proof boundary.",
+    "targets": "Influencer language use, disclosure compliance and earned quality are read in Month 11 before year-close reporting.",
+    "hashtag_or_signature": "So You Can, proved by others",
+    "audience": "Professional influencers, analysts, editors, partners, respected alumni, employee advocates and parent-group stakeholders.",
+    "message_pillar": "Useful relationships are stronger than broad claims about size.",
+    "peso_channel": "Earned, stakeholder briefings and shared.",
+    "phase": "Amplify",
+    "hero_hub_hygiene": "Hub",
+    "month": 11,
+    "kpi": [
+     {
+      "metric": "advocates using approved platform language",
+      "scale": "count",
+      "instrument": "Month 11 advocate language-use register"
+     },
+     {
+      "metric": "advocate and creator disclosure compliance",
+      "scale": "percentage",
+      "instrument": "influencer disclosure checklist"
+     },
+     {
+      "metric": "do-not-say breaches in third-party amplification",
+      "scale": "count",
+      "instrument": "third-party wording audit"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   },
+   {
+    "name": "Year-Close Scorecard and Recalibration",
+    "insight": "The platform only becomes durable if reputation, service, channel and proof signals are reviewed together.",
+    "idea": "Close the So You Can and The Invisible Thread year with an executive scorecard that reads paid, earned, shared, owned, service and reputation measures in one place.",
+    "engagement_mechanic": "Gather channel reports, tracker reads, recall data, service-friction logs, claim-breach checks and employee understanding into the next-cycle review.",
+    "desired_outcome": "Vivacom can decide what to repeat, adapt or stop in the next campaign period based on proof rather than activity volume.",
+    "targets": "The executive scorecard is read in Month 12 after all monthly reports close, with next-cycle recalibration decisions recorded before the next Month 1.",
+    "hashtag_or_signature": "The Invisible Thread works when proof is visible",
+    "audience": "Executive, communications, service, Legal and Regulatory Affairs and stakeholder teams.",
+    "message_pillar": "The Invisible Thread works when proof is visible.",
+    "peso_channel": "Owned and executive reporting.",
+    "phase": "Amplify",
+    "hero_hub_hygiene": "Hygiene",
+    "month": 12,
+    "kpi": [
+     {
+      "metric": "scorecard fields completed across paid, earned, shared, owned, service and reputation",
+      "scale": "percentage",
+      "instrument": "year-close executive scorecard"
+     },
+     {
+      "metric": "next-cycle decisions tied to measured proof",
+      "scale": "count",
+      "instrument": "Month 12 recalibration decision register"
+     }
+    ],
+    "approver": "Maria Bengtsson"
+   }
+  ],
+  "hero_hub_hygiene_balance": {
+   "hero": "The signature moments are The Invisible Thread at Home in Month 3 and Beyond the Home Cleared Cases in Month 10, keeping the biggest effort to roughly a fifth of the year and always naming So You Can.",
+   "hub": "The sustained programmes are The Observatory, advocacy briefing, launch reinforcement, Household Proof Series, expert proof and third-party amplification, carrying about three fifths of the effort through recurring proof.",
+   "hygiene": "The maintenance layer is proof lock, Conversation Management, Reach Clearly Explained, Service Moment Response Lines and the year-close scorecard, keeping the platform disciplined between campaign peaks."
+  },
+  "calendar": [
+   {
+    "phase": "Pre-Seed",
+    "audience_track": "Legal and Regulatory Affairs, leaders, service teams and communications teams",
+    "moment_hook": "Proof Lock and Claim Boundary Room opens; Conversation Management Loop and The Observatory Newsroom Watch begin as the always-on baseline.",
+    "key_message": "Reach is proved carefully, not claimed broadly, and So You Can only runs where The Invisible Thread has approved proof.",
+    "asset_tool": "Key-Message Table, proof map, do-not-say checklist, Conversation Management register and Observatory register.",
+    "peso_channel": "Owned and internal.",
+    "kpi": "Legal and Regulatory Affairs claim-clearance register, Conversation Management weekly response register and Observatory weekly moment register.",
+    "month": 1
+   },
+   {
+    "phase": "Pre-Seed",
+    "audience_track": "Employees, service teams, leaders, spokespeople and employee advocates",
+    "moment_hook": "Advocacy Briefing for Service and Employee Voices runs before public launch, while Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "Every service moment is where The Invisible Thread is either proved or broken in public.",
+    "asset_tool": "Spokesperson materials, 30-second pitch draft, advocate question log and service response rehearsal rubric.",
+    "peso_channel": "Owned, internal and shared advocacy preparation.",
+    "kpi": "Advocate question log, spokesperson rehearsal rubric, Conversation Management response register and Observatory moment register.",
+    "month": 2
+   },
+   {
+    "phase": "Launch",
+    "audience_track": "Existing customers, Maya as first believer, media and consumer audiences",
+    "moment_hook": "Earned-led public launch of The Invisible Thread at Home under So You Can, with Conversation Management Loop and The Observatory Newsroom Watch active.",
+    "key_message": "Vivacom keeps The Invisible Thread working, So You Can get on with daily life.",
+    "asset_tool": "Press release, household story, owned proof page, launch social assets and approved media lines.",
+    "peso_channel": "Earned, owned, shared and selective paid.",
+    "kpi": "Launch earned-attention quality log, post-launch message-recall pulse and owned-channel analytics report.",
+    "month": 3
+   },
+   {
+    "phase": "Launch",
+    "audience_track": "Existing customers and consumer audiences",
+    "moment_hook": "Household Launch Reinforcement keeps the launch story visible; Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "The Invisible Thread starts at home.",
+    "asset_tool": "Social pack, proof-page updates, household service explainers and paid support assets.",
+    "peso_channel": "Owned, shared and paid.",
+    "kpi": "Social-pack compliance check, owned proof-page analytics report and service-friction theme log.",
+    "month": 4
+   },
+   {
+    "phase": "Sustain",
+    "audience_track": "Consumer customers and the critical urban audience",
+    "moment_hook": "Household Proof Series begins monthly from Month 5 through Month 11; Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "Vivacom is strongest when it proves the household relationship people already use.",
+    "asset_tool": "Fact sheet, backgrounder, first household proof article and approved influencer proof notes.",
+    "peso_channel": "Owned, shared, earned and paid.",
+    "kpi": "Monthly household-hub analytics report, influencer proof-use register and brand tracker affinity read.",
+    "month": 5
+   },
+   {
+    "phase": "Sustain",
+    "audience_track": "Regulators, media, government and parent-group stakeholders",
+    "moment_hook": "Reach, Clearly Explained runs as the reach explainer push; Household Proof Series, Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "Vivacom can show reach through coverage-experience proof, not through broad network claims.",
+    "asset_tool": "Infographics, imagery, source notes, reach explainer and approved comparison lines.",
+    "peso_channel": "Owned, earned and paid amplification.",
+    "kpi": "Earned coverage wording audit, do-not-say breach register and Legal and Regulatory Affairs clearance register.",
+    "month": 6
+   },
+   {
+    "phase": "Sustain",
+    "audience_track": "Existing customers, employees and service teams",
+    "moment_hook": "Service Moment Response Lines begin monthly from Month 7 through Month 12; Household Proof Series, Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "Service moments prove the idea in public.",
+    "asset_tool": "Q&A, FAQ, service update templates, escalation lines and household proof article.",
+    "peso_channel": "Owned, shared and earned response.",
+    "kpi": "Service-response timing log, service-update understanding pulse and monthly service-friction theme register.",
+    "month": 7
+   },
+   {
+    "phase": "Sustain",
+    "audience_track": "Consumer customers, professional influencers and credible third parties",
+    "moment_hook": "Credible Expert Proof Moment runs; Household Proof Series, Service Moment Response Lines, Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "The household relationship is Vivacom's first proof.",
+    "asset_tool": "Advertorial outline, expert briefing note, owned explanation page and approved household proof pack.",
+    "peso_channel": "Earned, owned and paid.",
+    "kpi": "Third-party proof-use register, owned explanation analytics report and proof-message recall pulse.",
+    "month": 8
+   },
+   {
+    "phase": "Sustain",
+    "audience_track": "Existing customers, service teams, employees and consumer customers",
+    "moment_hook": "Quiet month: no hero launch; Household Proof Series, Service Moment Response Lines, Conversation Management Loop and The Observatory Newsroom Watch hold the white space.",
+    "key_message": "Vivacom keeps The Invisible Thread working from the home outward.",
+    "asset_tool": "Monthly household proof article, social pack, service update templates and newsroom register.",
+    "peso_channel": "Owned and shared, with earned response only if an issue becomes public.",
+    "kpi": "Baseline engagement report, service-update sentiment read, service-friction theme register and Observatory moment register.",
+    "month": 9
+   },
+   {
+    "phase": "Amplify",
+    "audience_track": "Business buyers, public-sector customers, municipalities, employees and parent-group stakeholders",
+    "moment_hook": "Beyond the Home Cleared Cases shows how So You Can and The Invisible Thread travel beyond the household; Household Proof Series, Service Moment Response Lines, Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "The same proof logic carries from the home to workplaces, municipalities and public services.",
+    "asset_tool": "Event and experiential kit, cleared case story, stakeholder briefing pack and partner approval notes.",
+    "peso_channel": "Earned, owned, events and stakeholder briefings.",
+    "kpi": "Beyond the Home case-clearance register and stakeholder briefing and event follow-up log.",
+    "month": 10
+   },
+   {
+    "phase": "Amplify",
+    "audience_track": "Parent-group stakeholders, media, professional influencers and employee advocates",
+    "moment_hook": "Third-Party Advocate Amplification runs; Household Proof Series closes; Service Moment Response Lines, Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "Useful relationships are stronger than broad claims about size.",
+    "asset_tool": "30-second pitch, advocate proof notes, disclosure checklist, final household proof article and third-party briefing materials.",
+    "peso_channel": "Earned, stakeholder briefings and shared.",
+    "kpi": "Advocate language-use register, influencer disclosure checklist and third-party wording audit.",
+    "month": 11
+   },
+   {
+    "phase": "Amplify",
+    "audience_track": "Executive, communications, service, Legal and Regulatory Affairs and stakeholder teams",
+    "moment_hook": "Year-Close Scorecard and Recalibration closes the campaign period; Service Moment Response Lines, Conversation Management Loop and The Observatory Newsroom Watch continue.",
+    "key_message": "The Invisible Thread works when proof is visible.",
+    "asset_tool": "Executive scorecard, channel reports, tracker reads, service-friction log, claim-breach audit and next-cycle decision register.",
+    "peso_channel": "Owned and executive reporting.",
+    "kpi": "Year-close executive scorecard and Month 12 recalibration decision register.",
+    "month": 12
+   }
+  ],
+  "proof_building_order": "Cases first: Proof Lock and Claim Boundary Room, Conversation Management Loop and The Observatory Newsroom Watch in Month 1, Advocacy Briefing for Service and Employee Voices in Month 2, The Invisible Thread at Home in Month 3, Household Launch Reinforcement in Month 4 and Household Proof Series from Months 5 through 11 build the household and service cases in calendar order; thought leadership next: Reach, Clearly Explained in Month 6, Service Moment Response Lines from Months 7 through 12 and Credible Expert Proof Moment in Month 8 turn the cases into disciplined proof and approved explanation; visibility last: Beyond the Home Cleared Cases in Month 10, Third-Party Advocate Amplification in Month 11 and Year-Close Scorecard and Recalibration in Month 12 widen the proof through stakeholders, advocates and the next-cycle evidence read.",
+  "rollout": {
+   "first_audience": "The year speaks first to existing customers, with Maya as the first believer, because the platform must be proved in ordinary household service, billing, app payment, television, internet, outage and help moments before it widens.",
+   "then_widen": "After Maya and existing customers have seen the household proof, the roadmap widens to the critical urban audience, Gen Z, employees, future talent, business and public-sector customers, municipalities, regulators, media, government and parent-group stakeholders through the same So You Can and The Invisible Thread proof logic."
+  },
+  "ownership": [
+   {
+    "element": "Platform decision and narrative consistency",
+    "owner": "Maria Bengtsson",
+    "cadence": "Month 1 for Proof Lock and Claim Boundary Room; Month 3 for The Invisible Thread at Home; Month 10 for Beyond the Home Cleared Cases; Month 12 for Year-Close Scorecard and Recalibration.",
+    "dependencies": "Approved strategy one-pager, fixed concept boundary, message tracks and proof-building order.",
+    "budget_frame": "Budget not established; United Partners proposes a phase-by-phase frame before Month 1 sign-off."
+   },
+   {
+    "element": "Claim clearance, reach wording and do-not-say control",
+    "owner": "Elitza Georgieva",
+    "cadence": "Weekly in Month 1 for Proof Lock and Claim Boundary Room; Month 6 for Reach, Clearly Explained; reactive checks in Months 7, 8, 9, 10, 11 and 12 for Service Moment Response Lines, Credible Expert Proof Moment, Beyond the Home Cleared Cases and Third-Party Advocate Amplification.",
+    "dependencies": "OpenSignal coverage-experience wording, proof notes, comparison guardrails, Legal and Regulatory Affairs review and partner approvals where cases are named.",
+    "budget_frame": "Legal and claim-review time is protected as a non-negotiable governance cost inside the campaign budget."
+   },
+   {
+    "element": "Local strategic approval path",
+    "owner": "Malina Chavdarova",
+    "cadence": "Month 1 for Proof Lock and Claim Boundary Room; Month 3 for The Invisible Thread at Home; Month 10 for Beyond the Home Cleared Cases; Month 12 for Year-Close Scorecard and Recalibration.",
+    "dependencies": "Elitza Georgieva clearance, Asen Velikov approval where required and Iva Gajić approval for divestment-sensitive, group-reputation-facing and major public corporate moments.",
+    "budget_frame": "Approval work sits in the governance allocation proposed by United Partners before Month 1."
+   },
+   {
+    "element": "Final local approval for major public corporate moments",
+    "owner": "Asen Velikov",
+    "cadence": "Month 3 for The Invisible Thread at Home; Month 10 for Beyond the Home Cleared Cases; Month 11 for Third-Party Advocate Amplification when public corporate stakes are high.",
+    "dependencies": "Maria Bengtsson narrative consistency, Elitza Georgieva claim clearance and Malina Chavdarova local strategic review.",
+    "budget_frame": "Senior approval time is held outside production spend and scheduled into milestone sign-off."
+   },
+   {
+    "element": "United Group approval for sensitive moments",
+    "owner": "Iva Gajić",
+    "cadence": "Month 3 for The Invisible Thread at Home if group-reputation-facing; Month 10 for Beyond the Home Cleared Cases if divestment-sensitive; Month 11 for Third-Party Advocate Amplification if major public corporate exposure is expected.",
+    "dependencies": "Local approval path, claim clearance and sensitivity assessment before release.",
+    "budget_frame": "No separate media spend assumed; review is part of the governance and risk frame."
+   },
+   {
+    "element": "Conversation Management Loop and Service Moment Response Lines",
+    "owner": "unassigned — Maria Bengtsson by the kick-off before Month 1",
+    "cadence": "Daily in Months 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12 for Conversation Management Loop; monthly in Months 7, 8, 9, 10, 11 and 12 for Service Moment Response Lines.",
+    "dependencies": "Approved service lines, escalation route, service-friction theme log, owned service channels and Legal and Regulatory Affairs clearance for public response lines.",
+    "budget_frame": "Always-on monitoring, response writing and escalation capacity must be budgeted as baseline reputation maintenance."
+   },
+   {
+    "element": "The Observatory Newsroom Watch",
+    "owner": "unassigned — Maria Bengtsson by the kick-off before Month 1",
+    "cadence": "Weekly in Months 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12 for The Observatory Newsroom Watch.",
+    "dependencies": "Moment register, approved proof bank, claim-boundary checklist and escalation route for crisis tripwires.",
+    "budget_frame": "Newsroom monitoring and rapid-content preparation sit in the always-on budget frame."
+   },
+   {
+    "element": "Advocacy and spokesperson readiness",
+    "owner": "unassigned — Maria Bengtsson by Month 1",
+    "cadence": "Month 2 for Advocacy Briefing for Service and Employee Voices; Month 11 for Third-Party Advocate Amplification.",
+    "dependencies": "Spokesperson materials, 30-second pitch, advocate question log, disclosure checklist and approved message tracks.",
+    "budget_frame": "Training, rehearsal and advocate materials require a discrete preparation budget before Month 2."
+   },
+   {
+    "element": "Launch execution and household proof content",
+    "owner": "unassigned — Maria Bengtsson by Month 2",
+    "cadence": "Month 3 for The Invisible Thread at Home; Month 4 for Household Launch Reinforcement; monthly in Months 5, 6, 7, 8, 9, 10 and 11 for Household Proof Series.",
+    "dependencies": "Press release, social pack, owned proof pages, household story approval, analytics tagging and approved paid support plan.",
+    "budget_frame": "Hero launch receives the largest single burst; household hub content receives recurring production and light amplification budget."
+   },
+   {
+    "element": "Business, public-sector and municipal case extension",
+    "owner": "unassigned — Maria Bengtsson by Month 9",
+    "cadence": "Month 10 for Beyond the Home Cleared Cases.",
+    "dependencies": "Named case permission, partner approval, claim clearance, event and experiential kit and stakeholder briefing route.",
+    "budget_frame": "Case production, event support and stakeholder materials require a dedicated Amplify allocation."
+   },
+   {
+    "element": "Measurement, tagging and year-close recalibration",
+    "owner": "unassigned — Maria Bengtsson by the kick-off before Month 1",
+    "cadence": "Weekly in Months 3, 4, 5, 6, 7, 8, 9, 10 and 11 for live channel reads; Month 12 for Year-Close Scorecard and Recalibration.",
+    "dependencies": "Campaign ID and UTM discipline, paid reports, earned logs, owned analytics, shared engagement, tracker reads, message recall, employee pulse and service-friction register.",
+    "budget_frame": "Measurement tools, dashboarding and final analysis are budgeted from the start, not added at year close."
+   }
+  ],
+  "global_local": "One global core holds the channel-agnostic beats: So You Can, The Invisible Thread, household proof first, reach proved only through coverage experience, service moments inside the promise, and extension beyond the home only through named cleared cases; local markets adapt hooks, spokespeople, language, local proof and market-specific tactics while using a small global KPI set for approved wording pull-through, message recall, quality earned attention, owned proof-page use, service-friction movement and do-not-say breaches with local targets.",
+  "markets_period": "The campaign period is Month 1 through Month 12 for Vivacom in Bulgaria, with relevant local-market adaptation only where United Group markets have approved local proof and claim clearance.",
+  "approval": {
+   "approved_by": null,
+   "approved_at": null
+  },
+  "platform_approval": {
+   "platform": "So You Can",
+   "decided_by": "Maria Bengtsson"
+  }
+ },
+ "inputs": {},
+ "expect": {
+  "result": "accepted",
+  "rendered_must_contain": [
+   "**Approver.** Maria Bengtsson"
+  ]
+ },
+ "expected_outcome": "the Vivacom pack approved by its platform decider is accepted"
+}

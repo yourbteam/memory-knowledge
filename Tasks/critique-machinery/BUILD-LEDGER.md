@@ -618,3 +618,147 @@ The code and replay-input commit is `7f8c13af08014f61b7a06308c36102b0ca3da51b`; 
 experiment evidence commit is `ffc7a9a5e12ff091a871082faeba1ae04ffe0f33`. Validation,
 blocker records, and this ledger travel in the final bounded closeout commit. Older untracked runs
 and generated duplicate source trees remain excluded.
+
+## Upgrade Atom D — an atom may declare the field it introduces — 2026-09-05
+
+**Outcome — the gap that would have stopped round 5 is closed.** Upgrade Atom C made every
+validation atom name its deliverable fields and refused at `start` any field that does not resolve
+in the named repository. That rule was right for misspellings and wrong for the atom whose whole
+purpose is to add a field: the real round-5 request declaring `activation_cards[].approver` was
+refused with `field 'activation_cards[].approver' does not resolve at 'approver'` before a single
+probe could run (`atom-16/frozen-real/s12-approver-named.start.stderr.txt`). A contract field may
+now carry `"introduced": true`. `start` requires the field's parent to resolve, records the field
+as pending, and lets the run begin; `record-promotion` re-resolves every introduced field against
+the canonical module and refuses by name until the module carries it. A field that already
+resolves is refused when marked introduced ("declare it without 'introduced'"), and a misspelled
+field is refused at `start` exactly as before, with the available keys named.
+
+**Frozen real cases and deciding experiment.** Four captured cases under `atom-16/cases/`: the
+real S12 approver request with the flag (must start; must be refused at promotion naming the
+field), the real misspelled `ownership[].owenr` request (still refused at start), the real
+round-4 structured-kpis field marked introduced (refused, told to drop the flag), and the real
+round-4 request unchanged (still starts). The frozen approver request first named
+`ACTIVATION_CARD_FIELDS` as the shape source of a pinned-string field; the smoke run of the
+champion exposed that as a defect in the frozen request itself (a pinned-string needs a compiled
+whole-value form), so the request now names the module's real `PERSON_NAME` form, its refusal was
+re-captured live, and the controller run was superseded rather than edited
+(`controller` → `controller-2`, Upgrade Atom B's door). `development-probe/run/` compared the
+selected `introduced-resolved-at-promotion` approach against an `unresolved-tolerated` rival that
+lets any unresolved field through: the champion scored 1.0 on all four metrics for all four cases;
+the rival scored 0 on start verdict, refusal actionability and promotion gate for the approver
+case. Assembly SHA-256 `a77598710a41b57fa4792ad66cd868c1135e91ba74552ed2c9553e71aaf0b2e1`, zero
+model calls. The pre-atom control refused the flag itself as an unexpected field.
+
+**Promotion and real path.** The change surface is the four canonical paths (`SKILL.md`,
+`atom_controller.py`, `tests/test_atom_building_machinery.py`, the regenerated projection
+registry), SHA-256 `a049ccb80a1410e59560e6d1fefb2370e055216fce26e900fe8f24f42f99cff8`; the
+experiment event is `11865bbae42f0b92a07481da1265b3a28a1a2ea43e6363c07e60fbd818665ec0`, the
+promotion event `22013fd26772a4ec…`. `atom-16/validation/cases/` replays all four requests
+through the canonical controller from the United Partners root: the approver request starts and
+the promotion-time validation refuses it naming the field; the other three behave as declared.
+The run completed at event `69a027cf42293648…` and `authorize-next` returned `authorized` with
+blocker-closeout `ad542a2f616b0eb6a50465da0e06d9ef478228096eb264a0181264fa0e539a0e` and zero
+linked occurrences. Focused verification: 69 passed in the controller, projection and installer
+suites after the registry regeneration (two new tests cover the introduced door and its two
+refusals).
+
+**Client installation and cost.** The managed installer refreshed only `atom-building-machinery`
+in both clients; `atom-16/validation/installation-receipt.json` records canonical and both
+installed controllers at SHA-256 `65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83`
+and exact registry parity for Codex and Claude. Both installed controllers then started the real
+approver request live from United Partners with the field recorded as introduced and pending.
+Unrelated installed drift in three Claude machineries (description, experiment, requirements)
+belongs to concurrent Codex work and was preserved untouched. Atom D used two deterministic
+approaches, four frozen real cases, one supersession, and zero model calls. Not committed; the
+publish is Kamen's call.
+
+## Correction Atom 5 — a started run keeps loading once its introduced field lands — 2026-09-05
+
+**Outcome — Upgrade Atom D's door opens both ways.** Atom D let a request declare a field the atom
+introduces and refused, at every stage, an introduced flag on a field that already resolved. That
+refusal is right only when a new run starts. Round-5 atom D (united-partners `s12-card-approver`)
+started through the door, recorded its experiment, and the canonical `tactical_roadmap.py` gained
+`activation_cards[].approver` — after which `status`, `change-surface` and `record-promotion` all
+refused the run: "introduced field 'activation_cards[].approver' already resolves at 'approver';
+declare it without 'introduced'" (CM-B13 in the united-partners round catalogue;
+`atom-17/frozen-real/` keeps the byte copy of the run, its request and both refusals). The two
+"already resolves" refusals in `_resolve_contract_field` now fire only at stage `start`; a started
+run whose field has landed loads and promotes.
+
+**Frozen real cases and deciding experiment.** Four cases under `atom-17/cases/`: the byte copy of
+the real atom D run (must load at stage promotion), Atom D's own case of an introduced flag on an
+existing field at start (still refused), the real round-5 atom E request declaring
+`rollout.widening_month` as introduced (still starts; still gated at promotion naming the leaf),
+and the real round-4 request (still starts). The probe trees carry the sibling
+`experiment-machinery` scripts because loading a run with a recorded experiment re-verifies its
+assembly — Atom D's trees never loaded such a run, which is how this case escaped it.
+`development-probe/run/` compared `already-resolves-is-a-start-check` against
+`already-resolves-tolerated-everywhere` (both refusals dropped at every stage): the champion
+scored 1.0 on all five metrics for all four cases; the rival admitted the introduced flag on an
+existing field at start (0 on start verdict and refusal actionability). Assembly SHA-256 `9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f`,
+zero model calls. The baseline refused the run copy at load-run exactly as the real run was refused.
+
+**Promotion and real path.** Change surface: the four canonical paths, SHA-256 `18fe73f3ac353ab40fe9093ed454febf46f77ea81cfac54d4e417d5e284ae43f`;
+experiment event `ea341c24a862fafc…`, promotion event `c8486246d508fa65…`. `atom-17/validation/cases/` replays all
+four cases through the canonical controller from the United Partners root; the load case checks
+both the byte copy and the real atom D run in place, and both load at stage promotion. Focused
+verification: 70 passed in the controller, projection and installer suites (one new test: a run
+with an introduced field loads and derives its change surface after the module carries the
+field, while a new start declaring it is still refused). The run completed and `authorize-next`
+returned `authorized`.
+
+**Client installation and cost.** Both projections refreshed for `atom-building-machinery` only;
+canonical and both installed controllers at SHA-256 `128587cac0f2c6a7c908b762c601d3e503b2d9789a2a19ce62250ec44ab6b00b`, registry parity for Codex and Claude
+(`atom-17/validation/installation-receipt.json`). Both installed controllers then loaded the real
+atom D run at stage promotion. Unrelated installed drift in three Claude machineries (description,
+experiment, requirements) is concurrent Codex work, preserved untouched. Correction Atom 5 used two
+deterministic approaches, four frozen real cases and zero model calls. Not committed; the publish
+is Kamen's call.
+
+## Upgrade Atom E — the code-owned payload-consistency lens — 2026-09-05
+
+**Outcome — a page that contradicts itself across units is a located defect.** The seven lenses
+read one unit at a time; on 2026-09-05 both blind seats cleared the B Team version 6 activation
+map while five of its cells contradicted the cards' own spans (the Senior craft story series ran
+Months 6 to 12 and read "Sustain"). Round 5 of the roadmap made spans, stages and months fields, so
+the machinery gains an eighth lens, `payload-consistency`, whose two seats are code:
+`consistency --work` reads the bound payload against the page and records, on every unit a
+declared check reads, a located `revise` where they disagree (map cell against card span, stage
+months against the spans of the cards it names, calendar rows against a span, the loop's deployment
+month against the equipping card, the widening month against the Launch span), `clear` where they
+agree, and `not-applicable` with its reason where no check reads the unit or the run was opened
+without a deliverable profile. Both seats agree by construction, so the lens never raises an owner
+question; `read-run` never sends it to a reader and `read-cell` refuses it. Runs opened before
+this atom keep their seven-lens shape and stay readable. The evidence has a reader's shape (a
+response with lens, verdict and unit lines under `reader-evidence/code-<unit>/`) plus every compared
+fact, and the findings document prints each contradicted fact under its cell.
+
+**Frozen real cases and deciding experiment.** `atom-18/frozen-real/` holds the delivered B Team and
+Vivacom version 6 pages with the run states that produced them, and the version 5 B Team page
+rendered from its own state (the export replaced the delivered file when version 6 landed); four
+cases under `atom-18/cases/`: the B Team run (map cell an agreement defect naming five rows; four
+read units clear; the rest not applicable; no owner question; `located` prints the craft series
+row), the Vivacom run (every read unit clear), the version 5 page (every lens cell not applicable,
+no-check), and the B Team page opened in explicit mode (every lens cell not applicable, no-profile;
+`consistency` refuses with that reason). `development-probe/run/` compared
+`code-owned-lens-both-seats` against `advisory-report-only` (the same checks written to a report
+file, no cells): the champion scored 1.0 on all seven metrics for all four cases; the rival left the
+map cell pending and located empty (3 of 7 on the B Team case). The baseline has no such command.
+Assembly SHA-256 `acd9787b9178fdd7f7806aff8641a94a8127b7bccaf45901cdd72b552cf3d172`, zero model calls.
+
+**Promotion and real path.** Change surface: `critique.py`, its `SKILL.md`, the critique test file
+and the regenerated projection registry, SHA-256 `5efae8c29f4cd5b9e19802245e063ad2a1509bd2956a609102296cb2a50ff4b5`; experiment event `59f448b969cf6aaf…`, promotion event
+`148d6483c2a17abd…`. `atom-18/validation/cases/` drives the canonical script through `open`, `consistency`,
+`located` and `ask-owner` on all four cases and reads the real seven-lens version 6 critique run in
+United Partners as a legacy run (readable, 7 lenses). Focused verification: 28 passed in the
+critique suite (two new tests; four count pins moved by one lens) and 27 in the projection and
+installer suites. The run completed and `authorize-next` returned `authorized`.
+
+**Client installation and cost.** Both projections refreshed for `critique-machinery` only;
+canonical and both installed scripts at SHA-256 `bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4`, registry parity for Codex and Claude
+(`atom-18/validation/installation-receipt.json`). Live: the real B Team version 6 run reopened
+through the installed Claude machinery into
+`Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v6-consistency` records 5 lens cells, 1
+defect cell (the map, five rows) and 19 not applicable, before any reader is spent. Unrelated
+installed drift in three Claude machineries is concurrent Codex work, preserved. Upgrade Atom E
+used two deterministic approaches, four frozen real cases and zero model calls.

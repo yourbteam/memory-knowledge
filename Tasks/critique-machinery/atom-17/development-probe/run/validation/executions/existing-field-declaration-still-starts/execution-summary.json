@@ -1,0 +1,7 @@
+{
+  "assembly_sha256": "9e19fb63cc947da281af1f17c8fdc02902686397525707283abf0614c4e8124f",
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_id": "existing-field-declaration-still-starts",
+  "schema_version": 1,
+  "status": "completed"
+}

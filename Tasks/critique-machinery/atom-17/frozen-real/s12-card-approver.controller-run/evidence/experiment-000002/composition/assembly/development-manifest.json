@@ -1,0 +1,145 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "the real v5 pack carries no approver and is refused naming the field set",
+        "id": "case-btm-v5-no-approver",
+        "kind": "failure",
+        "sha256": "94f3366fc7156ad00158f70054dbe4d2fd141c93f6b880d9a3f0b11fbd20b780",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-approver/cases/case-btm-v5-no-approver.json"
+      },
+      {
+        "expected_outcome": "the pack approved by the decider and a named owner is accepted and rendered",
+        "id": "case-btm-v5-named-approvers",
+        "kind": "success",
+        "sha256": "05e5ffeaa78de06eda7bdfbe731fbdb913fa445c72b8401188757e4b8dede03a",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-approver/cases/case-btm-v5-named-approvers.json"
+      },
+      {
+        "expected_outcome": "a card approved by the owner represented in its own audience is refused naming the people available",
+        "id": "case-btm-v5-audience-as-approver",
+        "kind": "failure",
+        "sha256": "df1df23f751bcb82f393e24930ee166868b80a1defb41ca8aefe13b46c59f24c",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-approver/cases/case-btm-v5-audience-as-approver.json"
+      },
+      {
+        "expected_outcome": "the Vivacom pack approved by its platform decider is accepted",
+        "id": "case-viv-v5-decider-approves",
+        "kind": "success",
+        "sha256": "ccf39f00415b5a45544d49c9f04b9d21455fe5ba580a783a4137156fd425a44a",
+        "source": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-card-approver/cases/case-viv-v5-decider-approves.json"
+      }
+    ],
+    "id": "s12-card-approver",
+    "outcome": "Every Activation Card carries approver \u2014 the person who approves the card's output before it runs \u2014 checked as a field: a person the roadmap already names (the platform decider or a named owner), never the card's audience; the page and Word twin print it beside the targets.",
+    "practical_value": "The version 5 B Team Owner control message test reads 'owners of midsize businesses read both message routes \u2026 before they approve the Launch language in writing' (critique cells u-009, four seats): the audience is made the approver while the claim boundary gives Kamen Kamenov final sign-off.",
+    "stopping_condition": "The real v5 pack without the field is refused naming the field set; the pack with the decider and a named owner as approvers is accepted and rendered; a card whose approver is 'Elena', the represented owner in its audience, is refused by name with the people available; the Vivacom pack approved by its decider passes."
+  },
+  "composition": {
+    "assembly_contract": "Every Activation Card carries approver \u2014 the person who approves the card's output before it runs \u2014 checked as a field: a person the roadmap already names (the platform decider or a named owner), neve",
+    "consumes": [
+      {
+        "artifact": "s12-card-approver-scripts",
+        "probe_id": "s12-card-approver-contract"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "case-btm-v5-no-approver",
+        "case-btm-v5-named-approvers",
+        "case-btm-v5-audience-as-approver",
+        "case-viv-v5-decider-approves"
+      ],
+      "failure_criterion": "A card without approver or with its audience as approver is accepted.",
+      "operator_path": "probe_entry.py on the composed tree over each captured case",
+      "success_criterion": "Missing field refused by shape; named approvers accepted and rendered; the audience's Elena refused by name; Vivacom accepted."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "scripts/atom_check.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "The approver must be someone the roadmap already names and cannot be the audience being tested.",
+          "id": "named-person-not-audience",
+          "implementation": "scripts/atom_check.py requires approver on every card, a PERSON_NAME among the decider and named owners, absent from the card's audience",
+          "predicted_tradeoff": "a card whose approver is a role or a new name is refused until the person is named in ownership"
+        },
+        {
+          "hypothesis": "Any person-shaped name is enough.",
+          "id": "any-person-name",
+          "implementation": "scripts/atom_check.py requires only that approver matches PERSON_NAME",
+          "predicted_tradeoff": "'Elena', the owner represented in the audience, passes as approver"
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "worst",
+            "name": "verdict-correct"
+          },
+          {
+            "method": "worst",
+            "name": "refusal-actionable"
+          },
+          {
+            "method": "worst",
+            "name": "render-correct"
+          },
+          {
+            "method": "worst",
+            "name": "prose-untouched"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "verdict-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "refusal-actionable"
+          },
+          {
+            "direction": "maximize",
+            "name": "render-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "prose-untouched"
+          }
+        ]
+      },
+      "goal": "Whether the approver is enforced as a named person outside the audience, by field.",
+      "id": "s12-card-approver-contract",
+      "inputs": [
+        {
+          "case_id": "case-btm-v5-no-approver"
+        },
+        {
+          "case_id": "case-btm-v5-named-approvers"
+        },
+        {
+          "case_id": "case-btm-v5-audience-as-approver"
+        },
+        {
+          "case_id": "case-viv-v5-decider-approves"
+        }
+      ],
+      "practical_value": "The version 5 B Team Owner control message test reads 'owners of midsize businesses read both message routes \u2026 before they approve the Launch language in writing' (critique cells u-009, four seats): the audience is made the approver while the claim boundary gives Kamen Kamenov final sign-off.",
+      "proof": {
+        "failure_criterion": "A card without approver or with its audience as approver is accepted.",
+        "success_criterion": "Missing field refused by shape; named approvers accepted and rendered; the audience's Elena refused by name; Vivacom accepted."
+      },
+      "winner_output": {
+        "artifact": "s12-card-approver-scripts",
+        "description": "Whether the approver is enforced as a named person outside the audience, by field."
+      },
+      "work_type": "code",
+      "work_type_reason": "the contract is deterministic validation and rendering; no model judgement is involved"
+    }
+  ],
+  "schema_version": 1
+}

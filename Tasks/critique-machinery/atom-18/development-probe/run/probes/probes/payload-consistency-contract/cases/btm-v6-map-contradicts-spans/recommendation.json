@@ -1,0 +1,14 @@
+{
+  "approach_id": "code-owned-lens-both-seats",
+  "atomic_step_id": "payload-consistency-lens",
+  "bundle": "../../bundles/code-owned-lens-both-seats",
+  "bundle_sha256": "29cba52461d806e30ec3d69f14a7ceef01ab84487b9eeee10731eacbdc7069ae",
+  "case_id": "btm-v6-map-contradicts-spans",
+  "experiment_id": "development-probe-b2aa3e173a63bb7d11c3",
+  "probe_id": "payload-consistency-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

@@ -1,0 +1,314 @@
+{
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "start-verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "refusal-actionable"
+      },
+      {
+        "direction": "maximize",
+        "name": "promotion-gate-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "load-verdict-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "approach_id": "already-resolves-tolerated-everywhere",
+    "atomic_step_id": "introduced-field-resolves-on-resume",
+    "development_manifest_sha256": "0be20e87504b15eaab8bbff88a81eef6a34b31967d117d1b9efbfc16ed8b99b7",
+    "probe_id": "introduced-field-resume-contract"
+  },
+  "inputs": {
+    "case_ids": [
+      "resolved-introduced-run-loads",
+      "introduced-flag-on-existing-field-refused",
+      "introduced-leaf-starts-and-gates",
+      "existing-field-declaration-still-starts"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "baseline_files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "afee6b68dc3178c41612e33c5f158160a084c3ef337d6089e958110fe40a0fda",
+        "size": 5951
+      },
+      {
+        "path": "skills/atom-building-machinery/SKILL.md",
+        "sha256": "0e14b57858134628a00be231d413d1b28b5c51a680f7f0ed217fa024e784ba67",
+        "size": 14075
+      },
+      {
+        "path": "skills/atom-building-machinery/agents/openai.yaml",
+        "sha256": "6d414a32e4012c2875c6743b0e764205b1671387c6c72a15406219da564f39c8",
+        "size": 253
+      },
+      {
+        "path": "skills/atom-building-machinery/references/blocker-closeout-contract.md",
+        "sha256": "f004147e725e99c997f1bd7e554954f5343095d1b044fdae1bb36a8828d9ac5c",
+        "size": 1309
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+        "sha256": "65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83",
+        "size": 128523
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/prose_waiver_approval",
+        "sha256": "1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215",
+        "size": 393408
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+        "sha256": "caa39168d9956d5c8a38d6b5b4428cc92dddf489e2c51929bde46ee4e35210b9",
+        "size": 14800
+      },
+      {
+        "path": "skills/experiment-machinery/SKILL.md",
+        "sha256": "8b9bdbf6c8f3d3c232121b34fe5114971374cc247d9d86c20d25fee9c4502f17",
+        "size": 14575
+      },
+      {
+        "path": "skills/experiment-machinery/agents/openai.yaml",
+        "sha256": "06f78c14262ddac5f48916ab0c7ab879916cfd78cbb0cfa944d3b2c3a3937412",
+        "size": 263
+      },
+      {
+        "path": "skills/experiment-machinery/references/adapter-contract.md",
+        "sha256": "de65eda4481c3b94ac7e51d106443d9679a54d516ed7c7ba408aee2396fa9ecd",
+        "size": 5773
+      },
+      {
+        "path": "skills/experiment-machinery/references/development-probe-contract.md",
+        "sha256": "2cbc98bcd2426d8c5b6b14717b31119873e2adc09229499f8b7d3ef63a29e58c",
+        "size": 21247
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_all_probes.py",
+        "sha256": "49ca30cdb74a49b5626be9716e1b86aadb42c85bd47abe919c00889e65cbdcb0",
+        "size": 22413
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065",
+        "size": 38440
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_compose.py",
+        "sha256": "7f14edd73a5289e2c1991042aa266fee458300dee830e527c28a707b5a6e8329",
+        "size": 32530
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_cross_case.py",
+        "sha256": "1695a53dcd407e8a8da6dfb35244ae6497b96e380a2be77feaaa3db36bb154a6",
+        "size": 22204
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_experiment.py",
+        "sha256": "f9c5ee196b7e1318290e00ecddcb0cb2dd6974dfda3f50828209e7f5c809a1cb",
+        "size": 31081
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_final_validation.py",
+        "sha256": "bd771ae33fb39793827ef904b3efdbc442346a4b97edf2c60d2fe3435d43b79c",
+        "size": 25811
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_manifest.py",
+        "sha256": "63d0790122a68914dfe70009e777063f894f392db99203eb2f11b7e2645e8010",
+        "size": 18387
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_repair.py",
+        "sha256": "ef8e03c9da4c5fb4462a4c8fafd7e90c027244c3352c8d6729ef17aaa557d66d",
+        "size": 36339
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_run.py",
+        "sha256": "34e75caaddbc38c146cfdfe9ef2b569ff24125859b3b90f0872fc0b80766bf34",
+        "size": 28341
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_telemetry.py",
+        "sha256": "194b2ea21bb333db593e2ec21cf7612232459867fbe7c6b4de546d897d3a19c3",
+        "size": 1769
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/intake_projection_terminal_probe.py",
+        "sha256": "f7cbbd09ce10261b1fe3f655dc8238a4553cdd6e928cfa9b4321dbd639b78d35",
+        "size": 17329
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/intake_purpose_probe.py",
+        "sha256": "2ac5ecc98a25c431baf55bef1f5afa62e8b33af1f8620497871a92c4fe05fd84",
+        "size": 11909
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/run_experiment.py",
+        "sha256": "9b98e61b841ba3805fcd876f8f9e26f114d8e10e0ba2cb057b3cab478ce9245f",
+        "size": 50410
+      },
+      {
+        "path": "tests/test_atom_building_machinery.py",
+        "sha256": "2c229cf939323933c02fce00779d0a4cf2fb4450b537e24fe517b57a2b3113ff",
+        "size": 60610
+      }
+    ],
+    "baseline_sha256": "a53483adf9d3627f688e056a03227e6e3371c29688349832c7140f8b6c84b80d",
+    "candidate_sha256": "49fc5c91f161b92743d253d3fad46e8834460a036ec3aaffbcd6db95cdb54248",
+    "changed_paths": [
+      "skills/atom-building-machinery/scripts/atom_controller.py"
+    ],
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "afee6b68dc3178c41612e33c5f158160a084c3ef337d6089e958110fe40a0fda",
+        "size": 5951
+      },
+      {
+        "path": "skills/atom-building-machinery/SKILL.md",
+        "sha256": "0e14b57858134628a00be231d413d1b28b5c51a680f7f0ed217fa024e784ba67",
+        "size": 14075
+      },
+      {
+        "path": "skills/atom-building-machinery/agents/openai.yaml",
+        "sha256": "6d414a32e4012c2875c6743b0e764205b1671387c6c72a15406219da564f39c8",
+        "size": 253
+      },
+      {
+        "path": "skills/atom-building-machinery/references/blocker-closeout-contract.md",
+        "sha256": "f004147e725e99c997f1bd7e554954f5343095d1b044fdae1bb36a8828d9ac5c",
+        "size": 1309
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+        "sha256": "3003ce4d53e7c079220657a1e7011a994c1df986e9dbfa6e70075b965cf70d77",
+        "size": 128543
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/prose_waiver_approval",
+        "sha256": "1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215",
+        "size": 393408
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+        "sha256": "caa39168d9956d5c8a38d6b5b4428cc92dddf489e2c51929bde46ee4e35210b9",
+        "size": 14800
+      },
+      {
+        "path": "skills/experiment-machinery/SKILL.md",
+        "sha256": "8b9bdbf6c8f3d3c232121b34fe5114971374cc247d9d86c20d25fee9c4502f17",
+        "size": 14575
+      },
+      {
+        "path": "skills/experiment-machinery/agents/openai.yaml",
+        "sha256": "06f78c14262ddac5f48916ab0c7ab879916cfd78cbb0cfa944d3b2c3a3937412",
+        "size": 263
+      },
+      {
+        "path": "skills/experiment-machinery/references/adapter-contract.md",
+        "sha256": "de65eda4481c3b94ac7e51d106443d9679a54d516ed7c7ba408aee2396fa9ecd",
+        "size": 5773
+      },
+      {
+        "path": "skills/experiment-machinery/references/development-probe-contract.md",
+        "sha256": "2cbc98bcd2426d8c5b6b14717b31119873e2adc09229499f8b7d3ef63a29e58c",
+        "size": 21247
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_all_probes.py",
+        "sha256": "49ca30cdb74a49b5626be9716e1b86aadb42c85bd47abe919c00889e65cbdcb0",
+        "size": 22413
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065",
+        "size": 38440
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_compose.py",
+        "sha256": "7f14edd73a5289e2c1991042aa266fee458300dee830e527c28a707b5a6e8329",
+        "size": 32530
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_cross_case.py",
+        "sha256": "1695a53dcd407e8a8da6dfb35244ae6497b96e380a2be77feaaa3db36bb154a6",
+        "size": 22204
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_experiment.py",
+        "sha256": "f9c5ee196b7e1318290e00ecddcb0cb2dd6974dfda3f50828209e7f5c809a1cb",
+        "size": 31081
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_final_validation.py",
+        "sha256": "bd771ae33fb39793827ef904b3efdbc442346a4b97edf2c60d2fe3435d43b79c",
+        "size": 25811
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_manifest.py",
+        "sha256": "63d0790122a68914dfe70009e777063f894f392db99203eb2f11b7e2645e8010",
+        "size": 18387
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_repair.py",
+        "sha256": "ef8e03c9da4c5fb4462a4c8fafd7e90c027244c3352c8d6729ef17aaa557d66d",
+        "size": 36339
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_run.py",
+        "sha256": "34e75caaddbc38c146cfdfe9ef2b569ff24125859b3b90f0872fc0b80766bf34",
+        "size": 28341
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/development_probe_telemetry.py",
+        "sha256": "194b2ea21bb333db593e2ec21cf7612232459867fbe7c6b4de546d897d3a19c3",
+        "size": 1769
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/intake_projection_terminal_probe.py",
+        "sha256": "f7cbbd09ce10261b1fe3f655dc8238a4553cdd6e928cfa9b4321dbd639b78d35",
+        "size": 17329
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/intake_purpose_probe.py",
+        "sha256": "2ac5ecc98a25c431baf55bef1f5afa62e8b33af1f8620497871a92c4fe05fd84",
+        "size": 11909
+      },
+      {
+        "path": "skills/experiment-machinery/scripts/run_experiment.py",
+        "sha256": "9b98e61b841ba3805fcd876f8f9e26f114d8e10e0ba2cb057b3cab478ce9245f",
+        "size": 50410
+      },
+      {
+        "path": "tests/test_atom_building_machinery.py",
+        "sha256": "2c229cf939323933c02fce00779d0a4cf2fb4450b537e24fe517b57a2b3113ff",
+        "size": 60610
+      }
+    ],
+    "root": "source"
+  }
+}

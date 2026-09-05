@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "approach_id": "introduced-resolved-at-promotion",
+      "bundle": "../../bundles/introduced-resolved-at-promotion",
+      "bundle_sha256": "74b928d523a848ab97768e2836cff8e6e3af50887b65ebf5a78d2d069cdae6d3",
+      "candidate_sha256": "fb8e1db53fadf75e9f28ee6033f1e9e2716ac5f2d197578cefc61b752a080cdb",
+      "case_ids": [
+        "introduced-approver-field-starts",
+        "misspelled-field-still-refused",
+        "introduced-flag-on-existing-field-refused",
+        "existing-field-declaration-still-starts"
+      ],
+      "error": null,
+      "probe_id": "introduced-field-contract",
+      "status": "reused"
+    },
+    {
+      "approach_id": "unresolved-tolerated",
+      "bundle": "../../bundles/unresolved-tolerated",
+      "bundle_sha256": "d06576024cf51292d189bc3a6cb0846a48ddb1cee226494ff4502f6d7a282482",
+      "candidate_sha256": "8661ddab26d88a2a2ad9a77690ca123458bfc3ffd75c2b8fcd2f650b95bc10d5",
+      "case_ids": [
+        "introduced-approver-field-starts",
+        "misspelled-field-still-refused",
+        "introduced-flag-on-existing-field-refused",
+        "existing-field-declaration-still-starts"
+      ],
+      "error": null,
+      "probe_id": "introduced-field-contract",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

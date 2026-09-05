@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "introduced-field-declaration",
+  "case_id": "misspelled-field-still-refused",
+  "experiment_id": "development-probe-74b95d8a6c1a6bc3d094",
+  "probe_id": "introduced-field-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "1d436f14cd9e0ec846e381187f56277283dd8413dd0686e71600679560592ca1",
+  "schema_version": 1,
+  "status": "completed"
+}

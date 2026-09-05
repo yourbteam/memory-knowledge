@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "acd9787b9178fdd7f7806aff8641a94a8127b7bccaf45901cdd72b552cf3d172",
+  "assessment_adapter_sha256": "dd76ef704a97ef6eee224aa6732bd6f7438379320968efd01a343c2fc45e83a9",
+  "atomic_step_id": "payload-consistency-lens",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

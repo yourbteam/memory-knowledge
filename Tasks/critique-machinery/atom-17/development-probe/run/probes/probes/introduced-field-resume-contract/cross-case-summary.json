@@ -1,0 +1,15 @@
+{
+  "aggregated_summary_sha256": "0377fb0dc0d041b100f1be9efa112ee394bb017a8a50698b1c060acac9511749",
+  "atomic_step_id": "introduced-field-resolves-on-resume",
+  "case_ids": [
+    "resolved-introduced-run-loads",
+    "introduced-flag-on-existing-field-refused",
+    "introduced-leaf-starts-and-gates",
+    "existing-field-declaration-still-starts"
+  ],
+  "probe_id": "introduced-field-resume-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "185b2709c70020b321ada481dc39d6ced3ca525215f1edfe8a223cac31d9839e",
+  "schema_version": 1,
+  "status": "completed"
+}

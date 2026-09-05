@@ -1,0 +1,19 @@
+{
+ "case_id": "misspelled-field-still-refused",
+ "controller": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/atom_controller.py",
+ "repository_root": "/Users/kamenkamenov/united-partners",
+ "expected": {
+  "promotion": "not-applicable",
+  "refusal_contains": [
+   "ownership[].owenr",
+   "does not resolve at 'owenr'",
+   "available keys are"
+  ],
+  "start": "refused"
+ },
+ "start_verdict": "refused",
+ "start_stderr": "Atom Building Machinery refused at start: field 'ownership[].owenr' does not resolve at 'owenr'; available keys are ['budget_frame', 'cadence', 'dependencies', 'element', 'owner']",
+ "promotion_observed": "not-applicable",
+ "promotion_message": "",
+ "satisfied": true
+}

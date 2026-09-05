@@ -1,0 +1,9 @@
+{
+  "case_id": "btm-v6-map-contradicts-spans",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 18 candidate facts passed",
+  "verdict": "satisfied"
+}

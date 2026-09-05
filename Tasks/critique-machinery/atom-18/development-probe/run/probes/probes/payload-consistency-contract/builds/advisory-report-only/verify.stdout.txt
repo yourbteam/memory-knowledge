@@ -1,0 +1,1 @@
+{"approach_id": "advisory-report-only", "atomic_step_id": "payload-consistency-lens", "bundle_sha256": "5331eb257dba106a3fce5a090e3a894261d993cb1734d72e86287658f1db49d8", "probe_id": "payload-consistency-contract", "status": "verified"}

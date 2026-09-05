@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "payload-consistency-lens",
+  "case_id": "btm-v5-page-without-span-fields",
+  "experiment_id": "development-probe-b17b878f93da4fe23b2f",
+  "probe_id": "payload-consistency-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "e32fad71f42fd352e7181daf6a2b9262403fa3e4ac8960a642938b66bd15a4cc",
+  "schema_version": 1,
+  "status": "completed"
+}

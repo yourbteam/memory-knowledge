@@ -1,0 +1,30 @@
+{
+  "approach_bundles": [
+    {
+      "approach_id": "introduced-resolved-at-promotion",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/bundles/introduced-resolved-at-promotion",
+      "bundle_sha256": "74b928d523a848ab97768e2836cff8e6e3af50887b65ebf5a78d2d069cdae6d3"
+    },
+    {
+      "approach_id": "unresolved-tolerated",
+      "bundle": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/probes/probes/introduced-field-contract/bundles/unresolved-tolerated",
+      "bundle_sha256": "d06576024cf51292d189bc3a6cb0846a48ddb1cee226494ff4502f6d7a282482"
+    }
+  ],
+  "case_id": "introduced-approver-field-starts",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run-inputs/development-manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/evaluator_adapter.py",
+      "sha256": "f6125d117638ea6b9868ee80ca6403a777e8ce4573d07a5e6f6aa4d247024f14"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "introduced-field-contract",
+  "schema_version": 1
+}

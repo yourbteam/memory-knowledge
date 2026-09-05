@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "approach_id": "already-resolves-is-a-start-check",
+      "bundle": "../../bundles/already-resolves-is-a-start-check",
+      "bundle_sha256": "6a46b3d72a011bd0a6496eb1e5b1d90cd6e2225f12be6c6739b83c19c51340e6",
+      "candidate_sha256": "2ecaa4f436941fc741b01dbece4b5db49a816a08c7446522ba1afbd5f888cf1e",
+      "case_ids": [
+        "resolved-introduced-run-loads",
+        "introduced-flag-on-existing-field-refused",
+        "introduced-leaf-starts-and-gates",
+        "existing-field-declaration-still-starts"
+      ],
+      "error": null,
+      "probe_id": "introduced-field-resume-contract",
+      "status": "reused"
+    },
+    {
+      "approach_id": "already-resolves-tolerated-everywhere",
+      "bundle": "../../bundles/already-resolves-tolerated-everywhere",
+      "bundle_sha256": "c1b2da832049b42f19cc466058c4948988bbc630b1c25e688cc7f2e628e47c32",
+      "candidate_sha256": "49fc5c91f161b92743d253d3fad46e8834460a036ec3aaffbcd6db95cdb54248",
+      "case_ids": [
+        "resolved-introduced-run-loads",
+        "introduced-flag-on-existing-field-refused",
+        "introduced-leaf-starts-and-gates",
+        "existing-field-declaration-still-starts"
+      ],
+      "error": null,
+      "probe_id": "introduced-field-resume-contract",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

@@ -1,0 +1,23 @@
+{
+  "aggregated_metrics": {
+    "frozen-input-unchanged": 1.0,
+    "promotion-gate-correct": 1.0,
+    "refusal-actionable": 1.0,
+    "start-verdict-correct": 1.0
+  },
+  "approach_id": "introduced-resolved-at-promotion",
+  "atomic_step_id": "introduced-field-declaration",
+  "bundle_sha256": "74b928d523a848ab97768e2836cff8e6e3af50887b65ebf5a78d2d069cdae6d3",
+  "case_count": 4,
+  "case_ids": [
+    "introduced-approver-field-starts",
+    "misspelled-field-still-refused",
+    "introduced-flag-on-existing-field-refused",
+    "existing-field-declaration-still-starts"
+  ],
+  "probe_id": "introduced-field-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended"
+}

@@ -1,0 +1,45 @@
+{
+ "allowed_paths": [
+  "src/up_harness/tactical_roadmap.py",
+  "tests/unit"
+ ],
+ "atomic_step_id": "s12-named-assigner",
+ "captured_cases": [
+  {
+   "case_id": "case-btm-v3-role-assigners",
+   "expected_outcome": "the real v3 pack refuses every role assigner in one refusal, naming the people available",
+   "kind": "failure",
+   "sha256": "78118a80bd64fd45bc4ee99e11ac7879c3953f62e0b3fce626342247f038ad0c",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-named-assigner/cases/case-btm-v3-role-assigners.json"
+  },
+  {
+   "case_id": "case-btm-v3-decider-assigns",
+   "expected_outcome": "doors assigned by the platform decider are accepted and rendered",
+   "kind": "success",
+   "sha256": "a35cd4947a03c13078cdbebdd27b2e23ff7bdf085ee795dff4679d0c1c77647d",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-named-assigner/cases/case-btm-v3-decider-assigns.json"
+  },
+  {
+   "case_id": "case-btm-v3-invented-person",
+   "expected_outcome": "a person the roadmap never names is refused",
+   "kind": "failure",
+   "sha256": "db9d583b431584c1cf7d84c84698fa9f70c5f4fa0cb6899b57dd508c3684a342",
+   "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-named-assigner/cases/case-btm-v3-invented-person.json"
+  }
+ ],
+ "contract_surface": {
+  "deliverable": "tactical_roadmap",
+  "fields": [
+   {
+    "field": "ownership[].owenr",
+    "shape": "pinned-string",
+    "shape_source": "src/up_harness/tactical_roadmap.py::DOOR_FORM"
+   }
+  ],
+  "kind": "validation"
+ },
+ "outcome": "An unassigned door's assigner is a person the roadmap already names \u2014 the platform decider or a named owner in another row \u2014 never a role or a new name; a door that names anyone else is refused naming every such row and the people available.",
+ "practical_value": "Three located cells (critique run claude-seat-s12-btm-page-v3, units u-027 and u-029): all nine doors on the version 3 page name roles ('United Partners project lead', 'The B Team delivery owner'), so nobody can open them.",
+ "schema_version": 1,
+ "stopping_condition": "The real v3 pack refuses naming all nine role rows and the people available; the same pack with the decider as assigner is accepted and renders the doors; an invented person is refused."
+}

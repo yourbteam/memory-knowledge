@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "case_id": "introduced-approver-field-starts",
+      "output": "cases/introduced-approver-field-starts",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "misspelled-field-still-refused",
+      "output": "cases/misspelled-field-still-refused",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "introduced-flag-on-existing-field-refused",
+      "output": "cases/introduced-flag-on-existing-field-refused",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "existing-field-declaration-still-starts",
+      "output": "cases/existing-field-declaration-still-starts",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

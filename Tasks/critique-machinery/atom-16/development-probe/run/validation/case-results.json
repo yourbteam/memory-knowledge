@@ -1,0 +1,211 @@
+{
+  "completion_order": [
+    "introduced-flag-on-existing-field-refused",
+    "misspelled-field-still-refused",
+    "existing-field-declaration-still-starts",
+    "introduced-approver-field-starts"
+  ],
+  "results": [
+    {
+      "case_id": "introduced-approver-field-starts",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-approver-field-starts/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-approver-field-starts/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-approver-field-starts/telemetry.jsonl",
+          "sha256": "1e534ea481b90af0febb78dabb414819e90210500bef51e1000cd950b9c29e82"
+        }
+      ],
+      "output": "executions/introduced-approver-field-starts",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "introduced-approver-field-starts",
+          "case_sha256": "86b921a47f113df973f7e164a3c8e1a22585e1b8351e1420875550f107a1e787",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "introduced field 'activation_cards[].approver' still does not resolve at 'approver' at record-promotion; the canonical module must carry it before the promotion receipt is recorded; available keys are ['audience', 'desired_outcome', 'engagement_mechanic', 'hashtag_or_signature', 'hero_hub_hygiene', 'idea', 'insight', 'kpi', 'message_pillar', 'month', 'name', 'peso_channel', 'phase', 'targets']",
+          "promotion_observed": "refused-naming-field",
+          "start_refusal": "",
+          "start_verdict": "started"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "misspelled-field-still-refused",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/misspelled-field-still-refused/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/misspelled-field-still-refused/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/misspelled-field-still-refused/telemetry.jsonl",
+          "sha256": "306899984e3882e5a2d1af9243f0ebd558e2b876408980ef0eda790a27afe028"
+        }
+      ],
+      "output": "executions/misspelled-field-still-refused",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "misspelled-field-still-refused",
+          "case_sha256": "1388e49eedbbf6b5c595b60160dddd4ae915d877734881f60bcb05a3afb83db4",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "",
+          "promotion_observed": "not-applicable",
+          "start_refusal": "Atom Building Machinery refused at start: field 'ownership[].owenr' does not resolve at 'owenr'; available keys are ['budget_frame', 'cadence', 'dependencies', 'element', 'owner']",
+          "start_verdict": "refused"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "introduced-flag-on-existing-field-refused",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/introduced-flag-on-existing-field-refused/telemetry.jsonl",
+          "sha256": "e3d20045c4e8619260695c5516c1743306b0924125c326a843eb993ebcb99645"
+        }
+      ],
+      "output": "executions/introduced-flag-on-existing-field-refused",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "introduced-flag-on-existing-field-refused",
+          "case_sha256": "5b0a1371f9f0b91b0ce58535b37f21cb9a1d5722ec471930f7edc8ecbd134841",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "",
+          "promotion_observed": "not-applicable",
+          "start_refusal": "Atom Building Machinery refused at start: introduced field 'activation_cards[].kpi' already resolves at 'kpi'; declare it without 'introduced'",
+          "start_verdict": "refused"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "existing-field-declaration-still-starts",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/existing-field-declaration-still-starts/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/existing-field-declaration-still-starts/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-16/development-probe/run/validation/executions/existing-field-declaration-still-starts/telemetry.jsonl",
+          "sha256": "4812ea3ed56dd859f17ed349d444d25f7a7ae8f33fabde550a0bc3a3ba356ee6"
+        }
+      ],
+      "output": "executions/existing-field-declaration-still-starts",
+      "result": {
+        "error": null,
+        "metrics": {
+          "frozen-input-unchanged": 1,
+          "promotion-gate-correct": 1,
+          "refusal-actionable": 1,
+          "start-verdict-correct": 1
+        },
+        "outcome": {
+          "case_id": "existing-field-declaration-still-starts",
+          "case_sha256": "9e5c89ae66fc50ff3700a26772fe9b5ea1768d7ff7cdf488b0b6150a07e80bd8",
+          "metrics": {
+            "frozen-input-unchanged": 1,
+            "promotion-gate-correct": 1,
+            "refusal-actionable": 1,
+            "start-verdict-correct": 1
+          },
+          "promotion_message": "",
+          "promotion_observed": "not-applicable",
+          "start_refusal": "",
+          "start_verdict": "started"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

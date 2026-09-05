@@ -1,0 +1,17 @@
+{
+ "case_id": "btm-v5-page-without-span-fields",
+ "deliverable": "tactical_roadmap",
+ "expect": {
+  "all_lens_cells_not_applicable": true,
+  "map_cell": "not-applicable",
+  "not_applicable_reason": "no-check",
+  "owner_queue_from_lens": 0
+ },
+ "inputs_sha256": {
+  "page": "8f97210c3926ed728701d237c6f434a31fdf6b1338a46c0124f75e2cad7598e9",
+  "state": "b0326f15dcdf999b12dc3751f6c97f3b39b9bc6b043dcd236410aad3eac91429"
+ },
+ "mode": "derived",
+ "page": "Tasks/critique-machinery/atom-18/frozen-real/btm-v5-page.from-state.md",
+ "state": "Tasks/critique-machinery/atom-18/frozen-real/btm-v5-state.json"
+}

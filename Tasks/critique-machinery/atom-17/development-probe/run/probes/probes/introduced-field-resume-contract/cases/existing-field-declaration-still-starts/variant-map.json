@@ -1,0 +1,32 @@
+{
+  "experiment_id": "development-probe-50c5058bf7ff7789a605",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "already-resolves-is-a-start-check",
+      "bundle": "../../bundles/already-resolves-is-a-start-check",
+      "bundle_sha256": "6a46b3d72a011bd0a6496eb1e5b1d90cd6e2225f12be6c6739b83c19c51340e6",
+      "case_ids": [
+        "resolved-introduced-run-loads",
+        "introduced-flag-on-existing-field-refused",
+        "introduced-leaf-starts-and-gates",
+        "existing-field-declaration-still-starts"
+      ],
+      "probe_id": "introduced-field-resume-contract",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "already-resolves-tolerated-everywhere",
+      "bundle": "../../bundles/already-resolves-tolerated-everywhere",
+      "bundle_sha256": "c1b2da832049b42f19cc466058c4948988bbc630b1c25e688cc7f2e628e47c32",
+      "case_ids": [
+        "resolved-introduced-run-loads",
+        "introduced-flag-on-existing-field-refused",
+        "introduced-leaf-starts-and-gates",
+        "existing-field-declaration-still-starts"
+      ],
+      "probe_id": "introduced-field-resume-contract",
+      "variant_id": "variation-2"
+    }
+  ]
+}

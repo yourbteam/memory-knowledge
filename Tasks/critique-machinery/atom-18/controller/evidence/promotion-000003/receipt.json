@@ -1,0 +1,47 @@
+{
+ "schema_version": 1,
+ "status": "promoted",
+ "atomic_step_id": "payload-consistency-lens",
+ "controller": "prototype-driven-implementation",
+ "experiment_event_sha256": "59f448b969cf6aafac1497ceab0a73346c7c2eba6041be79165d01d637bba798",
+ "experiment_assembly_sha256": "acd9787b9178fdd7f7806aff8641a94a8127b7bccaf45901cdd72b552cf3d172",
+ "changed_paths": [
+  "skills/critique-machinery/SKILL.md",
+  "skills/critique-machinery/scripts/critique.py",
+  "tests/test_critique_machinery.py",
+  "working-agreement/client-skill-projections.json"
+ ],
+ "change_surface": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/promotion/change-surface.json",
+  "sha256": "5efae8c29f4cd5b9e19802245e063ad2a1509bd2956a609102296cb2a50ff4b5"
+ },
+ "review": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/promotion/review.json",
+  "sha256": "2c1c30f686d7efdca05149160346496662bbec07ce2e17a3497b83ed5adcd4a7"
+ },
+ "evidence": [
+  {
+   "case_id": "btm-v6-map-contradicts-spans",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/cases/btm-v6-map-contradicts-spans.json",
+   "sha256": "687b65608f072d8359fecdae37b83f1bd99d9d11e3bee8101722e87b2ce3811e"
+  },
+  {
+   "case_id": "viv-v6-page-consistent",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/cases/viv-v6-page-consistent.json",
+   "sha256": "39acbf61146be5d33a27dccb8fff66b4fe5fa8b41c53421cd767e2cf4aa52104"
+  },
+  {
+   "case_id": "btm-v5-page-without-span-fields",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/cases/btm-v5-page-without-span-fields.json",
+   "sha256": "71f652c7f1ba317d2d7c983e69a5a18fc3c2c6d2e50ec787c908b6877f4a738e"
+  },
+  {
+   "case_id": "btm-v6-opened-without-profile",
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-18/cases/btm-v6-opened-without-profile.json",
+   "sha256": "e7504fd1536c64befe35768ead26f1db8b4276d0c13a59fee9e29701e4e39f51"
+  }
+ ],
+ "contract_surface": {
+  "kind": "render"
+ }
+}

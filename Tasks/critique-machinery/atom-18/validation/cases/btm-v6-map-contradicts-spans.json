@@ -1,0 +1,20 @@
+{
+ "case_id": "btm-v6-map-contradicts-spans",
+ "script": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/critique-machinery/scripts/critique.py",
+ "open_exit": 0,
+ "consistency_exit": 0,
+ "consistency_stdout": "{\"defects\": [\"u-003-57e99727::payload-consistency\"], \"deliverable\": \"tactical_roadmap\", \"not_applicable\": [\"u-001-67522c23::payload-consistency\", \"u-002-ec39019f::payload-consistency\", \"u-004-0f0ba629::payload-consistency\", \"u-005-eaaae687::payload-consistency\", \"u-006-f0f8c030::payload-consistency\", \"u-007-3e433a7d::payload-consistency\", \"u-008-c1f951d5::payload-consistency\", \"u-009-ad883569::payload-consistency\", \"u-010-875c470d::payload-consistency\", \"u-011-dd3508b9::payload-consistency\", \"u-",
+ "consistency_stderr": "",
+ "map_outcome": "agreement-defect",
+ "map_defects": [
+  "Earned validation outreach",
+  "Employee advocacy push",
+  "Partner proof pack",
+  "Public identity and proof lock",
+  "Senior craft story series"
+ ],
+ "code_cells": 24,
+ "owner_open_count": 0,
+ "located_head": "### u-003-57e99727::payload-consistency \u2014 agreement-defect \u2014 unit: The activation map\n reader-1: revise L7-16\n   L7: | Owners of midsize businesses, technical buyers, referral partners, ecosystem partners, enterprise buyers and senior Sofia talent. | The Stop Line makes AI easier to trust because it shows what is proved, who owns it and where the system s\n   L8: | Owners, technical buyers, partner",
+ "satisfied": true
+}

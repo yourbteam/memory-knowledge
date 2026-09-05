@@ -1,0 +1,26 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "skill": "atom-building-machinery",
+ "canonical_controller_sha256": "65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83",
+ "codex_projection_sha256": "38d73b756c20992a93118a522da7777b7c35d6a037f47161fc133fc38aaf4b55",
+ "claude_projection_sha256": "73684fc3e25046b68ebe6d5dfce743af917a2fb3221aa809e51ade6662d44e21",
+ "registry_matches": {
+  "codex": true,
+  "claude": true
+ },
+ "installed_controller_sha256": {
+  "codex": "65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83",
+  "claude": "65e1165868bcdedcdc226807ae685baf31c631f90c97462a89de53316240aa83"
+ },
+ "installer": "working-agreement/install_skills.py --source skills --manifest skills/managed-skills.txt --target <client> --only atom-building-machinery [--reconciliation working-agreement/client-skill-projections.json]",
+ "unrelated_claude_drift_preserved": [
+  "description-machinery",
+  "experiment-machinery",
+  "requirements-machinery"
+ ],
+ "clients": [
+  "/Users/kamenkamenov/.codex/skills/atom-building-machinery",
+  "/Users/kamenkamenov/.claude/skills/atom-building-machinery"
+ ]
+}

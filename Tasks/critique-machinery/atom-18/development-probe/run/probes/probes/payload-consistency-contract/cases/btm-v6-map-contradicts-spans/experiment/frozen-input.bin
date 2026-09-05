@@ -1,0 +1,30 @@
+{
+ "case_id": "btm-v6-map-contradicts-spans",
+ "deliverable": "tactical_roadmap",
+ "expect": {
+  "clear_units": [
+   "The proof-building order",
+   "The twelve-month calendar",
+   "The always-on loop",
+   "The rollout"
+  ],
+  "located_names_first_defect_row": true,
+  "map_cell": "agreement-defect",
+  "map_defect_cards": [
+   "Public identity and proof lock",
+   "Partner proof pack",
+   "Senior craft story series",
+   "Earned validation outreach",
+   "Employee advocacy push"
+  ],
+  "not_applicable_reason": "no-check",
+  "owner_queue_from_lens": 0
+ },
+ "inputs_sha256": {
+  "page": "f9d468f6f1360e9af3c86b0797baa0b207f21cca7cd00f5b27f14fa96cdc96a0",
+  "state": "1eef1172f0ec5af7bc9e5c6c262e07d17ef762834f2e91acafbcda80a0ee09ec"
+ },
+ "mode": "derived",
+ "page": "Tasks/critique-machinery/atom-18/frozen-real/btm-v6-page.md",
+ "state": "Tasks/critique-machinery/atom-18/frozen-real/btm-v6-state.json"
+}
