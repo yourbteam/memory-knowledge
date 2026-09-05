@@ -1,0 +1,83 @@
+{
+  "allowed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "tests/unit"
+  ],
+  "atomic_step_id": "s12-proof-order-staged",
+  "captured_cases": [
+    {
+      "case_id": "case-btm-v3-unstaged-order",
+      "expected_outcome": "the real v3 paragraph refuses naming each stage's gap",
+      "kind": "failure",
+      "sha256": "885985ebb49f639c8ab6111cfd499664d140b51026a943734e411747841151de",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-unstaged-order.json"
+    },
+    {
+      "case_id": "case-btm-v3-staged-order",
+      "expected_outcome": "a paragraph whose stages name cards and months in order is accepted",
+      "kind": "success",
+      "sha256": "0691453558e018cf08a358d5c29909332606a32751e23a77d7976ae45d741041",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-staged-order.json"
+    },
+    {
+      "case_id": "case-btm-v3-backwards-stages",
+      "expected_outcome": "stages that run backwards are refused",
+      "kind": "failure",
+      "sha256": "1f386409f2bd23784e3f737f790cacb30a07d17f36c714292156261812b8c614",
+      "source_ref": "/Users/kamenkamenov/united-partners/Tasks/step6-feedback-closure/runs/atom-s12-proof-order-staged/cases/case-btm-v3-backwards-stages.json"
+    }
+  ],
+  "contract_surface": {
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "proof_building_order",
+        "shape": "prose",
+        "shape_source": "src/up_harness/tactical_roadmap.py::SECTION_KEYS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "outcome": "Each stage of the proof-building order names the Activation Cards and months that carry it, in calendar order; a stage with no card or no month, or stages that run backwards, are refused naming every such stage.",
+  "practical_value": "Three located cells (critique run claude-seat-s12-btm-page-v3, unit u-025): the version 3 paragraph is one sentence with no month and no card, unrelated to the one-pager's practical order, so nobody can check it against the calendar.",
+  "prose_waiver": {
+    "date": "2026-09-05",
+    "operator": {
+      "approval_ui": "native-macos-window",
+      "authentication_policy": "device-owner-authentication",
+      "client_projection": "codex",
+      "helper_path": "/Users/kamenkamenov/.codex/skills/atom-building-machinery/scripts/prose_waiver_approval",
+      "helper_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "initiating_harness_markers": [
+        "CODEX_APP_TOOLS_PIPE_PATH",
+        "CODEX_CI",
+        "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+        "CODEX_MCP_NODE_PATH",
+        "CODEX_PERMISSION_PROFILE",
+        "CODEX_SAGE_BACKFILL_TRACKER_TAB_REUSE",
+        "CODEX_SANDBOX_NETWORK_DISABLED",
+        "CODEX_SESSION_ID",
+        "CODEX_SHELL",
+        "CODEX_THREAD_ID"
+      ],
+      "login_user": "kamenkamenov",
+      "observed_at": "2026-09-05T09:34:33.490Z",
+      "parent_process_name": "unknown",
+      "parent_process_pid": 5279,
+      "uid": 501
+    },
+    "presence_proof": {
+      "digest": "5cbcb7a6823fe1c3f1ca63d630f11aa7d0b756f1951507a6ca5e647f416c540d",
+      "helper_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "helper_version": 1,
+      "nonce": "0c51bf75417b38ecd7aceed6a31bfbe4f49dc61c15984c04778c675eb82a1fa0",
+      "scheme": "native-macos-device-owner-hmac-v1",
+      "service": "memory-knowledge.atom-building.prose-waiver.native-v1",
+      "signed_payload_base64": "eyJhZG9wdGVkX3N0YXRlbWVudCI6IkkgYXV0aG9yaXplIHRoaXMgZXhhY3QgdmFsaWRhdGlvbiByZXF1ZXN0IHRvIHN0YXJ0IGFzIGEgcmVjb3JkZWQgcHJvc2UgZXhjZXB0aW9uLiBUaGlzIGRvZXMgbm90IGF1dGhvcml6ZSBwcm9tb3Rpb24sIG9wZXJhdGlvbmFsIHVzZSwgYW5vdGhlciBmaWVsZCwgb3IgYW5vdGhlciBhdG9tLiIsImNob2ljZSI6IndhaXZlIiwiZGF0ZSI6IjIwMjYtMDktMDUiLCJmaWVsZHMiOlsicHJvb2ZfYnVpbGRpbmdfb3JkZXIiXSwibWVhbmluZ3MiOnsiZGVjbGluZSI6IkkgZG8gbm90IGF1dGhvcml6ZSB0aGlzIHJlcXVlc3QgdG8gc3RhcnQgd2hpbGUgaXQgcmVhZHMgcHJvc2UuIEl0IG11c3QgdXNlIGEgc3RydWN0dXJlZCBmaWVsZCBiZWZvcmUgcHJvY2VlZGluZy4iLCJ3YWl2ZSI6IkkgYXV0aG9yaXplIHRoaXMgZXhhY3QgdmFsaWRhdGlvbiByZXF1ZXN0IHRvIHN0YXJ0IGFzIGEgcmVjb3JkZWQgcHJvc2UgZXhjZXB0aW9uLiBUaGlzIGRvZXMgbm90IGF1dGhvcml6ZSBwcm9tb3Rpb24sIG9wZXJhdGlvbmFsIHVzZSwgYW5vdGhlciBmaWVsZCwgb3IgYW5vdGhlciBhdG9tLiJ9LCJvcGVyYXRvciI6eyJhcHByb3ZhbF91aSI6Im5hdGl2ZS1tYWNvcy13aW5kb3ciLCJhdXRoZW50aWNhdGlvbl9wb2xpY3kiOiJkZXZpY2Utb3duZXItYXV0aGVudGljYXRpb24iLCJjbGllbnRfcHJvamVjdGlvbiI6ImNvZGV4IiwiaGVscGVyX3BhdGgiOiJcL1VzZXJzXC9rYW1lbmthbWVub3ZcLy5jb2RleFwvc2tpbGxzXC9hdG9tLWJ1aWxkaW5nLW1hY2hpbmVyeVwvc2NyaXB0c1wvcHJvc2Vfd2FpdmVyX2FwcHJvdmFsIiwiaGVscGVyX3NoYTI1NiI6IjVmYTg2YmRhMmYxNzRmODUxNTg0ODgxNTViMGU3ZmRkOTA4YTY5NTI4MTE5MjlkYWFhZDFkY2MwY2U2ZTc2NmMiLCJpbml0aWF0aW5nX2hhcm5lc3NfbWFya2VycyI6WyJDT0RFWF9BUFBfVE9PTFNfUElQRV9QQVRIIiwiQ09ERVhfQ0kiLCJDT0RFWF9JTlRFUk5BTF9PUklHSU5BVE9SX09WRVJSSURFIiwiQ09ERVhfTUNQX05PREVfUEFUSCIsIkNPREVYX1BFUk1JU1NJT05fUFJPRklMRSIsIkNPREVYX1NBR0VfQkFDS0ZJTExfVFJBQ0tFUl9UQUJfUkVVU0UiLCJDT0RFWF9TQU5EQk9YX05FVFdPUktfRElTQUJMRUQiLCJDT0RFWF9TRVNTSU9OX0lEIiwiQ09ERVhfU0hFTEwiLCJDT0RFWF9USFJFQURfSUQiXSwibG9naW5fdXNlciI6ImthbWVua2FtZW5vdiIsIm9ic2VydmVkX2F0IjoiMjAyNi0wOS0wNVQwOTozNDozMy40OTBaIiwicGFyZW50X3Byb2Nlc3NfbmFtZSI6InVua25vd24iLCJwYXJlbnRfcHJvY2Vzc19waWQiOjUyNzksInVpZCI6NTAxfSwicmVwb3NpdG9yeV9yb290IjoiXC9Vc2Vyc1wva2FtZW5rYW1lbm92XC91bml0ZWQtcGFydG5lcnMiLCJyZXF1ZXN0X3NoYTI1NiI6IjRhMjU3OTg0OGI4MWI0OWI1Y2Y0MGQwYTFiYjk2YTYwMzIxOTVlYTA4NmM1ZWQyODBmYTc5YWFhZmUxNGIwZGUiLCJzY2hlbWFfdmVyc2lvbiI6MX0=",
+      "signed_payload_sha256": "6ac64a873c78d2bba79bf8b9d90c5a0ee3c2d96120344649cd4669d18688303d"
+    },
+    "words": "I authorize this exact validation request to start as a recorded prose exception. This does not authorize promotion, operational use, another field, or another atom."
+  },
+  "schema_version": 1,
+  "stopping_condition": "The real v3 pack refuses naming its three stages; the same pack with staged cards and months is accepted; backwards stages are refused."
+}

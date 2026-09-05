@@ -1,0 +1,7 @@
+{
+  "case_id": "codex-shell-self-approval",
+  "command_surface": "installed Codex helper authorize with an argument-supplied choice",
+  "exit_code": 2,
+  "observed": "the decision cannot be supplied by arguments; choose only in the native window",
+  "status": "satisfied"
+}

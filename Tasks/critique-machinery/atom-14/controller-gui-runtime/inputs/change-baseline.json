@@ -1,0 +1,51 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "f3c0be8266535cf2a53c1b6762eb704b12c6fab9da07e8cd874374cf7c55d474",
+      "size": 12492
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "8a12c34a5a4b9665bacc49d5d76e18e2a73c9df37b396776e863cee207a080dc",
+      "size": 121299
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval",
+      "sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "size": 374912
+    },
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+      "sha256": "9fa72811c50c8e9897c26175d0eaa3bc19bb70d42d98f64e3715d2321f441129",
+      "size": 13974
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "29a113c2ebac250aa853d7163beecdba04d899d038cfd71fcb8cca00d75aa40c",
+      "size": 50920
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "74821b56e945f6973c2614f0d80b0bfcf3aa88ae2ffafe95c2c73d52b8e6c1ef",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

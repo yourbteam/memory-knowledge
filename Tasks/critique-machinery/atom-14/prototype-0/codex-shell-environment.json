@@ -1,0 +1,27 @@
+{
+  "observed_at": "2026-09-05",
+  "stdin_isatty": false,
+  "stdout_isatty": false,
+  "tty_command": "not a tty",
+  "login_user": "kamenkamenov",
+  "uid": 501,
+  "ttyname": null,
+  "parent": {
+    "pid": 63642,
+    "ppid": 63166,
+    "command": "/Applications/ChatGPT.app/Contents/Resources/codex",
+    "mode": "app-server"
+  },
+  "observed_codex_markers": [
+    "CODEX_APP_TOOLS_PIPE_PATH",
+    "CODEX_CI",
+    "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+    "CODEX_MCP_NODE_PATH",
+    "CODEX_PERMISSION_PROFILE",
+    "CODEX_SAGE_BACKFILL_TRACKER_TAB_REUSE",
+    "CODEX_SANDBOX_NETWORK_DISABLED",
+    "CODEX_SESSION_ID",
+    "CODEX_SHELL",
+    "CODEX_THREAD_ID"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "change_surface": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/promotion/native-gui-runtime-change-surface.json",
+    "sha256": "d147030346bba324ae0a8920def8cb066746193a1b2271058429777e4a96fc49"
+  },
+  "changed_paths": [
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "contract_surface": {
+    "deliverable": "atom_controller",
+    "fields": [
+      {
+        "field": "prose_waiver",
+        "shape": "object",
+        "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_OPTIONAL_FIELDS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "controller": "prototype-driven-implementation",
+  "evidence": [
+    {
+      "case_id": "claude-shell-self-approval",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/frozen-real/claude-inspection.md",
+      "sha256": "b7109addd8cccefe9d289f13c0e55b6745918d6c93cde218b5cd641ed80ab09b"
+    },
+    {
+      "case_id": "codex-shell-self-approval",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/prototype-0/codex-shell-environment.json",
+      "sha256": "ef22e69fd67f6fcfb2a0413a3fd7cee516d936e8215c12d72434e4535900765c"
+    },
+    {
+      "case_id": "operator-native-waive",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/proof-order.atom-request.json",
+      "sha256": "1765899f24daef77123c0c5a38bd561887d3ef065058f4185faeec074846d852"
+    },
+    {
+      "case_id": "cross-request-reuse",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/declared-real/countable-kpis.atom-request.json",
+      "sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0"
+    },
+    {
+      "case_id": "historical-proof-receipt",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/waiver-interviews/proof-order-final-waive/prose-waiver-receipt.json",
+      "sha256": "7650dccc816b4d94accbf0dd5940c6d08eb988a815546a4e82f77481a96b88a9"
+    },
+    {
+      "case_id": "historical-countable-receipt",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-13/waiver-interviews/countable-kpis-final/prose-waiver-receipt.json",
+      "sha256": "39172ff72a0ddfb8fdb93f19a7da0d8c504e68e218bd54178d9ef5184fcb8444"
+    }
+  ],
+  "experiment_assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+  "experiment_event_sha256": "81f00e95fdd647c978ecfe70a0ce9fecd540ab5e403ddd15b7baf323562e6eb5",
+  "review": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/promotion/native-gui-runtime-review.json",
+    "sha256": "abafa017738b5948ea8ae53d63a686efbed1581bed06f29eb291bbb9172cbe38"
+  },
+  "schema_version": 1,
+  "status": "promoted"
+}

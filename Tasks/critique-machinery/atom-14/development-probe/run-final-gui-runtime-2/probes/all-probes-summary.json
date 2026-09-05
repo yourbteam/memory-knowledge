@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "probe_ids": [
+    "native-prose-waiver-authorization"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "ed804858da1b4ff4f545cb8aaa11eae465cc6a6977353c33df3647618282523e",
+  "schema_version": 1,
+  "status": "completed"
+}

@@ -1,0 +1,80 @@
+{
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "cases": [
+    {
+      "case_id": "claude-shell-self-approval",
+      "evidence": [
+        {
+          "case_id": "claude-shell-self-approval",
+          "path": "../operator-validation/cases/claude-shell-self-approval.json",
+          "sha256": "62d7171f54130c3d8427150e59ef7fa10a0ebf8a506c5b156ec861c52d5ccd88"
+        }
+      ],
+      "reason": "The installed Claude helper refused an argument-supplied choice before opening its native window.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "codex-shell-self-approval",
+      "evidence": [
+        {
+          "case_id": "codex-shell-self-approval",
+          "path": "../operator-validation/cases/codex-shell-self-approval.json",
+          "sha256": "e4624deea056186e61eab0381c8b5b5670719abbfe2bc3cc1991430b5be8634e"
+        }
+      ],
+      "reason": "The installed Codex helper refused an argument-supplied choice before opening its native window.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "operator-native-waive",
+      "evidence": [
+        {
+          "case_id": "operator-native-waive",
+          "path": "../operator-validation/cases/operator-native-waive.json",
+          "sha256": "1948805da6069a3c4366ab704611a44c821a79acd0a88ee3dfefda1fca5b1a2d"
+        }
+      ],
+      "reason": "Kamen's native-window choice and macOS device-owner authentication created one request-bound receipt; start accepted it without terminal input, both client helpers verified it, and an untrusted shell received no key bytes.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "cross-request-reuse",
+      "evidence": [
+        {
+          "case_id": "cross-request-reuse",
+          "path": "../operator-validation/cases/cross-request-reuse.json",
+          "sha256": "a68acb19931bd65eeb131f9118ca069856ba8fb58a4cb203039a7ced5a595b16"
+        }
+      ],
+      "reason": "The proof-order receipt was rejected when used to start the countable-KPIs request.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "historical-proof-receipt",
+      "evidence": [
+        {
+          "case_id": "historical-proof-receipt",
+          "path": "../operator-validation/cases/historical-proof-receipt.json",
+          "sha256": "2081e64f9ddcae1afe1eb8d47a2e211ec83220c174c1f63a595b964a0ecefd54"
+        }
+      ],
+      "reason": "The legacy proof-order receipt cannot start new work because it has no observed operator or protected presence proof, while an existing completed run remains readable.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "historical-countable-receipt",
+      "evidence": [
+        {
+          "case_id": "historical-countable-receipt",
+          "path": "../operator-validation/cases/historical-countable-receipt.json",
+          "sha256": "dca1640b082f73ef29fdea0658b0201ce3bddb8aebde6586e5590c6a1226a3c2"
+        }
+      ],
+      "reason": "The copied legacy countable-KPIs receipt cannot authorize a new start, while historical completed state remains readable.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_event_sha256": "c4c137d975794bae660992b2fcf8035da3dafab72a398d5d36e0b5e01d712d28",
+  "schema_version": 1,
+  "status": "completed"
+}

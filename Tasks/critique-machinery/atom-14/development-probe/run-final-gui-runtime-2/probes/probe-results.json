@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/native-prose-waiver-authorization",
+      "probe_id": "native-prose-waiver-authorization",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

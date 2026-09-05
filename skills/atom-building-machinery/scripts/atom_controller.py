@@ -5,20 +5,20 @@ from __future__ import annotations
 
 import argparse
 import ast
+import base64
+import binascii
 import hashlib
+import importlib
 import json
 import os
 import re
 import subprocess
 import sys
-from datetime import date as calendar_date
+from datetime import date as calendar_date, datetime
 from pathlib import Path
 from typing import Any
 
 MODULE_ROOT = Path(__file__).resolve().parents[3]
-if str(MODULE_ROOT) not in sys.path:
-    sys.path.insert(0, str(MODULE_ROOT))
-from scripts import blocker_catalog, work_memory
 
 CONTRACT = 1
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -48,11 +48,49 @@ REQUEST_OPTIONAL_FIELDS = {"prose_waiver"}
 CONTRACT_SURFACE_RENDER_FIELDS = {"kind"}
 CONTRACT_SURFACE_VALIDATION_FIELDS = {"kind", "deliverable", "fields"}
 CONTRACT_FIELD_FIELDS = {"field", "shape", "shape_source"}
-PROSE_WAIVER_FIELDS = {"by", "words", "date"}
+PROSE_WAIVER_FIELDS = {"operator", "words", "date", "presence_proof"}
+LEGACY_PROSE_WAIVER_FIELDS = {"by", "words", "date"}
+OPERATOR_FIELDS = {
+    "login_user", "uid", "approval_ui", "authentication_policy", "client_projection",
+    "helper_path", "helper_sha256", "parent_process_name", "parent_process_pid",
+    "observed_at", "initiating_harness_markers",
+}
+PRESENCE_PROOF_FIELDS = {
+    "scheme", "service", "helper_version", "helper_sha256", "signed_payload_base64",
+    "signed_payload_sha256", "nonce", "digest",
+}
+NATIVE_AUTHORIZATION_FIELDS = {
+    "schema_version", "status", "helper_version", "service", "signed_payload_base64",
+    "signed_payload_sha256", "nonce", "digest",
+}
+SIGNED_AUTHORIZATION_FIELDS = {
+    "schema_version", "request_sha256", "repository_root", "fields", "meanings",
+    "choice", "adopted_statement", "date", "operator",
+}
 PROSE_WAIVER_RECEIPT_FIELDS = {
     "schema_version", "status", "request_sha256", "repository_root", "fields",
-    "by", "words", "date", "operator_choice", "answer_event_sha256",
+    "operator", "words", "date", "presence_proof", "operator_choice", "answer_event_sha256",
 }
+KEYCHAIN_SERVICE = "memory-knowledge.atom-building.prose-waiver.native-v1"
+PRESENCE_SCHEME = "native-macos-device-owner-hmac-v1"
+NATIVE_HELPER_VERSION = 1
+NATIVE_HELPER_NAME = "prose_waiver_approval"
+MODEL_HARNESS_MARKERS = (
+    "CLAUDECODE",
+    "CLAUDE_CODE_SESSION_ID",
+    "CLAUDE_CODE_ENTRYPOINT",
+    "CLAUDE_PID",
+    "CODEX_APP_TOOLS_PIPE_PATH",
+    "CODEX_CI",
+    "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+    "CODEX_MCP_NODE_PATH",
+    "CODEX_PERMISSION_PROFILE",
+    "CODEX_SAGE_BACKFILL_TRACKER_TAB_REUSE",
+    "CODEX_SANDBOX_NETWORK_DISABLED",
+    "CODEX_SESSION_ID",
+    "CODEX_SHELL",
+    "CODEX_THREAD_ID",
+)
 CONTRACT_SHAPES = {"list", "object", "enum", "integer", "pinned-string", "prose"}
 CASE_FIELDS = {"case_id", "source_ref", "sha256", "kind", "expected_outcome"}
 EVIDENCE_FIELDS = {"case_id", "path", "sha256"}
@@ -482,7 +520,8 @@ def _validate_contract_surface(
     stage: str,
     *,
     allow_missing_prose_waiver: bool = False,
-) -> tuple[dict[str, Any], dict[str, str] | None]:
+    allow_legacy_prose_waiver: bool = False,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
     if type(value) is not dict:
         raise AtomError(stage, "contract_surface is not one object")
     kind = value.get("kind")
@@ -537,19 +576,40 @@ def _validate_contract_surface(
                 stage,
                 f"validation field(s) {prose_fields!r} use prose; a validation rule over prose is the class "
                 "that misread three real runs. Change the deliverable schema so the model fills a structured "
-                "field, or run prose-waiver-interview so Kamen Kamenov can choose between the fixed 'waive' "
+                "field, or run prose-waiver-interview so the operator can choose in the fixed native macOS window between 'waive' "
                 "and 'decline' meanings; a model-written prose_waiver is not accepted",
             )
+        if (
+            allow_legacy_prose_waiver
+            and type(waiver_value) is dict
+            and set(waiver_value) == LEGACY_PROSE_WAIVER_FIELDS
+        ):
+            raw_legacy = _exact(waiver_value, "legacy prose_waiver", LEGACY_PROSE_WAIVER_FIELDS, stage)
+            if raw_legacy["by"] != "Kamen Kamenov":
+                raise AtomError(stage, "legacy prose_waiver.by differs from its historical fixed value")
+            words = _nonempty(raw_legacy["words"], "legacy prose_waiver.words", stage)
+            date = _nonempty(raw_legacy["date"], "legacy prose_waiver.date", stage)
+            try:
+                calendar_date.fromisoformat(date)
+            except ValueError:
+                raise AtomError(stage, "legacy prose_waiver.date must use YYYY-MM-DD") from None
+            waiver = {"by": "Kamen Kamenov", "words": words, "date": date}
+            return {"kind": "validation", "deliverable": deliverable, "fields": fields}, waiver
         raw_waiver = _exact(waiver_value, "prose_waiver", PROSE_WAIVER_FIELDS, stage)
-        if raw_waiver["by"] != "Kamen Kamenov":
-            raise AtomError(stage, "prose_waiver.by must be exactly 'Kamen Kamenov'")
+        operator = _validated_operator(raw_waiver["operator"], stage)
+        presence = _validated_presence(raw_waiver["presence_proof"], stage)
+        if presence["helper_sha256"] != operator["helper_sha256"]:
+            raise AtomError(
+                stage,
+                "prose_waiver presence helper SHA-256 differs from its signed operator helper",
+            )
         words = _nonempty(raw_waiver["words"], "prose_waiver.words", stage)
         date = _nonempty(raw_waiver["date"], "prose_waiver.date", stage)
         try:
             calendar_date.fromisoformat(date)
         except ValueError:
             raise AtomError(stage, "prose_waiver.date must use YYYY-MM-DD")
-        waiver = {"by": "Kamen Kamenov", "words": words, "date": date}
+        waiver = {"operator": operator, "words": words, "date": date, "presence_proof": presence}
     elif waiver_value is not None:
         raise AtomError(stage, "prose_waiver is present but no declared target has shape 'prose'; remove it")
     return {"kind": "validation", "deliverable": deliverable, "fields": fields}, waiver
@@ -741,6 +801,7 @@ def _validate_request(
     repository_root: Path | None = None,
     stage: str = "validate-request",
     allow_missing_prose_waiver: bool = False,
+    allow_legacy_prose_waiver: bool = False,
 ) -> dict[str, Any]:
     if type(value) is not dict:
         raise AtomError(stage, "atom request is not one object")
@@ -799,6 +860,7 @@ def _validate_request(
         surface, waiver = _validate_contract_surface(
             request["contract_surface"], request.get("prose_waiver"), repository_root, stage,
             allow_missing_prose_waiver=allow_missing_prose_waiver,
+            allow_legacy_prose_waiver=allow_legacy_prose_waiver,
         )
         normalized["contract_surface"] = surface
         if waiver is not None:
@@ -863,6 +925,29 @@ def _snapshot_validation(
 
 
 def _canonical_blocker_closeout(run: Path, stage: str) -> dict[str, Any]:
+    roots = [MODULE_ROOT]
+    baseline_path = run / "inputs" / "change-baseline.json"
+    if baseline_path.is_file() and not baseline_path.is_symlink():
+        baseline = _load(baseline_path, "change baseline", stage)
+        repository_root = baseline.get("repository_root") if type(baseline) is dict else None
+        if type(repository_root) is str and repository_root:
+            roots.append(Path(repository_root))
+    module_root = next(
+        (root for root in roots if (root / "scripts" / "blocker_catalog.py").is_file()
+         and (root / "scripts" / "work_memory.py").is_file()),
+        None,
+    )
+    if module_root is None:
+        checked = [str(root / "scripts") for root in roots]
+        raise AtomError(
+            stage,
+            f"canonical blocker support is unavailable; require blocker_catalog.py and "
+            f"work_memory.py together in one of {checked!r}",
+        )
+    if str(module_root) not in sys.path:
+        sys.path.insert(0, str(module_root))
+    blocker_catalog = importlib.import_module("scripts.blocker_catalog")
+    work_memory = importlib.import_module("scripts.work_memory")
     try:
         return blocker_catalog.atom_closeout(run)
     except work_memory.WorkMemoryError as error:
@@ -1075,6 +1160,254 @@ def _append_waiver_event(interview: Path, event: str, payload: dict[str, Any]) -
     return _digest(line)
 
 
+def _validated_operator(value: object, stage: str) -> dict[str, Any]:
+    operator = _exact(value, "operator", OPERATOR_FIELDS, stage)
+    login_user = _nonempty(operator["login_user"], "operator.login_user", stage)
+    uid = operator["uid"]
+    if type(uid) is not int or uid < 0:
+        raise AtomError(stage, f"operator.uid is {uid!r}; require one nonnegative OS uid")
+    if operator["approval_ui"] != "native-macos-window":
+        raise AtomError(stage, "operator.approval_ui must identify the code-owned native macOS window")
+    if operator["authentication_policy"] != "device-owner-authentication":
+        raise AtomError(stage, "operator.authentication_policy must be macOS device-owner-authentication")
+    projection = operator["client_projection"]
+    if projection not in {"codex", "claude"}:
+        raise AtomError(stage, f"operator.client_projection is {projection!r}; require 'codex' or 'claude'")
+    helper_path = Path(_nonempty(operator["helper_path"], "operator.helper_path", stage))
+    expected_helper = (
+        Path.home() / f".{projection}" / "skills" / "atom-building-machinery" / "scripts" / NATIVE_HELPER_NAME
+    )
+    if helper_path != expected_helper:
+        raise AtomError(
+            stage,
+            f"operator.helper_path is {str(helper_path)!r}; require installed {projection} helper {str(expected_helper)!r}",
+        )
+    helper_sha256 = _sha(operator["helper_sha256"], "operator.helper_sha256", stage)
+    parent_name = _nonempty(operator["parent_process_name"], "operator.parent_process_name", stage)
+    parent_pid = operator["parent_process_pid"]
+    if type(parent_pid) is not int or parent_pid <= 0:
+        raise AtomError(stage, f"operator.parent_process_pid is {parent_pid!r}; require one positive observed pid")
+    observed_at = _nonempty(operator["observed_at"], "operator.observed_at", stage)
+    try:
+        parsed = datetime.fromisoformat(observed_at)
+    except ValueError:
+        raise AtomError(stage, "operator.observed_at must be an ISO-8601 wall-clock timestamp") from None
+    if parsed.tzinfo is None:
+        raise AtomError(stage, "operator.observed_at must include its UTC offset")
+    present = _strings(
+        operator["initiating_harness_markers"],
+        "operator.initiating_harness_markers",
+        stage,
+        nonempty=False,
+    )
+    if present != [name for name in MODEL_HARNESS_MARKERS if name in present]:
+        raise AtomError(
+            stage,
+            f"operator initiating harness markers are {present!r}; require the ordered code-owned marker subset",
+        )
+    return {
+        "login_user": login_user,
+        "uid": uid,
+        "approval_ui": "native-macos-window",
+        "authentication_policy": "device-owner-authentication",
+        "client_projection": projection,
+        "helper_path": str(helper_path),
+        "helper_sha256": helper_sha256,
+        "parent_process_name": parent_name,
+        "parent_process_pid": parent_pid,
+        "observed_at": observed_at,
+        "initiating_harness_markers": present,
+    }
+
+
+def _validated_presence(value: object, stage: str) -> dict[str, Any]:
+    proof = _exact(value, "presence_proof", PRESENCE_PROOF_FIELDS, stage)
+    if proof["scheme"] != PRESENCE_SCHEME:
+        raise AtomError(stage, f"presence_proof.scheme is {proof['scheme']!r}; require {PRESENCE_SCHEME!r}")
+    if proof["service"] != KEYCHAIN_SERVICE:
+        raise AtomError(stage, f"presence_proof.service is {proof['service']!r}; require {KEYCHAIN_SERVICE!r}")
+    if proof["helper_version"] != NATIVE_HELPER_VERSION:
+        raise AtomError(stage, f"presence_proof.helper_version must be {NATIVE_HELPER_VERSION}")
+    helper_sha256 = _sha(proof["helper_sha256"], "presence_proof.helper_sha256", stage)
+    signed_payload_base64 = _nonempty(
+        proof["signed_payload_base64"], "presence_proof.signed_payload_base64", stage
+    )
+    try:
+        signed_payload = base64.b64decode(signed_payload_base64, validate=True)
+    except (binascii.Error, ValueError):
+        raise AtomError(stage, "presence_proof.signed_payload_base64 is not canonical base64") from None
+    if not signed_payload:
+        raise AtomError(stage, "presence_proof signed payload is empty")
+    signed_payload_sha256 = _sha(
+        proof["signed_payload_sha256"], "presence_proof.signed_payload_sha256", stage
+    )
+    if _digest(signed_payload) != signed_payload_sha256:
+        raise AtomError(stage, "presence_proof signed payload SHA-256 does not match its bytes")
+    nonce = _sha(proof["nonce"], "presence_proof.nonce", stage)
+    digest = _sha(proof["digest"], "presence_proof.digest", stage)
+    return {
+        "scheme": PRESENCE_SCHEME,
+        "service": KEYCHAIN_SERVICE,
+        "helper_version": NATIVE_HELPER_VERSION,
+        "helper_sha256": helper_sha256,
+        "signed_payload_base64": signed_payload_base64,
+        "signed_payload_sha256": signed_payload_sha256,
+        "nonce": nonce,
+        "digest": digest,
+    }
+
+
+def _authorization_context(request_sha256: str, repository_root: Path, fields: list[str]) -> dict[str, Any]:
+    return {
+        "schema_version": CONTRACT,
+        "request_sha256": request_sha256,
+        "repository_root": str(repository_root),
+        "fields": fields,
+    }
+
+
+def _helper_path(stage: str) -> Path:
+    installed = [
+        Path.home() / ".codex" / "skills" / "atom-building-machinery" / "scripts" / NATIVE_HELPER_NAME,
+        Path.home() / ".claude" / "skills" / "atom-building-machinery" / "scripts" / NATIVE_HELPER_NAME,
+    ]
+    local = Path(__file__).resolve().with_name(NATIVE_HELPER_NAME)
+    candidates = [local, *installed] if local in installed else installed
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    raise AtomError(
+        stage,
+        "native prose-waiver helper is unavailable; refresh atom-building-machinery for both Codex and Claude through the managed installer",
+    )
+
+
+def _helper_error(result: subprocess.CompletedProcess[bytes], stage: str) -> AtomError:
+    detail = result.stderr.decode("utf-8", errors="replace").strip()
+    try:
+        decoded = json.loads(detail)
+        if type(decoded) is dict and type(decoded.get("reason")) is str:
+            detail = decoded["reason"]
+    except json.JSONDecodeError:
+        pass
+    return AtomError(stage, detail or f"native approval helper exited {result.returncode}")
+
+
+def _native_authorize(context: dict[str, Any]) -> dict[str, Any]:
+    result = subprocess.run(
+        [str(_helper_path("prose-waiver-interview")), "authorize"],
+        input=_document(context),
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise _helper_error(result, "prose-waiver-interview")
+    try:
+        value = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        raise AtomError("prose-waiver-interview", "native approval helper returned invalid JSON") from None
+    return value
+
+
+def _native_verify(proof: dict[str, Any]) -> None:
+    payload = base64.b64decode(proof["signed_payload_base64"], validate=True)
+    result = subprocess.run(
+        [str(_helper_path("start")), "verify", proof["nonce"], proof["digest"]],
+        input=payload,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise _helper_error(result, "start")
+    try:
+        value = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        raise AtomError("start", "native approval helper returned invalid verification JSON") from None
+    if value != {"schema_version": CONTRACT, "status": "verified"}:
+        raise AtomError("start", "native approval helper did not return the exact verified result")
+
+
+def _validated_signed_authorization(
+    proof: dict[str, Any],
+    context: dict[str, Any],
+    stage: str,
+) -> dict[str, Any]:
+    payload_bytes = base64.b64decode(proof["signed_payload_base64"], validate=True)
+    try:
+        raw = json.loads(payload_bytes)
+    except json.JSONDecodeError:
+        raise AtomError(stage, "presence_proof signed payload is not JSON") from None
+    payload = _exact(raw, "signed authorization payload", SIGNED_AUTHORIZATION_FIELDS, stage)
+    if payload["schema_version"] != CONTRACT:
+        raise AtomError(stage, f"signed authorization schema_version must be {CONTRACT}")
+    for key in ("request_sha256", "repository_root", "fields"):
+        if payload[key] != context[key]:
+            raise AtomError(stage, f"signed authorization {key} differs from the bound request")
+    question, answer_contract = _waiver_question(context["fields"])
+    del question
+    if payload["meanings"] != answer_contract["meanings"]:
+        raise AtomError(stage, "signed authorization meanings differ from the code-owned choices")
+    choice = payload["choice"]
+    if choice not in {"waive", "decline"}:
+        raise AtomError(stage, "signed authorization choice must be exactly 'waive' or 'decline'")
+    if payload["adopted_statement"] != answer_contract["meanings"][choice]:
+        raise AtomError(stage, "signed authorization adopted statement differs from the chosen code-owned meaning")
+    operator = _validated_operator(payload["operator"], stage)
+    if operator["helper_sha256"] != proof["helper_sha256"]:
+        raise AtomError(stage, "signed operator helper SHA-256 differs from the presence proof")
+    decision_date = _nonempty(payload["date"], "signed authorization date", stage)
+    try:
+        calendar_date.fromisoformat(decision_date)
+    except ValueError:
+        raise AtomError(stage, "signed authorization date must use YYYY-MM-DD") from None
+    if not operator["observed_at"].startswith(decision_date):
+        raise AtomError(stage, "signed authorization date differs from the observed operator time")
+    return {
+        "choice": choice,
+        "operator": operator,
+        "date": decision_date,
+        "adopted_statement": payload["adopted_statement"],
+    }
+
+
+def _validated_native_authorization(
+    value: object,
+    context: dict[str, Any],
+    stage: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    authorization = _exact(value, "native authorization", NATIVE_AUTHORIZATION_FIELDS, stage)
+    if authorization["schema_version"] != CONTRACT or authorization["status"] != "authorized":
+        raise AtomError(stage, "native authorization did not return the exact authorized contract")
+    proof = _validated_presence(
+        {
+            "scheme": PRESENCE_SCHEME,
+            "service": authorization["service"],
+            "helper_version": authorization["helper_version"],
+            "helper_sha256": _validated_signed_helper_sha(authorization, stage),
+            "signed_payload_base64": authorization["signed_payload_base64"],
+            "signed_payload_sha256": authorization["signed_payload_sha256"],
+            "nonce": authorization["nonce"],
+            "digest": authorization["digest"],
+        },
+        stage,
+    )
+    signed = _validated_signed_authorization(proof, context, stage)
+    return signed, proof
+
+
+def _validated_signed_helper_sha(authorization: dict[str, Any], stage: str) -> str:
+    payload_base64 = _nonempty(
+        authorization["signed_payload_base64"], "native authorization signed_payload_base64", stage
+    )
+    try:
+        payload = json.loads(base64.b64decode(payload_base64, validate=True))
+    except (binascii.Error, ValueError, json.JSONDecodeError):
+        raise AtomError(stage, "native authorization signed payload is invalid") from None
+    if type(payload) is not dict or type(payload.get("operator")) is not dict:
+        raise AtomError(stage, "native authorization signed payload lacks its operator")
+    return _sha(payload["operator"].get("helper_sha256"), "signed operator helper_sha256", stage)
+
+
 def _waiver_question(fields: list[str]) -> tuple[str, dict[str, Any]]:
     meanings = {
         "waive": (
@@ -1147,16 +1480,27 @@ def _waiver_state(interview: Path) -> dict[str, Any]:
     answer_record = records[1]
     answer_payload = _exact(
         answer_record["payload"],
-        "owner waiver decision payload",
-        {"question_id", "answer", "by", "date"},
+        "operator waiver decision payload",
+        {"question_id", "answer", "operator", "date", "presence_proof"},
         "prose-waiver-interview",
     )
     if answer_record["event"] != "owner-answer-recorded" or answer_payload["question_id"] != "prose-waiver-decision":
         raise AtomError("prose-waiver-interview", "second interview record is not the bound owner choice")
     if answer_payload["answer"] not in {"waive", "decline"}:
-        raise AtomError("prose-waiver-interview", "owner choice must be exactly 'waive' or 'decline'")
-    if answer_payload["by"] != "Kamen Kamenov":
-        raise AtomError("prose-waiver-interview", "owner choice is not bound to Kamen Kamenov")
+        raise AtomError("prose-waiver-interview", "operator choice must be exactly 'waive' or 'decline'")
+    operator = _validated_operator(answer_payload["operator"], "prose-waiver-interview")
+    presence = _validated_presence(answer_payload["presence_proof"], "prose-waiver-interview")
+    context = _authorization_context(payload["request_sha256"], repository_root, fields)
+    signed = _validated_signed_authorization(presence, context, "prose-waiver-interview")
+    if (
+        signed["choice"] != answer_payload["answer"]
+        or signed["operator"] != operator
+        or signed["date"] != answer_payload["date"]
+    ):
+        raise AtomError(
+            "prose-waiver-interview",
+            "recorded decision differs from the native helper's signed authorization",
+        )
     if answer_payload["answer"] == "decline":
         return {
             "schema_version": CONTRACT,
@@ -1165,6 +1509,8 @@ def _waiver_state(interview: Path) -> dict[str, Any]:
             "request": request,
             "repository_root": repository_root,
             "fields": fields,
+            "operator": operator,
+            "presence_proof": presence,
         }
     date = _nonempty(answer_payload["date"], "waiver answer date", "prose-waiver-interview")
     try:
@@ -1180,9 +1526,10 @@ def _waiver_state(interview: Path) -> dict[str, Any]:
         "fields": fields,
         "operator_choice": "waive",
         "waiver": {
-            "by": "Kamen Kamenov",
+            "operator": operator,
             "words": expected_contract["meanings"]["waive"],
             "date": date,
+            "presence_proof": presence,
         },
         "answer_event_sha256": hashes[-1],
     }
@@ -1205,8 +1552,7 @@ def prose_waiver_interview(
     request_path: Path,
     interview: Path,
     *,
-    input_fn: Any = input,
-    output_fn: Any = print,
+    approval_fn: Any = None,
 ) -> dict[str, Any]:
     request_path = request_path.absolute()
     interview = interview.absolute()
@@ -1268,16 +1614,17 @@ def prose_waiver_interview(
         raise AtomError("prose-waiver-interview", "current request or repository differs from the question presented to the owner")
     if state["status"] != "needs_operator_answer":
         return _public_waiver_state(state)
-    output_fn(f"Question: {state['question']}")
-    output_fn(f"Answer contract: {json.dumps(state['answer_contract'], sort_keys=True)}")
-    output_fn("Answer:")
-    try:
-        answer = input_fn()
-    except EOFError:
-        raise AtomError(
-            "prose-waiver-interview",
-            "operator answer unavailable; keep the interview unchanged and ask Kamen Kamenov the displayed question",
-        ) from None
+    context = _authorization_context(
+        _digest(_document(state["request"])),
+        repository_root,
+        state["fields"],
+    )
+    authorization = (approval_fn or _native_authorize)(context)
+    signed, presence_proof = _validated_native_authorization(
+        authorization,
+        context,
+        "prose-waiver-interview",
+    )
     confirmed = _waiver_state(interview)
     if (
         confirmed["status"] != "needs_operator_answer"
@@ -1285,19 +1632,17 @@ def prose_waiver_interview(
         or confirmed["question"] != state["question"]
     ):
         raise AtomError("prose-waiver-interview", "owner question changed before its answer could be recorded")
-    if answer not in {"waive", "decline"}:
-        raise AtomError(
-            "prose-waiver-interview",
-            f"answer to {state['question_id']!r} was {answer!r}; choose one word: 'waive' or 'decline'",
-        )
+    answer = signed["choice"]
+    operator = signed["operator"]
     _append_waiver_event(
         interview,
         "owner-answer-recorded",
         {
             "question_id": state["question_id"],
             "answer": answer,
-            "by": "Kamen Kamenov",
-            "date": calendar_date.today().isoformat(),
+            "operator": operator,
+            "date": signed["date"],
+            "presence_proof": presence_proof,
         },
     )
     completed = _waiver_state(interview)
@@ -1326,13 +1671,13 @@ def _verified_prose_waiver(
         if state["status"] == "declined":
             raise AtomError(
                 "start",
-                f"Kamen Kamenov chose 'decline' for prose field(s) {state['fields']!r}; "
+                f"operator {state['operator']['login_user']!r} chose 'decline' for prose field(s) {state['fields']!r}; "
                 "this request remains blocked until it uses a structured field",
             )
         raise AtomError(
             "start",
-            f"prose waiver interview is {state['status']!r}; present its current question to "
-            "Kamen Kamenov and record his choice before start",
+            f"prose waiver interview is {state['status']!r}; reopen its native approval window "
+            "and record the authenticated operator choice before start",
         )
     if state["repository_root"] != repository_root or _document(state["request"]) != _document(request):
         raise AtomError("start", "prose waiver interview is bound to a different request or repository")
@@ -1354,13 +1699,16 @@ def _verified_prose_waiver(
         "answer_event_sha256": state["answer_event_sha256"],
     }
     if receipt != expected:
-        raise AtomError("start", "prose waiver receipt differs from the code-recorded owner interview")
-    return state["waiver"]
+        raise AtomError("start", "prose waiver receipt differs from the code-recorded operator interview")
+    waiver = state["waiver"]
+    proof = waiver["presence_proof"]
+    _native_verify(proof)
+    return waiver
 
 
 def _request(run: Path) -> dict[str, Any]:
     raw = _load(run / "inputs" / "atom-request.json", "stored atom request", "load-run")
-    value = _validate_request(raw, stage="load-run")
+    value = _validate_request(raw, stage="load-run", allow_legacy_prose_waiver=True)
     records, _ = _read_ledger(run)
     root = records[0]["payload"]
     legacy_fields = {"atomic_step_id", "request_sha256"}
@@ -1372,7 +1720,12 @@ def _request(run: Path) -> dict[str, Any]:
         _exact(root, "atom-started payload", superseded_fields, "load-run")
     if "contract_surface" in value:
         repository_root = Path(_nonempty(root.get("repository_root"), "atom-started repository_root", "load-run"))
-        value = _validate_request(raw, repository_root=repository_root, stage="load-run")
+        value = _validate_request(
+            raw,
+            repository_root=repository_root,
+            stage="load-run",
+            allow_legacy_prose_waiver=True,
+        )
     if root["atomic_step_id"] != value["atomic_step_id"]:
         raise AtomError(
             "load-run",

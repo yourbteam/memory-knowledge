@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "cases_satisfied": 6,
+  "cases_total": 6,
+  "forgery_check": {
+    "exit_code": 2,
+    "observed": "receipt proof does not match the protected approval key"
+  },
+  "helper": {
+    "architectures": ["x86_64", "arm64"],
+    "codesign": "valid for canonical, Codex, and Claude copies",
+    "sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c"
+  },
+  "installed_controller_start": {
+    "claude": "passed",
+    "codex": "passed",
+    "previous_blocker": "blk-01c986fc3547c192005e6e33",
+    "previous_failure": "ModuleNotFoundError: No module named 'scripts'",
+    "status": "closed"
+  },
+  "model_calls": 0,
+  "operator_terminal_interaction": false,
+  "status": "passed"
+}

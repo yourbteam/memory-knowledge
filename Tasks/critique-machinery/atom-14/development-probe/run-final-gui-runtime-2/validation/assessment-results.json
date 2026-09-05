@@ -1,0 +1,95 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+        "atomic_step_id": "prose-waiver-proves-operator-presence",
+        "case_id": "claude-shell-self-approval",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "claude-shell-self-approval",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+        "atomic_step_id": "prose-waiver-proves-operator-presence",
+        "case_id": "codex-shell-self-approval",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "codex-shell-self-approval",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+        "atomic_step_id": "prose-waiver-proves-operator-presence",
+        "case_id": "operator-native-waive",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "operator-native-waive",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+        "atomic_step_id": "prose-waiver-proves-operator-presence",
+        "case_id": "cross-request-reuse",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "cross-request-reuse",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+        "atomic_step_id": "prose-waiver-proves-operator-presence",
+        "case_id": "historical-proof-receipt",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "historical-proof-receipt",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+        "atomic_step_id": "prose-waiver-proves-operator-presence",
+        "case_id": "historical-countable-receipt",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+        "status": "satisfied"
+      },
+      "case_id": "historical-countable-receipt",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

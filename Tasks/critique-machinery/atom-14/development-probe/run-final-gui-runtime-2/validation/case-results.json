@@ -1,0 +1,307 @@
+{
+  "completion_order": [
+    "operator-native-waive",
+    "claude-shell-self-approval",
+    "cross-request-reuse",
+    "codex-shell-self-approval",
+    "historical-proof-receipt",
+    "historical-countable-receipt"
+  ],
+  "results": [
+    {
+      "case_id": "claude-shell-self-approval",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/claude-shell-self-approval/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/claude-shell-self-approval/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/claude-shell-self-approval/telemetry.jsonl",
+          "sha256": "c42414e12bb73b7789b6076cbe5134d34a28583f0baa6856bc28786f480a6705"
+        }
+      ],
+      "output": "executions/claude-shell-self-approval",
+      "result": {
+        "error": null,
+        "metrics": {
+          "controller-regression-pass": 1,
+          "cross-client-proof-verification": 1,
+          "frozen-input-unchanged": 1,
+          "historical-run-readable": 1,
+          "model-choice-refused": 1,
+          "native-auth-real-path": 1,
+          "no-terminal-operator-use": 1,
+          "untrusted-shell-secret-blocked": 1
+        },
+        "outcome": {
+          "case_sha256": "b7109addd8cccefe9d289f13c0e55b6745918d6c93cde218b5cd641ed80ab09b",
+          "helper_argument_returncode": 2,
+          "historical_status_returncode": 0,
+          "mechanism_matches_real_prototype": true,
+          "tests_returncode": 0,
+          "tests_stderr_tail": "",
+          "tests_tail": "\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 37 passed, 6 warnings in 15.51s ========================"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "codex-shell-self-approval",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/codex-shell-self-approval/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/codex-shell-self-approval/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/codex-shell-self-approval/telemetry.jsonl",
+          "sha256": "2e4aef61fd3b0c6238d5c56b57c2c06cae17f81e216d82bcc9020c1b49a596cf"
+        }
+      ],
+      "output": "executions/codex-shell-self-approval",
+      "result": {
+        "error": null,
+        "metrics": {
+          "controller-regression-pass": 1,
+          "cross-client-proof-verification": 1,
+          "frozen-input-unchanged": 1,
+          "historical-run-readable": 1,
+          "model-choice-refused": 1,
+          "native-auth-real-path": 1,
+          "no-terminal-operator-use": 1,
+          "untrusted-shell-secret-blocked": 1
+        },
+        "outcome": {
+          "case_sha256": "ef22e69fd67f6fcfb2a0413a3fd7cee516d936e8215c12d72434e4535900765c",
+          "helper_argument_returncode": 2,
+          "historical_status_returncode": 0,
+          "mechanism_matches_real_prototype": true,
+          "tests_returncode": 0,
+          "tests_stderr_tail": "",
+          "tests_tail": "\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 37 passed, 6 warnings in 15.51s ========================"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "operator-native-waive",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/operator-native-waive/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/operator-native-waive/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/operator-native-waive/telemetry.jsonl",
+          "sha256": "550cadfde6416f90c9c5aad4ba0138de2a32c6a55c5f689d8fc0ac3f9e6c1160"
+        }
+      ],
+      "output": "executions/operator-native-waive",
+      "result": {
+        "error": null,
+        "metrics": {
+          "controller-regression-pass": 1,
+          "cross-client-proof-verification": 1,
+          "frozen-input-unchanged": 1,
+          "historical-run-readable": 1,
+          "model-choice-refused": 1,
+          "native-auth-real-path": 1,
+          "no-terminal-operator-use": 1,
+          "untrusted-shell-secret-blocked": 1
+        },
+        "outcome": {
+          "case_sha256": "1765899f24daef77123c0c5a38bd561887d3ef065058f4185faeec074846d852",
+          "helper_argument_returncode": 2,
+          "historical_status_returncode": 0,
+          "mechanism_matches_real_prototype": true,
+          "tests_returncode": 0,
+          "tests_stderr_tail": "",
+          "tests_tail": "\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 37 passed, 2 warnings in 15.51s ========================"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "cross-request-reuse",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/cross-request-reuse/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/cross-request-reuse/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/cross-request-reuse/telemetry.jsonl",
+          "sha256": "59b692dc2932581dcf180b6f197b9171dadc6482ee6cb022ea403accadb9527c"
+        }
+      ],
+      "output": "executions/cross-request-reuse",
+      "result": {
+        "error": null,
+        "metrics": {
+          "controller-regression-pass": 1,
+          "cross-client-proof-verification": 1,
+          "frozen-input-unchanged": 1,
+          "historical-run-readable": 1,
+          "model-choice-refused": 1,
+          "native-auth-real-path": 1,
+          "no-terminal-operator-use": 1,
+          "untrusted-shell-secret-blocked": 1
+        },
+        "outcome": {
+          "case_sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0",
+          "helper_argument_returncode": 2,
+          "historical_status_returncode": 0,
+          "mechanism_matches_real_prototype": true,
+          "tests_returncode": 0,
+          "tests_stderr_tail": "",
+          "tests_tail": "\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 37 passed, 5 warnings in 15.51s ========================"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "historical-proof-receipt",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/historical-proof-receipt/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/historical-proof-receipt/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/historical-proof-receipt/telemetry.jsonl",
+          "sha256": "80aa7125f490cd254b067cfe7dccdcbf3cac909f68ec9a36afa55a048330312f"
+        }
+      ],
+      "output": "executions/historical-proof-receipt",
+      "result": {
+        "error": null,
+        "metrics": {
+          "controller-regression-pass": 1,
+          "cross-client-proof-verification": 1,
+          "frozen-input-unchanged": 1,
+          "historical-run-readable": 1,
+          "model-choice-refused": 1,
+          "native-auth-real-path": 1,
+          "no-terminal-operator-use": 1,
+          "untrusted-shell-secret-blocked": 1
+        },
+        "outcome": {
+          "case_sha256": "7650dccc816b4d94accbf0dd5940c6d08eb988a815546a4e82f77481a96b88a9",
+          "helper_argument_returncode": 2,
+          "historical_status_returncode": 0,
+          "mechanism_matches_real_prototype": true,
+          "tests_returncode": 0,
+          "tests_stderr_tail": "",
+          "tests_tail": "\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 37 passed, 1 warning in 13.99s ========================"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "historical-countable-receipt",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/historical-countable-receipt/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/historical-countable-receipt/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-final-gui-runtime-2/validation/executions/historical-countable-receipt/telemetry.jsonl",
+          "sha256": "aba1664e600c60ee190f0fb66a75098f06b56ef1e480373a87debbbeb3c42686"
+        }
+      ],
+      "output": "executions/historical-countable-receipt",
+      "result": {
+        "error": null,
+        "metrics": {
+          "controller-regression-pass": 1,
+          "cross-client-proof-verification": 1,
+          "frozen-input-unchanged": 1,
+          "historical-run-readable": 1,
+          "model-choice-refused": 1,
+          "native-auth-real-path": 1,
+          "no-terminal-operator-use": 1,
+          "untrusted-shell-secret-blocked": 1
+        },
+        "outcome": {
+          "case_sha256": "39172ff72a0ddfb8fdb93f19a7da0d8c504e68e218bd54178d9ef5184fcb8444",
+          "helper_argument_returncode": 2,
+          "historical_status_returncode": 0,
+          "mechanism_matches_real_prototype": true,
+          "tests_returncode": 0,
+          "tests_stderr_tail": "",
+          "tests_tail": "\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 37 passed, 1 warning in 14.09s ========================"
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+  "assessment_adapter_sha256": "b31ea68d5eb30d95a7dbd453d8c34afae33f5cc7a1cfc755c29b195a765f7feb",
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

@@ -1,0 +1,8 @@
+{
+  "command": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/.venv/bin/pytest -q -p no:cacheprovider tests/test_atom_building_machinery.py tests/test_client_skill_projections.py tests/test_install_skills.py",
+  "failed": 0,
+  "model_calls": 0,
+  "passed": 63,
+  "schema_version": 1,
+  "status": "passed"
+}

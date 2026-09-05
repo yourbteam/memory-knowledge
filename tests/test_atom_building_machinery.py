@@ -1,9 +1,10 @@
 import hashlib
+import importlib.util
 import json
+import base64
 import shutil
 import subprocess
 import sys
-from datetime import date as calendar_date
 from pathlib import Path
 
 import pytest
@@ -34,6 +35,110 @@ def invoke(
         capture_output=True,
         check=False,
     )
+
+
+def test_installed_controller_starts_without_repository_modules_at_import_time(tmp_path: Path) -> None:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    source = repository / "schema.py"
+    source.write_text("FIELD = 'count'\n")
+    installed = tmp_path / "client" / "skills" / "atom-building-machinery" / "scripts"
+    installed.mkdir(parents=True)
+    controller = installed / "atom_controller.py"
+    shutil.copy2(CONTROLLER, controller)
+    request = tmp_path / "request.json"
+    write_json(request, {
+        "schema_version": 1,
+        "atomic_step_id": "installed-runtime",
+        "outcome": "installed controller starts",
+        "practical_value": "both client projections can run",
+        "stopping_condition": "start succeeds",
+        "allowed_paths": ["schema.py"],
+        "captured_cases": [{
+            "case_id": "installed-start",
+            "source_ref": "schema.py",
+            "sha256": "fdd74b57182cfe530eb425366470d6a5ce5f0e69986757955fc9a90dc4cbd532",
+            "kind": "success",
+            "expected_outcome": "installed controller reaches the experiment stage",
+        }, {
+            "case_id": "installed-refusal",
+            "source_ref": "schema.py",
+            "sha256": "fdd74b57182cfe530eb425366470d6a5ce5f0e69986757955fc9a90dc4cbd532",
+            "kind": "failure",
+            "expected_outcome": "installed controller keeps its normal refusal gates",
+        }],
+        "contract_surface": {"kind": "render"},
+    })
+    completed = subprocess.run(
+        [sys.executable, str(controller), "start", str(request), str(tmp_path / "run")],
+        cwd=repository,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)["stage"] == "experiment"
+
+
+@pytest.fixture
+def controller_module() -> object:
+    spec = importlib.util.spec_from_file_location("atom_controller_under_test", CONTROLLER)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def observed_operator() -> dict[str, object]:
+    helper_sha256 = "1" * 64
+    return {
+        "login_user": "kamenkamenov",
+        "uid": 501,
+        "approval_ui": "native-macos-window",
+        "authentication_policy": "device-owner-authentication",
+        "client_projection": "codex",
+        "helper_path": str(
+            Path.home()
+            / ".codex/skills/atom-building-machinery/scripts/prose_waiver_approval"
+        ),
+        "helper_sha256": helper_sha256,
+        "parent_process_name": "Python",
+        "parent_process_pid": 4321,
+        "observed_at": "2026-09-05T12:00:00.000Z",
+        "initiating_harness_markers": ["CODEX_SESSION_ID"],
+    }
+
+
+def native_authorization(context: dict[str, object], choice: str = "waive") -> dict[str, object]:
+    choices = {
+        "waive": (
+            "I authorize this exact validation request to start as a recorded prose exception. "
+            "This does not authorize promotion, operational use, another field, or another atom."
+        ),
+        "decline": (
+            "I do not authorize this request to start while it reads prose. "
+            "It must use a structured field before proceeding."
+        ),
+    }
+    payload = {
+        **context,
+        "meanings": choices,
+        "choice": choice,
+        "adopted_statement": choices.get(choice, "invalid helper choice"),
+        "date": "2026-09-05",
+        "operator": observed_operator(),
+    }
+    payload_bytes = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return {
+        "schema_version": 1,
+        "status": "authorized",
+        "helper_version": 1,
+        "service": "memory-knowledge.atom-building.prose-waiver.native-v1",
+        "signed_payload_base64": base64.b64encode(payload_bytes).decode(),
+        "signed_payload_sha256": hashlib.sha256(payload_bytes).hexdigest(),
+        "nonce": "2" * 64,
+        "digest": "3" * 64,
+    }
 
 
 @pytest.fixture(scope="module")
@@ -926,8 +1031,11 @@ def test_validation_atom_can_declare_the_controllers_own_contract_surface(
     assert json.loads(result.stdout)["contract_surface"] == value["contract_surface"]
 
 
-def test_prose_target_requires_code_interview_and_owner_choice_round_trip(
-    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+def test_prose_target_requires_native_authenticated_presence_round_trip(
+    tmp_path: Path,
+    assembly_fixture: tuple[Path, dict[str, object], str],
+    controller_module: object,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     write_tactical_schema(tmp_path)
     value = request(assembly_fixture[1])
@@ -960,39 +1068,39 @@ def test_prose_target_requires_code_interview_and_owner_choice_round_trip(
     del value["prose_waiver"]
     write_json(request_path, value)
 
+    monkeypatch.chdir(tmp_path)
+    verified: list[dict[str, object]] = []
+    monkeypatch.setattr(controller_module, "_native_verify", lambda proof: verified.append(proof))
     interview = tmp_path / "waiver-interview"
-    authorized = invoke(
-        "prose-waiver-interview",
+    authorized = controller_module.prose_waiver_interview(
         request_path,
         interview,
-        cwd=tmp_path,
-        input_text="waive\n",
+        approval_fn=lambda context: native_authorization(context),
     )
-    assert authorized.returncode == 0, authorized.stderr
-    assert json.loads(authorized.stdout.splitlines()[-1])["status"] == "completed"
-    started = invoke(
-        "start",
-        request_path,
-        tmp_path / "waived",
-        "--prose-waiver-interview",
-        interview,
-        cwd=tmp_path,
-    )
-    assert started.returncode == 0, started.stderr
-    waiver = json.loads(started.stdout)["prose_waiver"]
-    assert waiver["by"] == "Kamen Kamenov"
+    assert authorized["status"] == "completed"
+    started = controller_module.start(request_path, tmp_path / "waived", None, interview)
+    waiver = started["prose_waiver"]
+    assert waiver["operator"] == observed_operator()
     assert waiver["words"] == (
         "I authorize this exact validation request to start as a recorded prose exception. "
         "This does not authorize promotion, operational use, another field, or another atom."
     )
-    assert waiver["date"] == calendar_date.today().isoformat()
+    assert waiver["date"] == "2026-09-05"
     receipt = json.loads((interview / "prose-waiver-receipt.json").read_text())
     assert receipt["operator_choice"] == "waive"
     assert receipt["words"] == waiver["words"]
+    assert receipt["presence_proof"]["scheme"] == "native-macos-device-owner-hmac-v1"
+    assert receipt["presence_proof"]["helper_sha256"] == "1" * 64
+    assert len(verified) == 1
+    assert verified[0] == receipt["presence_proof"]
+    assert "secret" not in json.dumps(receipt).lower()
 
 
 def test_declined_prose_choice_keeps_the_request_blocked(
-    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+    tmp_path: Path,
+    assembly_fixture: tuple[Path, dict[str, object], str],
+    controller_module: object,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     write_tactical_schema(tmp_path)
     value = request(assembly_fixture[1])
@@ -1007,32 +1115,24 @@ def test_declined_prose_choice_keeps_the_request_blocked(
     write_json(request_path, value)
     interview = tmp_path / "waiver-interview"
 
-    declined = invoke(
-        "prose-waiver-interview",
+    monkeypatch.chdir(tmp_path)
+    declined = controller_module.prose_waiver_interview(
         request_path,
         interview,
-        cwd=tmp_path,
-        input_text="decline\n",
+        approval_fn=lambda context: native_authorization(context, "decline"),
     )
-    assert declined.returncode == 0, declined.stderr
-    assert json.loads(declined.stdout.splitlines()[-1])["status"] == "declined"
+    assert declined["status"] == "declined"
     assert not (interview / "prose-waiver-receipt.json").exists()
-    refused = invoke(
-        "start",
-        request_path,
-        tmp_path / "blocked",
-        "--prose-waiver-interview",
-        interview,
-        cwd=tmp_path,
-    )
-    assert refused.returncode == 2
-    assert "Kamen Kamenov chose 'decline'" in refused.stderr
-    assert "remains blocked until it uses a structured field" in refused.stderr
+    with pytest.raises(Exception, match="operator 'kamenkamenov' chose 'decline'.*remains blocked"):
+        controller_module.start(request_path, tmp_path / "blocked", None, interview)
     assert not (tmp_path / "blocked").exists()
 
 
-def test_prose_waiver_interview_refuses_invalid_or_changed_operator_boundary(
-    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+def test_prose_waiver_interview_refuses_invalid_helper_choice_or_changed_request(
+    tmp_path: Path,
+    assembly_fixture: tuple[Path, dict[str, object], str],
+    controller_module: object,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     write_tactical_schema(tmp_path)
     value = request(assembly_fixture[1])
@@ -1047,28 +1147,93 @@ def test_prose_waiver_interview_refuses_invalid_or_changed_operator_boundary(
     write_json(request_path, value)
     interview = tmp_path / "waiver-interview"
 
-    invalid = invoke(
-        "prose-waiver-interview",
-        request_path,
-        interview,
-        cwd=tmp_path,
-        input_text="yes\n",
-    )
-    assert invalid.returncode == 2
-    assert "choose one word: 'waive' or 'decline'" in invalid.stderr
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(Exception, match="choice must be exactly 'waive' or 'decline'"):
+        controller_module.prose_waiver_interview(
+            request_path,
+            interview,
+            approval_fn=lambda context: native_authorization(context, "yes"),
+        )
     assert len((interview / "ledger.jsonl").read_text().splitlines()) == 1
     value["outcome"] = "changed after the owner question"
     write_json(request_path, value)
-    changed = invoke(
-        "prose-waiver-interview",
+    with pytest.raises(Exception, match="differs from the question presented"):
+        controller_module.prose_waiver_interview(
+            request_path,
+            interview,
+            approval_fn=lambda context: native_authorization(context),
+        )
+    assert len((interview / "ledger.jsonl").read_text().splitlines()) == 1
+
+
+def test_start_rejects_presence_proof_that_native_helper_cannot_verify(
+    tmp_path: Path,
+    assembly_fixture: tuple[Path, dict[str, object], str],
+    controller_module: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    write_tactical_schema(tmp_path)
+    value = request(assembly_fixture[1])
+    value["contract_surface"] = validation_surface(
+        ("proof_building_order", "prose", "src/up_harness/tactical_roadmap.py::SECTION_KEYS"),
+    )
+    request_path = tmp_path / "request.json"
+    write_json(request_path, value)
+    monkeypatch.chdir(tmp_path)
+    interview = tmp_path / "waiver-interview"
+    controller_module.prose_waiver_interview(
         request_path,
         interview,
-        cwd=tmp_path,
-        input_text="waive\n",
+        approval_fn=lambda context: native_authorization(context),
     )
-    assert changed.returncode == 2
-    assert "differs from the question presented" in changed.stderr
-    assert len((interview / "ledger.jsonl").read_text().splitlines()) == 1
+    def reject(_: dict[str, object]) -> None:
+        raise controller_module.AtomError("start", "receipt proof does not match the protected approval key")
+
+    monkeypatch.setattr(controller_module, "_native_verify", reject)
+    with pytest.raises(Exception, match="receipt proof does not match the protected approval key"):
+        controller_module.start(request_path, tmp_path / "forged", None, interview)
+    assert not (tmp_path / "forged").exists()
+
+
+def test_prose_waiver_receipt_cannot_cross_to_changed_request(
+    tmp_path: Path,
+    assembly_fixture: tuple[Path, dict[str, object], str],
+    controller_module: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    write_tactical_schema(tmp_path)
+    first = request(assembly_fixture[1])
+    first["contract_surface"] = validation_surface(
+        ("proof_building_order", "prose", "src/up_harness/tactical_roadmap.py::SECTION_KEYS"),
+    )
+    first_path = tmp_path / "first.json"
+    write_json(first_path, first)
+    monkeypatch.chdir(tmp_path)
+    interview = tmp_path / "waiver-interview"
+    controller_module.prose_waiver_interview(
+        first_path,
+        interview,
+        approval_fn=lambda context: native_authorization(context),
+    )
+    second = dict(first)
+    second["outcome"] = "a genuinely different request"
+    second_path = tmp_path / "second.json"
+    write_json(second_path, second)
+    with pytest.raises(Exception, match="bound to a different request"):
+        controller_module.start(second_path, tmp_path / "crossed", None, interview)
+    assert not (tmp_path / "crossed").exists()
+
+
+def test_native_helper_refuses_model_supplied_choice_without_opening_ui() -> None:
+    helper = ROOT / "skills/atom-building-machinery/scripts/prose_waiver_approval"
+    result = subprocess.run(
+        [str(helper), "authorize", "waive"],
+        input=b"{}",
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert b"decision cannot be supplied by arguments" in result.stderr
 
 
 def test_validation_surface_misspelling_names_available_keys(

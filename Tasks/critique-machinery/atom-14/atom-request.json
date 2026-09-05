@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "outcome": "A model may launch one code-owned native prose-waiver window from either installed client, but only an operator click confirmed by macOS device-owner authentication can create a request-bound receipt that both projections verify.",
+  "practical_value": "The machinery model cannot approve its own prose exception or make Kamen appear to have approved a choice he did not make, while Kamen never has to use a terminal.",
+  "stopping_condition": "A model-supplied choice refuses; Kamen's native choice and macOS authentication produce an operator-attributed receipt accepted by start; both installed projections silently verify it; untrusted-shell reads, cross-request use, missing-proof, invalid-proof, and historical receipt shapes refuse; existing complete runs remain readable; both managed installs and the focused regression surface pass.",
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval",
+    "tests/test_atom_building_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "claude-shell-self-approval",
+      "source_ref": "Tasks/critique-machinery/atom-14/frozen-real/claude-inspection.md",
+      "sha256": "b7109addd8cccefe9d289f13c0e55b6745918d6c93cde218b5cd641ed80ab09b",
+      "kind": "failure",
+      "expected_outcome": "Claude may launch the code-owned window but cannot supply a choice through its shell; an argument-supplied choice is refused before UI."
+    },
+    {
+      "case_id": "codex-shell-self-approval",
+      "source_ref": "Tasks/critique-machinery/atom-14/prototype-0/codex-shell-environment.json",
+      "sha256": "ef22e69fd67f6fcfb2a0413a3fd7cee516d936e8215c12d72434e4535900765c",
+      "kind": "failure",
+      "expected_outcome": "Codex may launch the code-owned window but cannot supply a choice through its shell; an argument-supplied choice is refused before UI."
+    },
+    {
+      "case_id": "operator-native-waive",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/proof-order.atom-request.json",
+      "sha256": "1765899f24daef77123c0c5a38bd561887d3ef065058f4185faeec074846d852",
+      "kind": "success",
+      "expected_outcome": "Kamen's native-window waive choice plus macOS device-owner authentication creates an observed-operator receipt that starts the exact request without terminal input."
+    },
+    {
+      "case_id": "cross-request-reuse",
+      "source_ref": "Tasks/critique-machinery/atom-13/declared-real/countable-kpis.atom-request.json",
+      "sha256": "4d6eec8eaa2252c23cf324fd4759574163cf75f11f9b07824a030b267c17e6f0",
+      "kind": "failure",
+      "expected_outcome": "The proof-order receipt cannot start the countable-KPIs request."
+    },
+    {
+      "case_id": "historical-proof-receipt",
+      "source_ref": "Tasks/critique-machinery/atom-13/waiver-interviews/proof-order-final-waive/prose-waiver-receipt.json",
+      "sha256": "7650dccc816b4d94accbf0dd5940c6d08eb988a815546a4e82f77481a96b88a9",
+      "kind": "failure",
+      "expected_outcome": "A new start rejects the historical receipt because it has no observed operator object or presence proof."
+    },
+    {
+      "case_id": "historical-countable-receipt",
+      "source_ref": "Tasks/critique-machinery/atom-13/waiver-interviews/countable-kpis-final/prose-waiver-receipt.json",
+      "sha256": "39172ff72a0ddfb8fdb93f19a7da0d8c504e68e218bd54178d9ef5184fcb8444",
+      "kind": "failure",
+      "expected_outcome": "A copied legacy receipt without valid presence evidence cannot authorize a new start while complete historical runs remain readable."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "atom_controller",
+    "fields": [
+      {
+        "field": "prose_waiver",
+        "shape": "object",
+        "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_OPTIONAL_FIELDS"
+      }
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "assembly_sha256": "c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b",
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "cases": [
+    {
+      "case_id": "claude-shell-self-approval",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "codex-shell-self-approval",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "operator-native-waive",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "cross-request-reuse",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "historical-proof-receipt",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "historical-countable-receipt",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "all native authorization, cross-client, regression, compatibility, and integrity checks passed",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

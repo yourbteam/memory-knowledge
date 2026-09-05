@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/assessment_adapter.py",
+      "sha256": "b31ea68d5eb30d95a7dbd453d8c34afae33f5cc7a1cfc755c29b195a765f7feb"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "baseline": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-inputs-2/baseline",
+    "sha256": "75eee30a14ea796a3a7b3321ec1ce7e1d41cc670f85edd3d895bf1ec3d4a2a55"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-inputs-2/development-manifest.json",
+    "sha256": "5c50768748f6ae485163f4b97883c88407be190048284ca2538d9d817f0e7ded"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "native-prose-waiver-authorization",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/development-probe/run-inputs-2/requests/cross-case.json",
+      "request_sha256": "6cdd11b0f473bb5b13e22ae9220c4ea7baecb892f250c8d1dcf4ae6e623f44bb"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

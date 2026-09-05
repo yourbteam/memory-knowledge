@@ -1,0 +1,32 @@
+{
+  "case_id": "operator-native-waive",
+  "client_verification": {
+    "claude": "verified",
+    "codex": "verified"
+  },
+  "controller_run_ledger_sha256": "73e4a45033bb9207b5f50906fbd98844bc82faf9e9b0f6d4a450f14c1f27c7b9",
+  "helper_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+  "installed_controllers": {
+    "claude": {
+      "exit_code": 0,
+      "ledger_sha256": "73e4a45033bb9207b5f50906fbd98844bc82faf9e9b0f6d4a450f14c1f27c7b9",
+      "stage": "experiment"
+    },
+    "codex": {
+      "exit_code": 0,
+      "ledger_sha256": "73e4a45033bb9207b5f50906fbd98844bc82faf9e9b0f6d4a450f14c1f27c7b9",
+      "stage": "experiment"
+    }
+  },
+  "interview_ledger_sha256": "126eb01eeae732ff4f03af91fde603b851eb0389f39e51c9db29ae6a2192a020",
+  "operator_path": "native macOS choice window followed by device-owner authentication; no terminal input",
+  "receipt": "../native-interview/prose-waiver-receipt.json",
+  "receipt_sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c",
+  "start_exit_code": 0,
+  "status": "satisfied",
+  "untrusted_shell_key_read": {
+    "secret_bytes_returned": 0,
+    "status": "blocked",
+    "timeout_seconds": 5
+  }
+}

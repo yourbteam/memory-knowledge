@@ -1,0 +1,19 @@
+{
+  "duration_ms": 51257,
+  "evidence": "probes/all-probes-summary.json",
+  "evidence_sha256": "1675538a6dda45f2e456311416bc98a077a28087c698e6bd0addb785273e0528",
+  "exit_code": 0,
+  "output": "probes",
+  "promotion_applied": false,
+  "result": "probes/promotion-candidates.json",
+  "result_sha256": "ed804858da1b4ff4f545cb8aaa11eae465cc6a6977353c33df3647618282523e",
+  "schema_version": 1,
+  "stage": "run-probes",
+  "status": "completed",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "4fb326e603f3875404d86ef6724b3117279fe6e230add4dcc4e21fb61ca02f61",
+  "timed_out": false,
+  "timeout": null,
+  "timeout_ms": 5400000,
+  "timeout_sha256": null
+}

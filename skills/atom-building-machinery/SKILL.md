@@ -7,7 +7,7 @@ description: Provide PDI with the code-owned protocol for one approved atomic im
 
 Bound exactly one approved atom inside Prototype-Driven Implementation. PDI remains the single
 implementation lifecycle controller and approved-envelope owner. This machinery owns the atom's
-workflow order, immutable evidence identities, allowed enums, and terminal decision as a bounded
+workflow order, immutable evidence identities, allowed enums, and owner decision as a bounded
 capability protocol. Experiment Machinery remains its isolated comparison capability; neither
 machinery takes lifecycle ownership from PDI.
 
@@ -37,13 +37,26 @@ python3 scripts/atom_controller.py prose-waiver-interview \
   <atom-request.json> <new-or-existing-interview-directory>
 ```
 
-The command presents two hardcoded meanings. `waive` adopts the complete displayed authorization
-for this exact request while explicitly withholding promotion, operational use, other fields, and
-other atoms. `decline` keeps the request blocked until it uses a structured field. The operator
-answers with exactly one of those two words; the chosen word adopts the complete statement shown
-beside it. The code-recorded choice, adopted statement, date, request, repository, prose fields,
-question, and hash chain form one immutable receipt. The model may relay the displayed question,
-but must never choose for the operator.
+The command may be launched by either model client. It accepts no answer on standard input or as an
+argument. The installed, code-signed helper displays one native macOS window containing the two
+unchanged hardcoded meanings. `waive` adopts the complete displayed authorization for this exact
+request while explicitly withholding promotion, operational use, other fields, and other atoms.
+`decline` keeps the request blocked until it uses a structured field. `Cancel` records nothing.
+
+After the operator clicks `Waive` or `Decline`, macOS device-owner authentication confirms the
+choice with Touch ID or the login password. On its first successful authorization, the helper
+creates a random Keychain proof value and restricts it to the byte-identical helpers installed at
+both `~/.codex/skills/atom-building-machinery/` and
+`~/.claude/skills/atom-building-machinery/`. The value is never printed, passed as an argument, or
+written to a receipt. Missing or different client helpers fail closed and require refreshing both
+projections through the managed installer.
+
+The receipt records the OS login/uid, native approval and authentication policy, initiating client
+projection and harness markers, helper path/hash, parent process, wall-clock time, and a
+request-bound HMAC over the helper's signed payload and a random nonce. A model may launch the
+window but cannot supply its choice or satisfy macOS authentication. `start` asks either installed
+helper only to verify the proof; verification is silent, exposes no secret, and cannot mint a new
+receipt. Normal operation requires no terminal input or setup command.
 
 Only a completed interview can admit the exception:
 
@@ -52,8 +65,9 @@ python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory>
   --prose-waiver-interview <completed-interview-directory>
 ```
 
-`start` verifies the entire interview and writes `prose_waiver` with exactly `by`, the complete
-waiver statement the operator adopted, and the code-recorded ISO `date` into the preserved atom request. A direct
+`start` verifies the entire interview and native presence proof and writes `prose_waiver` with exactly the
+observed `operator`, `presence_proof`, complete waiver statement, and code-recorded ISO `date` into
+the preserved atom request. A direct
 `prose_waiver` in the supplied request is refused. Existing stored runs without this boundary
 remain readable, but every new run must declare its contract surface.
 

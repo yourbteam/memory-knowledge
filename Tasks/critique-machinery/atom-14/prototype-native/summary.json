@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-05",
+  "request_sha256": "4a2579848b81b49b5cf40d0a1bb96a6032195ea086c5ed280fa79aaafe14b0de",
+  "model_calls": 0,
+  "attempts": [
+    {
+      "approach": "native-window-secure-enclave-signature",
+      "choice_window_completed": true,
+      "exit_code": 2,
+      "result": "failed",
+      "observed_boundary": "OSStatus -34018: A required entitlement isn't present.",
+      "evidence": "secure-enclave.stderr.txt"
+    },
+    {
+      "approach": "native-window-software-key-signature",
+      "choice_window_completed": true,
+      "exit_code": 2,
+      "result": "failed",
+      "observed_boundary": "OSStatus -34018: A required entitlement isn't present.",
+      "evidence": "software-key.stderr.txt"
+    },
+    {
+      "approach": "native-window-externally-provisioned-helper-key",
+      "choice": "waive",
+      "authenticated": true,
+      "exit_code": 0,
+      "valid_proof_exit_code": 0,
+      "changed_proof_exit_code": 2,
+      "result": "passed-but-requires-separate-provisioning",
+      "evidence": "external-provision-authorize.stdout.json"
+    },
+    {
+      "approach": "native-window-self-provisioned-cross-client-helper-key",
+      "choice": "waive",
+      "authenticated": true,
+      "exit_code": 0,
+      "codex_helper_verify_exit_code": 0,
+      "claude_helper_verify_exit_code": 0,
+      "untrusted_shell_secret_bytes": 0,
+      "untrusted_shell_blocked_seconds": 5,
+      "result": "passed",
+      "evidence": [
+        "self-provision-authorize.stdout.json",
+        "codex-helper-verify.stdout.txt",
+        "claude-helper-verify.stdout.txt",
+        "changed-proof.stderr.txt",
+        "untrusted-shell-read.stdout.txt"
+      ]
+    }
+  ],
+  "selected_approach": "native-window-self-provisioned-cross-client-helper-key",
+  "operator_interaction": "Kamen clicked Waive in the code-owned native window and completed macOS device-owner authentication; no terminal input was used.",
+  "secret_handling": "The generated values were never printed. Receipts contain only nonce and HMAC digest.",
+  "final_helper": {
+    "source_sha256": "9fa72811c50c8e9897c26175d0eaa3bc19bb70d42d98f64e3715d2321f441129",
+    "universal_binary_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+    "architectures": ["x86_64", "arm64"],
+    "codesign_verification": "valid on disk; satisfies its Designated Requirement"
+  }
+}

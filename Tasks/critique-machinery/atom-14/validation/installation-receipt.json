@@ -1,0 +1,28 @@
+{
+  "clients": [
+    {
+      "client": "codex",
+      "destination": "/Users/kamenkamenov/.codex/skills/atom-building-machinery",
+      "helper_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "installed_tree_sha256": "0c1d77bb28c9646d50b2a1ec5684b91c92edb7e92e7e44d07ed745d542069651",
+      "parity_state": "MATCH",
+      "projected_tree_sha256": "0c1d77bb28c9646d50b2a1ec5684b91c92edb7e92e7e44d07ed745d542069651",
+      "required_runtime": "codex exec"
+    },
+    {
+      "client": "claude",
+      "destination": "/Users/kamenkamenov/.claude/skills/atom-building-machinery",
+      "helper_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "installed_tree_sha256": "13ec6141d56b1449b57f084b4b4243519ff7ae43e9c2f2a390918b914d369999",
+      "parity_state": "MATCH",
+      "projected_tree_sha256": "13ec6141d56b1449b57f084b4b4243519ff7ae43e9c2f2a390918b914d369999",
+      "required_runtime": "claude -p"
+    }
+  ],
+  "installer": "working-agreement/install_skills.py",
+  "model_calls": 0,
+  "schema_version": 1,
+  "selected_managed_skills": ["atom-building-machinery"],
+  "status": "installed",
+  "target": "both"
+}

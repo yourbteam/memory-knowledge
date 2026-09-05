@@ -1,0 +1,56 @@
+{
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "baseline_sha256": "81c4b9ae721c82fc09fe1563b0fedf9b743f6f90c453a2628afb94df68796f3a",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "f3c0be8266535cf2a53c1b6762eb704b12c6fab9da07e8cd874374cf7c55d474",
+      "before_mode": 420,
+      "before_sha256": "8510808722d3f4891fb86fa1550c197bcad2c5c84b4a6c56a492d303bafb2382",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/SKILL.md"
+    },
+    {
+      "after_mode": 493,
+      "after_sha256": "8a12c34a5a4b9665bacc49d5d76e18e2a73c9df37b396776e863cee207a080dc",
+      "before_mode": 493,
+      "before_sha256": "d209324acf018b0752876d5dcb177e25a139425b5619e7c4e0eda6d59bab425f",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py"
+    },
+    {
+      "after_mode": 493,
+      "after_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "9fa72811c50c8e9897c26175d0eaa3bc19bb70d42d98f64e3715d2321f441129",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "29a113c2ebac250aa853d7163beecdba04d899d038cfd71fcb8cca00d75aa40c",
+      "before_mode": 420,
+      "before_sha256": "3808ae6723d53689081e839f0ce68642ca5784caec85b3aeff04616207ee6d9c",
+      "kind": "changed",
+      "path": "tests/test_atom_building_machinery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "74821b56e945f6973c2614f0d80b0bfcf3aa88ae2ffafe95c2c73d52b8e6c1ef",
+      "before_mode": 420,
+      "before_sha256": "fb0b4778f255516a21f5d30d9cdf0a7f99cf0861d09f8c41e7fbaca4ecff2f24",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

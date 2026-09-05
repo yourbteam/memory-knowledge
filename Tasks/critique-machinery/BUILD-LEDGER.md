@@ -507,3 +507,56 @@ one real three-request operator replay, two owner interviews, and zero model cal
 verification and the repository-wide result are recorded in `atom-13/validation/test-receipt.json`;
 the standing CM-D2 installed dependency boundary and unrelated installed description-machinery
 drift remain explicitly out of scope.
+
+## Correction Atom 3 — a prose waiver proves an operator answered — 2026-09-05
+
+**Outcome.** A model may launch one code-owned native macOS decision window, but it cannot pass
+`waive` or `decline` as an argument. The window displays the fixed meanings, records only the
+clicked choice, and requires macOS device-owner authentication before creating a request-bound
+receipt. `start` verifies that receipt silently. No terminal input is part of the operator path.
+The same signed universal helper is installed for Codex and Claude, and both projections verify
+the same receipt without exposing the protected signing key.
+
+**Frozen case and competing approaches.** `atom-14/frozen-real/` preserves Claude's inspection and
+the real Codex shell environment. The terminal-plus-Keychain approach was rejected because the
+operator would still have to use a terminal. Native Secure Enclave and software-key prototypes
+both reached OSStatus -34018 because an unentitled standalone executable cannot persist those
+keys. The selected native-window plus protected Keychain HMAC approach passed with a self-created
+random key whose access control names only the two installed helper applications. The setup-free
+prototype and its untrusted-shell read are preserved under `atom-14/prototype-native/`.
+
+**Experiment and promotion.** `atom-14/development-probe/run-final-gui-4/` first compared the
+superseded terminal setup with the native GUI setup over the six frozen cases. A promoted-path
+check then exposed the standing CM-D2 dependency defect: both installed controllers exited before
+request validation because they imported repository-only support at process startup. The corrected
+controller defers that import until validation and resolves support from the run's recorded
+repository root. `atom-14/development-probe/run-final-gui-runtime-2/` repeated the full comparison
+and passed 6/6 with assembly SHA-256
+`c4fec1a35397150c34c22f19acd511aad1f749120aa996f6bd7bc29b9228a95b`; no approach promoted
+itself. The final controller run recorded promotion event
+`e4b9ce878ea902049b47b086593d13f1aa292aab73473eebd836067935c35c1c`. Its reviewed three-path
+correction surface is `atom-14/promotion/native-gui-runtime-change-surface.json`, SHA-256
+`d147030346bba324ae0a8920def8cb066746193a1b2271058429777e4a96fc49`.
+
+**Real operator path.** `atom-14/operator-validation/native-interview/` records Kamen's native
+`waive` click and device-owner authentication. The resulting receipt started the exact proof-order
+request at `atom-14/operator-validation/native-run/`; the countable-KPIs request refused it. Both
+installed helpers returned `verified` for that same receipt. A hash-chain-consistent copy with a
+forged digest refused, both legacy Atom 13 receipts refused new starts, and the historical completed
+controller run remained readable. After the CM-D2 correction, each installed controller also
+started the exact request into its own real run and silently verified the same authenticated
+receipt. An untrusted `/usr/bin/security` read returned zero key bytes
+before the five-second guard ended it. Case receipts and the aggregate result are under
+`atom-14/operator-validation/`.
+
+**Installation and cost.** The managed installer refreshed only `atom-building-machinery` for both
+clients. Codex matches its projected tree at
+`0c1d77bb28c9646d50b2a1ec5684b91c92edb7e92e7e44d07ed745d542069651`; Claude matches at
+`13ec6141d56b1449b57f084b4b4243519ff7ae43e9c2f2a390918b914d369999`. Canonical and installed
+helpers share SHA-256 `5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c`, carry x86_64 and
+arm64 slices, and pass strict signature verification. Focused controller, projection, and installer
+verification passes 63 tests. Blocker `blk-01c986fc3547c192005e6e33` is recorded, same-path
+verified, and closed. Four native prototypes, six real cases, two managed projections, and zero
+model calls were used. Final validation is `passed` at proof event
+`eaac5e4acfc5a6ae12ea3e683e6cff628b48e997b822f1988416e783320f85a1` with one linked blocker,
+zero blocking occurrences, and no remaining work.

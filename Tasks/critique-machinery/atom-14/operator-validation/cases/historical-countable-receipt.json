@@ -1,0 +1,7 @@
+{
+  "case_id": "historical-countable-receipt",
+  "historical_completed_run_status_exit_code": 0,
+  "new_start_exit_code": 2,
+  "observed": "legacy decision lacks operator and presence_proof and cannot start new work",
+  "status": "satisfied"
+}

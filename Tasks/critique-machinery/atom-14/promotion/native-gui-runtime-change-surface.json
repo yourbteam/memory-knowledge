@@ -1,0 +1,32 @@
+{
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "baseline_sha256": "16f9b45b83d46b95d413aad59065c4ca650bf8de3ae8460b612f797a72dbe3ab",
+  "changes": [
+    {
+      "after_mode": 493,
+      "after_sha256": "67fdb2cb88498f663528adf394c97643f3324a4f37a71d2959da5aa5019a9a17",
+      "before_mode": 493,
+      "before_sha256": "8a12c34a5a4b9665bacc49d5d76e18e2a73c9df37b396776e863cee207a080dc",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "8e6d5c8cc704b6a634ff84a48665ec790391817ac2d49dc1807da10a29dd61a7",
+      "before_mode": 420,
+      "before_sha256": "29a113c2ebac250aa853d7163beecdba04d899d038cfd71fcb8cca00d75aa40c",
+      "kind": "changed",
+      "path": "tests/test_atom_building_machinery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "8b0bbc9d4f8d418eac9bc7289bd9dba1a8c3dd4db609d1b10ad52d368445e1a2",
+      "before_mode": 420,
+      "before_sha256": "74821b56e945f6973c2614f0d80b0bfcf3aa88ae2ffafe95c2c73d52b8e6c1ef",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

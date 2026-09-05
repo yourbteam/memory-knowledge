@@ -1,0 +1,6 @@
+{
+  "case_id": "cross-request-reuse",
+  "exit_code": 2,
+  "observed": "prose waiver interview is bound to a different request or repository",
+  "status": "satisfied"
+}

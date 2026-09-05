@@ -1,0 +1,26 @@
+{
+  "atom_request_sha256": "a05eb639949e7706653fb634e086d749888c2739696a657c6493fb19c0821e95",
+  "atom_run_id": "f248b440b3f4bfcdfb8e47d2f1b23a4756d97c60e57a0f0e8186040eb9468728",
+  "atomic_step_id": "prose-waiver-proves-operator-presence",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [
+    {
+      "atom_attempt": 1,
+      "blocker_id": "blk-01c986fc3547c192005e6e33",
+      "blocking_reason": null,
+      "classification": "deliverable-blocker",
+      "disposition": "closed",
+      "occurrence_id": "c6f3b9b5-991e-4412-9fa3-5ea6d489d694",
+      "opened_event_id": "a57b657a-825e-4061-996a-b8a7ef4974fc",
+      "opened_sequence": 9329,
+      "remaining_work": "none",
+      "status": "closed",
+      "transition_event_id": "7376611e-7ed5-487a-8500-84df87637bc6"
+    }
+  ],
+  "linked_occurrence_count": 1,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "fdd67767ef919dbd90fa45216332f322ca9d9af2fd52f6e14a6408f8a14ff240"
+}
