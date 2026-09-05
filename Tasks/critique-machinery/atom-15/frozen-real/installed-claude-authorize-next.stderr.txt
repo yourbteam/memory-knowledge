@@ -1,0 +1,1 @@
+Atom Building Machinery refused at authorize-next: canonical blocker support is unavailable; require blocker_catalog.py and work_memory.py together in one of ['/Users/kamenkamenov/.claude/scripts', '/Users/kamenkamenov/united-partners/scripts']

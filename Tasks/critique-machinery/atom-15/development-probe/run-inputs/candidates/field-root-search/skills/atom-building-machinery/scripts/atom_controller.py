@@ -63,11 +63,10 @@ NATIVE_AUTHORIZATION_FIELDS = {
     "schema_version", "status", "helper_version", "service", "signed_payload_base64",
     "signed_payload_sha256", "nonce", "digest",
 }
-LEGACY_SIGNED_AUTHORIZATION_FIELDS = {
+SIGNED_AUTHORIZATION_FIELDS = {
     "schema_version", "request_sha256", "repository_root", "fields", "meanings",
     "choice", "adopted_statement", "date", "operator",
 }
-SIGNED_AUTHORIZATION_FIELDS = LEGACY_SIGNED_AUTHORIZATION_FIELDS | {"atomic_step_id"}
 PROSE_WAIVER_RECEIPT_FIELDS = {
     "schema_version", "status", "request_sha256", "repository_root", "fields",
     "operator", "words", "date", "presence_proof", "operator_choice", "answer_event_sha256",
@@ -210,14 +209,6 @@ BLOCKER_CLOSEOUT_FIELDS = {
     "work_memory_ledger_sha256", "clear", "linked_occurrence_count",
     "blocking_occurrence_count", "blocking_occurrences", "dispositions",
 }
-MANAGED_SOURCE_RECORD_FIELDS = {
-    "schema_version", "source_repository_root", "support_files",
-}
-BLOCKER_SUPPORT_FILES = (
-    "scripts/blocker_catalog.py",
-    "scripts/work_memory.py",
-)
-MANAGED_SOURCE_RECORD_NAME = ".managed-skills-source.json"
 
 
 class AtomError(RuntimeError):
@@ -933,53 +924,26 @@ def _snapshot_validation(
     )
 
 
-def _blocker_support_root(stage: str) -> Path:
-    if all((MODULE_ROOT / relative).is_file() for relative in BLOCKER_SUPPORT_FILES):
-        return MODULE_ROOT
-    record_path = MODULE_ROOT / MANAGED_SOURCE_RECORD_NAME
-    if record_path.is_symlink() or not record_path.is_file():
+def _canonical_blocker_closeout(run: Path, stage: str) -> dict[str, Any]:
+    roots = [MODULE_ROOT]
+    baseline_path = run / "inputs" / "change-baseline.json"
+    if baseline_path.is_file() and not baseline_path.is_symlink():
+        baseline = _load(baseline_path, "change baseline", stage)
+        repository_root = baseline.get("repository_root") if type(baseline) is dict else None
+        if type(repository_root) is str and repository_root:
+            roots.append(Path(repository_root))
+    module_root = next(
+        (root for root in roots if (root / "scripts" / "blocker_catalog.py").is_file()
+         and (root / "scripts" / "work_memory.py").is_file()),
+        None,
+    )
+    if module_root is None:
+        checked = [str(root / "scripts") for root in roots]
         raise AtomError(
             stage,
-            f"managed blocker support provenance is unavailable at {record_path}; "
-            "refresh atom-building-machinery for both clients through the managed installer",
+            f"canonical blocker support is unavailable; require blocker_catalog.py and "
+            f"work_memory.py together in one of {checked!r}",
         )
-    record = _exact(
-        _load(record_path, "managed blocker support provenance", stage),
-        "managed blocker support provenance",
-        MANAGED_SOURCE_RECORD_FIELDS,
-        stage,
-    )
-    if record["schema_version"] != CONTRACT:
-        raise AtomError(stage, f"managed blocker support schema_version must be {CONTRACT}")
-    source_value = _nonempty(
-        record["source_repository_root"], "managed source_repository_root", stage,
-    )
-    source = Path(source_value)
-    if not source.is_absolute() or source.is_symlink() or not source.is_dir():
-        raise AtomError(stage, "managed blocker support repository must be an available absolute directory")
-    support_files = _exact(
-        record["support_files"],
-        "managed blocker support files",
-        set(BLOCKER_SUPPORT_FILES),
-        stage,
-    )
-    for relative in BLOCKER_SUPPORT_FILES:
-        expected = _sha(support_files[relative], f"managed {relative} SHA-256", stage)
-        candidate = source / relative
-        if candidate.is_symlink() or not candidate.is_file():
-            raise AtomError(stage, f"managed blocker support file is unavailable or linked: {candidate}")
-        actual = _digest(candidate.read_bytes())
-        if actual != expected:
-            raise AtomError(
-                stage,
-                f"managed blocker support hash differs for {candidate}: found {actual}, require {expected}; "
-                "refresh both client projections through the managed installer",
-            )
-    return source
-
-
-def _canonical_blocker_closeout(run: Path, stage: str) -> dict[str, Any]:
-    module_root = _blocker_support_root(stage)
     if str(module_root) not in sys.path:
         sys.path.insert(0, str(module_root))
     blocker_catalog = importlib.import_module("scripts.blocker_catalog")
@@ -1293,15 +1257,9 @@ def _validated_presence(value: object, stage: str) -> dict[str, Any]:
     }
 
 
-def _authorization_context(
-    atomic_step_id: str,
-    request_sha256: str,
-    repository_root: Path,
-    fields: list[str],
-) -> dict[str, Any]:
+def _authorization_context(request_sha256: str, repository_root: Path, fields: list[str]) -> dict[str, Any]:
     return {
         "schema_version": CONTRACT,
-        "atomic_step_id": atomic_step_id,
         "request_sha256": request_sha256,
         "repository_root": str(repository_root),
         "fields": fields,
@@ -1379,30 +1337,9 @@ def _validated_signed_authorization(
         raw = json.loads(payload_bytes)
     except json.JSONDecodeError:
         raise AtomError(stage, "presence_proof signed payload is not JSON") from None
-    payload_fields = set(raw) if type(raw) is dict else set()
-    if payload_fields == SIGNED_AUTHORIZATION_FIELDS:
-        payload = _exact(raw, "signed authorization payload", SIGNED_AUTHORIZATION_FIELDS, stage)
-        legacy = False
-    elif payload_fields == LEGACY_SIGNED_AUTHORIZATION_FIELDS:
-        payload = _exact(
-            raw,
-            "legacy signed authorization payload",
-            LEGACY_SIGNED_AUTHORIZATION_FIELDS,
-            stage,
-        )
-        legacy = True
-    else:
-        expected = sorted(SIGNED_AUTHORIZATION_FIELDS)
-        legacy_expected = sorted(LEGACY_SIGNED_AUTHORIZATION_FIELDS)
-        raise AtomError(
-            stage,
-            f"signed authorization payload fields are {sorted(payload_fields)!r}; "
-            f"require {expected!r}, or the bounded legacy shape {legacy_expected!r}",
-        )
+    payload = _exact(raw, "signed authorization payload", SIGNED_AUTHORIZATION_FIELDS, stage)
     if payload["schema_version"] != CONTRACT:
         raise AtomError(stage, f"signed authorization schema_version must be {CONTRACT}")
-    if not legacy and payload["atomic_step_id"] != context["atomic_step_id"]:
-        raise AtomError(stage, "signed authorization atomic_step_id differs from the bound request")
     for key in ("request_sha256", "repository_root", "fields"):
         if payload[key] != context[key]:
             raise AtomError(stage, f"signed authorization {key} differs from the bound request")
@@ -1553,9 +1490,7 @@ def _waiver_state(interview: Path) -> dict[str, Any]:
         raise AtomError("prose-waiver-interview", "operator choice must be exactly 'waive' or 'decline'")
     operator = _validated_operator(answer_payload["operator"], "prose-waiver-interview")
     presence = _validated_presence(answer_payload["presence_proof"], "prose-waiver-interview")
-    context = _authorization_context(
-        request["atomic_step_id"], payload["request_sha256"], repository_root, fields,
-    )
+    context = _authorization_context(payload["request_sha256"], repository_root, fields)
     signed = _validated_signed_authorization(presence, context, "prose-waiver-interview")
     if (
         signed["choice"] != answer_payload["answer"]
@@ -1680,7 +1615,6 @@ def prose_waiver_interview(
     if state["status"] != "needs_operator_answer":
         return _public_waiver_state(state)
     context = _authorization_context(
-        state["request"]["atomic_step_id"],
         _digest(_document(state["request"])),
         repository_root,
         state["fields"],

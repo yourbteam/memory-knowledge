@@ -1,5 +1,4 @@
 import importlib.util
-import hashlib
 import json
 import subprocess
 import sys
@@ -20,27 +19,6 @@ installer = load("installer", ROOT / "working-agreement/install_skills.py")
 
 
 class InstallerTests(unittest.TestCase):
-    def test_install_records_hash_bound_canonical_blocker_support(self):
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw); repository = root/"repository"; source = repository/"skills"
-            dest = root/"client"/"skills"; state = root/"state"
-            (source/"one").mkdir(parents=True)
-            (source/"one/SKILL.md").write_text("---\nname: one\ndescription: test\n---\n")
-            (repository/"scripts").mkdir()
-            (repository/"scripts/blocker_catalog.py").write_text("BLOCKER = 1\n")
-            (repository/"scripts/work_memory.py").write_text("MEMORY = 1\n")
-            manifest = source/"managed-skills.txt"; manifest.write_text("one\n")
-
-            installer.install(source, manifest, [dest], state)
-
-            record = json.loads((root/"client/.managed-skills-source.json").read_text())
-            self.assertEqual(record["schema_version"], 1)
-            self.assertEqual(record["source_repository_root"], str(repository.resolve()))
-            self.assertEqual(record["support_files"], {
-                name: hashlib.sha256((repository/name).read_bytes()).hexdigest()
-                for name in ("scripts/blocker_catalog.py", "scripts/work_memory.py")
-            })
-
     def test_exact_replace_preserves_unrelated(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); source = root/"source"; dest = root/"dest"; state = root/"state"

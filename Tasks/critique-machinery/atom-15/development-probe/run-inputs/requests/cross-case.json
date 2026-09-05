@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "probe_id": "approval-and-installed-closeout-boundary",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/development-manifest.json",
+  "approach_build_requests": [
+    {
+      "approach_id": "bound-managed-source",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/requests/build-bound-managed-source.json"
+    },
+    {
+      "approach_id": "field-only-root-search",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/requests/build-field-root-search.json"
+    }
+  ],
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/evaluator_adapter.py",
+      "sha256": "0e913ed44480d0f66ddd0a7d7a8e683dd95d70e8129b377eb1919aec0d3d0e26"
+    },
+    "command": ["{python}", "{evaluation-adapter}", "{evaluation-request}", "{evaluation-response}"]
+  }
+}

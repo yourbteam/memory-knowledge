@@ -38,11 +38,9 @@ python3 scripts/atom_controller.py prose-waiver-interview \
 ```
 
 The command may be launched by either model client. It accepts no answer on standard input or as an
-argument. The installed, code-signed helper displays one native macOS window containing the atom
-id, full request SHA-256, repository, fields, and the two unchanged hardcoded meanings. The macOS
-authentication reason repeats the atom id and request SHA-256. Both identities are inside the
-signed payload and are checked at `start`. `waive` adopts the complete displayed authorization for
-this exact request while explicitly withholding promotion, operational use, other fields, and other atoms.
+argument. The installed, code-signed helper displays one native macOS window containing the two
+unchanged hardcoded meanings. `waive` adopts the complete displayed authorization for this exact
+request while explicitly withholding promotion, operational use, other fields, and other atoms.
 `decline` keeps the request blocked until it uses a structured field. `Cancel` records nothing.
 
 After the operator clicks `Waive` or `Decline`, macOS device-owner authentication confirms the
@@ -53,15 +51,8 @@ both `~/.codex/skills/atom-building-machinery/` and
 written to a receipt. Missing or different client helpers fail closed and require refreshing both
 projections through the managed installer.
 
-A helper rebuild can cause macOS Keychain to ask whether the replaced helper may use the existing
-proof value. Approve only the installed Codex or Claude helper path. Never grant Keychain access to
-`security`, a shell, or another reader: a dialog left unanswered is not proof that policy denied
-access. Existing native version-one receipts remain a bounded compatibility input and verify only
-for their exact request bytes; every new receipt also signs the atom id explicitly.
-
 The receipt records the OS login/uid, native approval and authentication policy, initiating client
-projection and harness markers, helper path/hash, the observed parent application or executable
-(or the explicit value `unavailable`), wall-clock time, and a
+projection and harness markers, helper path/hash, parent process, wall-clock time, and a
 request-bound HMAC over the helper's signed payload and a random nonce. A model may launch the
 window but cannot supply its choice or satisfy macOS authentication. `start` asks either installed
 helper only to verify the proof; verification is silent, exposes no secret, and cannot mint a new
@@ -88,12 +79,6 @@ While the atom is active, open every encountered blocker with
 `scripts/blocker_catalog.py open --atom-run <atom-run>` so code derives its immutable atom request,
 run, and attempt identity. Follow `references/blocker-closeout-contract.md`; never add those
 identity fields by hand.
-
-The managed installer writes one client-root provenance record binding the canonical source
-repository to the exact blocker-catalog and work-memory module hashes. An installed controller uses
-only that record for blocker closeout outside the canonical repository. Missing, linked, incomplete,
-or changed support refuses and requires refreshing both projections through the managed installer;
-support modules are never copied into individual skill projections.
 
 Start the append-only run:
 

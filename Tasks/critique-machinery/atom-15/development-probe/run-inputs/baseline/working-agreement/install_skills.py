@@ -16,13 +16,6 @@ import uuid
 from pathlib import Path
 
 
-MANAGED_SOURCE_RECORD_NAME = ".managed-skills-source.json"
-BLOCKER_SUPPORT_FILES = (
-    "scripts/blocker_catalog.py",
-    "scripts/work_memory.py",
-)
-
-
 def fsync_dir(path: Path) -> None:
     fd = os.open(path, os.O_RDONLY)
     try: os.fsync(fd)
@@ -59,21 +52,6 @@ def write_json(path: Path, data: dict) -> None:
         json.dump(data, handle, indent=2, sort_keys=True); handle.write("\n"); handle.flush(); os.fsync(handle.fileno())
     os.replace(tmp, path)
     fsync_dir(path.parent)
-
-
-def managed_source_record(source: Path) -> dict | None:
-    repository = source.resolve().parent
-    paths = [repository / relative for relative in BLOCKER_SUPPORT_FILES]
-    if not all(path.is_file() and not path.is_symlink() for path in paths):
-        return None
-    return {
-        "schema_version": 1,
-        "source_repository_root": str(repository),
-        "support_files": {
-            relative: hashlib.sha256((repository / relative).read_bytes()).hexdigest()
-            for relative in BLOCKER_SUPPORT_FILES
-        },
-    }
 
 
 def names(manifest: Path) -> list[str]:
@@ -220,10 +198,6 @@ def install(source: Path, manifest: Path, destinations: list[Path], state_dir: P
         journal["phase"] = "CLEANED"; write_json(journal_path, journal)
         shutil.rmtree(txn, ignore_errors=True); fsync_dir(txn.parent)
         journal_path.unlink(); fsync_dir(journal_path.parent)
-        source_record = managed_source_record(source)
-        if source_record is not None:
-            for destination_root in destinations:
-                write_json(destination_root.parent / MANAGED_SOURCE_RECORD_NAME, source_record)
         for row in entries: print(f"installed {row['name']} -> {row['destination']} {row['source_hash']}")
 
 

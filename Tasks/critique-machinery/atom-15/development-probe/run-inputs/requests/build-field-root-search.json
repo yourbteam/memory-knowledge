@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "probe_id": "approval-and-installed-closeout-boundary",
+  "approach_id": "field-only-root-search",
+  "development_manifest": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/development-manifest.json",
+  "source": {
+    "baseline": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/baseline",
+    "candidate": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/candidates/field-root-search",
+    "entrypoint": "probe_entry.py"
+  },
+  "execution": {
+    "protocol": "experiment-result-v1",
+    "command": ["{python}", "{candidate-entrypoint}", "{frozen-input}", "{result-path}", "{telemetry-path}"]
+  }
+}

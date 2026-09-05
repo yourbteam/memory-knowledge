@@ -1,0 +1,106 @@
+{
+  "schema_version": 2,
+  "atomic_step": {
+    "id": "visible-request-identity-and-installed-closeout",
+    "outcome": "The native waiver window visibly and cryptographically binds the operator's choice to one atom and request, while either managed client projection can complete blocker-governed validation and final authorization in another repository.",
+    "practical_value": "Kamen can see exactly what he is authorizing, and an installed controller can finish the same governed atom it starts without hidden repository-local dependencies.",
+    "stopping_condition": "Frozen red cases reproduce; two approaches are compared; the promoted implementation shows atom id and request hash in the native window and authentication reason, signs and validates both, preserves the one existing receipt for only its exact request, records truthful parent identity, refuses unsafe or tampered support provenance, lets both managed projections complete validation and authorize-next outside memory-knowledge, records all six findings and cost in the BUILD-LEDGER, and stops before commit or push for Claude inspection.",
+    "captured_cases": [
+      {"id": "approval-window-omits-atom-identity", "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6", "kind": "failure", "expected_outcome": "The approval window and authentication prompt visibly name atomic_step_id and the full request SHA-256, and the signed payload binds both."},
+      {"id": "installed-controller-cannot-close-up-atom", "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6", "kind": "failure", "expected_outcome": "Both installed projections complete blocker-governed record-validation and authorize-next for a repository without local blocker support modules."},
+      {"id": "existing-native-receipt", "source_ref": "Tasks/critique-machinery/atom-14/operator-validation/native-interview/prose-waiver-receipt.json", "sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c", "kind": "success", "expected_outcome": "The real Atom 14 native receipt remains valid for its exact request and cannot authorize another atom or request."},
+      {"id": "helper-and-untrusted-reader-boundary", "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6", "kind": "failure", "expected_outcome": "Operator guidance accurately explains helper rebuild prompts and refuses treating an unanswered untrusted-reader dialog as policy enforcement."},
+      {"id": "parent-process-telemetry", "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6", "kind": "failure", "expected_outcome": "Parent-process telemetry records an observed executable identity or an explicit unavailable state, never an unexplained unknown claim."},
+      {"id": "published-blocker-evidence", "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6", "kind": "failure", "expected_outcome": "The ledger and eventual relevant-only publish scope carry the blocker evidence needed to reproduce closeout claims."}
+    ]
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "mini_probes": [
+    {
+      "id": "approval-and-installed-closeout-boundary",
+      "goal": "Choose the stable ownership boundary for visible approval identity and installed blocker closeout.",
+      "practical_value": "The operator sees the exact authorization target and either installed client can finish its atom.",
+      "work_type": "code",
+      "work_type_reason": "Identity binding, source provenance, refusals, compatibility, and telemetry are deterministic code decisions.",
+      "inputs": [
+        {"case_id": "approval-window-omits-atom-identity"},
+        {"case_id": "installed-controller-cannot-close-up-atom"},
+        {"case_id": "existing-native-receipt"},
+        {"case_id": "helper-and-untrusted-reader-boundary"},
+        {"case_id": "parent-process-telemetry"},
+        {"case_id": "published-blocker-evidence"}
+      ],
+      "allowed_paths": [
+        "skills/atom-building-machinery/SKILL.md",
+        "skills/atom-building-machinery/scripts/atom_controller.py",
+        "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+        "skills/atom-building-machinery/scripts/prose_waiver_approval",
+        "working-agreement/install_skills.py",
+        "tests/test_atom_building_machinery.py",
+        "tests/test_install_skills.py",
+        "working-agreement/client-skill-projections.json"
+      ],
+      "approaches": [
+        {
+          "id": "bound-managed-source",
+          "hypothesis": "Signing visible atom/request identity and resolving closeout through installer-written hash-bound provenance fixes both defects at their owning contracts.",
+          "implementation": "Add atom identity to the native UI and signature, and let the managed installer bind the canonical support repository and module hashes.",
+          "predicted_tradeoff": "Adds one small client-root provenance record and a bounded legacy receipt branch."
+        },
+        {
+          "id": "field-only-root-search",
+          "hypothesis": "Keeping the field-only authorization and searching the installed or target repository is sufficient.",
+          "implementation": "Retain the Atom 14 controller and helper, which show only fields and search MODULE_ROOT plus the target repository for support.",
+          "predicted_tradeoff": "Avoids new metadata but leaves the exact two frozen blockers and can only be extended through copied dependency exceptions."
+        }
+      ],
+      "evaluation": {
+        "metrics": [
+          {"name": "visible-exact-request-identity", "direction": "maximize"},
+          {"name": "signed-atom-and-request-binding", "direction": "maximize"},
+          {"name": "managed-closeout-provenance", "direction": "maximize"},
+          {"name": "bounded-legacy-receipt-compatibility", "direction": "maximize"},
+          {"name": "truthful-parent-telemetry", "direction": "maximize"},
+          {"name": "accurate-operator-guidance", "direction": "maximize"},
+          {"name": "frozen-input-unchanged", "direction": "maximize"}
+        ],
+        "across_cases": [
+          {"name": "visible-exact-request-identity", "method": "worst"},
+          {"name": "signed-atom-and-request-binding", "method": "worst"},
+          {"name": "managed-closeout-provenance", "method": "worst"},
+          {"name": "bounded-legacy-receipt-compatibility", "method": "worst"},
+          {"name": "truthful-parent-telemetry", "method": "worst"},
+          {"name": "accurate-operator-guidance", "method": "worst"},
+          {"name": "frozen-input-unchanged", "method": "worst"}
+        ]
+      },
+      "proof": {
+        "success_criterion": "All seven ordered metrics equal one on every frozen case.",
+        "failure_criterion": "Any ordered metric is not one on any frozen case."
+      },
+      "winner_output": {
+        "artifact": "approval-and-closeout-winner",
+        "description": "The measured identity and installed-closeout implementation."
+      }
+    }
+  ],
+  "composition": {
+    "consumes": [
+      {"probe_id": "approval-and-installed-closeout-boundary", "artifact": "approval-and-closeout-winner"}
+    ],
+    "assembly_contract": "Use only the measured winner's eight declared paths and preserve every unrelated lifecycle boundary.",
+    "final_validation": {
+      "case_ids": [
+        "approval-window-omits-atom-identity",
+        "installed-controller-cannot-close-up-atom",
+        "existing-native-receipt",
+        "helper-and-untrusted-reader-boundary",
+        "parent-process-telemetry",
+        "published-blocker-evidence"
+      ],
+      "operator_path": "Run the same candidate measurement on every frozen case; promoted validation then exercises the real native helper and both installed controllers outside memory-knowledge.",
+      "success_criterion": "All seven candidate metrics pass every case, followed by the promoted real operator path for both client projections.",
+      "failure_criterion": "Any metric fails or the promoted installed-client path differs from the measured candidate."
+    }
+  }
+}

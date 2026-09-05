@@ -1,6 +1,5 @@
 import AppKit
 import CryptoKit
-import Darwin
 import Foundation
 import LocalAuthentication
 import Security
@@ -113,15 +112,12 @@ func inputObject(stage: String) -> [String: Any] {
     }
     let object = exactObject(
         decoded,
-        keys: ["schema_version", "atomic_step_id", "request_sha256", "repository_root", "fields"],
+        keys: ["schema_version", "request_sha256", "repository_root", "fields"],
         stage: stage,
         label: "authorization context"
     )
     guard object["schema_version"] as? Int == contractVersion else {
         fail(stage, "authorization context schema_version must be \(contractVersion)")
-    }
-    guard let atomicStep = object["atomic_step_id"] as? String, !atomicStep.isEmpty else {
-        fail(stage, "authorization context atomic_step_id must be a non-empty string")
     }
     guard let requestSHA = object["request_sha256"] as? String,
           requestSHA.range(of: "^[0-9a-f]{64}$", options: .regularExpression) != nil else {
@@ -193,7 +189,7 @@ func secret(createIfMissing: Bool, stage: String) -> Data {
     return generated
 }
 
-func authenticate(choice: String, atomicStep: String, requestSHA: String) {
+func authenticate(choice: String) {
     let context = LAContext()
     let policy = LAPolicy.deviceOwnerAuthentication
     var availabilityError: NSError?
@@ -205,7 +201,7 @@ func authenticate(choice: String, atomicStep: String, requestSHA: String) {
     var failure: Error?
     context.evaluatePolicy(
         policy,
-        localizedReason: "Confirm \(choice) for atom \(atomicStep), request \(requestSHA)"
+        localizedReason: "Confirm your \(choice) choice for this exact atom request"
     ) { ok, error in
         accepted = ok
         failure = error
@@ -226,21 +222,12 @@ func authenticatedDigest(payload: Data, nonce: String, key: Data) -> String {
 }
 
 func parentName(pid: pid_t) -> String {
-    let appName = NSRunningApplication(processIdentifier: pid)?.localizedName ?? "unavailable"
-    if appName != "unavailable" { return appName }
-    var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
-    let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
-    if length > 0 {
-        return URL(fileURLWithPath: String(cString: buffer)).lastPathComponent
-    }
-    return appName
+    NSRunningApplication(processIdentifier: pid)?.localizedName ?? "unknown"
 }
 
 func authorize() -> Never {
     let installation = validatedInstallation(stage: "authorize")
     let context = inputObject(stage: "authorize")
-    let atomicStep = context["atomic_step_id"] as! String
-    let requestSHA = context["request_sha256"] as! String
     let fields = context["fields"] as! [String]
     let repository = context["repository_root"] as! String
     let app = NSApplication.shared
@@ -248,14 +235,14 @@ func authorize() -> Never {
     app.activate(ignoringOtherApps: true)
     let alert = NSAlert()
     alert.messageText = "Atom prose exception"
-    alert.informativeText = "Atom: \(atomicStep)\nRequest SHA-256: \(requestSHA)\nRepository: \(repository)\nValidation field(s): \(fields)\n\nwaive — \(meanings["waive"]!)\n\ndecline — \(meanings["decline"]!)"
+    alert.informativeText = "Validation field(s) \(fields) in \(repository) read prose.\n\nwaive — \(meanings["waive"]!)\n\ndecline — \(meanings["decline"]!)"
     alert.addButton(withTitle: "Waive")
     alert.addButton(withTitle: "Decline")
     alert.addButton(withTitle: "Cancel")
     let response = alert.runModal()
     if response == .alertThirdButtonReturn { fail("authorize", "operator cancelled without recording a decision") }
     let choice = response == .alertFirstButtonReturn ? "waive" : "decline"
-    authenticate(choice: choice, atomicStep: atomicStep, requestSHA: requestSHA)
+    authenticate(choice: choice)
     let now = Date()
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -277,8 +264,7 @@ func authorize() -> Never {
     ]
     let payload: [String: Any] = [
         "schema_version": contractVersion,
-        "atomic_step_id": atomicStep,
-        "request_sha256": requestSHA,
+        "request_sha256": context["request_sha256"]!,
         "repository_root": repository,
         "fields": fields,
         "meanings": meanings,
