@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "development_manifest": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run-inputs/development-manifest.json",
+  "sha256": "b43fb2e5b83f4f8f3bea16817dfc9c187ccc649d3decc1c78e28fd3ebd8e8663"
+ },
+ "baseline": {
+  "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run-inputs/baseline",
+  "sha256": "6f72a0f17982c480d72e47a1c9c4fd6d47f78bf5b1bdc685a3bff139044fe285"
+ },
+ "probe_requests": [
+  {
+   "probe_id": "trend-contract",
+   "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run-inputs/requests/cross-case.json",
+   "request_sha256": "51e27e8347be302e2f67bde7ec1221c6fef4c9cb821e30b820965c1b660d9dca"
+  }
+ ],
+ "assessment": {
+  "adapter": {
+   "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/assessment_adapter.py",
+   "sha256": "062be72f211a1e4dbc7ad38f558ae9f1b86446587e99e440d1c2e9f5cce2bc94"
+  },
+  "command": [
+   "{python}",
+   "{assessment-adapter}",
+   "{assessment-request}",
+   "{assessment-response}"
+  ]
+ }
+}

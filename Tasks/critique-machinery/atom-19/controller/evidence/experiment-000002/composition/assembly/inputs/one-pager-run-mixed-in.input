@@ -1,0 +1,16 @@
+{
+ "case_id": "one-pager-run-mixed-in",
+ "expect": {
+  "exit": 2,
+  "refusal_names": [
+   "btm-v6-run",
+   "one-pager-run",
+   "context.up.cd_s_002.tactical_roadmap",
+   "context.up.cd_s_002.strategy_one_pager"
+  ]
+ },
+ "works": [
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run",
+  "Tasks/critique-machinery/atom-19/frozen-real/one-pager-run"
+ ]
+}

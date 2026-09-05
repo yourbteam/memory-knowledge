@@ -1,0 +1,115 @@
+{
+  "baseline_sha256": "6f72a0f17982c480d72e47a1c9c4fd6d47f78bf5b1bdc685a3bff139044fe285",
+  "candidates": [
+    {
+      "approach_id": "report-rule-per-run",
+      "artifact": "trend-winner",
+      "bundle_sha256": "eb32e3f444662442d2fbcfcc2d11d01617633bc1a24c8d75d7d6ac87e8712e3d",
+      "probe_id": "trend-contract"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "critique-trend",
+    "development_manifest_sha256": "3b7cf3dc5f249ea9d1a94da514158f1f29e5ca88126d69c356cce9ddf55f2faa"
+  },
+  "inputs": [
+    {
+      "case_id": "btm-five-complete-runs-out-of-order",
+      "path": "btm-five-complete-runs-out-of-order.input",
+      "sha256": "a111fe1c3795a7b26439d4a5010ba88671243659d7d1e94e7aa6813ea90950f9",
+      "size": 780
+    },
+    {
+      "case_id": "btm-v7-partial-beside-v6",
+      "path": "btm-v7-partial-beside-v6.input",
+      "sha256": "4c47170282a2258bd413fb17f6a46ab5bbb4000c9248ad94b976b52c0739b245",
+      "size": 490
+    },
+    {
+      "case_id": "one-pager-run-mixed-in",
+      "path": "one-pager-run-mixed-in.input",
+      "sha256": "1121a756a37f2cb6158323aefb846739012daeda4103249db99bf2695a872597",
+      "size": 360
+    },
+    {
+      "case_id": "same-version-twice",
+      "path": "same-version-twice.input",
+      "sha256": "4c9a9906b98bd6bcbe1ad912db2f2901d32d3f3683bfadc733ff778464d25320",
+      "size": 334
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "trend-contract"
+      ],
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "955e2d7649bdec92a44a3f0933cd1a2071de380352c33546f44210b02311e2e0",
+      "size": 9420
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "trend-contract"
+      ],
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "5f5613cd2485666a37f0c6a10743db733bb8570e05bc03ddcb9777cfbdd28d95",
+      "size": 137871
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "trend-contract"
+      ],
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "cb66af070b5e9ccea0d54fe4a792c6813e15f6be98de796eb566cb20a7de0460",
+      "size": 49904
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "e4ae00aeef33e4788e30053aadc32f133fec09b2d0dee2b587bf40a43433a59f",
+        "size": 5742
+      },
+      {
+        "path": "skills/critique-machinery/SKILL.md",
+        "sha256": "955e2d7649bdec92a44a3f0933cd1a2071de380352c33546f44210b02311e2e0",
+        "size": 9420
+      },
+      {
+        "path": "skills/critique-machinery/agents/openai.yaml",
+        "sha256": "60aa711c16519a909a35adcc15178e632e23f8cafffbe93c134fd929f3ceb629",
+        "size": 265
+      },
+      {
+        "path": "skills/critique-machinery/scripts/critique.py",
+        "sha256": "5f5613cd2485666a37f0c6a10743db733bb8570e05bc03ddcb9777cfbdd28d95",
+        "size": 137871
+      },
+      {
+        "path": "tests/test_critique_machinery.py",
+        "sha256": "cb66af070b5e9ccea0d54fe4a792c6813e15f6be98de796eb566cb20a7de0460",
+        "size": 49904
+      }
+    ],
+    "root": "source",
+    "sha256": "9ee5a9e2e2be53545b01f390b65fa350e97ab8d2cbd0f38738d376d78d1a2be5"
+  },
+  "status": "assembled"
+}

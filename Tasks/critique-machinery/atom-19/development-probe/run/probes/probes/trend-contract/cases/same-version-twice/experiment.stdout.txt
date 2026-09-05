@@ -1,0 +1,214 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/evaluator_adapter.py",
+        "sha256": "2898504aa80f7235875bb0154e0f4c21f2a802df49656dc0b6bc06d9ebf586d1"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "exit-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "order-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "counts-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "counts-match-report-route"
+      },
+      {
+        "direction": "maximize",
+        "name": "deltas-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "comparability-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "refusal-names-items"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-b154be4e9bb5eb41a94d",
+  "frozen_input_sha256": "4c9a9906b98bd6bcbe1ad912db2f2901d32d3f3683bfadc733ff778464d25320",
+  "hypothesis": "Every approach declared by mini-probe 'trend-contract' can run against captured case 'same-version-twice', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 195,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "outcome": {
+        "case_id": "same-version-twice",
+        "case_sha256": "4c9a9906b98bd6bcbe1ad912db2f2901d32d3f3683bfadc733ff778464d25320",
+        "deltas": null,
+        "direction": null,
+        "located": [],
+        "metrics": {
+          "comparability-correct": 1,
+          "counts-correct": 1,
+          "counts-match-report-route": 1,
+          "deltas-correct": 1,
+          "exit-correct": 1,
+          "frozen-input-unchanged": 1,
+          "order-correct": 1,
+          "refusal-names-items": 1
+        },
+        "trend_exit": 2,
+        "trend_stderr": "critique refused: trend refused: runs /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run and /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-consistency-run-partial both bound page version 6 (UP_BTM_CDS002_S12_ROADMAP_FINAL_v6.md, UP_BTM_CDS002_",
+        "versions": []
+      },
+      "reported_metrics": {
+        "comparability-correct": 1,
+        "counts-correct": 1,
+        "counts-match-report-route": 1,
+        "deltas-correct": 1,
+        "exit-correct": 1,
+        "frozen-input-unchanged": 1,
+        "order-correct": 1,
+        "refusal-names-items": 1
+      },
+      "result_sha256": "da48b31dc459da29ba8dbf3ed481c08db3303d6c84c2c330f1f2983880dc6c77",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "04048114e5b7b776761d49c56f90ba6151632ddf2f96ea6441a5090a0c98c93b",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 190,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "outcome": {
+        "case_id": "same-version-twice",
+        "case_sha256": "4c9a9906b98bd6bcbe1ad912db2f2901d32d3f3683bfadc733ff778464d25320",
+        "deltas": null,
+        "direction": null,
+        "located": [],
+        "metrics": {
+          "comparability-correct": 1,
+          "counts-correct": 1,
+          "counts-match-report-route": 1,
+          "deltas-correct": 1,
+          "exit-correct": 1,
+          "frozen-input-unchanged": 1,
+          "order-correct": 1,
+          "refusal-names-items": 1
+        },
+        "trend_exit": 2,
+        "trend_stderr": "critique refused: trend refused: runs /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run and /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-consistency-run-partial both bound page version 6 (UP_BTM_CDS002_S12_ROADMAP_FINAL_v6.md, UP_BTM_CDS002_",
+        "versions": []
+      },
+      "reported_metrics": {
+        "comparability-correct": 1,
+        "counts-correct": 1,
+        "counts-match-report-route": 1,
+        "deltas-correct": 1,
+        "exit-correct": 1,
+        "frozen-input-unchanged": 1,
+        "order-correct": 1,
+        "refusal-names-items": 1
+      },
+      "result_sha256": "bccf840ad6c958b5e974c75aa8b7063c3dbc7155677712839a1084570d4b9c65",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "f510c44feed1a14a50fb20e7ceb63442b6ff54f21192094973f8186df3f3ef3d",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

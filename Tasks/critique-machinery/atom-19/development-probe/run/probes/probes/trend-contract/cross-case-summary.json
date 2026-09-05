@@ -1,0 +1,15 @@
+{
+  "aggregated_summary_sha256": "0624687bd0327b5e3bd84bb2e04a72ae6c2bee0bbf126d2b0ead70bec6f773d9",
+  "atomic_step_id": "critique-trend",
+  "case_ids": [
+    "btm-five-complete-runs-out-of-order",
+    "btm-v7-partial-beside-v6",
+    "one-pager-run-mixed-in",
+    "same-version-twice"
+  ],
+  "probe_id": "trend-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "564984c926a887a3ccdb0f6e3a3e8383fc46632aea31df87521702cc531e7a2c",
+  "schema_version": 1,
+  "status": "completed"
+}

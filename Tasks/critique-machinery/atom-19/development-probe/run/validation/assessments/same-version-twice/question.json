@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+  "atomic_outcome": "The critique machinery gains `trend`: given runs of one deliverable, it counts each run's located defects by the rule the report route uses (agreement-defect cells plus owner-resolved cells ruled revise or reject), orders the runs by the version their bound page names, prints each count with its delta from the previous comparable run and the direction of the series, lists an unfinished run with its reason without comparing it, and refuses runs of another deliverable or two runs of one version, naming the runs.",
+  "atomic_step_id": "critique-trend",
+  "case_id": "same-version-twice",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/validation/executions/same-version-twice/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/validation/executions/same-version-twice/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/validation/executions/same-version-twice/telemetry.jsonl",
+      "sha256": "480fdfe5bd2e97b361b32d3f6c37e19db72f3ebdfa9745853fad6c78ce635851"
+    }
+  ],
+  "expected_outcome": "The version 6 run and the version 6 consistency-only run are refused as two runs of one page version, naming both runs.",
+  "operator_path": "Drive the candidate critique script through its own command line: trend with every frozen run the case lists, then report on each comparable run to cross-check the count; refusal cases read exit code and stderr.",
+  "overall_criterion": "Any metric fails on any case.",
+  "schema_version": 1
+}

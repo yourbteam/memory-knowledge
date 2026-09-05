@@ -1,0 +1,14 @@
+{
+  "approach_id": "report-rule-per-run",
+  "atomic_step_id": "critique-trend",
+  "bundle": "../../bundles/report-rule-per-run",
+  "bundle_sha256": "eb32e3f444662442d2fbcfcc2d11d01617633bc1a24c8d75d7d6ac87e8712e3d",
+  "case_id": "one-pager-run-mixed-in",
+  "experiment_id": "development-probe-c1ec37bfc49b4ae7a347",
+  "probe_id": "trend-contract",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "control"
+}

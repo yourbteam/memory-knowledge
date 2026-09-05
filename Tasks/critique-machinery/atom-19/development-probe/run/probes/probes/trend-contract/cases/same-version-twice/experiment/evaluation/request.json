@@ -1,0 +1,94 @@
+{
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/probes/probes/trend-contract/cases/same-version-twice/experiment/variants/control/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/probes/probes/trend-contract/cases/same-version-twice/experiment/variants/control/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/probes/probes/trend-contract/cases/same-version-twice/experiment/variants/control/telemetry.jsonl",
+          "sha256": "04048114e5b7b776761d49c56f90ba6151632ddf2f96ea6441a5090a0c98c93b"
+        }
+      ],
+      "execution": {
+        "duration_ms": 195,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "da48b31dc459da29ba8dbf3ed481c08db3303d6c84c2c330f1f2983880dc6c77",
+      "variant_id": "control"
+    },
+    {
+      "evidence": [
+        {
+          "id": "stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/probes/probes/trend-contract/cases/same-version-twice/experiment/variants/variation-2/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/probes/probes/trend-contract/cases/same-version-twice/experiment/variants/variation-2/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/probes/probes/trend-contract/cases/same-version-twice/experiment/variants/variation-2/telemetry.jsonl",
+          "sha256": "f510c44feed1a14a50fb20e7ceb63442b6ff54f21192094973f8186df3f3ef3d"
+        }
+      ],
+      "execution": {
+        "duration_ms": 190,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "result_sha256": "bccf840ad6c958b5e974c75aa8b7063c3dbc7155677712839a1084570d4b9c65",
+      "variant_id": "variation-2"
+    }
+  ],
+  "experiment_id": "development-probe-b154be4e9bb5eb41a94d",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "exit-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "order-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "counts-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "counts-match-report-route"
+    },
+    {
+      "direction": "maximize",
+      "name": "deltas-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "comparability-correct"
+    },
+    {
+      "direction": "maximize",
+      "name": "refusal-names-items"
+    },
+    {
+      "direction": "maximize",
+      "name": "frozen-input-unchanged"
+    }
+  ],
+  "schema_version": 1
+}

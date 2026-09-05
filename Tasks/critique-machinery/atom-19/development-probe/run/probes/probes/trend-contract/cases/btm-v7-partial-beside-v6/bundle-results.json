@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "approach_id": "report-rule-per-run",
+      "bundle": "../../bundles/report-rule-per-run",
+      "bundle_sha256": "eb32e3f444662442d2fbcfcc2d11d01617633bc1a24c8d75d7d6ac87e8712e3d",
+      "candidate_sha256": "9ee5a9e2e2be53545b01f390b65fa350e97ab8d2cbd0f38738d376d78d1a2be5",
+      "case_ids": [
+        "btm-five-complete-runs-out-of-order",
+        "btm-v7-partial-beside-v6",
+        "one-pager-run-mixed-in",
+        "same-version-twice"
+      ],
+      "error": null,
+      "probe_id": "trend-contract",
+      "status": "reused"
+    },
+    {
+      "approach_id": "agreed-defects-only",
+      "bundle": "../../bundles/agreed-defects-only",
+      "bundle_sha256": "e80f40a0f72d1fef8941566e6fbfa4860477f198d9d135b5a9de34c7c2332f16",
+      "candidate_sha256": "02aa23875a4456ea0a1161d2e5e999410b5465dc28271e656aebd5b4cdeaa1f5",
+      "case_ids": [
+        "btm-five-complete-runs-out-of-order",
+        "btm-v7-partial-beside-v6",
+        "one-pager-run-mixed-in",
+        "same-version-twice"
+      ],
+      "error": null,
+      "probe_id": "trend-contract",
+      "status": "reused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "cross-case-shared"
+}

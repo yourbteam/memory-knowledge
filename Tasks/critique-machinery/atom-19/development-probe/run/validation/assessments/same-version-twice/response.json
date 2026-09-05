@@ -1,0 +1,9 @@
+{
+  "case_id": "same-version-twice",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 19 candidate facts passed",
+  "verdict": "satisfied"
+}

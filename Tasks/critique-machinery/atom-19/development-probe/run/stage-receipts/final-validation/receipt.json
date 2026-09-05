@@ -1,0 +1,19 @@
+{
+  "duration_ms": 506,
+  "evidence": "validation/final-validation-summary.json",
+  "evidence_sha256": "dbb54efad86f69a3d05face47045d625231d716990a7909b3e75ba2dd5831edf",
+  "exit_code": 0,
+  "output": "validation",
+  "promotion_applied": false,
+  "result": "validation/final-verdict.json",
+  "result_sha256": "3ad23c4e5183b6c5ae085f59b589611976871b61c5a207b6772bc34fbdd4e8e2",
+  "schema_version": 1,
+  "stage": "final-validation",
+  "status": "completed",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "207d324a00d651eb9d62e5748ef06a54564845bb98bfce47086202a1266939aa",
+  "timed_out": false,
+  "timeout": null,
+  "timeout_ms": 2700000,
+  "timeout_sha256": null
+}

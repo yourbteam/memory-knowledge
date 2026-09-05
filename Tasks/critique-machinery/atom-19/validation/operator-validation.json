@@ -1,0 +1,56 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "atomic_step_id": "critique-trend",
+ "promotion_event_sha256": "6cb7dc2fc2a3d8f8e8e5042435e31482909c1ab2a45198ed47d3a7ba45a63dc7",
+ "cases": [
+  {
+   "case_id": "btm-five-complete-runs-out-of-order",
+   "verdict": "satisfied",
+   "reason": "The canonical script, run from its command line on the five real completed B Team runs passed out of order, prints versions 1, 2, 3, 5, 6 with located defects 22, 15, 9, 25, 12 (each equal to the report route), deltas -7, -6, +16, -13 and direction mixed.",
+   "evidence": [
+    {
+     "case_id": "btm-five-complete-runs-out-of-order",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/validation/cases/btm-five-complete-runs-out-of-order.json",
+     "sha256": "6fcf5557e32a50b78202b8a73abbe52c26612c0d2a363078c7106b90b23cd652"
+    }
+   ]
+  },
+  {
+   "case_id": "btm-v7-partial-beside-v6",
+   "verdict": "satisfied",
+   "reason": "The partial version 7 run beside version 6: version 6 comparable at 12, version 7 listed with 10 agreed defects and not comparable because 21 owner questions are open, no delta, no direction.",
+   "evidence": [
+    {
+     "case_id": "btm-v7-partial-beside-v6",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/validation/cases/btm-v7-partial-beside-v6.json",
+     "sha256": "ec5ec224fb9e15c6ac4916da86f831bffdc42a405920f8feb0a8acab4d3b0763"
+    }
+   ]
+  },
+  {
+   "case_id": "one-pager-run-mixed-in",
+   "verdict": "satisfied",
+   "reason": "The Strategy One-Pager run mixed in is refused with exit 2, naming both runs and both payload keys.",
+   "evidence": [
+    {
+     "case_id": "one-pager-run-mixed-in",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/validation/cases/one-pager-run-mixed-in.json",
+     "sha256": "0a29c988fe22f50f48e7db183c54e75f4bebc7bc259f34f355cf1fa110ff344a"
+    }
+   ]
+  },
+  {
+   "case_id": "same-version-twice",
+   "verdict": "satisfied",
+   "reason": "The version 6 run and the version 6 consistency-only run are refused with exit 2 as two runs of one page version, naming both runs.",
+   "evidence": [
+    {
+     "case_id": "same-version-twice",
+     "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/validation/cases/same-version-twice.json",
+     "sha256": "967a52188e344811d82068199828907b44d63e0860b1b355df44f527890a7151"
+    }
+   ]
+  }
+ ]
+}

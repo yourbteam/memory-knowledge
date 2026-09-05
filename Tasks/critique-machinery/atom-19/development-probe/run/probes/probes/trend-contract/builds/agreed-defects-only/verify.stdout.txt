@@ -1,0 +1,1 @@
+{"approach_id": "agreed-defects-only", "atomic_step_id": "critique-trend", "bundle_sha256": "e80f40a0f72d1fef8941566e6fbfa4860477f198d9d135b5a9de34c7c2332f16", "probe_id": "trend-contract", "status": "verified"}

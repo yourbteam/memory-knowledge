@@ -1,0 +1,56 @@
+{
+ "schema_version": 1,
+ "status": "completed",
+ "skill": "critique-machinery",
+ "canonical_script_sha256": "5f5613cd2485666a37f0c6a10743db733bb8570e05bc03ddcb9777cfbdd28d95",
+ "codex_projection_sha256": "549e9172063caa123b48b826d4d22a40f38b050f9211e5a6279509431597c256",
+ "claude_projection_sha256": "bfb8db9b7a9aa5e2a0db217a073961a05508d03e9f22ebc5be202be7942ce487",
+ "registry_matches": {
+  "codex": true,
+  "claude": true
+ },
+ "installed_script_sha256": {
+  "codex": "5f5613cd2485666a37f0c6a10743db733bb8570e05bc03ddcb9777cfbdd28d95",
+  "claude": "5f5613cd2485666a37f0c6a10743db733bb8570e05bc03ddcb9777cfbdd28d95"
+ },
+ "live_confirmation": {
+  "client": "claude",
+  "runs": [
+   "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-v4",
+   "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v2",
+   "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v3",
+   "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v5",
+   "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v6",
+   "/Users/kamenkamenov/united-partners/Tasks/critique-machinery/runs/claude-seat-s12-btm-page-v7"
+  ],
+  "versions": [
+   1,
+   2,
+   3,
+   5,
+   6,
+   7
+  ],
+  "located_defects": [
+   22,
+   15,
+   9,
+   25,
+   12,
+   10
+  ],
+  "deltas": [
+   -7,
+   -6,
+   16,
+   -13
+  ],
+  "direction": "mixed",
+  "not_comparable": [
+   {
+    "because": "21 owner questions open",
+    "version": 7
+   }
+  ]
+ }
+}

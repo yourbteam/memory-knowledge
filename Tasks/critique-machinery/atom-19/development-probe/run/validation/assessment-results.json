@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+        "atomic_step_id": "critique-trend",
+        "case_id": "btm-five-complete-runs-out-of-order",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 19 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "btm-five-complete-runs-out-of-order",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+        "atomic_step_id": "critique-trend",
+        "case_id": "btm-v7-partial-beside-v6",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 19 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "btm-v7-partial-beside-v6",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+        "atomic_step_id": "critique-trend",
+        "case_id": "one-pager-run-mixed-in",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 19 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "one-pager-run-mixed-in",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+        "atomic_step_id": "critique-trend",
+        "case_id": "same-version-twice",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 19 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "same-version-twice",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

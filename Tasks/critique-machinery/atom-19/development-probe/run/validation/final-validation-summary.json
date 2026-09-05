@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+  "assessment_adapter_sha256": "062be72f211a1e4dbc7ad38f558ae9f1b86446587e99e440d1c2e9f5cce2bc94",
+  "atomic_step_id": "critique-trend",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

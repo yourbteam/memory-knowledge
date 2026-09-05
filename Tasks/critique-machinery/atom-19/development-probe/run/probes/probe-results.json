@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/trend-contract",
+      "probe_id": "trend-contract",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

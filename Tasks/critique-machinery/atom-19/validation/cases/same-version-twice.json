@@ -1,0 +1,9 @@
+{
+ "exit": 2,
+ "refusal_names_present": [
+  "btm-v6-run",
+  "btm-v6-consistency-run-partial",
+  "both bound page version 6"
+ ],
+ "stderr": "critique refused: trend refused: runs /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run and /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-consistency-run-partial both bound page version 6 (UP_BTM_CDS002_S12_ROADMAP_FINAL_v6.md, UP_BTM_CDS002_S12_ROADMAP_FINAL_v6.md); a trend has one run per version, so pass one of them."
+}

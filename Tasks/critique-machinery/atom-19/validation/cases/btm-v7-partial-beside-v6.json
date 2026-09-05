@@ -1,0 +1,26 @@
+{
+ "comparable": [
+  true,
+  false
+ ],
+ "deliverable": "context.up.cd_s_002.tactical_roadmap",
+ "deltas": [],
+ "direction": null,
+ "exit": 0,
+ "located": [
+  12,
+  10
+ ],
+ "not_comparable_because": [
+  null,
+  "21 owner questions open"
+ ],
+ "report_route_located": [
+  12
+ ],
+ "stderr": "",
+ "versions": [
+  6,
+  7
+ ]
+}

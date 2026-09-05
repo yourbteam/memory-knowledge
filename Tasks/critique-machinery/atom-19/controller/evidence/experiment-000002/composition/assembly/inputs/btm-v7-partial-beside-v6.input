@@ -1,0 +1,29 @@
+{
+ "case_id": "btm-v7-partial-beside-v6",
+ "expect": {
+  "comparable": [
+   true,
+   false
+  ],
+  "deliverable": "context.up.cd_s_002.tactical_roadmap",
+  "deltas": [],
+  "direction": null,
+  "exit": 0,
+  "located": [
+   12,
+   10
+  ],
+  "not_comparable_because": [
+   null,
+   "21 owner questions open"
+  ],
+  "versions": [
+   6,
+   7
+  ]
+ },
+ "works": [
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v7-run-partial",
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run"
+ ]
+}

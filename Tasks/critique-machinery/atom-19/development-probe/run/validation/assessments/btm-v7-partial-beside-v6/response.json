@@ -1,0 +1,9 @@
+{
+  "case_id": "btm-v7-partial-beside-v6",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 19 candidate facts passed",
+  "verdict": "satisfied"
+}

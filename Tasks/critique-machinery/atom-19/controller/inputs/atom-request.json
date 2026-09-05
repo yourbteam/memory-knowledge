@@ -1,0 +1,46 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-trend",
+  "captured_cases": [
+    {
+      "case_id": "btm-five-complete-runs-out-of-order",
+      "expected_outcome": "The five completed B Team runs, passed out of order, come back ordered by page version 1, 2, 3, 5, 6 with located defects 22, 15, 9, 25, 12, each equal to the report route's count, deltas -7, -6, +16, -13 and direction mixed.",
+      "kind": "success",
+      "sha256": "a111fe1c3795a7b26439d4a5010ba88671243659d7d1e94e7aa6813ea90950f9",
+      "source_ref": "Tasks/critique-machinery/atom-19/cases/btm-five-complete-runs-out-of-order.json"
+    },
+    {
+      "case_id": "btm-v7-partial-beside-v6",
+      "expected_outcome": "The partial version 7 run beside the complete version 6 run: version 6 comparable at 12, version 7 listed with 10 agreed defects, not comparable because 21 owner questions are open, no delta, direction undefined.",
+      "kind": "success",
+      "sha256": "4c47170282a2258bd413fb17f6a46ab5bbb4000c9248ad94b976b52c0739b245",
+      "source_ref": "Tasks/critique-machinery/atom-19/cases/btm-v7-partial-beside-v6.json"
+    },
+    {
+      "case_id": "one-pager-run-mixed-in",
+      "expected_outcome": "A Strategy One-Pager run passed with the version 6 roadmap run is refused, naming both runs and both payload keys.",
+      "kind": "failure",
+      "sha256": "1121a756a37f2cb6158323aefb846739012daeda4103249db99bf2695a872597",
+      "source_ref": "Tasks/critique-machinery/atom-19/cases/one-pager-run-mixed-in.json"
+    },
+    {
+      "case_id": "same-version-twice",
+      "expected_outcome": "The version 6 run and the version 6 consistency-only run are refused as two runs of one page version, naming both runs.",
+      "kind": "failure",
+      "sha256": "4c9a9906b98bd6bcbe1ad912db2f2901d32d3f3683bfadc733ff778464d25320",
+      "source_ref": "Tasks/critique-machinery/atom-19/cases/same-version-twice.json"
+    }
+  ],
+  "contract_surface": {
+    "kind": "render"
+  },
+  "outcome": "The critique machinery gains `trend`: given runs of one deliverable, it counts each run's located defects by the rule the report route uses (agreement-defect cells plus owner-resolved cells ruled revise or reject), orders the runs by the version their bound page names, prints each count with its delta from the previous comparable run and the direction of the series, lists an unfinished run with its reason without comparing it, and refuses runs of another deliverable or two runs of one version, naming the runs.",
+  "practical_value": "Every round of the S12 roadmap work re-based its own measure (21 version-5 cells, then 5 version-6 cells), so no report could be subtracted from the one before it and Kamen saw findings go up and down with no trend. The delivered B Team page's critiqued versions carry 22, 15, 9, 25 and 12 located defects; nothing printed that series until now.",
+  "schema_version": 1,
+  "stopping_condition": "trend on the five real completed B Team runs prints versions 1, 2, 3, 5, 6 with 22, 15, 9, 25, 12 located defects and deltas -7, -6, +16, -13; the partial version 7 run is listed as not comparable with 21 owner questions open; a Strategy One-Pager run mixed in refuses naming both payload keys; two runs of version 6 refuse naming both runs; the existing suite passes."
+}

@@ -1,0 +1,226 @@
+{
+  "champion": "control",
+  "evaluation": {
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/evaluator_adapter.py",
+        "sha256": "2898504aa80f7235875bb0154e0f4c21f2a802df49656dc0b6bc06d9ebf586d1"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "exit-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "order-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "counts-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "counts-match-report-route"
+      },
+      {
+        "direction": "maximize",
+        "name": "deltas-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "comparability-correct"
+      },
+      {
+        "direction": "maximize",
+        "name": "refusal-names-items"
+      },
+      {
+        "direction": "maximize",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-dd45ef239fd9adfedff9",
+  "frozen_input_sha256": "4c47170282a2258bd413fb17f6a46ab5bbb4000c9248ad94b976b52c0739b245",
+  "hypothesis": "Every approach declared by mini-probe 'trend-contract' can run against captured case 'btm-v7-partial-beside-v6', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 0.0,
+        "counts-match-report-route": 0.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "rank": 2,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/experiment-machinery/scripts",
+      "sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608"
+    }
+  },
+  "target_source_sha256": "eb768584a7de4b4b3b5c2205301b5dec88ec7292d30f7bd63ceda9e703ea7608",
+  "variants": [
+    {
+      "duration_ms": 243,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "outcome": {
+        "case_id": "btm-v7-partial-beside-v6",
+        "case_sha256": "4c47170282a2258bd413fb17f6a46ab5bbb4000c9248ad94b976b52c0739b245",
+        "deltas": [],
+        "direction": null,
+        "located": [
+          12,
+          10
+        ],
+        "metrics": {
+          "comparability-correct": 1,
+          "counts-correct": 1,
+          "counts-match-report-route": 1,
+          "deltas-correct": 1,
+          "exit-correct": 1,
+          "frozen-input-unchanged": 1,
+          "order-correct": 1,
+          "refusal-names-items": 1
+        },
+        "trend_exit": 0,
+        "trend_stderr": "",
+        "versions": [
+          6,
+          7
+        ]
+      },
+      "reported_metrics": {
+        "comparability-correct": 1,
+        "counts-correct": 1,
+        "counts-match-report-route": 1,
+        "deltas-correct": 1,
+        "exit-correct": 1,
+        "frozen-input-unchanged": 1,
+        "order-correct": 1,
+        "refusal-names-items": 1
+      },
+      "result_sha256": "57e4fae42ad105cd295bb1364d649b1dbd52b0b76c5a8864c3c3ff78e77de433",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "d6716d51fdd6456543fed8603395702c3b28f417474ed99d5bf96ace75be5521",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 238,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 0.0,
+        "counts-match-report-route": 0.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "outcome": {
+        "case_id": "btm-v7-partial-beside-v6",
+        "case_sha256": "4c47170282a2258bd413fb17f6a46ab5bbb4000c9248ad94b976b52c0739b245",
+        "deltas": [],
+        "direction": null,
+        "located": [
+          6,
+          10
+        ],
+        "metrics": {
+          "comparability-correct": 1,
+          "counts-correct": 0,
+          "counts-match-report-route": 0,
+          "deltas-correct": 1,
+          "exit-correct": 1,
+          "frozen-input-unchanged": 1,
+          "order-correct": 1,
+          "refusal-names-items": 1
+        },
+        "trend_exit": 0,
+        "trend_stderr": "",
+        "versions": [
+          6,
+          7
+        ]
+      },
+      "reported_metrics": {
+        "comparability-correct": 1,
+        "counts-correct": 0,
+        "counts-match-report-route": 0,
+        "deltas-correct": 1,
+        "exit-correct": 1,
+        "frozen-input-unchanged": 1,
+        "order-correct": 1,
+        "refusal-names-items": 1
+      },
+      "result_sha256": "a288238d2889b65cc3644c71c394a32b89416d40af4349ab249a9812ad87b0d4",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": "556fd8f0ae023fc3994ccd60292b7970dc0376162da5f6e63f3b9bed04cd33c9",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

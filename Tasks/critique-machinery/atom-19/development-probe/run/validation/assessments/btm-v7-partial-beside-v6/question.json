@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd",
+  "atomic_outcome": "The critique machinery gains `trend`: given runs of one deliverable, it counts each run's located defects by the rule the report route uses (agreement-defect cells plus owner-resolved cells ruled revise or reject), orders the runs by the version their bound page names, prints each count with its delta from the previous comparable run and the direction of the series, lists an unfinished run with its reason without comparing it, and refuses runs of another deliverable or two runs of one version, naming the runs.",
+  "atomic_step_id": "critique-trend",
+  "case_id": "btm-v7-partial-beside-v6",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/validation/executions/btm-v7-partial-beside-v6/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/validation/executions/btm-v7-partial-beside-v6/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/development-probe/run/validation/executions/btm-v7-partial-beside-v6/telemetry.jsonl",
+      "sha256": "9deb28440e5eadf0ed9d072a788b46a37a9711b2437ea2afaf7dc51d57476b00"
+    }
+  ],
+  "expected_outcome": "The partial version 7 run beside the complete version 6 run: version 6 comparable at 12, version 7 listed with 10 agreed defects, not comparable because 21 owner questions are open, no delta, direction undefined.",
+  "operator_path": "Drive the candidate critique script through its own command line: trend with every frozen run the case lists, then report on each comparable run to cross-check the count; refusal cases read exit code and stderr.",
+  "overall_criterion": "trend on the five real completed B Team runs prints versions 1, 2, 3, 5, 6 with 22, 15, 9, 25, 12 located defects and deltas -7, -6, +16, -13; the partial version 7 run is listed as not comparable with 21 owner questions open; a Strategy One-Pager run mixed in refuses naming both payload keys; two runs of version 6 refuse naming both runs; the existing suite passes.",
+  "schema_version": 1
+}

@@ -1,0 +1,180 @@
+{
+  "atomic_step": {
+    "captured_cases": [
+      {
+        "expected_outcome": "The five completed B Team runs, passed out of order, come back ordered by page version 1, 2, 3, 5, 6 with located defects 22, 15, 9, 25, 12, each equal to the report route's count, deltas -7, -6, +16, -13 and direction mixed.",
+        "id": "btm-five-complete-runs-out-of-order",
+        "kind": "success",
+        "sha256": "a111fe1c3795a7b26439d4a5010ba88671243659d7d1e94e7aa6813ea90950f9",
+        "source_ref": "Tasks/critique-machinery/atom-19/cases/btm-five-complete-runs-out-of-order.json"
+      },
+      {
+        "expected_outcome": "The partial version 7 run beside the complete version 6 run: version 6 comparable at 12, version 7 listed with 10 agreed defects, not comparable because 21 owner questions are open, no delta, direction undefined.",
+        "id": "btm-v7-partial-beside-v6",
+        "kind": "success",
+        "sha256": "4c47170282a2258bd413fb17f6a46ab5bbb4000c9248ad94b976b52c0739b245",
+        "source_ref": "Tasks/critique-machinery/atom-19/cases/btm-v7-partial-beside-v6.json"
+      },
+      {
+        "expected_outcome": "A Strategy One-Pager run passed with the version 6 roadmap run is refused, naming both runs and both payload keys.",
+        "id": "one-pager-run-mixed-in",
+        "kind": "failure",
+        "sha256": "1121a756a37f2cb6158323aefb846739012daeda4103249db99bf2695a872597",
+        "source_ref": "Tasks/critique-machinery/atom-19/cases/one-pager-run-mixed-in.json"
+      },
+      {
+        "expected_outcome": "The version 6 run and the version 6 consistency-only run are refused as two runs of one page version, naming both runs.",
+        "id": "same-version-twice",
+        "kind": "failure",
+        "sha256": "4c9a9906b98bd6bcbe1ad912db2f2901d32d3f3683bfadc733ff778464d25320",
+        "source_ref": "Tasks/critique-machinery/atom-19/cases/same-version-twice.json"
+      }
+    ],
+    "id": "critique-trend",
+    "outcome": "The critique machinery gains `trend`: given runs of one deliverable, it counts each run's located defects by the rule the report route uses (agreement-defect cells plus owner-resolved cells ruled revise or reject), orders the runs by the version their bound page names, prints each count with its delta from the previous comparable run and the direction of the series, lists an unfinished run with its reason without comparing it, and refuses runs of another deliverable or two runs of one version, naming the runs.",
+    "practical_value": "Every round of the S12 roadmap work re-based its own measure (21 version-5 cells, then 5 version-6 cells), so no report could be subtracted from the one before it and Kamen saw findings go up and down with no trend. The delivered B Team page's critiqued versions carry 22, 15, 9, 25 and 12 located defects; nothing printed that series until now.",
+    "stopping_condition": "trend on the five real completed B Team runs prints versions 1, 2, 3, 5, 6 with 22, 15, 9, 25, 12 located defects and deltas -7, -6, +16, -13; the partial version 7 run is listed as not comparable with 21 owner questions open; a Strategy One-Pager run mixed in refuses naming both payload keys; two runs of version 6 refuse naming both runs; the existing suite passes."
+  },
+  "case_source_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "composition": {
+    "assembly_contract": "The critique machinery gains `trend`: given runs of one deliverable, it counts each run's located defects by the rule the report route uses (agreement-defect cells plus owner-resolved cells ruled revi",
+    "consumes": [
+      {
+        "artifact": "trend-winner",
+        "probe_id": "trend-contract"
+      }
+    ],
+    "final_validation": {
+      "case_ids": [
+        "btm-five-complete-runs-out-of-order",
+        "btm-v7-partial-beside-v6",
+        "one-pager-run-mixed-in",
+        "same-version-twice"
+      ],
+      "failure_criterion": "Any metric fails on any case.",
+      "operator_path": "Drive the candidate critique script through its own command line: trend with every frozen run the case lists, then report on each comparable run to cross-check the count; refusal cases read exit code and stderr.",
+      "success_criterion": "trend on the five real completed B Team runs prints versions 1, 2, 3, 5, 6 with 22, 15, 9, 25, 12 located defects and deltas -7, -6, +16, -13; the partial version 7 run is listed as not comparable with 21 owner questions open; a Strategy One-Pager run mixed in refuses naming both payload keys; two runs of version 6 refuse naming both runs; the existing suite passes."
+    }
+  },
+  "mini_probes": [
+    {
+      "allowed_paths": [
+        "skills/critique-machinery/scripts/critique.py",
+        "skills/critique-machinery/SKILL.md",
+        "tests/test_critique_machinery.py"
+      ],
+      "approaches": [
+        {
+          "hypothesis": "Counting each run's located defects by the exact rule the report route uses, ordered by the bound page's version, gives one number that can be subtracted between versions and matches what the report already prints.",
+          "id": "report-rule-per-run",
+          "implementation": "trend --work ... : per run, agreement-defect cells plus owner-resolved cells ruled revise or reject; version parsed from the bound page name; deltas between comparable runs; partial runs listed with their reason; mixed deliverables and repeated versions refused by name",
+          "predicted_tradeoff": "an owner queue left open makes a run incomparable until the rulings are filed"
+        },
+        {
+          "hypothesis": "Counting only the cells both blind seats called a defect is enough to show the trend.",
+          "id": "agreed-defects-only",
+          "implementation": "the same command with the owner's revise and reject rulings on disputed cells left out of the count",
+          "predicted_tradeoff": "every version whose owner queue carried defects prints a smaller number than its own report (version 5: 16 against 25), so the trend disagrees with the documents already filed"
+        }
+      ],
+      "evaluation": {
+        "across_cases": [
+          {
+            "method": "worst",
+            "name": "exit-correct"
+          },
+          {
+            "method": "worst",
+            "name": "order-correct"
+          },
+          {
+            "method": "worst",
+            "name": "counts-correct"
+          },
+          {
+            "method": "worst",
+            "name": "counts-match-report-route"
+          },
+          {
+            "method": "worst",
+            "name": "deltas-correct"
+          },
+          {
+            "method": "worst",
+            "name": "comparability-correct"
+          },
+          {
+            "method": "worst",
+            "name": "refusal-names-items"
+          },
+          {
+            "method": "worst",
+            "name": "frozen-input-unchanged"
+          }
+        ],
+        "metrics": [
+          {
+            "direction": "maximize",
+            "name": "exit-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "order-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "counts-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "counts-match-report-route"
+          },
+          {
+            "direction": "maximize",
+            "name": "deltas-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "comparability-correct"
+          },
+          {
+            "direction": "maximize",
+            "name": "refusal-names-items"
+          },
+          {
+            "direction": "maximize",
+            "name": "frozen-input-unchanged"
+          }
+        ]
+      },
+      "goal": "Decide how the critique machinery prints one comparable located-defect count per version of a deliverable.",
+      "id": "trend-contract",
+      "inputs": [
+        {
+          "case_id": "btm-five-complete-runs-out-of-order"
+        },
+        {
+          "case_id": "btm-v7-partial-beside-v6"
+        },
+        {
+          "case_id": "one-pager-run-mixed-in"
+        },
+        {
+          "case_id": "same-version-twice"
+        }
+      ],
+      "practical_value": "Every round of the S12 roadmap work re-based its own measure (21 version-5 cells, then 5 version-6 cells), so no report could be subtracted from the one before it and Kamen saw findings go up and down with no trend. The delivered B Team page's critiqued versions carry 22, 15, 9, 25 and 12 located defects; nothing printed that series until now.",
+      "proof": {
+        "failure_criterion": "Any ordered metric is not one on any frozen case.",
+        "success_criterion": "All eight ordered metrics equal one on every frozen case."
+      },
+      "winner_output": {
+        "artifact": "trend-winner",
+        "description": "Decide how the critique machinery prints one comparable located-defect count per version of a deliverable."
+      },
+      "work_type": "code",
+      "work_type_reason": "Counting recorded outcomes, ordering by a parsed version and refusing by name are deterministic code decisions; no model judgement is involved."
+    }
+  ],
+  "schema_version": 2
+}

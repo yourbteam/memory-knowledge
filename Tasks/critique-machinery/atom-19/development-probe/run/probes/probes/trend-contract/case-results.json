@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "case_id": "btm-five-complete-runs-out-of-order",
+      "output": "cases/btm-five-complete-runs-out-of-order",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "btm-v7-partial-beside-v6",
+      "output": "cases/btm-v7-partial-beside-v6",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "one-pager-run-mixed-in",
+      "output": "cases/one-pager-run-mixed-in",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "same-version-twice",
+      "output": "cases/same-version-twice",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

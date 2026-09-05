@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-trend",
+  "case_id": "same-version-twice",
+  "experiment_id": "development-probe-b154be4e9bb5eb41a94d",
+  "probe_id": "trend-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "793febb05df0ff3731297f9415401726fe62a53f86289eaa7e3f0620dfe7199c",
+  "schema_version": 1,
+  "status": "completed"
+}

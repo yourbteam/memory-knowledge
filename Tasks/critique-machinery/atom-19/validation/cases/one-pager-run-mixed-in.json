@@ -1,0 +1,10 @@
+{
+ "exit": 2,
+ "refusal_names_present": [
+  "btm-v6-run",
+  "one-pager-run",
+  "context.up.cd_s_002.tactical_roadmap",
+  "context.up.cd_s_002.strategy_one_pager"
+ ],
+ "stderr": "critique refused: trend refused: run /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run bound payload key 'context.up.cd_s_002.tactical_roadmap' while run /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/one-pager-run bound 'context.up.cd_s_002.strategy_one_pager'; pass runs of one deliverable only (drop /Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-19/frozen-real/one-pager-run or trend it separately)."
+}

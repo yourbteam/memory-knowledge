@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-trend",
+  "case_id": "btm-v7-partial-beside-v6",
+  "experiment_id": "development-probe-dd45ef239fd9adfedff9",
+  "probe_id": "trend-contract",
+  "promotion_applied": false,
+  "recommendation_sha256": "2c6735eb7db5583b99f50434384a1dc6032b3af7c72c6b3ae53aac03a2b0bb3c",
+  "schema_version": 1,
+  "status": "completed"
+}

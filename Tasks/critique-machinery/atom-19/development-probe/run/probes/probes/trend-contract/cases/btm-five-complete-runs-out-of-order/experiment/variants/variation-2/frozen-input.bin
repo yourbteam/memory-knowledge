@@ -1,0 +1,49 @@
+{
+ "case_id": "btm-five-complete-runs-out-of-order",
+ "expect": {
+  "comparable": [
+   true,
+   true,
+   true,
+   true,
+   true
+  ],
+  "deliverable": "context.up.cd_s_002.tactical_roadmap",
+  "deltas": [
+   -7,
+   -6,
+   16,
+   -13
+  ],
+  "direction": "mixed",
+  "exit": 0,
+  "located": [
+   22,
+   15,
+   9,
+   25,
+   12
+  ],
+  "not_comparable_because": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "versions": [
+   1,
+   2,
+   3,
+   5,
+   6
+  ]
+ },
+ "works": [
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v5-run",
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v1-run",
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v6-run",
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v2-run",
+  "Tasks/critique-machinery/atom-19/frozen-real/btm-v3-run"
+ ]
+}

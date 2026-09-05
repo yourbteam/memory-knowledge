@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "critique-trend",
+  "probe_ids": [
+    "trend-contract"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "fbca06415b31b63d1a51f254d8a5bad3d2f7d70f7a07912ac4bf1daee22a1976",
+  "schema_version": 1,
+  "status": "completed"
+}

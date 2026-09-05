@@ -1,0 +1,87 @@
+{
+  "case_ids": [
+    "btm-five-complete-runs-out-of-order",
+    "btm-v7-partial-beside-v6",
+    "one-pager-run-mixed-in",
+    "same-version-twice"
+  ],
+  "champion": "report-rule-per-run",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "exit-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "order-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "counts-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "counts-match-report-route"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "deltas-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "comparability-correct"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "refusal-names-items"
+      },
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "frozen-input-unchanged"
+      }
+    ]
+  },
+  "probe_id": "trend-contract",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 1.0,
+        "counts-match-report-route": 1.0,
+        "deltas-correct": 1.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "approach_id": "report-rule-per-run",
+      "rank": 1
+    },
+    {
+      "aggregated_metrics": {
+        "comparability-correct": 1.0,
+        "counts-correct": 0.0,
+        "counts-match-report-route": 0.0,
+        "deltas-correct": 0.0,
+        "exit-correct": 1.0,
+        "frozen-input-unchanged": 1.0,
+        "order-correct": 1.0,
+        "refusal-names-items": 1.0
+      },
+      "approach_id": "agreed-defects-only",
+      "rank": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "completed"
+}

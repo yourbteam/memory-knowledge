@@ -762,3 +762,52 @@ through the installed Claude machinery into
 defect cell (the map, five rows) and 19 not applicable, before any reader is spent. Unrelated
 installed drift in three Claude machineries is concurrent Codex work, preserved. Upgrade Atom E
 used two deterministic approaches, four frozen real cases and zero model calls.
+
+## Upgrade Atom F — `trend`: one frozen measure across the versions of a deliverable — 2026-09-05
+
+**Outcome — the delivered page's real trend is printed by the machinery, not composed per round.**
+Every round of the S12 roadmap work re-based its own measure (of 21 version-5 cells, how many
+closed; of 5 version-6 cells, how many closed), so no report could be subtracted from the one before
+it and Kamen saw findings go up and down with no trend ("this is random and not part of a
+machinery"). The critique machinery gains `trend --work <run> [--work …]`: for each run it counts
+located defects by the exact rule the report route already uses (agreement-defect cells plus
+owner-resolved cells ruled revise or reject), orders the runs by the version their bound page names,
+prints each count with its delta from the previous comparable run and the direction of the series
+(falling, rising, flat, mixed), lists a run whose reading or owner queue is unfinished with its
+reason and never compares it, and refuses — naming the runs — a run of another deliverable, a page
+that names no version, or two runs of one version. It spends no reader and reads only the runs' own
+records. A project's goal store reads this command and nothing else.
+
+**Frozen real cases and deciding experiment.** `atom-19/frozen-real/` holds compact copies (matrix,
+unit manifest, owner queue and rulings, sources) of eight real runs: the five completed B Team
+critiques (pages v1, v2, v3, v5, v6), the partial version 7 run (21 owner questions open), the
+partial version 6 consistency-only run, and the Strategy One-Pager run from Atom 3. Four cases under
+`atom-19/cases/`: the five completed runs passed out of order (versions 1, 2, 3, 5, 6 with 22, 15, 9,
+25, 12 located defects, each equal to its own report route, deltas −7, −6, +16, −13, mixed), the
+partial version 7 beside version 6 (listed, not compared, no delta), the One-Pager mixed in (refused
+naming both runs and both payload keys), and two runs of version 6 (refused naming both runs).
+`development-probe/run/` compared `report-rule-per-run` against `agreed-defects-only` (the owner's
+revise and reject rulings left out): the champion scored 1.0 on all eight metrics on all four cases;
+the rival printed 12, 7, 4, 16, 6 — smaller than every filed report — and failed the count, report-match
+and delta metrics on both success cases. The baseline has no such command. Assembly SHA-256
+`ce00ca2d72672b36d87473a7ec55bf0ef19f6a8453f18c5247750d814907efdd`, zero model calls.
+
+**Promotion and real path.** Change surface: `critique.py`, its `SKILL.md`, the critique test file
+and the regenerated projection registry, SHA-256
+`eee54b249023c5a2c65701dbdefee07fdeeb5f5caf457dc29c0843f9d48bf7bf`; experiment event
+`3c2260fe94587327…`, promotion event `6cb7dc2fc2a3d8f8…`, validation event `6ddb71a540ce9d5d…`.
+`atom-19/validation/cases/` drives the canonical script from its command line through `trend` on every
+case and `report` on each comparable run, and reads the frozen seven-lens version 3 run as a legacy
+run (readable, 7 lenses). Focused verification: 29 passed in the critique suite (one new test on the
+frozen real runs) and 45 in the projection and installer suites. The run completed and
+`authorize-next` returned `authorized`.
+
+**Client installation and cost.** Both projections refreshed for `critique-machinery`; canonical and
+both installed scripts at SHA-256 `5f5613cd2485666a37f0c6a10743db733bb8570e05bc03ddcb9777cfbdd28d95`,
+registry parity for Codex (`549e9172…`) and Claude (`bfb8db9b…`)
+(`atom-19/validation/installation-receipt.json`). Live: the installed Claude machinery run over the six
+real B Team runs in United Partners prints 22, 15, 9, 25, 12 for versions 1, 2, 3, 5, 6 — deltas −7,
+−6, +16, −13, direction mixed — and lists version 7 as not comparable with 21 owner questions open and
+10 agreed defects so far. The same three unrelated installed drifts as at Atom E (description,
+experiment and requirements machineries) remain concurrent Codex work, preserved. Upgrade Atom F used
+two deterministic approaches, four frozen real cases and zero model calls.

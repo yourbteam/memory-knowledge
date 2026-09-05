@@ -1,0 +1,37 @@
+{
+  "allowed_paths": [
+    "skills/critique-machinery/SKILL.md",
+    "skills/critique-machinery/scripts/critique.py",
+    "tests/test_critique_machinery.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "critique-trend",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "6c0132d7c04af0d99d1e2a46207903f49d4f6c51c4abd28f6ac242c3544ad168",
+      "size": 8570
+    },
+    {
+      "mode": 420,
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "bccaec2cc11fb4a601c02212fedce1e351a0bc163f039ce023b6e252978de9e4",
+      "size": 131976
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_critique_machinery.py",
+      "sha256": "d72e83dd347f52dfc47978266ca0ecf851163fc24572834d0c62e0dbf78f1287",
+      "size": 48084
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "22953046aeab8da4c913517cfd033d73aa5cfc71a2bf4e753a2f7c62bc5c3e66",
+      "size": 11941
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}
