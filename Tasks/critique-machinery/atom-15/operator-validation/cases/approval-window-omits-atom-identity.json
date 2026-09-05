@@ -1,0 +1,17 @@
+{
+  "case_id": "approval-window-omits-atom-identity",
+  "status": "satisfied",
+  "observed": {
+    "atomic_step_id": "s12-proof-order-staged",
+    "request_sha256": "4a2579848b81b49b5cf40d0a1bb96a6032195ea086c5ed280fa79aaafe14b0de",
+    "operator_choice": "waive",
+    "parent_process_name": "Python",
+    "start_event_sha256": "3abba4df707fa371f73c7c098b93ddb7a724188ab86c79173d98f350bd80e288"
+  },
+  "evidence": [
+    "../native-new-request/prose-waiver-receipt.json",
+    "../native-start-run/ledger.jsonl",
+    "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/scripts/prose_waiver_approval.swift"
+  ],
+  "reason": "Kamen completed the code-owned native window. Its signed payload binds the displayed atom id and full request hash, and the installed Codex controller accepted that receipt only for the exact request."
+}

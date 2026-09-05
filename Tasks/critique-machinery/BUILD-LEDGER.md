@@ -560,3 +560,61 @@ verified, and closed. Four native prototypes, six real cases, two managed projec
 model calls were used. Final validation is `passed` at proof event
 `eaac5e4acfc5a6ae12ea3e683e6cff628b48e997b822f1988416e783320f85a1` with one linked blocker,
 zero blocking occurrences, and no remaining work.
+
+## Correction Atom 4 — visible request identity and complete installed closeout — 2026-09-05
+
+**Outcome — Claude's two blockers and four notes closed.** The native approval window and macOS
+authentication reason now name the exact `atomic_step_id` and full request SHA-256. Both identities
+are part of the signed payload and `start` checks them. New receipts therefore cannot cross atoms
+or requests. The one real version-1 Atom 14 receipt remains valid only through an explicit legacy
+shape bounded by its exact request, repository, and fields. Parent-process telemetry records the
+observed executable name or the explicit state `unavailable`, never an unexplained `unknown`.
+
+**Installed closeout boundary.** The managed installer writes a client-root provenance record that
+binds the canonical source repository and exact hashes of `scripts/blocker_catalog.py` and
+`scripts/work_memory.py`. Installed controllers resolve closeout only through that record and
+refuse absent, incomplete, linked, or hash-changed support with managed-install refresh guidance;
+the support modules are not copied into client projections. Guidance now states that rebuilding a
+helper may cause a new Keychain confirmation, that only the installed helper path may be allowed,
+and that an unanswered prompt from `security`, a shell, or another reader proves no policy denial.
+
+**Frozen cases and deciding experiment.** `atom-15/frozen-real/` preserves Claude's six findings.
+`atom-15/development-probe/run-03/development-probe-summary.json` and `final-verdict.json` record
+the comparison of signed identity plus hash-bound managed source against field-only approval plus
+ambient root search on all six frozen cases; `atom-15/development-probe/run-inputs/` and the two
+checked-in adapters preserve the reproducible inputs without publishing generated duplicate source
+trees. The selected approach passed 6/6 with assembly SHA-256
+`d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe`; the controller accepted
+experiment event `0652d58c839641fc01cc41f301457a177aee5987fa538645ba4b7142d2633375`
+and promotion event `1f9aa7f30978a10cab5d4ecf0554260535c01c7f6acec55f7e1eb2df9e9dd0bb`.
+
+**Real operator path.** Kamen completed the installed Codex native window for the real
+`s12-proof-order-staged` request. `atom-15/operator-validation/native-new-request/` records the
+signed atom id, request SHA-256
+`4a2579848b81b49b5cf40d0a1bb96a6032195ea086c5ed280fa79aaafe14b0de`, and observed parent
+`Python`; the installed controller accepted it into `native-start-run/` at event
+`3abba4df707fa371f73c7c098b93ddb7a724188ab86c79173d98f350bd80e288`. Both rebuilt installed
+helpers separately verified the preserved Atom 14 receipt. From United Partners, the Codex and
+Claude installed controllers replayed `record-validation` to complete at events
+`13df20c34e7ed368daea55d12603a9803b100d1bdf08c335c00d8842eee53406` and
+`cb86f58dc21585ea9c7700eca3669cd72b6d9ae8a2e82aa71667accf03168b56`, then each authorized the
+next atom. A hash-tampered managed-source record refused.
+
+**Installation, blockers, and cost.** The managed installer refreshed only
+`atom-building-machinery`. Codex matches projection SHA-256
+`2237b39e472be20d8b818e05b25e5c431f8672fd324b9d1537038027549e610e`; Claude matches
+`da3a39e29794159cd5d71218074c69ed5fb74ef044ccc471d5b0f33c7cb6c351`. Canonical and installed
+universal helpers share SHA-256
+`1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215` and pass strict signature
+verification. Focused verification passes 68 tests. Blockers `blk-2e4cdda1f16ac56cd88f42bc` and
+`blk-1f156964710b5ec965f508ce` are same-path verified and closed. The controller completed at proof
+event `184b7a90fa862ae433413da430535ab7971cbe75d156a3e1218b56c2ce129904`; final authorization has
+blocker-closeout SHA-256 `55f3036be662ece9e61529f84c894632656eeb43a68d74fcdf25065e62c60af3`,
+two linked occurrences, and zero blocking occurrences. Two deterministic approaches, six frozen
+real cases, two installed projections, one native operator decision, and zero model calls were
+used. The eventual relevant-only publish scope must include `operations/blockers/BLOCKERS.md` and
+`operations/work-memory/events.jsonl`. Kamen authorized relevant-only publication on 2026-09-05.
+The code and replay-input commit is `7f8c13af08014f61b7a06308c36102b0ca3da51b`; the deciding-
+experiment evidence commit is `ffc7a9a5e12ff091a871082faeba1ae04ffe0f33`. Validation,
+blocker records, and this ledger travel in the final bounded closeout commit. Older untracked runs
+and generated duplicate source trees remain excluded.

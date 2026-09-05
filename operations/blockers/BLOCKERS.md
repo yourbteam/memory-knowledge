@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `86e8b7a10c40b9563606d964e82fdea32f46d7cf7d3ed08e281f82dbf040a441`
+Ledger-SHA256: `da02d8ca0ee560478a4fb2e08f1f6da67b867d79da473a620070e78887e534eb`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -111,6 +111,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `up-harness cd-s-002 live drive`
 - Symptom: A validated final strategy brief was refused whole by the claim audit. The message named nothing against a 52,000-character document; the real cause was seven table rows whose clearance and flag cells were left blank, which the auditor rejects.
 - Evidence: up-run-e853bc59cc26: final_strategy_validation valid, gate issues ['unsupported_markdown_syntax']; reproduction against the stored candidate isolated the seven rows
+
+## blk-01c986fc3547c192005e6e33
+
+- Status: `closed`
+- Subject: `critique-machinery-atom-14-installed-runtime`
+- Step: `atom-14-installed-controller`
+- Surface: `installed-client-projection`
+- Symptom: both-installed-controllers-exit-before-request-validation
+- Evidence: Tasks/critique-machinery/atom-14/operator-validation/installed-controller-failure
 
 ## blk-01fb8f61bf3ddba46341a3ec
 
@@ -1432,6 +1441,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: broad snapshot restore attempted to overwrite protected nested .plan-playbook source snapshots and cp returned permission denied
 - Evidence: cp -R snapshot/. task-root failed on immutable .plan-playbook/source-snapshots files
 
+## blk-1f156964710b5ec965f508ce
+
+- Status: `closed`
+- Subject: `critique-machinery-atom-15`
+- Step: `atom-15-installed-closeout`
+- Surface: `atom-building-machinery/installed-controller`
+- Symptom: Installed controller starts a United Partners atom but refuses authorize-next and record-validation
+- Evidence: Tasks/critique-machinery/atom-15/frozen-real/installed-claude-authorize-next.stderr.txt
+
 ## blk-1f1e5f4e40827f9918b43438
 
 - Status: `non-gap`
@@ -2025,6 +2043,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-dependency-manifest`
 - Symptom: The dependency manifest could not be patched because its canonical JSON is stored on one line.
 - Evidence: apply_patch found no standalone dependency object line; no bytes were changed.
+
+## blk-2e4cdda1f16ac56cd88f42bc
+
+- Status: `closed`
+- Subject: `critique-machinery-atom-15`
+- Step: `atom-15-visible-request-identity`
+- Surface: `atom-building-machinery/native-approval`
+- Symptom: Native approval window identifies only the prose field and repository
+- Evidence: Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md
 
 ## blk-2e65432f8ed08537a4557b65
 

@@ -1,0 +1,14 @@
+{
+  "case_id": "published-blocker-evidence",
+  "status": "satisfied",
+  "files_in_eventual_publish_scope": [
+    "operations/blockers/BLOCKERS.md",
+    "operations/work-memory/events.jsonl"
+  ],
+  "atom_15_blockers": [
+    "blk-2e4cdda1f16ac56cd88f42bc",
+    "blk-1f156964710b5ec965f508ce"
+  ],
+  "remaining_blocking_occurrences": 0,
+  "reason": "Both blocker records and their verification events are present in the relevant-only change surface that a later authorized publish must include."
+}

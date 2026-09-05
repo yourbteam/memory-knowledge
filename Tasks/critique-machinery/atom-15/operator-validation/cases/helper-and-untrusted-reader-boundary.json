@@ -1,0 +1,11 @@
+{
+  "case_id": "helper-and-untrusted-reader-boundary",
+  "status": "satisfied",
+  "observed": "The rebuilt installed helpers each verified the existing receipt after the operator granted their path-specific Keychain access.",
+  "policy": "Only the installed helper path may receive Keychain access. An unanswered dialog from security, a shell, or another reader is not a policy denial and must never be approved as evidence.",
+  "evidence": [
+    "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/skills/atom-building-machinery/SKILL.md",
+    "../native-new-request/prose-waiver-receipt.json"
+  ],
+  "reason": "The operator guidance now describes the real rebuild prompt and the untrusted-reader boundary without claiming an unanswered dialog enforced policy."
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "skill": "atom-building-machinery",
+  "canonical_sha256": "6b7f916a011e12aafc60152e5710be39d05eafecc28cfd1d618da35edeb9837b",
+  "codex_projection_sha256": "2237b39e472be20d8b818e05b25e5c431f8672fd324b9d1537038027549e610e",
+  "claude_projection_sha256": "da3a39e29794159cd5d71218074c69ed5fb74ef044ccc471d5b0f33c7cb6c351",
+  "helper_sha256": "1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215",
+  "managed_source_repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "support_files": {
+    "scripts/blocker_catalog.py": "5345c711bd213ef0ecc19fab0f0dd79098e8665c1f73393239f1b79e85d8dbd4",
+    "scripts/work_memory.py": "7f295a739ce1136287a17fae6b05147ebb005038f3729a3d8e9f484e676057fd"
+  },
+  "clients": [
+    "/Users/kamenkamenov/.codex/skills/atom-building-machinery",
+    "/Users/kamenkamenov/.claude/skills/atom-building-machinery"
+  ]
+}
