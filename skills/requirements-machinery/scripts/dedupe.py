@@ -18,6 +18,7 @@ by the owner on 2026-08-24. The record behind each part:
 """
 import importlib.util
 import re
+from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -30,6 +31,8 @@ def _load(name):
 
 
 interview = _load("interview")
+comparison_cache = _load("comparison_cache")
+MAX_WORKERS = 4
 
 ASKS = 4
 JACCARD_FLOOR = 0.15     # below the weakest verified reworded repeat (0.172), measured
@@ -77,29 +80,52 @@ def verdict(votes, pair_cover):
     return "owner"
 
 
-def judge(entries, reader_command):
-    """Returns (merge_pairs, owner_pairs, detail). Entries are texts; pairs are 1-based."""
-    merged, owner, detail = set(), set(), []
+def _owner_fixed(votes):
+    return None in votes or ("YES" in votes and "NO" in votes)
+
+
+def read_pair(a, b, reader_command, pair, *, cache_dir=None, namespace="", stage="dedupe"):
+    """Resume the exact paid vote prefix; stop only when every completion means owner."""
+    identity = {"left": a, "right": b, "reader_command": reader_command,
+                "prompt": ASK, "asks": ASKS, "jaccard_floor": JACCARD_FLOOR,
+                "gray_cover": GRAY_COVER, "namespace": namespace, "stage": stage,
+                "policy": "unanimity-with-irrevocable-owner-v1"}
+    with comparison_cache.checkpoint(cache_dir, identity) as (votes, save):
+        while len(votes) < ASKS and not _owner_fixed(votes):
+            raw = interview.ask_free(reader_command, ASK.format(a=a, b=b),
+                                     stage=stage, piece=f"{pair[0]}-{pair[1]}")
+            answer = next((re.sub(r"[^A-Z]", "", line.upper())
+                           for line in raw.split("\n")
+                           if re.sub(r"[^A-Z]", "", line.upper()) in ("YES", "NO")), None)
+            votes.append(answer)
+            save(votes)
+    return votes, verdict(votes, cover(a, b))
+
+
+def judge(entries, reader_command, *, cache_dir=None, namespace="", max_workers=MAX_WORKERS):
+    """Independent pairs run concurrently; ordered output and unanimous verdicts stay stable."""
+    if not isinstance(max_workers, int) or isinstance(max_workers, bool) or not 1 <= max_workers <= MAX_WORKERS:
+        raise ValueError(f"comparison concurrency must be between 1 and {MAX_WORKERS}")
+    planned = []
     for i in range(len(entries)):
         for j in range(i + 1, len(entries)):
             a, b = entries[i], entries[j]
             if code_merges(a, b):
-                merged.add((i + 1, j + 1))
-                detail.append({"pair": [i + 1, j + 1], "by": "code"})
+                planned.append((i + 1, j + 1, "code"))
             elif _jaccard(a, b) >= JACCARD_FLOOR:
-                votes = []
-                for _ in range(ASKS):
-                    raw = interview.ask_free(reader_command, ASK.format(a=a, b=b),
-                                             stage="dedupe", piece=f"{i + 1}-{j + 1}")
-                    answer = next((re.sub(r"[^A-Z]", "", l.upper())
-                                   for l in raw.split("\n")
-                                   if re.sub(r"[^A-Z]", "", l.upper()) in ("YES", "NO")), None)
-                    votes.append(answer)
-                v = verdict(votes, cover(a, b))
-                if v == "merge":
-                    merged.add((i + 1, j + 1))
-                elif v == "owner":
-                    owner.add((i + 1, j + 1))
-                detail.append({"pair": [i + 1, j + 1], "by": "reader", "votes": votes,
-                               "cover": round(cover(a, b), 2), "verdict": v})
+                planned.append((i + 1, j + 1, "reader"))
+    def compare(row):
+        i, j, kind = row
+        if kind == "code":
+            return {"pair": [i, j], "by": "code"}
+        a, b = entries[i - 1], entries[j - 1]
+        votes, decision = read_pair(a, b, reader_command, (i, j),
+                                    cache_dir=cache_dir, namespace=namespace)
+        return {"pair": [i, j], "by": "reader", "votes": votes,
+                "cover": round(cover(a, b), 2), "verdict": decision}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        detail = list(executor.map(compare, planned))
+    merged = [tuple(row["pair"]) for row in detail
+              if row["by"] == "code" or row.get("verdict") == "merge"]
+    owner = [tuple(row["pair"]) for row in detail if row.get("verdict") == "owner"]
     return sorted(merged), sorted(owner), detail

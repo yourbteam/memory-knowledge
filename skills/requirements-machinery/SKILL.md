@@ -222,7 +222,13 @@ owner queue is empty. A genuinely pending item still refuses. Thus a dispute-fre
 run with an explicitly stored empty map produce byte-identical documents.
 
 It runs over the register's pieces, never over the document, so it cannot quietly judge a subset.
-State is written after every piece, so a long run resumes where it stopped.
+State is written after every piece, so a long run resumes where it stopped. Complete input receipts bind each
+reader's batches to the exact source and target. Both relevance readers receive every complete
+sentence batch; obligation batches preserve whole units and their global numbers, including long
+units. No prefix is substituted for the complete piece. Missing answers remain incomplete.
+Saved answers from before these receipts, or from changed inputs, cannot certify a new result:
+open the source in a fresh work directory and rerun extraction. Existing runs and owner rulings
+remain available for inspection.
 
 `bearing` is how that answer comes out, and it obeys the same rule as everything else here: it
 refuses while any piece is unjudged, naming how many and which. The verdicts printed during a run
@@ -233,6 +239,12 @@ reads exactly like a finished one.
 contain, must say, or must be checked against. Code cuts the piece into numbered lines and the model
 only says which of them are obligations, so the candidate set is never the model's to choose. Every
 line kept is checked verbatim against the piece it came from.
+
+Duplicate comparisons run at most four independent pairs concurrently. Votes within a pair stay
+sequential and stop early only when disagreement or an unanswered vote makes the owner's decision
+unavoidable. Exact-input checkpoints preserve each completed vote, so interrupted comparisons
+resume without paying for those votes again. Source wording, target, reader command, and comparison
+policy changes select different checkpoints. All unanimous merge/apart rules remain the same.
 
 `obligation-list` hands that back, under the same rule again: it refuses while relevance is
 unfinished, and while any admitted piece has not been read. When a piece is neither in nor out — the
@@ -292,3 +304,36 @@ It does not cast an owner's decision. Readers may extract, compare, and phrase r
 split relevance call, an unresolved merge, or any other owner-queued choice remains unsettled until
 `answer-owner` records one of the choices actually offered. The machinery can produce requirements
 and assemble their document; it cannot silently turn model agreement into owner authority.
+
+
+## Assess a finished requirements document
+
+Run a separate, reference-relative assessment when an independently prepared reference is
+available. This examines the finished Markdown itself. It does not establish that the reference
+contains every duty in the source.
+
+```sh
+python3 scripts/assess_output.py --reference reference.json --document requirements.md --report assessment.json --reader-command '<configured reader command>'
+```
+
+Use the exact reader command required by the installed client's policy. The reference JSON has
+`schema_version: 1`, `scope: "reference-relative"`, a `target`, a `source` object with `path` and
+`sha256`, and nonempty `duties` containing unique `id` values and verbatim source `quote` values.
+Relative source paths resolve beside the reference file. The source must be UTF-8 text, and its
+hash and every quote are checked before any reader call.
+
+Two independent readers assess each reference duty against the complete requirements list,
+each requirement against all reference quotes, and each nonidentical requirement pair for
+complete duplication. No input is clipped. A disagreement, unanswered call, or uncertain answer
+remains uncertain. Identical statements count as duplicates directly. The report preserves each
+reader's attempts, input hashes, omissions, unsupported requirements relative to the reference,
+duplicate pairs, uncertainty, and the number of recorded owner rulings. It qualifies an output
+only when none of those quality issues remains. Reader agreement does not prove the reference
+exhaustive, and missing reference support does not by itself prove a duty was invented.
+
+The input must use the machinery's numbered `## The requirements` section and its
+`## Owner rulings (recorded)` section. Malformed or empty requirement inventories are refused.
+The command creates an assessment report and leaves the source, reference, and document intact.
+Up to four independent checks run concurrently; each check keeps its two blind reader seats.
+For N requirements and D reference duties, the upper bound is two reader decisions for each of
+D + N + N(N−1)/2 checks; exact duplicate pairs need no reader.

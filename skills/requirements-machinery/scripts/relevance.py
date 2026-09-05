@@ -29,6 +29,10 @@ _rspec = importlib.util.spec_from_file_location(
 _reflow = importlib.util.module_from_spec(_rspec)
 _rspec.loader.exec_module(_reflow)
 
+_cspec = importlib.util.spec_from_file_location("reader_coverage", Path(__file__).resolve().parent / "reader_coverage.py")
+coverage = importlib.util.module_from_spec(_cspec)
+_cspec.loader.exec_module(coverage)
+
 STRATEGY = "grounded"
 
 QUESTION = (
@@ -91,24 +95,31 @@ def judge(page_text, target, reader_command, quotecheck, piece=None):
     # mid-sentence. quotecheck flattens whitespace on both sides, so a quote taken from the
     # reflowed text still verifies against the piece as stored.
     shown = "\n".join(_reflow.units(page_text, min_chars=1))
+    batches = coverage.text_batches(shown)
     seats = []
     for seat in (1, 2):
-        answer, transcript = interview.ask_choice(
-            reader_command, QUESTION.format(target=target, page=shown[:6000]), CHOICES,
-            stage="relevance", piece=piece, seat=seat)
-        quote, quote_attempts, denied = None, [], False
-        if answer == "YES":
-            quote, qt = interview.ask_quote(
-                reader_command, QUOTE_QUESTION.format(target=target, page=shown[:6000]),
-                page_text, quotecheck, stage="relevance", piece=piece, seat=seat)
-            # Recorded because the first version kept only the choice attempts, and on the two
-            # pieces that failed at the quoting step the record could not say what came back.
-            quote_attempts = [t["raw_first_line"] for t in qt]
-            # An explicit no-such-words reply ended the quoting without a retry; the yes stands
-            # ungrounded rather than pressed into a quote (the p-0004 coercion, 2026-08-25).
-            denied = any(t.get("denied") for t in qt)
-        seats.append({"seat": seat, "answer": answer, "quote": quote,
-                      "attempts": [t["raw_first_line"] for t in transcript],
-                      "quote_attempts": quote_attempts,
-                      **({"denied": True} if denied else {})})
+        readings = []
+        for index, batch in enumerate(batches, 1):
+            context = f"Section {index} of {len(batches)} of the same page.\n"
+            answer, transcript = interview.ask_choice(
+                reader_command, context + QUESTION.format(target=target, page=batch["text"]),
+                CHOICES, stage="relevance", piece=piece, seat=seat)
+            quote, qt = None, []
+            if answer == "YES":
+                quote, qt = interview.ask_quote(
+                    reader_command, context + QUOTE_QUESTION.format(target=target, page=batch["text"]),
+                    batch["text"], quotecheck, stage="relevance", piece=piece, seat=seat)
+            readings.append({"batch": index, "start": batch["start"], "end": batch["end"],
+                             "shown_sha256": coverage.digest(batch["text"]),
+                             "answer": answer, "quote": quote,
+                             "attempts": [t["raw_first_line"] for t in transcript],
+                             "quote_attempts": [t["raw_first_line"] for t in qt],
+                             "denied": any(t.get("denied") for t in qt)})
+        answers = [r["answer"] for r in readings]
+        answer = None if None in answers else "YES" if "YES" in answers else "NO"
+        quotes = list(dict.fromkeys(r["quote"] for r in readings if r["quote"]))
+        seats.append({"seat": seat, "answer": answer, "quote": quotes[0] if quotes else None,
+                      "quotes": quotes, "attempts": [a for r in readings for a in r["attempts"]],
+                      "quote_attempts": [a for r in readings for a in r["quote_attempts"]],
+                      "coverage": coverage.receipt(page_text, target, readings, None not in answers)})
     return verdict(seats), seats

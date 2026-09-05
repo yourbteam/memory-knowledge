@@ -56,6 +56,32 @@ def answer_all_pieces(run: Path, state: dict) -> None:
         }
 
 
+def seed_reader_coverage(run: Path, state: dict, target: str, *, bears=False,
+                         include_obligations=False) -> None:
+    """Use production readers and receipt construction with only the model edge substituted."""
+    relevance = load("fixture_relevance", MACHINERY / "scripts" / "relevance.py")
+    obligations = load("fixture_obligations", MACHINERY / "scripts" / "obligations.py")
+    checker = load("fixture_quotecheck", MACHINERY / "scripts" / "quotecheck.py")
+    relevance.interview.ask_choice = lambda *_args, **_kwargs: ("YES" if bears else "NO", [])
+    relevance.interview.ask_quote = lambda _reader, _question, source, _checker, **_labels: (source, [])
+    obligations.interview.ask_free = lambda *_args, **_kwargs: "NONE"
+    rows = {}
+    for piece in state["pieces"]:
+        piece_id = piece["id"]
+        text = (run / "pieces" / f"{piece_id}.txt").read_text(encoding="utf-8")
+        verdict, seats = relevance.judge(text, target, "fixture-reader", checker, piece=piece_id)
+        rows[piece_id] = {"verdict": verdict, "seats": seats, "at": 1}
+        if include_obligations:
+            found, offered, cuts = obligations.extract(text, target, "fixture-reader", checker,
+                admitted_on=[quote for seat in seats for quote in seat.get("quotes", [])], piece=piece_id)
+            state.setdefault("obligations", {}).setdefault(target, {})[piece_id] = {
+                "obligations": found, "units_offered": offered, "by_cut": cuts,
+                "coverage": obligations.coverage.receipt(text, target,
+                    [{"cut": name, **cut["coverage"]} for name, cut in cuts.items()]),
+            }
+    state["relevance"] = {"last": target, "targets": {target: {"pieces": rows}}}
+
+
 def test_published_command_surface_matches_real_cli() -> None:
     completed = subprocess.run(
         [
@@ -459,7 +485,7 @@ def test_reader_policy_is_validated_at_every_cli_command_boundary() -> None:
         (run / "pieces").mkdir(parents=True)
         piece = "Reader policy fixture."
         (run / "pieces" / "p-0001.txt").write_text(piece, encoding="utf-8")
-        (run / "coverage.json").write_text(json.dumps(bind_run_identity(run, {
+        state = bind_run_identity(run, {
             "source": "fixture.pdf", "source_sha256": "a" * 64,
             "strategy": "fixture", "opened_at": 0,
             "pieces": [{"id": "p-0001", "chars": len(piece),
@@ -469,7 +495,9 @@ def test_reader_policy_is_validated_at_every_cli_command_boundary() -> None:
                     "verdict": "does-not-bear", "seats": [], "at": 1,
                 }}}
             }},
-        })), encoding="utf-8")
+        })
+        seed_reader_coverage(run, state, "target requirements")
+        (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
         feed = run / "feed.jsonl"
         env = os.environ.copy()
         env["REQ_MACHINERY_FEED"] = str(feed)
@@ -553,6 +581,7 @@ def test_completed_empty_obligations_are_distinct_from_absence() -> None:
         }
         state_path = run / "coverage.json"
         bind_run_identity(run, state)
+        seed_reader_coverage(run, state, target)
         state_path.write_text(json.dumps(state), encoding="utf-8")
 
         assert cover.collapse(run, "unused-reader") == 3
@@ -724,6 +753,10 @@ def test_conflicting_source_selection_reopens_and_corrects_through_cli() -> None
                 {"piece": "p-0002", "text": dropped},
             ]}},
         })
+        (run / "pieces" / "p-0001.txt").write_text(kept, encoding="utf-8")
+        (run / "pieces" / "p-0002.txt").write_text(dropped, encoding="utf-8")
+        bind_run_identity(run, state)
+        seed_reader_coverage(run, state, target, bears=True, include_obligations=True)
         answer_all_pieces(run, state)
         (run / "coverage.json").write_text(json.dumps(state), encoding="utf-8")
 

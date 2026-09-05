@@ -35,8 +35,12 @@ _rspec = importlib.util.spec_from_file_location(
 _reflow = importlib.util.module_from_spec(_rspec)
 _rspec.loader.exec_module(_reflow)
 
+_cspec = importlib.util.spec_from_file_location("reader_coverage", Path(__file__).resolve().parent / "reader_coverage.py")
+coverage = importlib.util.module_from_spec(_cspec)
+_cspec.loader.exec_module(coverage)
+
 STRATEGY = "code-cuts-then-judge"
-MIN_CHARS = 25
+MIN_CHARS = 1
 
 ASK = ("Below is one page of a corporate communications methodology library, cut into numbered "
        "lines by code.\n\nWhich of these lines state an obligation on {target} — something it must "
@@ -63,27 +67,37 @@ def units(piece_text):
 
 def candidate_units(piece_text):
     """Return the deterministic units each obligation-reader cut receives."""
-    page_len = len(_reflow.flow(piece_text))
-    return {
-        name: [u for u in cut(piece_text, MIN_CHARS)
-               if len(u) <= 600 or len(u) <= 0.5 * page_len]
-        for name, cut in _reflow.CUTS.items()
-    }
+    return {name: cut(piece_text, MIN_CHARS) for name, cut in _reflow.CUTS.items()}
 
 
-def _ask_one_cut(candidates, target, reader_command, piece_text, quotecheck, piece=None):
-    """One cut, one ask. Returns what it picked, verified verbatim against the piece."""
-    if not candidates:
-        return []
-    numbered = "\n".join(f"{i}. {u}" for i, u in enumerate(candidates, 1))
-    raw = interview.ask_free(reader_command, ASK.format(target=target, numbered=numbered[:9000]),
-                             stage="obligations", piece=piece)
+def _ask_one_cut(candidates, target, reader_command, piece_text, quotecheck, piece=None,
+                 receipts=None):
+    """Every complete unit is offered; malformed replies fail instead of becoming empty picks."""
     picked = []
-    for line in raw.split("\n"):
-        m = re.match(r"^\s*(\d{1,3})\s*[.):]?\s*$", line)
-        if m and 1 <= int(m.group(1)) <= len(candidates):
-            picked.append(candidates[int(m.group(1)) - 1])
-    return [u for u in dict.fromkeys(picked) if quotecheck.check(u, piece_text)]
+    for batch in coverage.unit_batches(candidates):
+        numbered = "\n".join(row["line"] for row in batch)
+        raw = interview.ask_free(reader_command, ASK.format(target=target, numbered=numbered),
+                                 stage="obligations", piece=piece)
+        ids = {row["id"] for row in batch}
+        selected = []
+        if raw.strip() != "NONE":
+            lines = raw.strip().splitlines()
+            if not lines:
+                raise ValueError("obligation reader returned no answer; input coverage is incomplete")
+            for line in lines:
+                match = re.fullmatch(r"\s*(\d+)\s*[.):]?\s*", line)
+                if not match or int(match.group(1)) not in ids:
+                    raise ValueError("obligation reader returned an invalid selection; input coverage is incomplete")
+                selected.append(int(match.group(1)))
+        chosen = [row["text"] for row in batch if row["id"] in selected]
+        if any(not quotecheck.check(unit, piece_text) for unit in chosen):
+            raise ValueError("selected obligation does not match its source")
+        picked.extend(chosen)
+        if receipts is not None:
+            receipts.append({"unit_ids": sorted(ids), "shown_sha256": coverage.digest(numbered),
+                             "shown_characters": len(numbered), "selected_ids": sorted(set(selected)),
+                             "answer": raw})
+    return list(dict.fromkeys(picked))
 
 
 def extract(piece_text, target, reader_command, quotecheck, admitted_on=(), piece=None):
@@ -91,6 +105,19 @@ def extract(piece_text, target, reader_command, quotecheck, admitted_on=(), piec
 
     `admitted_on` carries the verbatim quotes the relevance pass admitted this piece on; they
     are unioned with the picks so the two passes cannot contradict each other about the page.
+
+    The active code-owned cuts in reflow.CUTS determine the candidate set. Every
+    nonempty unit is offered intact, across as many numbered batches as necessary.
+    Oversized indivisible units travel alone instead of being dropped or clipped.
+    Each cut retains its selected units and source-bound batch receipts.
+
+    Selections are expanded to their surrounding source statement and contained
+    duplicates are removed. The reader-call cost is the number of batches across
+    the active cuts, rather than a fixed number of calls per piece.
+
+    Historical comparison notes below describe superseded cuts and candidate filtering;
+    current batching offers all structural units intact. These notes retain their
+    original wording for the unverified empirical claim inventory.
 
     The page is cut four ways and each cut is asked on its own, because no single cut is right for
     a whole page. Measured on the ten admitted pages: cutting by line left 17 of 22 obligations
@@ -119,8 +146,11 @@ def extract(piece_text, target, reader_command, quotecheck, admitted_on=(), piec
     picked, offered, by_cut = [], 0, {}
     for name, candidates in candidate_units(piece_text).items():
         offered += len(candidates)
-        mine = _ask_one_cut(candidates, target, reader_command, piece_text, quotecheck, piece=piece)
-        by_cut[name] = {"offered": len(candidates), "picked": mine}
+        receipts = []
+        mine = _ask_one_cut(candidates, target, reader_command, piece_text, quotecheck, piece=piece,
+                            receipts=receipts)
+        by_cut[name] = {"offered": len(candidates), "picked": mine,
+                        "coverage": coverage.receipt(piece_text, target, receipts)}
         picked += mine
 
     # The quotes that admitted this piece are obligations two blind relevance readers already
