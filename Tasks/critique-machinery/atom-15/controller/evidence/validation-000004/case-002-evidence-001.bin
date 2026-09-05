@@ -1,0 +1,18 @@
+{
+  "case_id": "installed-controller-cannot-close-up-atom",
+  "status": "satisfied",
+  "codex": {
+    "run": "../codex-record-validation-replay",
+    "stage": "complete",
+    "validation_event_sha256": "13df20c34e7ed368daea55d12603a9803b100d1bdf08c335c00d8842eee53406",
+    "authorize_next": "authorized"
+  },
+  "claude": {
+    "run": "../claude-record-validation-replay",
+    "stage": "complete",
+    "validation_event_sha256": "cb86f58dc21585ea9c7700eca3669cd72b6d9ae8a2e82aa71667accf03168b56",
+    "authorize_next": "authorized"
+  },
+  "tampered_provenance": "refused with managed-install refresh guidance",
+  "reason": "Each installed projection completed record-validation and authorize-next for a United Partners atom by resolving exact hash-bound support from the managed source repository."
+}

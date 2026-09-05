@@ -1,0 +1,25 @@
+{
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "approach_id": "bound-managed-source",
+      "artifact": "approval-and-closeout-winner",
+      "bundle": "probes/approval-and-installed-closeout-boundary/bundles/bound-managed-source",
+      "bundle_sha256": "30eb2621f4f665d153c021f8aa11ab4bc67e8bee10922d5819aa6b221acc2d85",
+      "case_ids": [
+        "approval-window-omits-atom-identity",
+        "installed-controller-cannot-close-up-atom",
+        "existing-native-receipt",
+        "helper-and-untrusted-reader-boundary",
+        "parent-process-telemetry",
+        "published-blocker-evidence"
+      ],
+      "probe_id": "approval-and-installed-closeout-boundary",
+      "recommendation": "probes/approval-and-installed-closeout-boundary/recommendation.json"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "candidates-ready"
+}

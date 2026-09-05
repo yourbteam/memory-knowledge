@@ -1,0 +1,319 @@
+{
+  "completion_order": [
+    "existing-native-receipt",
+    "installed-controller-cannot-close-up-atom",
+    "approval-window-omits-atom-identity",
+    "helper-and-untrusted-reader-boundary",
+    "published-blocker-evidence",
+    "parent-process-telemetry"
+  ],
+  "results": [
+    {
+      "case_id": "approval-window-omits-atom-identity",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/approval-window-omits-atom-identity/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/approval-window-omits-atom-identity/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/approval-window-omits-atom-identity/telemetry.jsonl",
+          "sha256": "43c6a20a36f98e76d3c95e9c671a938363574ab0b33d9dc54979825c0264c287"
+        }
+      ],
+      "output": "executions/approval-window-omits-atom-identity",
+      "result": {
+        "error": null,
+        "metrics": {
+          "accurate-operator-guidance": 1,
+          "bounded-legacy-receipt-compatibility": 1,
+          "frozen-input-unchanged": 1,
+          "managed-closeout-provenance": 1,
+          "signed-atom-and-request-binding": 1,
+          "truthful-parent-telemetry": 1,
+          "visible-exact-request-identity": 1
+        },
+        "outcome": {
+          "case_sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+          "source_checks": {
+            "accurate-operator-guidance": 1,
+            "bounded-legacy-receipt-compatibility": 1,
+            "frozen-input-unchanged": 1,
+            "managed-closeout-provenance": 1,
+            "signed-atom-and-request-binding": 1,
+            "truthful-parent-telemetry": 1,
+            "visible-exact-request-identity": 1
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "installed-controller-cannot-close-up-atom",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/installed-controller-cannot-close-up-atom/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/installed-controller-cannot-close-up-atom/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/installed-controller-cannot-close-up-atom/telemetry.jsonl",
+          "sha256": "43c6a20a36f98e76d3c95e9c671a938363574ab0b33d9dc54979825c0264c287"
+        }
+      ],
+      "output": "executions/installed-controller-cannot-close-up-atom",
+      "result": {
+        "error": null,
+        "metrics": {
+          "accurate-operator-guidance": 1,
+          "bounded-legacy-receipt-compatibility": 1,
+          "frozen-input-unchanged": 1,
+          "managed-closeout-provenance": 1,
+          "signed-atom-and-request-binding": 1,
+          "truthful-parent-telemetry": 1,
+          "visible-exact-request-identity": 1
+        },
+        "outcome": {
+          "case_sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+          "source_checks": {
+            "accurate-operator-guidance": 1,
+            "bounded-legacy-receipt-compatibility": 1,
+            "frozen-input-unchanged": 1,
+            "managed-closeout-provenance": 1,
+            "signed-atom-and-request-binding": 1,
+            "truthful-parent-telemetry": 1,
+            "visible-exact-request-identity": 1
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "existing-native-receipt",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/existing-native-receipt/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/existing-native-receipt/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/existing-native-receipt/telemetry.jsonl",
+          "sha256": "34084a9bc3a17a343dd010d0c40a3cfd41aac5e618df88efd3bda6cfcc930b1d"
+        }
+      ],
+      "output": "executions/existing-native-receipt",
+      "result": {
+        "error": null,
+        "metrics": {
+          "accurate-operator-guidance": 1,
+          "bounded-legacy-receipt-compatibility": 1,
+          "frozen-input-unchanged": 1,
+          "managed-closeout-provenance": 1,
+          "signed-atom-and-request-binding": 1,
+          "truthful-parent-telemetry": 1,
+          "visible-exact-request-identity": 1
+        },
+        "outcome": {
+          "case_sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c",
+          "source_checks": {
+            "accurate-operator-guidance": 1,
+            "bounded-legacy-receipt-compatibility": 1,
+            "frozen-input-unchanged": 1,
+            "managed-closeout-provenance": 1,
+            "signed-atom-and-request-binding": 1,
+            "truthful-parent-telemetry": 1,
+            "visible-exact-request-identity": 1
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "helper-and-untrusted-reader-boundary",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/helper-and-untrusted-reader-boundary/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/helper-and-untrusted-reader-boundary/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/helper-and-untrusted-reader-boundary/telemetry.jsonl",
+          "sha256": "43c6a20a36f98e76d3c95e9c671a938363574ab0b33d9dc54979825c0264c287"
+        }
+      ],
+      "output": "executions/helper-and-untrusted-reader-boundary",
+      "result": {
+        "error": null,
+        "metrics": {
+          "accurate-operator-guidance": 1,
+          "bounded-legacy-receipt-compatibility": 1,
+          "frozen-input-unchanged": 1,
+          "managed-closeout-provenance": 1,
+          "signed-atom-and-request-binding": 1,
+          "truthful-parent-telemetry": 1,
+          "visible-exact-request-identity": 1
+        },
+        "outcome": {
+          "case_sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+          "source_checks": {
+            "accurate-operator-guidance": 1,
+            "bounded-legacy-receipt-compatibility": 1,
+            "frozen-input-unchanged": 1,
+            "managed-closeout-provenance": 1,
+            "signed-atom-and-request-binding": 1,
+            "truthful-parent-telemetry": 1,
+            "visible-exact-request-identity": 1
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "parent-process-telemetry",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/parent-process-telemetry/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/parent-process-telemetry/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/parent-process-telemetry/telemetry.jsonl",
+          "sha256": "43c6a20a36f98e76d3c95e9c671a938363574ab0b33d9dc54979825c0264c287"
+        }
+      ],
+      "output": "executions/parent-process-telemetry",
+      "result": {
+        "error": null,
+        "metrics": {
+          "accurate-operator-guidance": 1,
+          "bounded-legacy-receipt-compatibility": 1,
+          "frozen-input-unchanged": 1,
+          "managed-closeout-provenance": 1,
+          "signed-atom-and-request-binding": 1,
+          "truthful-parent-telemetry": 1,
+          "visible-exact-request-identity": 1
+        },
+        "outcome": {
+          "case_sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+          "source_checks": {
+            "accurate-operator-guidance": 1,
+            "bounded-legacy-receipt-compatibility": 1,
+            "frozen-input-unchanged": 1,
+            "managed-closeout-provenance": 1,
+            "signed-atom-and-request-binding": 1,
+            "truthful-parent-telemetry": 1,
+            "visible-exact-request-identity": 1
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "published-blocker-evidence",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/published-blocker-evidence/stdout.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/published-blocker-evidence/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/published-blocker-evidence/telemetry.jsonl",
+          "sha256": "43c6a20a36f98e76d3c95e9c671a938363574ab0b33d9dc54979825c0264c287"
+        }
+      ],
+      "output": "executions/published-blocker-evidence",
+      "result": {
+        "error": null,
+        "metrics": {
+          "accurate-operator-guidance": 1,
+          "bounded-legacy-receipt-compatibility": 1,
+          "frozen-input-unchanged": 1,
+          "managed-closeout-provenance": 1,
+          "signed-atom-and-request-binding": 1,
+          "truthful-parent-telemetry": 1,
+          "visible-exact-request-identity": 1
+        },
+        "outcome": {
+          "case_sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+          "source_checks": {
+            "accurate-operator-guidance": 1,
+            "bounded-legacy-receipt-compatibility": 1,
+            "frozen-input-unchanged": 1,
+            "managed-closeout-provenance": 1,
+            "signed-atom-and-request-binding": 1,
+            "truthful-parent-telemetry": 1,
+            "visible-exact-request-identity": 1
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

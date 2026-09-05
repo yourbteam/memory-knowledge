@@ -1,0 +1,95 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+        "atomic_step_id": "visible-request-identity-and-installed-closeout",
+        "case_id": "approval-window-omits-atom-identity",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 15 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "approval-window-omits-atom-identity",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+        "atomic_step_id": "visible-request-identity-and-installed-closeout",
+        "case_id": "installed-controller-cannot-close-up-atom",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 15 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "installed-controller-cannot-close-up-atom",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+        "atomic_step_id": "visible-request-identity-and-installed-closeout",
+        "case_id": "existing-native-receipt",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 15 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "existing-native-receipt",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+        "atomic_step_id": "visible-request-identity-and-installed-closeout",
+        "case_id": "helper-and-untrusted-reader-boundary",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 15 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "helper-and-untrusted-reader-boundary",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+        "atomic_step_id": "visible-request-identity-and-installed-closeout",
+        "case_id": "parent-process-telemetry",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 15 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "parent-process-telemetry",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+        "atomic_step_id": "visible-request-identity-and-installed-closeout",
+        "case_id": "published-blocker-evidence",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "all declared Atom 15 candidate facts passed",
+        "status": "satisfied"
+      },
+      "case_id": "published-blocker-evidence",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

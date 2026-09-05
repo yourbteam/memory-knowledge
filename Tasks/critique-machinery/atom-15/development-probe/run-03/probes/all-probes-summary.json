@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "probe_ids": [
+    "approval-and-installed-closeout-boundary"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "2d6b3ae925a3426dd26b3f8ac28d2d46be7ba7034ef0c5be4ca359896ca3aff9",
+  "schema_version": 1,
+  "status": "completed"
+}

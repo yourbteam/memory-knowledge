@@ -1,0 +1,72 @@
+{
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "baseline_sha256": "2af825ca6fbc1f746dff0039729e665423a2d4ee5d320f9c781ff2ff53f76996",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "fcbfcb47c1be7f888b8ed569ddee17750e0b93e5c3efa8b29bf98ce703d2d1cc",
+      "before_mode": 420,
+      "before_sha256": "f3c0be8266535cf2a53c1b6762eb704b12c6fab9da07e8cd874374cf7c55d474",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/SKILL.md"
+    },
+    {
+      "after_mode": 493,
+      "after_sha256": "ab6d3b0d3f84af5ac1ba85b48c5f3ae82627c4aef6cfdc6cb63674958e6c0259",
+      "before_mode": 493,
+      "before_sha256": "67fdb2cb88498f663528adf394c97643f3324a4f37a71d2959da5aa5019a9a17",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py"
+    },
+    {
+      "after_mode": 493,
+      "after_sha256": "1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215",
+      "before_mode": 493,
+      "before_sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "caa39168d9956d5c8a38d6b5b4428cc92dddf489e2c51929bde46ee4e35210b9",
+      "before_mode": 420,
+      "before_sha256": "9fa72811c50c8e9897c26175d0eaa3bc19bb70d42d98f64e3715d2321f441129",
+      "kind": "changed",
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "8e55d005fe2e47f3986f2ff155593a0a9b15ddeebb9714f81ac38207a0059b3e",
+      "before_mode": 420,
+      "before_sha256": "8e6d5c8cc704b6a634ff84a48665ec790391817ac2d49dc1807da10a29dd61a7",
+      "kind": "changed",
+      "path": "tests/test_atom_building_machinery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "a5da10374b0f6c68469855d880517bcdf81a623fc07be484c6621c1a8a6f40fb",
+      "before_mode": 420,
+      "before_sha256": "a12f33acbec783db8a0072f44dc732cf9130762f429ea13c2f0348d35a2971f5",
+      "kind": "changed",
+      "path": "tests/test_install_skills.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "7f3c7a887940e15ba829632b755c2ecd236bad58f1e240c15e9beae16ed1f392",
+      "before_mode": 420,
+      "before_sha256": "8b0bbc9d4f8d418eac9bc7289bd9dba1a8c3dd4db609d1b10ad52d368445e1a2",
+      "kind": "changed",
+      "path": "working-agreement/client-skill-projections.json"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "a1155769291b0e18f8b44616d6f2395af9151ae8f16ba8cac85ef048f9d5c9c0",
+      "before_mode": 420,
+      "before_sha256": "5e577a443bf586531e68822778afd8bf210a2671f459f836583e36d9161cc6b1",
+      "kind": "changed",
+      "path": "working-agreement/install_skills.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

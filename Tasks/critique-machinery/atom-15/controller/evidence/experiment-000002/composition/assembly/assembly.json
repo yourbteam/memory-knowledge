@@ -1,0 +1,183 @@
+{
+  "baseline_sha256": "db5e586270f910faac36a65a11fd85d9948b5ce84d6896af4f0ac8d4f74f8f97",
+  "candidates": [
+    {
+      "approach_id": "bound-managed-source",
+      "artifact": "approval-and-closeout-winner",
+      "bundle_sha256": "30eb2621f4f665d153c021f8aa11ab4bc67e8bee10922d5819aa6b221acc2d85",
+      "probe_id": "approval-and-installed-closeout-boundary"
+    }
+  ],
+  "execution": {
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}",
+      "{frozen-input}",
+      "{result-path}",
+      "{telemetry-path}"
+    ],
+    "protocol": "experiment-result-v1"
+  },
+  "identity": {
+    "atomic_step_id": "visible-request-identity-and-installed-closeout",
+    "development_manifest_sha256": "e1914ae18b7a27c03dc90d1b8abbbf8b5e17913e8c7035a7cbba5de382a37696"
+  },
+  "inputs": [
+    {
+      "case_id": "approval-window-omits-atom-identity",
+      "path": "approval-window-omits-atom-identity.input",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "size": 9019
+    },
+    {
+      "case_id": "installed-controller-cannot-close-up-atom",
+      "path": "installed-controller-cannot-close-up-atom.input",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "size": 9019
+    },
+    {
+      "case_id": "existing-native-receipt",
+      "path": "existing-native-receipt.input",
+      "sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c",
+      "size": 3982
+    },
+    {
+      "case_id": "helper-and-untrusted-reader-boundary",
+      "path": "helper-and-untrusted-reader-boundary.input",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "size": 9019
+    },
+    {
+      "case_id": "parent-process-telemetry",
+      "path": "parent-process-telemetry.input",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "size": 9019
+    },
+    {
+      "case_id": "published-blocker-evidence",
+      "path": "published-blocker-evidence.input",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "size": 9019
+    }
+  ],
+  "operations": [
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "fcbfcb47c1be7f888b8ed569ddee17750e0b93e5c3efa8b29bf98ce703d2d1cc",
+      "size": 13706
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "ab6d3b0d3f84af5ac1ba85b48c5f3ae82627c4aef6cfdc6cb63674958e6c0259",
+      "size": 124949
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval",
+      "sha256": "1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215",
+      "size": 393408
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+      "sha256": "caa39168d9956d5c8a38d6b5b4428cc92dddf489e2c51929bde46ee4e35210b9",
+      "size": 14800
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "8e55d005fe2e47f3986f2ff155593a0a9b15ddeebb9714f81ac38207a0059b3e",
+      "size": 56878
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "tests/test_install_skills.py",
+      "sha256": "a5da10374b0f6c68469855d880517bcdf81a623fc07be484c6621c1a8a6f40fb",
+      "size": 17343
+    },
+    {
+      "action": "change",
+      "contributors": [
+        "approval-and-installed-closeout-boundary"
+      ],
+      "path": "working-agreement/install_skills.py",
+      "sha256": "a1155769291b0e18f8b44616d6f2395af9151ae8f16ba8cac85ef048f9d5c9c0",
+      "size": 12851
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "source": {
+    "entrypoint": "probe_entry.py",
+    "files": [
+      {
+        "path": "probe_entry.py",
+        "sha256": "203e0c97195bd43a46288588dbef08fc95b15667be8fb8edf8cdd726ce438818",
+        "size": 3885
+      },
+      {
+        "path": "skills/atom-building-machinery/SKILL.md",
+        "sha256": "fcbfcb47c1be7f888b8ed569ddee17750e0b93e5c3efa8b29bf98ce703d2d1cc",
+        "size": 13706
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+        "sha256": "ab6d3b0d3f84af5ac1ba85b48c5f3ae82627c4aef6cfdc6cb63674958e6c0259",
+        "size": 124949
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/prose_waiver_approval",
+        "sha256": "1f330774c8e115e2b020a41586531591e195df7c17adcb66d4328b8741f5b215",
+        "size": 393408
+      },
+      {
+        "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+        "sha256": "caa39168d9956d5c8a38d6b5b4428cc92dddf489e2c51929bde46ee4e35210b9",
+        "size": 14800
+      },
+      {
+        "path": "tests/test_atom_building_machinery.py",
+        "sha256": "8e55d005fe2e47f3986f2ff155593a0a9b15ddeebb9714f81ac38207a0059b3e",
+        "size": 56878
+      },
+      {
+        "path": "tests/test_install_skills.py",
+        "sha256": "a5da10374b0f6c68469855d880517bcdf81a623fc07be484c6621c1a8a6f40fb",
+        "size": 17343
+      },
+      {
+        "path": "working-agreement/client-skill-projections.json",
+        "sha256": "8b0bbc9d4f8d418eac9bc7289bd9dba1a8c3dd4db609d1b10ad52d368445e1a2",
+        "size": 11941
+      },
+      {
+        "path": "working-agreement/install_skills.py",
+        "sha256": "a1155769291b0e18f8b44616d6f2395af9151ae8f16ba8cac85ef048f9d5c9c0",
+        "size": 12851
+      }
+    ],
+    "root": "source",
+    "sha256": "1ef40d1850e8655aefa8e05e1afc5d727ec16c4af16adc4c57b5e0e6e9e0967e"
+  },
+  "status": "assembled"
+}

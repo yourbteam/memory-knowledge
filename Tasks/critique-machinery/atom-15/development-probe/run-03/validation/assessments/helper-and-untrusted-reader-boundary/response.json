@@ -1,0 +1,9 @@
+{
+  "case_id": "helper-and-untrusted-reader-boundary",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 15 candidate facts passed",
+  "verdict": "satisfied"
+}

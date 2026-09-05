@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "promotion_event_sha256": "1f9aa7f30978a10cab5d4ecf0554260535c01c7f6acec55f7e1eb2df9e9dd0bb",
+  "cases": [
+    {
+      "case_id": "approval-window-omits-atom-identity",
+      "verdict": "satisfied",
+      "reason": "The code-owned native interaction signed the visible atom id and full request hash, and the installed controller started that exact request.",
+      "evidence": [
+        {
+          "case_id": "approval-window-omits-atom-identity",
+          "path": "../operator-validation/cases/approval-window-omits-atom-identity.json",
+          "sha256": "8fc42e2acd658174d218377e0baf5ff0a5fae2e2caf62aa1648cf9452e86ca7e"
+        }
+      ]
+    },
+    {
+      "case_id": "installed-controller-cannot-close-up-atom",
+      "verdict": "satisfied",
+      "reason": "Both installed projections completed validation and final authorization outside the memory-knowledge repository; tampered provenance refused.",
+      "evidence": [
+        {
+          "case_id": "installed-controller-cannot-close-up-atom",
+          "path": "../operator-validation/cases/installed-controller-cannot-close-up-atom.json",
+          "sha256": "e123a87ea09e45b6914c2e3905f8652b97f5e03f58907365a290435e428579ec"
+        }
+      ]
+    },
+    {
+      "case_id": "existing-native-receipt",
+      "verdict": "satisfied",
+      "reason": "Both installed helpers verified the real Atom 14 receipt for its exact request; bounded compatibility does not relax new atomic-step binding.",
+      "evidence": [
+        {
+          "case_id": "existing-native-receipt",
+          "path": "../operator-validation/cases/existing-native-receipt.json",
+          "sha256": "1c2ebca3f85a14f084ff6b1136630986ab59629724fa8f6e7a8d71b48b39edb4"
+        }
+      ]
+    },
+    {
+      "case_id": "helper-and-untrusted-reader-boundary",
+      "verdict": "satisfied",
+      "reason": "Operator guidance now names the rebuild prompt, trusted helper paths, and the fact that an unanswered untrusted-reader dialog proves no denial.",
+      "evidence": [
+        {
+          "case_id": "helper-and-untrusted-reader-boundary",
+          "path": "../operator-validation/cases/helper-and-untrusted-reader-boundary.json",
+          "sha256": "d806e7737511ab3aab8c62b42d9f0e29de59224c5150767549150861ae994b0d"
+        }
+      ]
+    },
+    {
+      "case_id": "parent-process-telemetry",
+      "verdict": "satisfied",
+      "reason": "The real receipt recorded Python as the observed parent, with unavailable reserved for failed OS resolution.",
+      "evidence": [
+        {
+          "case_id": "parent-process-telemetry",
+          "path": "../operator-validation/cases/parent-process-telemetry.json",
+          "sha256": "9f3110ade5a7c54a4e293e777765905d6f8e0b94c79e66f64ff6c4ffcaa27e6c"
+        }
+      ]
+    },
+    {
+      "case_id": "published-blocker-evidence",
+      "verdict": "satisfied",
+      "reason": "The canonical blocker view and event ledger contain both Atom 15 blocker lifecycles and are explicitly inside the later relevant-only publish scope.",
+      "evidence": [
+        {
+          "case_id": "published-blocker-evidence",
+          "path": "../operator-validation/cases/published-blocker-evidence.json",
+          "sha256": "66816bcd750532c6aee24ccbbe08fe2ac75b18e836040e12b09dec64f5f36757"
+        }
+      ]
+    }
+  ]
+}

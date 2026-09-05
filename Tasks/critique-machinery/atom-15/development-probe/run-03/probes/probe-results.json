@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/approval-and-installed-closeout-boundary",
+      "probe_id": "approval-and-installed-closeout-boundary",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

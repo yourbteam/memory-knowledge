@@ -1,0 +1,65 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval",
+    "working-agreement/install_skills.py",
+    "tests/test_atom_building_machinery.py",
+    "tests/test_install_skills.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "files": [
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/SKILL.md",
+      "sha256": "f3c0be8266535cf2a53c1b6762eb704b12c6fab9da07e8cd874374cf7c55d474",
+      "size": 12492
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/atom_controller.py",
+      "sha256": "67fdb2cb88498f663528adf394c97643f3324a4f37a71d2959da5aa5019a9a17",
+      "size": 122322
+    },
+    {
+      "mode": 493,
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval",
+      "sha256": "5fa86bda2f174f85158488155b0e7fdd908a6952811929daaad1dcc0ce6e766c",
+      "size": 374912
+    },
+    {
+      "mode": 420,
+      "path": "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+      "sha256": "9fa72811c50c8e9897c26175d0eaa3bc19bb70d42d98f64e3715d2321f441129",
+      "size": 13974
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_atom_building_machinery.py",
+      "sha256": "8e6d5c8cc704b6a634ff84a48665ec790391817ac2d49dc1807da10a29dd61a7",
+      "size": 52752
+    },
+    {
+      "mode": 420,
+      "path": "tests/test_install_skills.py",
+      "sha256": "a12f33acbec783db8a0072f44dc732cf9130762f429ea13c2f0348d35a2971f5",
+      "size": 16088
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/client-skill-projections.json",
+      "sha256": "8b0bbc9d4f8d418eac9bc7289bd9dba1a8c3dd4db609d1b10ad52d368445e1a2",
+      "size": 11941
+    },
+    {
+      "mode": 420,
+      "path": "working-agreement/install_skills.py",
+      "sha256": "5e577a443bf586531e68822778afd8bf210a2671f459f836583e36d9161cc6b1",
+      "size": 11917
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903",
+  "schema_version": 1
+}

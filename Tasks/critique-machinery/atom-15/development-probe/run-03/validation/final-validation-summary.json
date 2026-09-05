@@ -1,0 +1,9 @@
+{
+  "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+  "assessment_adapter_sha256": "cdf93211c3430486edef3da67e6b9f89d7c18180c237a4b1cbe57926e64ee631",
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

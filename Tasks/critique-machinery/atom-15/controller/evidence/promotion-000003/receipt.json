@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "0652d58c839641fc01cc41f301457a177aee5987fa538645ba4b7142d2633375",
+  "experiment_assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+  "changed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+    "tests/test_atom_building_machinery.py",
+    "tests/test_install_skills.py",
+    "working-agreement/client-skill-projections.json",
+    "working-agreement/install_skills.py"
+  ],
+  "evidence": [
+    {"case_id": "approval-window-omits-atom-identity", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6"},
+    {"case_id": "installed-controller-cannot-close-up-atom", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6"},
+    {"case_id": "existing-native-receipt", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-14/operator-validation/native-interview/prose-waiver-receipt.json", "sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c"},
+    {"case_id": "helper-and-untrusted-reader-boundary", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6"},
+    {"case_id": "parent-process-telemetry", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6"},
+    {"case_id": "published-blocker-evidence", "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md", "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6"}
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/promotion/change-surface.json",
+    "sha256": "006a921e4f47edc25ea02244b9e2c67da15597235b9a11da9cbda45dbb562ebf"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/promotion/review.json",
+    "sha256": "85d9c1034ce97d254596764b15fb55e92eea740ac8baa4beba1fd39be9b90528"
+  },
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "atom_controller",
+    "fields": [
+      {"field": "prose_waiver", "shape": "object", "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_OPTIONAL_FIELDS"}
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "existing-native-receipt",
+  "status": "satisfied",
+  "receipt": "../../../atom-14/operator-validation/native-interview/prose-waiver-receipt.json",
+  "receipt_sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c",
+  "codex_installed_helper": "verified",
+  "claude_installed_helper": "verified",
+  "bounded_compatibility": "The legacy signed shape is accepted only when its exact request hash, repository root, and fields match; new receipts additionally bind atomic_step_id.",
+  "reason": "Both current installed helpers verified the one real Atom 14 receipt after the helper rebuild; focused tests refuse atomic-step and request reuse."
+}

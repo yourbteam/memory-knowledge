@@ -1,0 +1,9 @@
+{
+  "case_id": "parent-process-telemetry",
+  "status": "satisfied",
+  "parent_process_name": "Python",
+  "parent_process_pid": 10184,
+  "fallback": "unavailable",
+  "evidence": "../native-new-request/prose-waiver-receipt.json",
+  "reason": "The real native receipt records the observed parent executable identity; the helper uses an explicit unavailable state when the OS cannot resolve it."
+}

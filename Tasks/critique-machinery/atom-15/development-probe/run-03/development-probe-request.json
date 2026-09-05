@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/assessment_adapter.py",
+      "sha256": "cdf93211c3430486edef3da67e6b9f89d7c18180c237a4b1cbe57926e64ee631"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "baseline": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/baseline",
+    "sha256": "db5e586270f910faac36a65a11fd85d9948b5ce84d6896af4f0ac8d4f74f8f97"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/development-manifest.json",
+    "sha256": "4670e0084f489054a2481831a435853725fb3599fc13aabb1bb38049477b56ef"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "approval-and-installed-closeout-boundary",
+      "request": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-inputs/requests/cross-case.json",
+      "request_sha256": "a7e1a8d293564cac320fc2cdb68ee88ea4e9a5dbeb6fc0e276e7f5a0a72f8de0"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

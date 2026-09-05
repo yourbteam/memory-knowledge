@@ -1,0 +1,9 @@
+{
+  "case_id": "parent-process-telemetry",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 15 candidate facts passed",
+  "verdict": "satisfied"
+}

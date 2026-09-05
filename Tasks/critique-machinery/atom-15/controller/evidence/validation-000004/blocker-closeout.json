@@ -1,0 +1,39 @@
+{
+  "atom_request_sha256": "cb09fdaeb5f25291a8332d77137a27c12082a765073a2d65dd2b586bd989d5cf",
+  "atom_run_id": "d2c7b2922bd364d5fa59d55da8382384bcaafe9a018b765e682513790db09d92",
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "blocking_occurrence_count": 0,
+  "blocking_occurrences": [],
+  "clear": true,
+  "dispositions": [
+    {
+      "atom_attempt": 1,
+      "blocker_id": "blk-2e4cdda1f16ac56cd88f42bc",
+      "blocking_reason": null,
+      "classification": "deliverable-blocker",
+      "disposition": "closed",
+      "occurrence_id": "09b0f8f7-453f-4ea3-9daa-116ec0a652a2",
+      "opened_event_id": "50f6d604-f4fa-4e48-adcb-7f73eb3cf880",
+      "opened_sequence": 9336,
+      "remaining_work": "none",
+      "status": "closed",
+      "transition_event_id": "634181f9-9e61-4187-a2d7-2c02003a50b4"
+    },
+    {
+      "atom_attempt": 1,
+      "blocker_id": "blk-1f156964710b5ec965f508ce",
+      "blocking_reason": null,
+      "classification": "deliverable-blocker",
+      "disposition": "closed",
+      "occurrence_id": "b491139d-419f-4534-8e70-03dc6a1bb77c",
+      "opened_event_id": "3e7d0cc9-da13-4fc6-abf8-295510809423",
+      "opened_sequence": 9337,
+      "remaining_work": "none",
+      "status": "closed",
+      "transition_event_id": "9a853d36-b3dd-4b6d-8fea-1667786e0935"
+    }
+  ],
+  "linked_occurrence_count": 2,
+  "schema_version": 1,
+  "work_memory_ledger_sha256": "da02d8ca0ee560478a4fb2e08f1f6da67b867d79da473a620070e78887e534eb"
+}

@@ -1,0 +1,13 @@
+{
+  "assembly": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/composition/assembly",
+  "assessment": {
+    "adapter": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/assessment_adapter.py",
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "schema_version": 1
+}

@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "d9ddda3916b8c2ae6bf63f9424350c4c918954d98ca14bf7c96678ff2bd43ffe",
+  "atomic_outcome": "The native waiver window visibly and cryptographically binds the operator's choice to one atom and request, while either managed client projection can complete blocker-governed validation and final authorization in another repository.",
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "case_id": "installed-controller-cannot-close-up-atom",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/installed-controller-cannot-close-up-atom/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/installed-controller-cannot-close-up-atom/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/.codex/worktrees/critique-machinery-publish-20260903/Tasks/critique-machinery/atom-15/development-probe/run-03/validation/executions/installed-controller-cannot-close-up-atom/telemetry.jsonl",
+      "sha256": "43c6a20a36f98e76d3c95e9c671a938363574ab0b33d9dc54979825c0264c287"
+    }
+  ],
+  "expected_outcome": "Both installed projections complete blocker-governed record-validation and authorize-next for a repository without local blocker support modules.",
+  "operator_path": "Run the same candidate measurement on every frozen case; promoted validation then exercises the real native helper and both installed controllers outside memory-knowledge.",
+  "overall_criterion": "Any metric fails or the promoted installed-client path differs from the measured candidate.",
+  "schema_version": 1
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "installed-controller-cannot-close-up-atom",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "all declared Atom 15 candidate facts passed",
+  "verdict": "satisfied"
+}

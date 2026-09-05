@@ -1,0 +1,72 @@
+{
+  "allowed_paths": [
+    "skills/atom-building-machinery/SKILL.md",
+    "skills/atom-building-machinery/scripts/atom_controller.py",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval.swift",
+    "skills/atom-building-machinery/scripts/prose_waiver_approval",
+    "working-agreement/install_skills.py",
+    "tests/test_atom_building_machinery.py",
+    "tests/test_install_skills.py",
+    "working-agreement/client-skill-projections.json"
+  ],
+  "atomic_step_id": "visible-request-identity-and-installed-closeout",
+  "captured_cases": [
+    {
+      "case_id": "approval-window-omits-atom-identity",
+      "expected_outcome": "The approval window and authentication prompt visibly name atomic_step_id and the full request SHA-256, and the signed payload binds both.",
+      "kind": "failure",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md"
+    },
+    {
+      "case_id": "installed-controller-cannot-close-up-atom",
+      "expected_outcome": "Both installed projections complete blocker-governed record-validation and authorize-next for a repository without local blocker support modules.",
+      "kind": "failure",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md"
+    },
+    {
+      "case_id": "existing-native-receipt",
+      "expected_outcome": "The real Atom 14 native receipt remains valid for its exact request and cannot authorize another atom or request.",
+      "kind": "success",
+      "sha256": "f08232955b027c94dfc12aab510e2ae43f05bbce99e7cb7fc03472c983b4281c",
+      "source_ref": "Tasks/critique-machinery/atom-14/operator-validation/native-interview/prose-waiver-receipt.json"
+    },
+    {
+      "case_id": "helper-and-untrusted-reader-boundary",
+      "expected_outcome": "Operator guidance accurately explains helper rebuild prompts and refuses treating an unanswered untrusted-reader dialog as policy enforcement.",
+      "kind": "failure",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md"
+    },
+    {
+      "case_id": "parent-process-telemetry",
+      "expected_outcome": "Parent-process telemetry records an observed executable identity or an explicit unavailable state, never an unexplained unknown claim.",
+      "kind": "failure",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md"
+    },
+    {
+      "case_id": "published-blocker-evidence",
+      "expected_outcome": "The ledger and eventual relevant-only publish scope carry the blocker evidence needed to reproduce closeout claims.",
+      "kind": "failure",
+      "sha256": "dde933a83d4bd1b349097b3b6f3643033ab522232f27849031e9c1c6a1268ef6",
+      "source_ref": "Tasks/critique-machinery/atom-15/frozen-real/claude-atom-14-inspection.md"
+    }
+  ],
+  "contract_surface": {
+    "deliverable": "atom_controller",
+    "fields": [
+      {
+        "field": "prose_waiver",
+        "shape": "object",
+        "shape_source": "skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_OPTIONAL_FIELDS"
+      }
+    ],
+    "kind": "validation"
+  },
+  "outcome": "The native waiver window visibly and cryptographically binds the operator's choice to one atom and request, while either managed client projection can complete blocker-governed validation and final authorization in another repository.",
+  "practical_value": "Kamen can see exactly what he is authorizing, and an installed controller can finish the same governed atom it starts without hidden repository-local dependencies.",
+  "schema_version": 1,
+  "stopping_condition": "Frozen red cases reproduce; two approaches are compared; the promoted implementation shows atom id and request hash in the native window and authentication reason, signs and validates both, preserves the one existing receipt for only its exact request, records truthful parent identity, refuses unsafe or tampered support provenance, lets both managed projections complete validation and authorize-next outside memory-knowledge, records all six findings and cost in the BUILD-LEDGER, and stops before commit or push for Claude inspection."
+}
