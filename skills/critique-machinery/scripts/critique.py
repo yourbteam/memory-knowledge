@@ -2286,6 +2286,95 @@ def _replace_failed_reader(
     return cell
 
 
+def _quality_recovery_files(matrix: dict[str, Any]) -> dict[str, str]:
+    """Bind every persisted reader attempt, including the failed original."""
+    paths = set()
+    for cell in matrix["cells"]:
+        for reader in cell.get("readers", {}).values():
+            for attempt in [reader, *reader.get("attempt_history", [])]:
+                location = attempt.get("intake", {}).get("evidence_path")
+                if location:
+                    root = Path(location)
+                    if not root.is_dir() or root.is_symlink():
+                        raise Refusal("quality recovery requires preserved reader evidence")
+                    for path in root.rglob("*"):
+                        if path.is_symlink():
+                            raise Refusal("quality recovery refuses linked reader evidence")
+                        if path.is_file():
+                            paths.add(path)
+    return {str(path): digest_file(path) for path in sorted(paths)}
+
+
+def _start_quality_recovery(work: Path, manifest: dict[str, Any], matrix: dict[str, Any]) -> None:
+    _quality_plan(work, manifest)
+    witness = json.loads((work / "quality-execution.json").read_text())
+    if (witness.get("status") != "completed" or witness.get("entrypoint") != "read-run"
+            or witness.get("plan_sha256") != digest_file(work / "quality-plan.json")
+            or witness.get("matrix_sha256") != digest_file(work / "matrix.json")):
+        raise Refusal("quality recovery requires the unchanged original full-round execution")
+    if any((work / name).exists() for name in ("quality-recovery-before.json", "quality-recovery-start.json", "quality-recovery.json")):
+        raise Refusal("planned recovery already started; preserve the bounded attempt evidence")
+    start = {"schema_version": 1, "entrypoint": "retry-failed",
+             "original_matrix_sha256": witness["matrix_sha256"],
+             "bound_files": {name: digest_file(work / name) for name in
+                 ("quality-plan.json", "quality-execution.json", "unit-manifest.json", "sources.json")},
+             "original_evidence": _quality_recovery_files(matrix)}
+    with (work / "quality-recovery-before.json").open("xb") as target:
+        target.write((work / "matrix.json").read_bytes())
+    with (work / "quality-recovery-start.json").open("xb") as target:
+        target.write(canonical(start))
+
+
+def _quality_recovery_bound(work: Path, manifest: dict[str, Any], matrix: dict[str, Any]) -> bool:
+    """Accept only the exact original round plus its one bounded failed-seat replacement."""
+    try:
+        start = json.loads((work / "quality-recovery-start.json").read_text())
+        receipt = json.loads((work / "quality-recovery.json").read_text())
+        before = json.loads((work / "quality-recovery-before.json").read_text())
+        witness = json.loads((work / "quality-execution.json").read_text())
+        if (start["schema_version"] != 1 or start["entrypoint"] != "retry-failed"
+                or receipt != {"schema_version": 1, "entrypoint": "retry-failed", "status": "completed",
+                    "start_sha256": digest_file(work / "quality-recovery-start.json"),
+                    "matrix_sha256": digest_file(work / "matrix.json"),
+                    "evidence": _quality_recovery_files(matrix)}
+                or start["original_matrix_sha256"] != digest_file(work / "quality-recovery-before.json")
+                or start["original_matrix_sha256"] != witness.get("matrix_sha256")
+                or witness.get("status") != "completed" or witness.get("entrypoint") != "read-run"
+                or witness.get("plan_sha256") != digest_file(work / "quality-plan.json")
+                or set(start["bound_files"]) != {"quality-plan.json", "quality-execution.json", "unit-manifest.json", "sources.json"}
+                or any(digest_file(work / name) != sha for name, sha in start["bound_files"].items())
+                or start["original_evidence"] != _quality_recovery_files(before)):
+            return False
+        _quality_plan(work, manifest)
+        groups = [g for g in _failed_reader_groups(before) if g["attempt"] == 1]
+        if not groups:
+            return False
+        expected = copy.deepcopy(before)
+        current_cells = {c["cell_id"]: c for c in matrix["cells"]}
+        for group in groups:
+            for cell in expected["cells"]:
+                if cell["cell_id"] not in group["cell_ids"]:
+                    continue
+                seat = group["seat"]
+                previous = cell["readers"].pop(seat)
+                current = current_cells[cell["cell_id"]]["readers"][seat]
+                intake = current["intake"]
+                if (current.get("attempt_history") != [previous] or intake.get("attempt") != 2
+                        or intake.get("batch_id") != group["batch_id"]
+                        or intake.get("request_id") != group["request_id"]
+                        or intake.get("seat") != seat or intake.get("lenses") != group["lenses"]
+                        or intake.get("evidence_path") != str(Path(group["evidence_path"]).parent / "attempt-002")):
+                    return False
+                _apply_reader_claim(work, manifest, cell, seat,
+                    "no-answer" if current.get("status") == "no-answer" else current.get("verdict"),
+                    current.get("quote"), current.get("source_id"), current.get("source_quote"),
+                    intake, current.get("findings"))
+                cell["readers"][seat]["attempt_history"] = [previous]
+        return expected == matrix
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, Refusal):
+        return False
+
+
 def retry_failed(work: Path) -> dict[str, Any]:
     manifest, matrix = load_matrix(work)
     groups = _failed_reader_groups(matrix)
@@ -2295,6 +2384,9 @@ def retry_failed(work: Path) -> dict[str, Any]:
     artifact_context = artifact_context_for_run(work, manifest)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
     outcomes = []
+    planned_recovery = bool(retryable) and (work / "quality-plan.json").is_file()
+    if planned_recovery:
+        _start_quality_recovery(work, manifest, matrix)
     for group in retryable:
         evidence_path = group.get("evidence_path")
         if not isinstance(evidence_path, str) or not evidence_path:
@@ -2324,6 +2416,14 @@ def retry_failed(work: Path) -> dict[str, Any]:
                 group["seat"],
                 claims[lens],
             )
+    if planned_recovery:
+        _, recovered = load_matrix(work)
+        receipt = {"schema_version": 1, "entrypoint": "retry-failed", "status": "completed",
+                   "start_sha256": digest_file(work / "quality-recovery-start.json"),
+                   "matrix_sha256": digest_file(work / "matrix.json"),
+                   "evidence": _quality_recovery_files(recovered)}
+        with (work / "quality-recovery.json").open("xb") as target:
+            target.write(canonical(receipt))
     queue = owner_queue(work)
     status = matrix_status(work)
     return {
@@ -3414,11 +3514,29 @@ def _quality_plan(work: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     return plan
 
 
+def _quality_evidence_registry(material: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Expose only actual judgment evidence; transport metadata is not semantic evidence."""
+    registry = {}
+    for seat in READER_SEATS:
+        source = material["observations"].get(seat, {})
+        entries = [("verdict", source.get("verdict")), ("quote", source.get("quote"))]
+        for index, finding in enumerate(source.get("findings", [])):
+            entries.extend((f"findings/{index}/{field}", finding.get(field))
+                           for field in ("quote", "reason", "practical_consequence"))
+        for path, quote in entries:
+            if isinstance(quote, str) and quote.strip():
+                identity = f"{seat}/{path}"
+                registry[identity] = {"seat": seat, "path": path, "quote": quote}
+    return registry
+
+
 def _assess_quality_case(material: dict[str, Any], evidence: Path, runtime_parts: list[str], executable: str):
     evidence.mkdir(parents=True)
+    registry = _quality_evidence_registry(material)
+    (evidence / "evidence-registry.json").write_bytes(canonical(registry))
     fields = {"seat": {"type": "string", "enum": list(READER_SEATS)},
               "verdict": {"type": "string", "enum": ["satisfied", "not-satisfied", "cannot-assess"]},
-              "reason": {"type": "string"}, "observation_quote": {"type": "string"}}
+              "reason": {"type": "string"}, "evidence_id": {"type": "string", "enum": list(registry)}}
     schema = {"type": "object", "properties": {"observations": {"type": "array", "minItems": 2, "maxItems": 2,
               "items": {"type": "object", "properties": fields, "required": list(fields), "additionalProperties": False}}},
               "required": ["observations"], "additionalProperties": False}
@@ -3427,11 +3545,12 @@ def _assess_quality_case(material: dict[str, Any], evidence: Path, runtime_parts
               "separately, in reader-1 then reader-2 order. Do not invent a replacement critique or reward fewer findings. "
               "A positive detection criterion requires the named concrete obligation to appear in that reader's findings, "
               "not merely in the page or another reader. A prohibited-inference criterion fails if any of that reader's "
-              "findings makes that inference. Other findings are outside this criterion. Cite an exact contiguous passage "
-              "from that reader's supplied observation in observation_quote; for a missing finding quote the original "
-              "clear verdict or its page quotation. Explain the result against the full artifact and registered evidence. "
+              "findings makes that inference. Other findings are outside this criterion. Select evidence_id from the "
+              "code-owned evidence_registry for that same reader's actual observation. Do not write a quotation: "
+              "code projects the exact registered text. For a missing finding select its verdict or page quotation. "
+              "Explain the result against the full artifact and registered evidence. "
               "If the criterion or evidence cannot decide, return cannot-assess. Never cast owner votes.\n" +
-              json.dumps(material, ensure_ascii=False))
+              json.dumps({**material, "evidence_registry": registry}, ensure_ascii=False))
     schema_path, raw_path = evidence / "schema.json", evidence / "reply.json"
     schema_path.write_bytes(canonical(schema))
     (evidence / "prompt.txt").write_text(prompt)
@@ -3473,11 +3592,13 @@ def _assess_quality_case(material: dict[str, Any], evidence: Path, runtime_parts
                         if [o["seat"] for o in observations] != list(READER_SEATS):
                             problems.append("observations must name reader-1 and reader-2 once in order")
                         for observation in observations:
-                            source = material["observations"].get(observation["seat"], {})
-                            strings = "\n".join(str(v) for _, v in flatten(source) if isinstance(v, (str, int)))
-                            quote = collapsed(observation["observation_quote"])
-                            if not quote or quote not in collapsed(strings) or not observation["reason"].strip():
-                                problems.append(f"{observation['seat']} must quote actual supplied observation words and explain the criterion result")
+                            selected = registry.get(observation["evidence_id"])
+                            if selected is None or selected["seat"] != observation["seat"]:
+                                problems.append(f"{observation['seat']} selected {observation['evidence_id']!r}; select an evidence_id registered for that same seat")
+                            else:
+                                observation["observation_quote"] = selected["quote"]
+                            if not observation["reason"].strip():
+                                problems.append(f"{observation['seat']} supplied an empty reason; explain the criterion result")
                     if problems:
                         error = "; ".join(problems)
                 except (ValueError, TypeError, KeyError):
@@ -3497,7 +3618,8 @@ def assess_quality(work: Path, out: Path) -> dict[str, Any]:
     if out.exists() or repo_for(out) != repo_for(work):
         raise Refusal("quality receipt must be a new directory in the run repository")
     hashes = {name: digest_file(work / name) if (work / name).is_file() else None
-              for name in ("matrix.json", "unit-manifest.json", "sources.json", "quality-plan.json")}
+              for name in ("matrix.json", "unit-manifest.json", "sources.json", "quality-plan.json",
+                           "quality-execution.json", "quality-recovery-before.json", "quality-recovery-start.json", "quality-recovery.json")}
     out.mkdir(parents=True)
     (out / "plan.json").write_bytes(canonical(plan))
     witness_path = work / "quality-execution.json"
@@ -3505,6 +3627,8 @@ def assess_quality(work: Path, out: Path) -> dict[str, Any]:
     round_bound = (witness.get("status") == "completed" and witness.get("entrypoint") == "read-run"
                    and witness.get("plan_sha256") == hashes["quality-plan.json"]
                    and witness.get("matrix_sha256") == hashes["matrix.json"])
+    if any((work / name).exists() for name in ("quality-recovery-before.json", "quality-recovery-start.json", "quality-recovery.json")):
+        round_bound = _quality_recovery_bound(work, manifest, matrix)
     incomplete = missing_cells(matrix)
     model_cells = [c for c in matrix["cells"] if c["status"] != "not-applicable" and c["lens"] != CODE_LENS]
     invalid = []
@@ -3543,6 +3667,8 @@ def assess_quality(work: Path, out: Path) -> dict[str, Any]:
     _quality_plan(work, manifest)
     if any((digest_file(work / name) if (work / name).is_file() else None) != value for name, value in hashes.items()):
         raise Refusal("quality inputs or decisions changed during assessment; preserve raw evidence and assess a new receipt")
+    if round_bound and (work / "quality-recovery-start.json").exists() and not _quality_recovery_bound(work, manifest, matrix):
+        raise Refusal("quality recovery evidence changed during assessment; preserve the receipt and investigate")
     verdicts = [r["verdict"] for r in results]
     result = {"schema_version": 1, "verdict": "not-satisfied" if "not-satisfied" in verdicts else
               "cannot-assess" if "cannot-assess" in verdicts else "satisfied",

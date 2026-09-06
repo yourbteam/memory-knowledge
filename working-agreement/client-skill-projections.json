@@ -65,15 +65,15 @@
       ]
     },
     "critique-machinery": {
-      "canonical_tree_sha256": "eaa64b453fdfcdd5bf1898fc56d951dfb58ba8c3e7da943db3e309c7fd70d357",
+      "canonical_tree_sha256": "a38d5ee58bdd0310dd95028ce6bd41d349395140bdbbd07b683c145769cd29ff",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while critique state and evidence remain shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "f288d95736bceb75d573fe2bb0a3115a9be1ea120c26d09f6d012ef31f77ad52",
-        "codex": "cbaef5b7e5cb88443c04e9f3871438b8e7317884f6c07c288d1b91b4924a9e02"
+        "claude": "6a755d5027bebe0a7b3721d07e6a4bd445983e0fa50e30e37cafd3d9d4d6a2ac",
+        "codex": "a2840a960466b0365ec8f5ec434b006a321b04385c84ed0bc30ae89210fa1a98"
       },
       "scenario_groups": [
         "CAP-PDI"

@@ -243,3 +243,15 @@ After opening a new run, before any model reading, freeze a JSON list of accepta
 Run the ordinary complete `read-run`, then `assess-quality --work RUN --out NEW_DIRECTORY`. Focused reads, missing replies and failed transports cannot qualify as a complete round. An isolated observer assesses both original seats separately for each frozen criterion, citing original observation words. Every criterion must be satisfied; an unknown result cannot qualify. Raw observations, prompts, traces and refusals stay visible. The command does not change findings, owner decisions, the artifact, or promotion state.
 
 This is acceptance against the declared criteria, not proof that every possible defect was found. A later discovered full-round failure must become a frozen regression criterion before another candidate comparison; a focused probe passing never replaces this full-round check. Observers remain fallible: inspect the cited raw evidence and calibrate proposed criteria on known positive and negative records before relying on a new acceptance set.
+
+## Quality assessment after bounded recovery
+
+For a round with a frozen quality plan, `retry-failed` preserves the original execution witness
+and every original reader attempt. A successful bounded retry adds a hash-bound recovery receipt
+that `assess-quality` verifies before accepting the recovered round. A failed retry remains
+unassessed; it never triggers a third attempt. Changed retained evidence or criteria invalidate
+the receipt. Preserve an interrupted recovery for diagnosis instead of rerunning the round.
+
+Quality observers select an evidence identifier belonging to the reader being assessed. Code
+copies the exact original text into the assessment. Missing or wrong-reader evidence is refused.
+These checks establish evidence integrity, not correctness of the model's semantic judgment.
