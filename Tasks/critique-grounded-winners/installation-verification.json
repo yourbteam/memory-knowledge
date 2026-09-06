@@ -1,0 +1,59 @@
+{
+  "installed_before_publication": true,
+  "results": [
+    {
+      "client": "codex",
+      "projection_sha256": "f9537c06a5c392d5158bb868c307f458729695c61912c601ae2f2aa87fed127f",
+      "expected_sha256": "f9537c06a5c392d5158bb868c307f458729695c61912c601ae2f2aa87fed127f",
+      "match": true,
+      "script_sha256": "468c37e28fd4b5777ca739b4ddbf77155e1263a58f3ab858bfa087067f53f4b3",
+      "public_command_available": true,
+      "policy": {
+        "client": "codex",
+        "fail_closed": true,
+        "forbidden_runtime": "claude",
+        "required_runtime": "codex exec",
+        "schema_version": 1
+      },
+      "installed_behavior_replay": {
+        "calendar_clear_months": 12,
+        "group_sizes": {
+          "repeated-header": [
+            12
+          ],
+          "distinct-measures": [
+            2,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "client": "claude",
+      "projection_sha256": "371cf2680c65f4ee9efe9af17bb1b671b7049f4b3fad70239e1ddd5a93af960e",
+      "expected_sha256": "371cf2680c65f4ee9efe9af17bb1b671b7049f4b3fad70239e1ddd5a93af960e",
+      "match": true,
+      "script_sha256": "468c37e28fd4b5777ca739b4ddbf77155e1263a58f3ab858bfa087067f53f4b3",
+      "public_command_available": true,
+      "policy": {
+        "client": "claude",
+        "fail_closed": true,
+        "forbidden_runtime": "codex exec",
+        "required_runtime": "claude -p",
+        "schema_version": 1
+      },
+      "installed_behavior_replay": {
+        "calendar_clear_months": 12,
+        "group_sizes": {
+          "repeated-header": [
+            12
+          ],
+          "distinct-measures": [
+            2,
+            2
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "assembly_sha256": "da66a86743f6b77abfe24501e675e5de9bbde8610e1b23fb7c96bdb90811f061",
+  "atomic_step_id": "critique-calendar-declared-contract",
+  "cases": [
+    {
+      "case_id": "btm-v7-calendar",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Fresh public consistency replay preserves the exact expected real-case outcomes.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "btm-v6-map",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Fresh public consistency replay preserves the exact expected real-case outcomes.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "viv-v6-clear",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Fresh public consistency replay preserves the exact expected real-case outcomes.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

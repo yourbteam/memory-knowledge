@@ -1,0 +1,124 @@
+{
+  "repeated-header": {
+    "readers": [
+      {
+        "error": null,
+        "groups": [
+          {
+            "finding_ids": [
+              "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+              "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+              "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+              "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+              "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+              "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+              "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+              "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+              "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+              "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+              "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+              "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+            ],
+            "issue": "The ownership table presents named operational owners as settled even though the artifact-wide status says that owners are not approved and no owner is recorded.",
+            "why_same_issue": "Every observation identifies a manifestation of the same complete-artifact contradiction: named owner entries for approval work or individual tactics conflict with the page-level no-owner status. The proof-page, message-test, founder-post, technical-story, scorecard, approval-cadence, and budget/resource consequences differ only by row or reader lens; they do not allege separate missing obligations. The two broader observations summarize the same contradiction across multiple rows, while the remaining observations instantiate it for particular rows."
+          }
+        ],
+        "status": "completed"
+      },
+      {
+        "error": null,
+        "groups": [
+          {
+            "finding_ids": [
+              "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+              "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+              "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+              "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+              "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+              "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+              "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+              "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+              "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+              "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+              "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+              "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+            ],
+            "issue": "The artifact-wide ownership status contradicts the ownership table: the page says owners are unapproved and no owner is recorded, while the table presents Kamen Kamenov and Matthew Maday as owners without marking those assignments as proposed.",
+            "why_same_issue": "Every observation identifies a manifestation of the same page-wide contradiction in the same ownership table. The proof-page, owner-test, founder-post, technical-story, scorecard, approval-cadence, and budget/resource comments differ only in the affected row, reader lens, or practical consequence. They do not allege separate missing obligations: each depends on the single unresolved failure to distinguish unapproved proposed ownership from recorded operational ownership."
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "ids": [
+      "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+      "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+      "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+      "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+      "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+      "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+      "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+      "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+      "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+      "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+      "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+      "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+    ],
+    "source": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-grounded-fixes-20260906/checkout/Tasks/critique-grounded-fixes/grouping-01/experiment-01/probes/probes/observable-outcome/cases/repeated-header/experiment/variants/variation-2/proposals"
+  },
+  "distinct-measures": {
+    "readers": [
+      {
+        "error": null,
+        "groups": [
+          {
+            "finding_ids": [
+              "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+              "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+            ],
+            "issue": "The Conversation Management loop omits the required response-time KPI.",
+            "why_same_issue": "Both findings allege that the same KPI line, under the same artifact-wide scope, fails to measure response time required by the execution toolkit. Their differing consequences— incomplete evaluation versus unidentified delays—are effects of that single omission."
+          },
+          {
+            "finding_ids": [
+              "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+              "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+            ],
+            "issue": "The Conversation Management loop omits the required issue-resolution KPI.",
+            "why_same_issue": "Both findings allege that the same KPI line, under the same artifact-wide scope, measures unresolved escalations but not actual issue resolution, and that no other delivered-page KPI restores that required measure. Their practical consequences describe the same missing obligation."
+          }
+        ],
+        "status": "completed"
+      },
+      {
+        "error": null,
+        "groups": [
+          {
+            "finding_ids": [
+              "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+              "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+            ],
+            "issue": "The Conversation Management KPI set omits the required response-time measure.",
+            "why_same_issue": "Both findings allege the same omission in the same artifact-wide KPI scope: the registered toolkit requires response time, but the Activation Card and Month 9 calendar provide no defined response-time KPI. Their different consequences— incomplete evaluation versus unidentified delays—are effects of that single missing measure."
+          },
+          {
+            "finding_ids": [
+              "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+              "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+            ],
+            "issue": "The Conversation Management KPI set omits the required issue-resolution measure.",
+            "why_same_issue": "Both findings allege the same omission in the same artifact-wide KPI scope: the registered toolkit separately requires issue resolution, while the delivered KPI set counts unresolved escalations without measuring whether issues are resolved. The observations differ only in how they describe the resulting accountability gap."
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "ids": [
+      "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+      "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085",
+      "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+      "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+    ],
+    "source": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-grounded-fixes-20260906/checkout/Tasks/critique-grounded-fixes/grouping-01/experiment-01/probes/probes/observable-outcome/cases/distinct-measures/experiment/variants/variation-2/proposals"
+  }
+}

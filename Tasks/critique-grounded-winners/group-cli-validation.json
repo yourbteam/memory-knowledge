@@ -1,0 +1,175 @@
+{
+  "matrix_unchanged": true,
+  "selected_count": 17,
+  "groups": [
+    {
+      "finding_ids": [
+        "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+        "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+      ],
+      "reader_explanations": [
+        {
+          "finding_ids": [
+            "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+            "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+          ],
+          "issue": "The Conversation Management loop and Observatory newsroom omit the required response-time measure.",
+          "why_same_issue": "Both observations identify the same missing response-time KPI in the same always-on tactic and against the same Month 9 source commitment. Their different practical descriptions of reporting and delay detection are consequences of that single omission."
+        },
+        {
+          "finding_ids": [
+            "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+            "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+          ],
+          "issue": "The Conversation Management and Observatory measurement plan omits the required response-time KPI.",
+          "why_same_issue": "Both observations identify the same absent response-time measure in the same always-on tactic and Month 9 scope. Their different descriptions of the operational consequence do not create separate failures."
+        }
+      ],
+      "status": "proposed-for-owner-review"
+    },
+    {
+      "finding_ids": [
+        "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+        "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+      ],
+      "reader_explanations": [
+        {
+          "finding_ids": [
+            "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+            "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+          ],
+          "issue": "The Conversation Management loop and Observatory newsroom omit the required issue-resolution measure.",
+          "why_same_issue": "Both observations allege the same omission from the same KPI line under the same Month 9 commitment: unresolved-gap escalation is measured, but issue resolution is not. The wording and practical consequences differ, but the missing obligation is identical."
+        },
+        {
+          "finding_ids": [
+            "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+            "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+          ],
+          "issue": "The Conversation Management and Observatory measurement plan omits the required issue-resolution KPI.",
+          "why_same_issue": "Both observations allege the same missing issue-resolution measure in the same tactic and Month 9 scope. Counting unresolved or escalated gaps is cited by both as not satisfying that obligation."
+        }
+      ],
+      "status": "proposed-for-owner-review"
+    },
+    {
+      "finding_ids": [
+        "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+        "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+        "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+        "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+        "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+        "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+        "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+        "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+        "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+        "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+        "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+        "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+      ],
+      "reader_explanations": [
+        {
+          "finding_ids": [
+            "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+            "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+            "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+            "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+            "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+            "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+            "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+            "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+            "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+            "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+            "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+            "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+          ],
+          "issue": "The ownership table presents named operational owners as settled while the artifact-wide status says owners are unapproved and no owner is recorded.",
+          "why_same_issue": "Every observation is a manifestation of the same artifact-wide contradiction in the same ownership table. Some focus on individual tactics, approval-versus-execution ambiguity, or the resource and spending consequences, while the broader observations cover several rows; all depend on the common failure to distinguish proposed assignments from approved, recorded ownership."
+        },
+        {
+          "finding_ids": [
+            "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+            "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+            "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+            "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+            "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+            "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+            "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+            "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+            "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+            "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+            "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+            "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+          ],
+          "issue": "The artifact-wide statement that no owner is recorded contradicts the ownership table\u2019s unqualified named assignments, making the status of operational and resource accountability ambiguous.",
+          "why_same_issue": "Every observation is a manifestation of the same artifact-wide contradiction under the same ownership-table scope: the page declares all owners unapproved and unrecorded, while rows present Kamen Kamenov or Matthew Maday as owners without marking those assignments as proposed. Some observations focus on individual tactics, approval-versus-delivery roles, or budget consequences, while the broader observations summarize several rows; those are different lenses and consequences of the same contradictory ownership status."
+        }
+      ],
+      "status": "proposed-for-owner-review"
+    }
+  ],
+  "result_path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-grounded-fixes-20260906/checkout/Tasks/critique-grounded-fixes/runs/retained-group-cli-proposals/result.json",
+  "reference": {
+    "criteria": {
+      "reviewable-equivalence": {
+        "repeated-header": {
+          "ids": [
+            "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+            "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+            "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+            "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+            "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+            "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+            "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+            "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+            "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+            "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+            "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+            "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+          ],
+          "groups": [
+            [
+              "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+              "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+              "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+              "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+              "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+              "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+              "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+              "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+              "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+              "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+              "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+              "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+            ]
+          ]
+        },
+        "distinct-measures": {
+          "ids": [
+            "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+            "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085",
+            "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+            "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+          ],
+          "groups": [
+            [
+              "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+              "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+            ],
+            [
+              "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+              "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+            ]
+          ]
+        },
+        "single-observation": {
+          "ids": [
+            "finding-61d611443ca00f21cdabe23abcbc2c71755ebc9917f45df7c4c03985129e17c4"
+          ],
+          "groups": []
+        }
+      }
+    }
+  },
+  "exact_expected_groups": true
+}

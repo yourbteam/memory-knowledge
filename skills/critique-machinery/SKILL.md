@@ -123,7 +123,7 @@ python3 scripts/critique.py consistency --work <work>
 after `open` and before `read-run`. Code reads the bound payload against the page and fills both
 seats of that lens on every unit a declared check reads: a located `revise` where the page
 contradicts the payload (a map cell against a card's span, a stage's months against the spans of
-the cards it names, the calendar rows against a span, the loop's deployment month against the
+the cards it names, the explicit calendar month/phase fields against their bound calendar entries, the loop's deployment month against the
 equipping card, the widening month against the Launch span), `clear` where it does not, and
 `not-applicable` with its reason where no check reads the unit or the page carries no field the
 check reads. A run opened with explicit `--payload` flags records the lens as not applicable
@@ -222,3 +222,16 @@ block `report` and `document`. This changes evidence availability, not semantic 
 ### Codex reader isolation
 
 The reader invocation omits ambient skill instructions and project documentation and disables shell, plugin, app, browser, image, collaboration, hook, and workspace dependency capabilities without changing model defaults or authentication. This does not assert an empty tool schema. The preserved Codex JSON event trace must complete one answered turn containing only assistant/reasoning items, and its final assistant text must match the preserved reply. Tool use, unknown events, failed or incomplete traces, and mismatched replies are classified as malformed; they cannot become accepted blind evidence. Claude retains its existing client-specific controls.
+
+
+The calendar consistency check compares explicit rendered month/phase fields with the bound calendar entries. It does not infer that a card must be named in every month of its active span: that is a separate completeness requirement that the profile does not declare. Unsupported table shapes and historical pages without the span profile remain not applicable. The other declared checks, including the cross-section map-versus-card-span check, are unchanged.
+
+## Review repeated observations together
+
+After reading is complete, use `suggest-groups --work RUN --out NEW_RECEIPT_DIRECTORY` to propose issue groups without merging observations or casting owner votes. Optionally repeat `--finding ID` to freeze a bounded selection; the receipt lists all findings outside that selection as unassessed. Owner-confirmed groups are excluded from new proposals.
+
+Two isolated readers independently partition the selected grounded observations. Code requires complete, exact-once identity coverage and proposes only intersections containing at least two findings that both readers placed together. Different unmet commitments remain distinct even when they share a source line, page span, owner, or possible edit. This is semantic advice, not proof of equivalence or an independent repair count.
+
+The receipt's `review.md` preserves every proposed group's member IDs and original reasons, both reader explanations, and all observations left separate. Raw prompts, schemas, replies and event traces remain beside it. Failed or malformed proposal readers produce no groups. Every reader has the existing 180-second process-group bound and client isolation controls; no retry is automatic. A changed critique matrix refuses proposal admission.
+
+Existing `findings`, `ask-owner`, `group-findings` and owner rulings keep their meanings. Apply a proposed group with `group-findings` only after the owner explicitly confirms equivalence and supplies the recorded reason. The machinery never supplies that approval itself.

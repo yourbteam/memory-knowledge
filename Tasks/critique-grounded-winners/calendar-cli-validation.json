@@ -1,0 +1,30 @@
+{
+  "source_sha256": "468c37e28fd4b5777ca739b4ddbf77155e1263a58f3ab858bfa087067f53f4b3",
+  "cases": [
+    {
+      "case_id": "btm-v6-map",
+      "calendar": "agreement-clear",
+      "map_defects": [
+        "Earned validation outreach",
+        "Employee advocacy push",
+        "Partner proof pack",
+        "Public identity and proof lock",
+        "Senior craft story series"
+      ],
+      "original_inputs_unchanged": true
+    },
+    {
+      "case_id": "btm-v7-calendar",
+      "calendar": "agreement-clear",
+      "map_defects": [],
+      "original_inputs_unchanged": true
+    },
+    {
+      "case_id": "viv-v6-clear",
+      "calendar": "agreement-clear",
+      "map_defects": [],
+      "original_inputs_unchanged": true
+    }
+  ],
+  "passed": true
+}
