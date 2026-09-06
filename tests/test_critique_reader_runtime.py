@@ -111,7 +111,7 @@ def test_relative_evidence_paths_resolve_before_isolated_reader(critic, tmp_path
         assert Path(kwargs["cwd"]) != tmp_path
         observed.append(argv)
         raise Inspected()
-    monkeypatch.setattr(critic.subprocess, "run", inspect)
+    monkeypatch.setattr(critic, "run_reader_process", inspect)
     with pytest.raises(Inspected):
         critic._reader_judgments(Path("relative"), "Captured roadmap", "Inspect upstream commitments", UNIT,
             ["upstream-trace"], evidence_root=None if from_environment else Path("relative/evidence"),

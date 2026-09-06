@@ -80,7 +80,7 @@ def test_actual_reader_evidence_binds_unclipped_context_and_prompt(critic,work,m
     (projection/"client-model-policy.json").write_text(json.dumps({"required_runtime":"codex exec","fail_closed":True}))
     monkeypatch.setattr(critic,"__file__",str(projection/"scripts/critique.py"))
     monkeypatch.setattr(critic.shutil,"which",lambda client:"/reader/codex")
-    monkeypatch.setattr(critic.subprocess,"run",lambda *args,**kwargs:SimpleNamespace(returncode=1,stdout="",stderr="Runtime boundary test: no provider call"))
+    monkeypatch.setattr(critic,"run_reader_process",lambda *args,**kwargs:SimpleNamespace(returncode=1,stdout="",stderr="Runtime boundary test: no provider call"))
     evidence=work/"context-evidence"
     result=critic._reader_judgments(work.parent,"Captured context",critic.LENS_QUESTIONS["buyer-read"],manifest["units"][0],["buyer-read"],evidence_root=evidence,artifact_context=context)
     expected=critic.digest_bytes(critic.canonical(context))

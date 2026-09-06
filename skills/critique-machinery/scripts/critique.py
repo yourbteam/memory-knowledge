@@ -12,6 +12,7 @@ import math
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tarfile
@@ -30,7 +31,7 @@ QUOTE_REQUIRED = True
 READER_STRATEGY = "blind-separated"
 READER_SEATS = ("reader-1", "reader-2")
 READER_REPLY_OUTCOMES = ("valid", "malformed", "empty", "timeout", "nonzero-exit")
-READER_TIMEOUT_SECONDS = 900
+READER_TIMEOUT_SECONDS = 180
 READER_MAX_ATTEMPTS = 2
 TRACE_STRATEGY = "registered-source-exact-quote"
 TRACE_GROUNDING_RULE = (
@@ -1272,8 +1273,7 @@ def record_reader(
     return cell
 
 
-def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    manifest, matrix = load_matrix(work)
+def _apply_cell_pair(work, manifest, matrix, cell_id, claims):
     matches = [cell for cell in matrix["cells"] if cell["cell_id"] == cell_id]
     if not matches:
         raise Refusal(f"cell {cell_id!r} does not exist; choose one of the cell ids shown by status.")
@@ -1327,8 +1327,26 @@ def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, An
     else:
         cell.clear()
         cell.update(candidate)
-    (work / "matrix.json").write_bytes(canonical(matrix))
     return cell
+
+
+def record_reader_batch(work, pairs):
+    """Publish all lenses covered by a paired reader reply as one observable state."""
+    manifest, matrix = load_matrix(work)
+    recorded = [_apply_cell_pair(work, manifest, matrix, cell_id, claims)
+                for cell_id, claims in pairs.items()]
+    with tempfile.NamedTemporaryFile(dir=work, prefix=".matrix-", delete=False) as pending:
+        pending.write(canonical(matrix))
+        pending_path = Path(pending.name)
+    try:
+        os.replace(pending_path, work / "matrix.json")
+    finally:
+        pending_path.unlink(missing_ok=True)
+    return recorded
+
+
+def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return record_reader_batch(work, {cell_id: claims})[0]
 
 
 def record_judgment(work: Path, cell_id: str, verdict: str, quote: str | None) -> dict[str, Any]:
@@ -1598,6 +1616,74 @@ def ground_reader_result(
     return result
 
 
+def codex_reader_controls():
+    """Invocation-local isolation; never changes auth, model, or user configuration."""
+    controls = ["--json", "-c", "project_doc_max_bytes=0", "-c", "skills.include_instructions=false",
+                "-c", 'web_search="disabled"']
+    for feature in ("shell_tool", "plugins", "apps", "skill_search", "hooks", "multi_agent",
+                    "image_generation", "browser_use", "computer_use", "workspace_dependencies"):
+        controls.extend(["--disable", feature])
+    return controls
+
+
+def codex_reader_trace_error(stdout, raw_reply):
+    """Fail closed if the observed Codex exec JSONL trace is not a complete blind read.
+
+    This admits only assistant/reasoning items, not an unverified claim of zero tool schemas.
+    Keep the trace and raw final reply even when this boundary refuses admission.
+    """
+    state = "new"
+    active = set()
+    closed = set()
+    final = None
+    for number, line in enumerate(stdout.splitlines(), 1):
+        try:
+            event = json.loads(line)
+        except (ValueError, TypeError):
+            return f"Codex trace line {number} is not JSON"
+        if not isinstance(event, dict):
+            return f"Codex trace line {number} is not an event object"
+        kind = event.get("type")
+        if kind == "thread.started" and state == "new" and isinstance(event.get("thread_id"), str):
+            state = "thread"
+        elif kind == "turn.started" and state == "thread":
+            state = "turn"
+        elif kind in ("item.started", "item.updated", "item.completed") and state == "turn":
+            item = event.get("item")
+            if not isinstance(item, dict) or item.get("type") not in ("agent_message", "reasoning"):
+                return f"Codex trace line {number} contains a tool or unknown item"
+            identity = item.get("id")
+            if not isinstance(identity, str) or not identity or identity in closed:
+                return f"Codex trace line {number} has an invalid or repeated item identity"
+            if kind == "item.started":
+                if identity in active:
+                    return f"Codex trace line {number} repeats an active item"
+                active.add(identity)
+            elif kind == "item.updated":
+                if identity not in active:
+                    return f"Codex trace line {number} updates an unstarted item"
+            else:
+                active.discard(identity)
+                closed.add(identity)
+                if item["type"] == "agent_message":
+                    if not isinstance(item.get("text"), str):
+                        return f"Codex trace line {number} has no assistant text"
+                    final = item["text"]
+        elif kind == "turn.completed" and state == "turn" and not active and final is not None:
+            state = "complete"
+        else:
+            return f"Codex trace line {number} has an unexpected, failed, or out-of-order event: {kind!r}"
+    if state != "complete":
+        return "Codex trace did not complete one answered turn"
+    try:
+        reply = raw_reply.decode("utf-8") if isinstance(raw_reply, bytes) else raw_reply
+    except UnicodeDecodeError:
+        return "Codex final reply is not UTF-8"
+    if final.strip() != reply.strip():
+        return "Codex final reply differs from the captured assistant message"
+    return None
+
+
 def build_reader_argv(
     runtime_parts: list[str],
     executable: str,
@@ -1611,7 +1697,7 @@ def build_reader_argv(
         return [
             executable, "exec", "--ephemeral", "--sandbox", "read-only", "--ignore-user-config",
             "--ignore-rules", "--skip-git-repo-check", "--color", "never", "--cd", str(isolated),
-            "--output-schema", str(schema_path), "--output-last-message", str(raw_reply_path), "-",
+            "--output-schema", str(schema_path), "--output-last-message", str(raw_reply_path), *codex_reader_controls(), "-",
         ]
     if runtime_parts == ["claude", "-p"]:
         return [
@@ -1642,6 +1728,41 @@ def _selected_unit(manifest: dict[str, Any], case: dict[str, Any]) -> dict[str, 
             f"case {case['case_id']!r} exposed {len(matches)} target units for {needles}; expected exactly one real unit."
         )
     return matches[0]
+
+
+def run_reader_process(argv, *, input, text, capture_output, timeout, cwd):
+    """Bound the complete reader group, including launchers' inherited-pipe children."""
+    # Files expose progress immediately and cannot keep communicate waiting on a grandchild.
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stdout_file, \
+            tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
+        process = subprocess.Popen(
+            argv, stdin=subprocess.PIPE, stdout=stdout_file, stderr=stderr_file,
+            text=True, cwd=cwd, start_new_session=True,
+        )
+        try:
+            process.communicate(input=input, timeout=timeout)
+        except BaseException as exc:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait(timeout=5)
+            stdout_file.seek(0)
+            stderr_file.seek(0)
+            if isinstance(exc, subprocess.TimeoutExpired):
+                raise subprocess.TimeoutExpired(
+                    argv, timeout, output=stdout_file.read(), stderr=stderr_file.read()
+                ) from exc
+            raise
+        else:
+            # A successful launcher must not leave a worker running after its reply.
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            stdout_file.seek(0)
+            stderr_file.seek(0)
+            return subprocess.CompletedProcess(argv, process.returncode, stdout_file.read(), stderr_file.read())
 
 
 def _reader_judgments(
@@ -1800,6 +1921,8 @@ Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or
             "seat": seat,
             "attempt": attempt,
             "client": client,
+            "timeout_seconds": READER_TIMEOUT_SECONDS,
+            "process_scope": "isolated-process-group",
             "instruction_sha256": digest_bytes(prompt.encode("utf-8")),
             "schema_sha256": digest_file(schema_path),
             "isolated_working_directory": True,
@@ -1810,7 +1933,7 @@ Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or
         }
         (evidence_root / "reader-input-envelope.json").write_bytes(canonical(envelope))
         try:
-            completed = subprocess.run(
+            completed = run_reader_process(
                 argv,
                 input=prompt,
                 text=True,
@@ -1861,9 +1984,15 @@ Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or
                         )
                     raw_reply_path.write_text(raw_reply, encoding="utf-8")
                 raw_reply = raw_reply_path.read_bytes() if raw_reply_path.is_file() else b""
+                trace_error = (
+                    codex_reader_trace_error(completed.stdout, raw_reply)
+                    if runtime_parts == ["codex", "exec"] else None
+                )
                 result = classify_reader_reply(
                     raw_reply, schema, lenses, batch_id=batch_id, seat=seat, attempt=attempt,
                     evidence_path=relative_evidence, exit_code=completed.returncode,
+                    forced_outcome="malformed" if trace_error else None,
+                    process_detail=trace_error,
                 )
     result["intake"]["finding_scope_sha256"] = finding_scope_sha256
     result["intake"]["artifact_context_sha256"] = artifact_context_sha256
@@ -1981,24 +2110,36 @@ def read_run(work: Path) -> dict[str, Any]:
             batch_id=batch_id, seat=seat, attempt=1, artifact_context=artifact_context,
         )
 
-    launched = []
+    claims_by_cell: dict[str, dict[str, dict[str, Any]]] = {}
+    reply_outcomes = []
+    refused = []
+    recorded_ids = set()
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(4, len(jobs) or 1)) as pool:
         futures = [pool.submit(launch, job) for job in jobs]
         for future in concurrent.futures.as_completed(futures):
-            launched.append(future.result())
-    claims_by_cell: dict[str, dict[str, dict[str, Any]]] = {}
-    reply_outcomes = []
-    for (unit, seat, lenses), result in sorted(launched, key=lambda item: (item[0][0]["unit_id"], item[0][1])):
-        reply_outcomes.append(result["intake"])
-        claims = _claims_from_reader_result(result, lenses)
-        for lens in lenses:
-            cell_id = f"{unit['unit_id']}::{lens}"
-            claims_by_cell.setdefault(cell_id, {})[seat] = claims[lens]
-    refused = []
-    for cell_id, claims in claims_by_cell.items():
-        recorded = record_cell_readers(work, cell_id, claims)
-        if recorded.get("recording_refusal"):
-            refused.append(cell_id)
+            (unit, seat, lenses), result = future.result()
+            reply_outcomes.append(result["intake"])
+            claims = _claims_from_reader_result(result, lenses)
+            for lens in lenses:
+                cell_id = f"{unit['unit_id']}::{lens}"
+                pair = claims_by_cell.setdefault(cell_id, {})
+                pair[seat] = claims[lens]
+            unit_pairs = {f"{unit['unit_id']}::{lens}": claims_by_cell.get(f"{unit['unit_id']}::{lens}", {})
+                          for lens in lenses}
+            if all(set(pair) == set(READER_SEATS) for pair in unit_pairs.values()):
+                for recorded in record_reader_batch(work, unit_pairs):
+                    recorded_ids.add(recorded["cell_id"])
+                    if recorded.get("recording_refusal"):
+                        refused.append(recorded["cell_id"])
+            event = {"schema_version": 1, "event": "reader-recorded",
+                     "recorded_at": datetime.now(timezone.utc).isoformat(),
+                     "request_id": result["intake"]["request_id"],
+                     "outcome": result["intake"]["outcome"],
+                     "completed_reader_count": len(reply_outcomes),
+                     "requested_reader_count": len(jobs),
+                     "recorded_cell_count": len(recorded_ids)}
+            with (work / "reader-progress.jsonl").open("a", encoding="utf-8") as feed:
+                feed.write(json.dumps(event, sort_keys=True) + "\n")
     queue = owner_queue(work)
     status = matrix_status(work)
     return {

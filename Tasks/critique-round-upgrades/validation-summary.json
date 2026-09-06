@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "product_files": [
+    {
+      "path": "skills/critique-machinery/SKILL.md",
+      "sha256": "df9f78243e904e8984d6936689e6373f8fc7ddfffd579bc02c01d5dc63c32bec"
+    },
+    {
+      "path": "skills/critique-machinery/scripts/critique.py",
+      "sha256": "5b36769cfae780629a220ad97507c9cb2fd58ec2e70bf8ceabad10d23b68a2a7"
+    },
+    {
+      "path": "tests/test_critique_counterevidence.py",
+      "sha256": "0c0338fe1ae67827080bcbf1b21d7e3ae820bccd91fad0c011cff44a39d50082"
+    },
+    {
+      "path": "tests/test_critique_reader_runtime.py",
+      "sha256": "3afc02c998232cae83b8a3040e11fc3cf69e58bfc24c7fc9934375cbdd2831f0"
+    },
+    {
+      "path": "tests/test_critique_incremental_recording.py",
+      "sha256": "4f4688f74207ded5215384dc56478583173587ccfde2522a25dfeb111e0fe146"
+    },
+    {
+      "path": "tests/test_critique_process_lifecycle.py",
+      "sha256": "5de6b5970ce71e68f73c7378f5a736d78a1830dc8935d6f6d76636b11b0f5878"
+    },
+    {
+      "path": "tests/test_critique_reader_isolation.py",
+      "sha256": "0849effdba7ae4c83defa13c78c5e5206fd172f140cc446a9f98c482fd6847dc"
+    }
+  ],
+  "tests_passed": 89,
+  "validated_atoms": [
+    {
+      "atom": "atom-01",
+      "receipt": {
+        "schema_version": 1,
+        "status": "completed",
+        "atomic_step_id": "critique-bounded-reader-lifecycle",
+        "promotion_event_sha256": "36cb22269c954baef340a3ec37ddc28c0dda97826e864057e470b1acf768be18",
+        "cases": [
+          {
+            "case_id": "completed-reader",
+            "verdict": "satisfied",
+            "reason": "Public read-cell completed two fresh Codex seats and retained an unfinished whole-artifact status.",
+            "evidence": [
+              {
+                "case_id": "completed-reader",
+                "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades/atom-01/live-completed-reader.json",
+                "sha256": "8c7d70b2b72a31e5f467200f8ada3cf79c5a7ae2e54906ae59766ba3ad056cca"
+              }
+            ]
+          },
+          {
+            "case_id": "stalled-reader",
+            "verdict": "satisfied",
+            "reason": "Public read-cell with an injected 1ms deadline recorded two visible timeout/no-answer seats in 0.027s; group-child cleanup independently proven in the captured topology experiment.",
+            "evidence": [
+              {
+                "case_id": "stalled-reader",
+                "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades/atom-01/live-stalled-reader.json",
+                "sha256": "d7076878e61fffa1fc9d5592b071d64c7adce9311c4c0d36176786be5860a516"
+              }
+            ]
+          }
+        ]
+      },
+      "receipt_sha256": "fec33eba2b114a47c9a395f0a7e62d536c76030351b7c6031ec54fec760b838e"
+    },
+    {
+      "atom": "atom-02",
+      "receipt": {
+        "schema_version": 1,
+        "status": "completed",
+        "atomic_step_id": "critique-incremental-pair-recording",
+        "promotion_event_sha256": "85f17c6ebae86a1fbf35ceeccc240a010fc2aade0326396e15d47e6150bf4405",
+        "cases": [
+          {
+            "case_id": "completed-pairs",
+            "verdict": "satisfied",
+            "reason": "Promoted read-run exposes137 completed cells before delayed reply, has no half pairs and refuses premature report; terminal cells match all captured semantic evidence.",
+            "evidence": [
+              {
+                "case_id": "completed-pairs",
+                "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades/atom-02/validated-replay/completed-pairs/observed.json",
+                "sha256": "826b06e5a28664550c37b215f8949c7af1b740f4f0766c7377de60d70aa2ae72"
+              }
+            ]
+          },
+          {
+            "case_id": "full-round",
+            "verdict": "satisfied",
+            "reason": "Promoted read-run exposes137 completed cells before delayed reply, has no half pairs and refuses premature report; terminal cells match all captured semantic evidence.",
+            "evidence": [
+              {
+                "case_id": "full-round",
+                "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades/atom-02/validated-replay/full-round/observed.json",
+                "sha256": "88fa58cf222c8299f781bd11fdc38ff58bc571c6fcd3f3d8ecf43cff4788794a"
+              }
+            ]
+          }
+        ]
+      },
+      "receipt_sha256": "000f863717ec2d59ed13a9bb53ac5adb4a69e5a84e68622ed0be9a7d8b567d2f"
+    },
+    {
+      "atom": "atom-03-replacement",
+      "receipt": {
+        "schema_version": 1,
+        "status": "completed",
+        "atomic_step_id": "critique-reader-isolation",
+        "promotion_event_sha256": "ae797cf1540e51accc202aee480fd42916e073291ed8ad74234489cc41b75d6e",
+        "cases": [
+          {
+            "case_id": "clean-reply",
+            "verdict": "satisfied",
+            "reason": "Promoted public path preserves clean transport or refuses contaminated evidence; two fresh actual Codex seats finish with complete assistant-only traces and matching reply bytes.",
+            "evidence": [
+              {
+                "case_id": "clean-reply",
+                "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades/atom-03-replacement/real-validation/clean-reply/proof.json",
+                "sha256": "d01d5af7e79f02cd97646e854ae7081fbf29c2290bcf6ba6808c90b5703419e5"
+              }
+            ]
+          },
+          {
+            "case_id": "outside-material",
+            "verdict": "satisfied",
+            "reason": "Promoted public path preserves clean transport or refuses contaminated evidence; two fresh actual Codex seats finish with complete assistant-only traces and matching reply bytes.",
+            "evidence": [
+              {
+                "case_id": "outside-material",
+                "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades/atom-03-replacement/real-validation/outside-material/proof.json",
+                "sha256": "3d65f730b749e0fbc911939fe1f686c7e5f583b0bd9f81215f90b00bbc6aa1d7"
+              }
+            ]
+          }
+        ]
+      },
+      "receipt_sha256": "378beb82f2b890bb17a5abc23b58bf6bf027f53e578b2f5a01b10bdec78a691b"
+    }
+  ],
+  "rejected": "Semantic prompt atom failed fresh validation and is excluded.",
+  "full_evidence_root": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-round-upgrades-20260906/checkout/Tasks/critique-round-upgrades",
+  "scope": "Compact relevant receipts; full local experimental evidence is retained outside this publication.",
+  "installed_projections": {
+    "codex": {
+      "path": "/Users/kamenkamenov/.codex/skills/critique-machinery",
+      "tree_sha256": "1fc0ad8f5df5aa238f1c42c548792b468d9a02d2fb3918e80f1b15eaf12bbd89",
+      "runtime": "codex exec"
+    },
+    "claude": {
+      "path": "/Users/kamenkamenov/.claude/skills/critique-machinery",
+      "tree_sha256": "a42f49bdbd0cb998be6b46efc3212f1fbf72fa1f01d8d81f3464d717882a1b28",
+      "runtime": "claude -p"
+    }
+  }
+}

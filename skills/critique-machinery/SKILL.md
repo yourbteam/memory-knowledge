@@ -68,9 +68,10 @@ Do not substitute labels, paraphrases, or model memory for those records.
 
 Run each judgment through both fixed blind seats. The installed client projection owns the reader
 runtime; the script refuses an unavailable or invalid runtime rather than switching clients. Code
-starts every seat in an isolated working directory with that client's settings, tools, persistence,
-and ambient instructions disabled, and supplies an exact schema through the client's structured
-output control. The reply intake accepts exactly one schema-valid JSON object and records exactly
+starts every seat in an isolated working directory with client-specific instruction and capability
+controls, and supplies an exact schema through the client's structured output control. Codex
+admits only the completed assistant-only trace described below; Claude uses its existing
+restricted tool and settings controls. The reply intake accepts exactly one schema-valid JSON object and records exactly
 one of `valid`, `malformed`, `empty`, `timeout`, or `nonzero-exit`; it never repairs fences,
 prefaces, truncation, extra keys, or wrong lens order.
 This code-owned interview is the only model entry point: `read-cell`, `read-run`, and
@@ -202,3 +203,22 @@ The result is always specified-finding-only. The receipt exposes unread after ce
 open owner questions, other known after findings, and other before findings explicitly
 not reassessed. It never clears the whole card or artifact, changes a run's existing
 reader state, invents an owner ruling, or assumes other before findings still exist.
+
+
+Reader attempts have a 180-second deadline, recorded in each input envelope. Timeout kills
+the isolated reader process group, including its launcher and child; successful launchers
+also release remaining group members. The attempt remains a visible timeout/no-answer.
+This default preserved all 45 successful durations in the captured September 6 round; it
+is not a guarantee that future useful replies always finish within three minutes. Retry
+remains a separate explicit operator action, never an automatic second three-minute wait.
+
+
+During `read-run`, each complete blind pair is recorded as soon as both replies finish.
+`status` and `findings` can expose that evidence while other readers run; `reader-progress.jsonl`
+records finished reader identities, outcomes, and completed-pair counts. Matrix publication
+is atomic. No single-seat claim is presented as a completed pair, and unread cells still
+block `report` and `document`. This changes evidence availability, not semantic judgments.
+
+### Codex reader isolation
+
+The reader invocation omits ambient skill instructions and project documentation and disables shell, plugin, app, browser, image, collaboration, hook, and workspace dependency capabilities without changing model defaults or authentication. This does not assert an empty tool schema. The preserved Codex JSON event trace must complete one answered turn containing only assistant/reasoning items, and its final assistant text must match the preserved reply. Tool use, unknown events, failed or incomplete traces, and mismatched replies are classified as malformed; they cannot become accepted blind evidence. Claude retains its existing client-specific controls.
