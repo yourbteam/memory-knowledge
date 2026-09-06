@@ -103,12 +103,12 @@
       ]
     },
     "experiment-machinery": {
-      "canonical_tree_sha256": "eb46032dfcfc232ff91f3c959bf1bfd347ebddcbc2363a9eab69969d3c272728",
+      "canonical_tree_sha256": "6c75b87b6469525825ecf613d1b512178fe36ce43ef05a9a1c3df326edcb98ad",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "eb46032dfcfc232ff91f3c959bf1bfd347ebddcbc2363a9eab69969d3c272728",
+      "projected_tree_sha256": "6c75b87b6469525825ecf613d1b512178fe36ce43ef05a9a1c3df326edcb98ad",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -227,15 +227,15 @@
       ]
     },
     "requirements-machinery": {
-      "canonical_tree_sha256": "9e558a0ac0bc4ad1928df4f7dd1b9ed8a8d77544a1e4c067c7313fe4a603d04c",
+      "canonical_tree_sha256": "ae8b8251cce474cfa0de14be0e07c8e4c67e9ed4cf1f25bad97728911fadaf62",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the exact reader runtime policy while the coverage and requirements behavior remains shared.",
       "generator": "machinery-client-model-v2",
       "generator_sha256": "70fbf3155f75718fe10efd078becf87eaf593b84f0e310e181e6f7ad5fb30ffa",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "ea7098dd1942af88641c6a1aa5df65a8ac0aedadbbbdddba06a95d2b5f12a11d",
-        "codex": "4b3f405042280a97dab256ac4f93574fa9b0f3b60b046e34d2a6762951b867c9"
+        "claude": "14edfbf8b6899d558e8ccc7323dbde81dfb985c792601e4fa9fc7e18edfc8339",
+        "codex": "395105d65cf14ec2c7d82c37c02163841b0228e48f14a58c3f5faecf735ce036"
       },
       "scenario_groups": [
         "CAP-SHARED"

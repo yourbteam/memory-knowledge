@@ -12,6 +12,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
+from evaluator_calibration import normalize_calibration, validate as validate_calibration
+from winner_selection import validate as validate_selection
+from independent_evaluation import normalize_reference, validate as validate_assessment
 
 sys.dont_write_bytecode = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -541,6 +544,9 @@ def _run_experiment(
     case_path: Path,
     mappings: list[dict[str, Any]],
     evaluator: dict[str, Any],
+    assessment: dict[str, Any] | None = None,
+    selection: dict[str, Any] | None = None,
+    calibration: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     scripts = Path(__file__).parent
     runner = scripts / "run_experiment.py"
@@ -586,6 +592,13 @@ def _run_experiment(
             "evaluator": evaluator,
         },
     }
+    if assessment is not None:
+        spec["schema_version"] = 5
+        spec["evaluation"]["assessment"] = assessment
+    if selection is not None:
+        spec["evaluation"]["selection"] = selection
+    if calibration is not None:
+        spec["evaluation"]["calibration"] = calibration
     _write_once(output / "experiment.json", spec)
     _write_once(
         output / "variant-map.json",
@@ -724,6 +737,12 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
     common = {
         "schema_version", "development_manifest", "probe_id", "case_id", "evaluator"
     }
+    if "assessment" in request:
+        common.add("assessment")
+    if "selection" in request:
+        common.add("selection")
+    if "calibration" in request:
+        common.add("calibration")
     fields = set(request)
     if fields == common | {"approach_build_requests"}:
         candidate_source = "build"
@@ -762,6 +781,27 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
         case_id = _identifier(request["case_id"], "case_id", "validate-request")
         probe = _find_probe(manifest, probe_id)
         case, case_path = _find_case(manifest, probe, case_id, manifest_path)
+        selection = request.get("selection")
+        try:
+            validate_selection(selection, probe["evaluation"]["metrics"], "assessment" in request)
+        except ValueError as error:
+            raise LaunchError("validate-request", str(error)) from error
+        assessment = None
+        if "assessment" in request:
+            try:
+                assessment = normalize_reference(request["assessment"], request_path.parent)
+                validate_assessment(assessment, probe["evaluation"]["metrics"], request_path)
+            except (ValueError, OSError) as error:
+                raise LaunchError("validate-request", f"probe {probe_id!r} assessment is invalid: {error}; correct its reference, output fields, or criteria before retrying") from error
+        calibration = None
+        if "calibration" in request:
+            if assessment is None:
+                raise LaunchError("validate-request", "calibration requires version-5 assessment; declare independent raw-output observations")
+            try:
+                calibration = normalize_calibration(request["calibration"], request_path.parent)
+                validate_calibration(calibration, probe["evaluation"]["metrics"], assessment, request_path)
+            except (ValueError, OSError) as error:
+                raise LaunchError("validate-request", f"calibration is invalid: {error}") from error
         if candidate_source == "build":
             tasks = _reconcile_approaches(
                 probe["approaches"], request["approach_build_requests"], request_path.parent
@@ -796,7 +836,17 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
             case_path,
             mappings,
             evaluator,
+            assessment,
+            selection,
+            calibration,
         )
+        if summary.get("champion") is None:
+            result = {"schema_version": CONTRACT, "status": "completed", "recommendation": None,
+                "selection_outcome": summary.get("selection_outcome", "no-qualified-candidate"),
+                "atomic_step_id": manifest["atomic_step"]["id"], "probe_id": probe_id,
+                "case_id": case_id, "promotion_applied": False}
+            _write_once(output / "launch-summary.json", result)
+            return result
         recommendation = _bind_recommendation(
             output, manifest, probe_id, case_id, summary, mappings
         )

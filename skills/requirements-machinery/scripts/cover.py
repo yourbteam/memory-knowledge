@@ -511,6 +511,34 @@ def _last_target(state):
     return rel.get("target") or rel.get("last")
 
 
+def _reader_coverage_error(state, target, work, include_obligations=False):
+    """Historic output remains replayable, but cannot certify a new complete extraction."""
+    coverage = _load("reader_coverage")
+    rows = state.get("relevance", {}).get("targets", {}).get(target, {}).get("pieces", {})
+    for piece in state["pieces"]:
+        piece_id = piece["id"]
+        text = (Path(work) / "pieces" / f"{piece_id}.txt").read_text()
+        row = rows.get(piece_id)
+        if row is None and include_obligations:
+            return f"{piece_id} has no relevance coverage"
+        if row is not None and (len(row.get("seats", [])) != 2 or any(
+                not coverage.matches(seat.get("coverage"), text, target)
+                for seat in row.get("seats", []))):
+            return f"{piece_id} has legacy, incomplete, or changed relevance coverage"
+        if include_obligations and row and row.get("verdict") != "does-not-bear":
+            result = state.get("obligations", {}).get(target, {}).get(piece_id)
+            if result is None or not coverage.matches(result.get("coverage"), text, target):
+                return f"{piece_id} has legacy, incomplete, or changed obligation coverage"
+    return None
+
+
+def _refuse_reader_coverage(error):
+    print(f"cannot certify complete reader input: {error}. Open the source in a fresh work "
+          "directory and rerun relevance and obligations; the existing run and owner rulings "
+          "are preserved for inspection.", file=sys.stderr)
+    return 3
+
+
 def relevance(work, target, reader_command):
     """Ask, of every piece the register holds, whether it bears on the document being built.
 
@@ -521,6 +549,9 @@ def relevance(work, target, reader_command):
     relevance_mod = _load("relevance")
     state = _read(work)
     rows = _verdicts(state, target)
+    error = _reader_coverage_error(state, target, work)
+    if error:
+        return _refuse_reader_coverage(error)
     for piece in state["pieces"]:
         if piece["id"] in rows:
             continue
@@ -559,6 +590,9 @@ def obligations(work, reader_command):
               f"{work} --target ... --reader-command ...` first.", file=sys.stderr)
         return 3
     judged = _verdicts(state, target)
+    error = _reader_coverage_error(state, target, work)
+    if error:
+        return _refuse_reader_coverage(error)
     unjudged = [p["id"] for p in state["pieces"] if p["id"] not in judged]
     if unjudged:
         print(f"cannot take obligations: {len(unjudged)} of {len(state['pieces'])} piece(s) have "
@@ -576,17 +610,25 @@ def obligations(work, reader_command):
                                        relevance_mod.NO_ANSWER)]
     store = state.setdefault("obligations", {}).setdefault(target, {})
     for piece_id in sorted(admitted) + sorted(unsettled):
-        if piece_id in store:
-            continue
         text = (Path(work) / "pieces" / f"{piece_id}.txt").read_text()
+        if piece_id in store:
+            if not obligations_mod.coverage.matches(store[piece_id].get("coverage"), text, target):
+                return _refuse_reader_coverage(f"{piece_id} has legacy or changed obligation coverage")
+            continue
         seats = state["relevance"]["targets"][target]["pieces"].get(piece_id, {}).get("seats", [])
-        admitted_on = [str(s.get("quote")) for s in seats
-                       if s.get("quote") and str(s.get("quote")) != "None"]
-        found, asked, by_cut = obligations_mod.extract(text, target, reader_command, quotecheck,
-                                                       admitted_on=admitted_on, piece=piece_id)
+        admitted_on = [str(q) for seat in seats
+                       for q in seat.get("quotes", [seat.get("quote")]) if q and str(q) != "None"]
+        try:
+            found, asked, by_cut = obligations_mod.extract(text, target, reader_command, quotecheck,
+                                                           admitted_on=admitted_on, piece=piece_id)
+        except ValueError as error:
+            print(f"cannot complete obligations for {piece_id}: {error}", file=sys.stderr)
+            return 3
         store[piece_id] = {"obligations": found, "units_offered": asked, "at": time.time(),
                            "settled": piece_id in admitted, "by_cut": by_cut,
-                           "relevance_verdict": judged[piece_id]["verdict"]}
+                           "relevance_verdict": judged[piece_id]["verdict"],
+                           "coverage": obligations_mod.coverage.receipt(text, target,
+                               [{"cut": name, **cut["coverage"]} for name, cut in by_cut.items()])}
         _write(work, state)
         print(f"{piece_id}: {len(found)} of {asked} lines"
               f"{'' if piece_id in admitted else '   (unsettled — for the owner)'}", flush=True)
@@ -677,7 +719,8 @@ def collapse(work, reader_command):
         print(f"reusing the recorded judgement of these exact {len(entries)} entries "
               f"(0 reader calls)", flush=True)
     else:
-        merged, owner, detail = dedupe_mod.judge(entries, reader_command)
+        merged, owner, detail = dedupe_mod.judge(entries, reader_command,
+            cache_dir=Path(work) / "comparison-checkpoints" / "collapse", namespace=target)
     # The pairs are the proven deliverable. The first production run also formed groups by
     # transitive closure, and that closure — never experimented — chained 17 of 28 entries into
     # one: A shared a rule with B and B another with C, so A and C fused while sharing nothing.
@@ -797,7 +840,8 @@ def requirements(work, reader_command):
         item_owner = [tuple(x) for x in prior_j["owner"]]
         print(f"reusing the recorded rule judgement (0 reader calls)", flush=True)
     else:
-        item_merged, item_owner, _ = dedupe_mod.judge(rule_texts, reader_command)
+        item_merged, item_owner, _ = dedupe_mod.judge(rule_texts, reader_command,
+            cache_dir=Path(work) / "comparison-checkpoints" / "requirements", namespace=target)
         state.setdefault("requirements", {}).setdefault(target, {})["rule_judgement"] = {
             "texts": rule_texts, "merged": sorted(map(list, item_merged)),
             "owner": sorted(map(list, item_owner))}
@@ -1796,20 +1840,10 @@ def _final_semantic_candidates(items, dedupe_mod, reflow_mod, distinct_pairs):
     return kept, automatic, reader
 
 
-def _read_final_semantic_pair(dedupe_mod, reader_command, left, right, pair):
-    votes = []
-    for _ in range(dedupe_mod.ASKS):
-        raw = dedupe_mod.interview.ask_free(
-            reader_command,
-            dedupe_mod.ASK.format(a=left, b=right),
-            stage="final-semantic-dedupe",
-            piece=f"{pair[0]}-{pair[1]}",
-        )
-        answer = next((re.sub(r"[^A-Z]", "", line.upper())
-                       for line in raw.split("\n")
-                       if re.sub(r"[^A-Z]", "", line.upper()) in ("YES", "NO")), None)
-        votes.append(answer)
-    return votes, dedupe_mod.verdict(votes, dedupe_mod.cover(left, right))
+def _read_final_semantic_pair(dedupe_mod, reader_command, left, right, pair,
+                              cache_dir=None, namespace=""):
+    return dedupe_mod.read_pair(left, right, reader_command, pair, cache_dir=cache_dir,
+                               namespace=namespace, stage="final-semantic-dedupe")
 
 
 def _final_semantic_consolidate(items, state, target, work, reader_command, reflow_mod,
@@ -1850,7 +1884,9 @@ def _final_semantic_consolidate(items, state, target, work, reader_command, refl
         for pair in reader_pairs:
             left, right = (kept[pair[0] - 1]["statement"], kept[pair[1] - 1]["statement"])
             votes, verdict = _read_final_semantic_pair(
-                dedupe_mod, reader_command, left, right, pair)
+                dedupe_mod, reader_command, left, right, pair,
+                cache_dir=Path(work) / "comparison-checkpoints" / "final-semantic",
+                namespace=target)
             if verdict == "merge":
                 merged.add(_canonical_final_pair(pair))
             elif verdict == "owner":
@@ -1922,6 +1958,9 @@ def document(work, out_path, reader_command=None):
         return 3
     state["_work"] = work
     target = _last_target(state)
+    error = _reader_coverage_error(state, target, work, include_obligations=True)
+    if error:
+        return _refuse_reader_coverage(error)
     queue = _owner_queue(state, target)
     if queue is None:
         print(f"no distilled record in {work}. Run `cover.py distill` first.", file=sys.stderr)
@@ -2294,6 +2333,8 @@ def _next_stage_from_state(state, target, work=None):
     completion = state.get("obligation_completion", {}).get(target, {})
     if (completion.get("complete") is not True
             or sorted(completion.get("piece_ids", [])) != expected_obligations):
+        return "obligations"
+    if work is not None and _reader_coverage_error(state, target, work, include_obligations=True):
         return "obligations"
     if target not in state.get("collapse", {}):
         return "collapse"
