@@ -2105,6 +2105,42 @@ def read_run(work: Path) -> dict[str, Any]:
     return result
 
 
+
+def read_recoverable_round(work: Path) -> dict[str, Any]:
+    """Complete reading and the existing one-retry policy as one operator action."""
+    def progress(event, **details):
+        record = {"schema_version": 1, "event": event,
+                  "recorded_at": datetime.now(timezone.utc).isoformat(), **details}
+        with (work / "round-progress.jsonl").open("a", encoding="utf-8") as feed:
+            feed.write(json.dumps(record, sort_keys=True) + "\n")
+
+    # Validate the run before creating telemetry; read_run owns plan/reentry admission.
+    load_matrix(work)
+    progress("round-started")
+    try:
+        initial = read_run(work)
+        progress("reading-completed", reader_calls=initial["reader_calls"],
+                 failed_seats=initial["retryable_failed_seat_count"])
+        retry_calls = 0
+        if initial["retryable_failed_seat_count"]:
+            progress("recovery-started", failed_seats=initial["retryable_failed_seat_count"])
+            recovered = retry_failed(work)
+            retry_calls = recovered["reader_calls"]
+            progress("recovery-completed", reader_calls=retry_calls,
+                     exhausted_seats=recovered["retry_exhausted_seat_count"])
+        current = matrix_status(work)
+        state = ("exhausted" if current["retry_exhausted_seat_count"]
+                 else "recovered" if retry_calls else "not-needed")
+        result = {**current, "reader_calls": initial["reader_calls"] + retry_calls,
+                  "recovery": {"state": state, "initial_reader_calls": initial["reader_calls"],
+                               "retry_reader_calls": retry_calls}}
+        progress("round-completed", recovery_state=state, reader_calls=result["reader_calls"],
+                 owner_queue_count=current["owner_queue_count"])
+        return result
+    except Exception as exc:
+        progress("round-failed", reason=str(exc))
+        raise
+
 def _read_run_impl(work: Path) -> dict[str, Any]:
     manifest, matrix = load_matrix(work)
     source_context = "Judge the target unit against the immutable complete artifact and registered evidence supplied below."
@@ -2316,7 +2352,7 @@ def _start_quality_recovery(work: Path, manifest: dict[str, Any], matrix: dict[s
         raise Refusal("planned recovery already started; preserve the bounded attempt evidence")
     start = {"schema_version": 1, "entrypoint": "retry-failed",
              "original_matrix_sha256": witness["matrix_sha256"],
-             "bound_files": {name: digest_file(work / name) for name in
+             "bound_files": {name: (digest_file(work / name) if name != "sources.json" or (work / name).exists() else None) for name in
                  ("quality-plan.json", "quality-execution.json", "unit-manifest.json", "sources.json")},
              "original_evidence": _quality_recovery_files(matrix)}
     with (work / "quality-recovery-before.json").open("xb") as target:
@@ -2342,7 +2378,8 @@ def _quality_recovery_bound(work: Path, manifest: dict[str, Any], matrix: dict[s
                 or witness.get("status") != "completed" or witness.get("entrypoint") != "read-run"
                 or witness.get("plan_sha256") != digest_file(work / "quality-plan.json")
                 or set(start["bound_files"]) != {"quality-plan.json", "quality-execution.json", "unit-manifest.json", "sources.json"}
-                or any(digest_file(work / name) != sha for name, sha in start["bound_files"].items())
+                or any((digest_file(work / name) if name != "sources.json" or (work / name).exists() else None) != sha
+                       for name, sha in start["bound_files"].items())
                 or start["original_evidence"] != _quality_recovery_files(before)):
             return False
         _quality_plan(work, manifest)
@@ -3783,6 +3820,7 @@ def main(argv: list[str] | None = None) -> int:
     read_parser.add_argument("--id", required=True)
     read_run_parser = sub.add_parser("read-run", help="resume blind readers across every unread matrix cell")
     read_run_parser.add_argument("--work", required=True)
+    read_run_parser.add_argument("--recover-failed", action="store_true", help="complete the existing single failed-seat retry before returning")
     consistency_parser = sub.add_parser(
         "consistency", help="fill the code-owned payload-consistency lens from the bound payload"
     )
@@ -3914,7 +3952,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "read-cell":
             result = read_cell(Path(args.work), args.id)
         elif args.command == "read-run":
-            result = read_run(Path(args.work))
+            result = (read_recoverable_round if args.recover_failed else read_run)(Path(args.work))
         elif args.command == "consistency":
             result = run_consistency(Path(args.work))
         elif args.command == "retry-failed":

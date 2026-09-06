@@ -84,6 +84,17 @@ Every failed seat becomes a visible `no-answer` for each cell it covered. `retry
 only those failed first attempts, once, into a new `attempt-002` evidence directory. It preserves
 the first bytes and refusal, never launches a third attempt, and leaves a second failure visible
 for the owner rather than wedging or silently clearing it.
+For a complete round, use `read-run --work RUN --recover-failed`. This performs the initial
+reading and immediately invokes the same bounded recovery when failed first attempts remain.
+It adds no retry for a successful read and never starts a third attempt. The returned recovery
+state is `not-needed`, `recovered`, or `exhausted`; `recovered` means transport recovery, not
+artifact approval or satisfied quality criteria. Owner questions and quality assessment remain
+separate. `round-progress.jsonl` exposes reading, recovery, completion, and failure transitions;
+the detailed original reader evidence and full-round/recovery witnesses remain intact.
+The flag is explicit: unflagged `read-run` and separate `retry-failed` keep their existing behavior.
+An interrupted planned round remains refused on reentry; inspect preserved evidence rather than
+restarting automatically. Timeouts and models are unchanged.
+
 Disagreement, no-answer, and a defect without grounded words remain distinct owner questions.
 Present only the first question, record only an offered verdict, and preserve the owner's words
 verbatim. The machine never casts that vote.
