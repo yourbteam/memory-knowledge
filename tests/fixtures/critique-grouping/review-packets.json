@@ -1,0 +1,915 @@
+{
+  "repeated-header": {
+    "material": {
+      "findings": [
+        {
+          "end_line": 7,
+          "finding_id": "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::buyer-read",
+              "lens": "buyer-read",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "The buyer cannot confidently authorize or route work on the proof page because Kamen is presented as its owner even though the page says no owner is recorded.",
+          "quote": "| The Stop Line proof page | Kamen Kamenov | The Stop Line proof page works in Months 2, 4, 5, 6, 7, 8, 9, 10, 11 and 12. | Proof library lock, Matthew Maday technical confirmation and public identity cleanup. | Owned-channel build inside internal pilot cost. |",
+          "quote_sha256": "af55746e35b3737162f52ed742dd25437180d887fdc739ac4c0771300fc5a0d4",
+          "reason": "The table labels Kamen Kamenov as owner of the proof page, contradicting complete-page line 6, which says the owners are not approved and no owner is recorded. Kamen's separately stated approval role does not resolve operational ownership.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 7,
+          "status": "grounded"
+        },
+        {
+          "end_line": 8,
+          "finding_id": "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::buyer-read",
+              "lens": "buyer-read",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "The buyer cannot tell whether Kamen must execute the test or merely approve it, so accountability for Month 3 is unreliable.",
+          "quote": "| Owner control message test | Kamen Kamenov | Owner control message test works in Month 3. | Testable owner-control language, paid/owned test setup and baseline measurement instrument. | Selective paid test spend decided case by case. |",
+          "quote_sha256": "0380e130ccdf5fe1281aa6cef01fc16e2c7ee45d3686f357b16f393067fd1f5a",
+          "reason": "The owner-control test is assigned to Kamen Kamenov despite the artifact-wide notice that no owner is recorded; elsewhere Kamen is identified as the card's approver, which is a different responsibility.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 8,
+          "status": "grounded"
+        },
+        {
+          "end_line": 10,
+          "finding_id": "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::buyer-read",
+              "lens": "buyer-read",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "The buyer may direct production work to Kamen without an approved assignment, risking delay or unowned execution.",
+          "quote": "| Signed by Humans founder launch post | Kamen Kamenov | Signed by Humans founder launch post works in Month 5. | Public proof page, social pack, founder language and final claim approval. | Internal content production, with paid amplification decided case by case. |",
+          "quote_sha256": "af4229c8c6a4b3c9d584089d7a28df72d19230d36e7095f2a14f2b1925b3dc94",
+          "reason": "The founder-launch-post row records Kamen Kamenov as owner while complete-page line 6 explicitly says the owners are not yet approved and no owner is recorded.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 10,
+          "status": "grounded"
+        },
+        {
+          "end_line": 12,
+          "finding_id": "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::buyer-read",
+              "lens": "buyer-read",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "The buyer cannot know whether Matthew owns production of the technical story or only supplies technical approval.",
+          "quote": "| Technical proof story | Matthew Maday | Technical proof story works in Months 7, 8, 9, 10, 11 and 12. | Approved technical artifact, proof label, senior owner and stated stop line. | Internal technical content time, with design production approved case by case. |",
+          "quote_sha256": "cfcaa2b7fc62e691a228468a95eb1e88ed4819ed9f2bf7da4677a168a192ba4b",
+          "reason": "The row names Matthew Maday as owner of the technical proof story, conflicting with the page's no-owner status and blurring his separately documented technical-confirmation role.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 12,
+          "status": "grounded"
+        },
+        {
+          "end_line": 16,
+          "finding_id": "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::buyer-read",
+              "lens": "buyer-read",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "The buyer lacks a dependable accountable party for the Month 12 closeout and may treat an unapproved assignment as settled.",
+          "quote": "| Close scorecard and message recalibration | Kamen Kamenov | Close scorecard and message recalibration works in Month 12. | Measurement reports, Key-Message Table, proof gap register and executive review. | Internal measurement and planning time. |",
+          "quote_sha256": "4210cd641659eb59d148e7fb3a4667a1ce1d5ca31c1db566fc89e91f64f7d345",
+          "reason": "The scorecard row assigns ownership to Kamen Kamenov even though the complete artifact explicitly says no owner is recorded.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 16,
+          "status": "grounded"
+        },
+        {
+          "end_line": 6,
+          "finding_id": "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::buyer-read",
+              "lens": "buyer-read",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-2",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "The buyer cannot confidently authorize work or route approvals because the page simultaneously says no owner is recorded and presents named people as owners and approvers.",
+          "quote": "| Platform decision, positioning, proof lane, claims and public references | Kamen Kamenov | Final approval before Month 1 work begins, then before each public release in Months 4, 5, 6, 7, 10, 11 and 12. | Proof library, public identity cleanup, Key-Message Table, claim boundary and do-not-say lines. | Internal pilot cost, with out-of-pocket costs decided case by case. | | Claim-level and AI-language technical confirmation | Matthew Maday | Approval before any technical or AI-language claim runs in Months 2, 4, 5, 6, 7, 10, 11 and 12. | Approved proof types, technical artifacts, internal demos and claim-level language. | Internal technical review time, with external production costs approved case by case. |",
+          "quote_sha256": "3362fb07ddd8efeb62bb19a8fd5ea1a01ab1282333526bf1ca55829cc3849db2",
+          "reason": "These rows record Kamen Kamenov and Matthew Maday as owners with mandatory approval cadences, but complete-page line 6 says the owners and calendar are not approved and that no owner is recorded. The table does not label these named assignments as proposed, so the operating instruction conflicts with the page-level status.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 5,
+          "status": "grounded"
+        },
+        {
+          "end_line": 7,
+          "finding_id": "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::cfo",
+              "lens": "cfo",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "Internal build capacity and any related spend cannot be reliably charged or authorized against an approved accountable owner.",
+          "quote": "| The Stop Line proof page | Kamen Kamenov | The Stop Line proof page works in Months 2, 4, 5, 6, 7, 8, 9, 10, 11 and 12. | Proof library lock, Matthew Maday technical confirmation and public identity cleanup. | Owned-channel build inside internal pilot cost. |",
+          "quote_sha256": "af55746e35b3737162f52ed742dd25437180d887fdc739ac4c0771300fc5a0d4",
+          "reason": "The proof-page resource frame is attached to Kamen as owner, but the complete page says ownership is unapproved and unrecorded; approval authority is not the same as delivery accountability.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 7,
+          "status": "grounded"
+        },
+        {
+          "end_line": 8,
+          "finding_id": "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::cfo",
+              "lens": "cfo",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "Selective paid-test spending lacks a dependable operational owner for requesting and controlling the case-by-case decision.",
+          "quote": "| Owner control message test | Kamen Kamenov | Owner control message test works in Month 3. | Testable owner-control language, paid/owned test setup and baseline measurement instrument. | Selective paid test spend decided case by case. |",
+          "quote_sha256": "0380e130ccdf5fe1281aa6cef01fc16e2c7ee45d3686f357b16f393067fd1f5a",
+          "reason": "The row assigns Kamen ownership of the message test despite the artifact-wide statement that no owner is recorded.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 8,
+          "status": "grounded"
+        },
+        {
+          "end_line": 10,
+          "finding_id": "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::cfo",
+              "lens": "cfo",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "Internal production and possible paid-amplification decisions may be attributed to a person whose delivery ownership has not been approved.",
+          "quote": "| Signed by Humans founder launch post | Kamen Kamenov | Signed by Humans founder launch post works in Month 5. | Public proof page, social pack, founder language and final claim approval. | Internal content production, with paid amplification decided case by case. |",
+          "quote_sha256": "af4229c8c6a4b3c9d584089d7a28df72d19230d36e7095f2a14f2b1925b3dc94",
+          "reason": "The founder-post row presents Kamen as owner while complete-page line 6 says all owners remain unapproved and unrecorded.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 10,
+          "status": "grounded"
+        },
+        {
+          "end_line": 12,
+          "finding_id": "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::cfo",
+              "lens": "cfo",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "Technical-content and design resources cannot be confidently allocated because technical approval and delivery ownership are conflated.",
+          "quote": "| Technical proof story | Matthew Maday | Technical proof story works in Months 7, 8, 9, 10, 11 and 12. | Approved technical artifact, proof label, senior owner and stated stop line. | Internal technical content time, with design production approved case by case. |",
+          "quote_sha256": "cfcaa2b7fc62e691a228468a95eb1e88ed4819ed9f2bf7da4677a168a192ba4b",
+          "reason": "Matthew Maday is shown as tactic owner despite the no-owner notice; the artifact otherwise identifies him as technical confirmer, not necessarily the resource owner.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 12,
+          "status": "grounded"
+        },
+        {
+          "end_line": 16,
+          "finding_id": "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::cfo",
+              "lens": "cfo",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "Month 12 measurement and planning time lacks a reliably approved accountable owner.",
+          "quote": "| Close scorecard and message recalibration | Kamen Kamenov | Close scorecard and message recalibration works in Month 12. | Measurement reports, Key-Message Table, proof gap register and executive review. | Internal measurement and planning time. |",
+          "quote_sha256": "4210cd641659eb59d148e7fb3a4667a1ce1d5ca31c1db566fc89e91f64f7d345",
+          "reason": "The scorecard is assigned to Kamen even though the page expressly says ownership has not been approved or recorded.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 16,
+          "status": "grounded"
+        },
+        {
+          "end_line": 10,
+          "finding_id": "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd",
+          "observations": [
+            {
+              "cell_id": "u-020-9424ef01::cfo",
+              "lens": "cfo",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-2",
+              "unit_id": "u-020-9424ef01"
+            }
+          ],
+          "practical_consequence": "Resource holders cannot treat the listed internal work and case-by-case spending boundaries as authorized commitments because their accountable owners remain officially unapproved.",
+          "quote": "| Platform decision, positioning, proof lane, claims and public references | Kamen Kamenov | Final approval before Month 1 work begins, then before each public release in Months 4, 5, 6, 7, 10, 11 and 12. | Proof library, public identity cleanup, Key-Message Table, claim boundary and do-not-say lines. | Internal pilot cost, with out-of-pocket costs decided case by case. | | Claim-level and AI-language technical confirmation | Matthew Maday | Approval before any technical or AI-language claim runs in Months 2, 4, 5, 6, 7, 10, 11 and 12. | Approved proof types, technical artifacts, internal demos and claim-level language. | Internal technical review time, with external production costs approved case by case. | | The Stop Line proof page | Kamen Kamenov | The Stop Line proof page works in Months 2, 4, 5, 6, 7, 8, 9, 10, 11 and 12. | Proof library lock, Matthew Maday technical confirmation and public identity cleanup. | Owned-channel build inside internal pilot cost. | | Owner control message test | Kamen Kamenov | Owner control message test works in Month 3. | Testable owner-control language, paid/owned test setup and baseline measurement instrument. | Selective paid test spend decided case by case. | | Conversation Management loop and Observatory newsroom | unassigned \u2014 Kamen Kamenov by the kick-off before Month 1 | Conversation Management loop and Observatory newsroom work in Months 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12. | Q&A / FAQ, escalation route, approved-answer register and crisis tripwire. | Always-on internal operating time, with monitoring tools approved case by case. | | Signed by Humans founder launch post | Kamen Kamenov | Signed by Humans founder launch post works in Month 5. | Public proof page, social pack, founder language and final claim approval. | Internal content production, with paid amplification decided case by case. |",
+          "quote_sha256": "7fce120212b163e7ad78a4e7692e7ce2014f1acf183cfc18d391014d6ff03ace",
+          "reason": "The budget frames are attached to named or delegated owners, including Kamen Kamenov and Matthew Maday, while complete-page line 6 says no owner is recorded and the owners are not approved. Until the table distinguishes proposed from approved accountability, its resource decision boundaries are materially ambiguous.",
+          "source_end_line": null,
+          "source_id": null,
+          "source_start_line": null,
+          "start_line": 5,
+          "status": "grounded"
+        }
+      ]
+    },
+    "result": {
+      "input_sha256": "212697012b72af9627cb63a45b641347ed0dff2821aaa5b07e4de1421c3adc19",
+      "matrix_sha256": "6c36c0cdd33e5901ebfc57c0d9618cd8a45032be25abe95aa38add8dc28de30c",
+      "original_finding_count": 12,
+      "owner_confirmed_findings_excluded": 0,
+      "proposed_groups": [
+        {
+          "finding_ids": [
+            "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+            "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+            "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+            "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+            "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+            "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+            "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+            "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+            "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+            "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+            "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+            "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+          ],
+          "reader_explanations": [
+            {
+              "finding_ids": [
+                "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+                "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+                "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+                "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+                "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+                "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+                "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+                "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+                "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+                "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+                "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+                "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+              ],
+              "issue": "The ownership table presents named operational owners as settled even though the artifact-wide status says that owners are not approved and no owner is recorded.",
+              "why_same_issue": "Every observation identifies a manifestation of the same complete-artifact contradiction: named owner entries for approval work or individual tactics conflict with the page-level no-owner status. The proof-page, message-test, founder-post, technical-story, scorecard, approval-cadence, and budget/resource consequences differ only by row or reader lens; they do not allege separate missing obligations. The two broader observations summarize the same contradiction across multiple rows, while the remaining observations instantiate it for particular rows."
+            },
+            {
+              "finding_ids": [
+                "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+                "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+                "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+                "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+                "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+                "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+                "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+                "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+                "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+                "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+                "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+                "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+              ],
+              "issue": "The artifact-wide ownership status contradicts the ownership table: the page says owners are unapproved and no owner is recorded, while the table presents Kamen Kamenov and Matthew Maday as owners without marking those assignments as proposed.",
+              "why_same_issue": "Every observation identifies a manifestation of the same page-wide contradiction in the same ownership table. The proof-page, owner-test, founder-post, technical-story, scorecard, approval-cadence, and budget/resource comments differ only in the affected row, reader lens, or practical consequence. They do not allege separate missing obligations: each depends on the single unresolved failure to distinguish unapproved proposed ownership from recorded operational ownership."
+            }
+          ],
+          "status": "proposed-for-owner-review"
+        }
+      ],
+      "readers": [
+        {
+          "error": null,
+          "groups": [
+            {
+              "finding_ids": [
+                "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+                "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+                "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+                "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+                "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+                "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+                "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+                "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+                "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+                "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+                "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+                "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+              ],
+              "issue": "The ownership table presents named operational owners as settled even though the artifact-wide status says that owners are not approved and no owner is recorded.",
+              "why_same_issue": "Every observation identifies a manifestation of the same complete-artifact contradiction: named owner entries for approval work or individual tactics conflict with the page-level no-owner status. The proof-page, message-test, founder-post, technical-story, scorecard, approval-cadence, and budget/resource consequences differ only by row or reader lens; they do not allege separate missing obligations. The two broader observations summarize the same contradiction across multiple rows, while the remaining observations instantiate it for particular rows."
+            }
+          ],
+          "status": "completed"
+        },
+        {
+          "error": null,
+          "groups": [
+            {
+              "finding_ids": [
+                "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+                "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+                "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+                "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+                "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+                "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+                "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+                "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+                "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+                "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+                "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+                "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+              ],
+              "issue": "The artifact-wide ownership status contradicts the ownership table: the page says owners are unapproved and no owner is recorded, while the table presents Kamen Kamenov and Matthew Maday as owners without marking those assignments as proposed.",
+              "why_same_issue": "Every observation identifies a manifestation of the same page-wide contradiction in the same ownership table. The proof-page, owner-test, founder-post, technical-story, scorecard, approval-cadence, and budget/resource comments differ only in the affected row, reader lens, or practical consequence. They do not allege separate missing obligations: each depends on the single unresolved failure to distinguish unapproved proposed ownership from recorded operational ownership."
+            }
+          ],
+          "status": "completed"
+        }
+      ],
+      "schema_version": 1,
+      "scope": "review-only; no owner ruling or automatic finding merge",
+      "selected_finding_ids": [
+        "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+        "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+        "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+        "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+        "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+        "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+        "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+        "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+        "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+        "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+        "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+        "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd"
+      ],
+      "status": "completed",
+      "unassessed_finding_ids": [
+        "finding-a652343bfb1a95ef9661886a81bc50b19431759c371f4c07a09e740225f03d34",
+        "finding-fd7c5f0475808c2a762ffd58590874fb9c2283aebd8faea19015f53deaba3021",
+        "finding-bacd4fd35fd5cc36b27712ba585e948fc4b312a338cfc08eb70a090c158b37ac",
+        "finding-3b49c5a77affef862eeab37ff0cd9359baa489bf8cc70ad915371e69c898d78d",
+        "finding-a612d513d6722fc7d8e03b78056bd86f552fc33abeeb1b2b156ca137ff9b9b18",
+        "finding-530bcfa9c2769d4e1cc3f0238e821975a2263efd23aff88587dac288c1750e78",
+        "finding-c5532f1f86c78ecdf8985ff4dc2bce3a1751125a2604d4f39546d79b05e9753c",
+        "finding-3ed366af8210552d23d6882c7223462ca12583ae4be6fae37ff11502c1e8fae7",
+        "finding-b4e17381eb0b7018b6ca58017802baa2831235bf96973887ac9742ee8be35094",
+        "finding-812a283e492d620c6ea6b1bc6d0006291cf8aa15dd9fb7a9860fd4f2c2195a64",
+        "finding-516bc4d7113b8b27deed0b8fd5d49c716ae136247647dee4a5f9e7875507f1df",
+        "finding-370bd454c53e88ee537ce056a0e949d6a22d466ba79fad989a48682bea478eae",
+        "finding-258720e6b53306e766d6651d54b26b92302eacfc256f69c0aeca729f04bd5b8c",
+        "finding-77153613ab17cd8faae52b3c3d7c79156cab7919dd0a40a85863a5ebdf0d3c69",
+        "finding-d91307ac9d778b69f8f0277ebc9aef29de6bfc898f275a33b011e28112f3ef69",
+        "finding-7a67cd46941a23d3768c60f013a078a4219fa591f1fecbeaffef7664ea9b8f68",
+        "finding-e5a96b1af43ddb0d32c731070269865b25fa5dca27b0ef3e76dc58ebd42c2c93",
+        "finding-8cf4a524d957675b979ac56aaf2e1bacb0f83a468cdfe4af3cf207f1230fa4b5",
+        "finding-f22ccd066bb568cba7ccc18ccaf1fea53e354a6585b948964cc01b96567c400c",
+        "finding-d7e220f2b012639a782153c26d8dc8096e4f227e903dee4974d3f0519afa39ef",
+        "finding-1623a009a32b6f8e64bbda104d8b3b17379c3b9b0c42a186866abe5fa6379c67",
+        "finding-f736ababd45e06b380dd5fda8cc475999c4cb92396f6ae01be15f9bc04d06753",
+        "finding-878f139e9aef37fd14b9e3fd74eecf7cafd8e4b8f92a92e2aead58ff8932cfe8",
+        "finding-8ec2002b6fa58b3481163ad2589806f4999082a38242d361cccd19af18d6e195",
+        "finding-722f198983ce7d8fd99dbfc30a716e55956764e2996f78abadc5936adf9ae4f1",
+        "finding-74bb7ed5db0787c283620512336b69e62affa6a764b586950a1aebd2f373f5dd",
+        "finding-61d611443ca00f21cdabe23abcbc2c71755ebc9917f45df7c4c03985129e17c4",
+        "finding-35470f2c1da498d8d6e61e02782cc6ac6fe6b3be081b6de329425b6235bbbdb0",
+        "finding-f384111dabef57472aa381dcb697df8d8a7d38a9a62409f31196ade4aabc1c41",
+        "finding-32e3de626d60e325530b9280ef8445f3dcc00a0801ecbf2359e68d32f033450d",
+        "finding-17488b785047180f6d30a62d56ff713305a36d66af0f0ea83f0afebbf8c576e1",
+        "finding-727880c9c70dcf138721ff021540497d9eb0c5e5d08beb3bbd4b491f6d80b614",
+        "finding-4d17aa651da7b3447e5e39098f19911b0d72668bcd689420640564acd9b6b259",
+        "finding-5f170d22e88d25277f8339622ed1373acc1a774e78acdeec12c29e5fb2b91189",
+        "finding-cb003e11d1cec6a596e08266c972f1f5ab8b0a831f10655096c60e28a807b15c",
+        "finding-780dbbabfa593a2f418fb3573c0e909bfbcf63e6026bea9a33b9f8f44c8f6a33",
+        "finding-7216bd00ef31d41f2e56cad19999cf1015ddc00211de0201e7d41cc86467e85c",
+        "finding-12402df30e3653e6f17a087c3f37a16ff4a7353f6672b7db273d536e984e0397",
+        "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+        "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+        "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085",
+        "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20",
+        "finding-371a47b31c66af93f30b4708e9e89095e49062fbe46cd1eb8a79741922aeefff",
+        "finding-11474ee4dd1e012d174833473963cfaa09928907f71e99f28dd56667fd5acedc",
+        "finding-51cd0f97a5ee1722b404543a9af9912ae932e92fd0e394d2e1889a8b31fcf1ae",
+        "finding-bfa32bb7897175f7d38a8f9a7c226ca2a5d26982ac2aabdd54de33e143efa6fc",
+        "finding-d6b69892e9e588db8f80f5b3f3e6dbffade4f70f3dbc5e270c4da6d13efae6d8",
+        "finding-ee292d86fec13602a0b43f7bc840dc5969d219869bad7fc6590977a3521aedba",
+        "finding-c1b277b22373ac199dcf4f9437d6fe0176f93fbb75c05de36d83e75f08ba39fd",
+        "finding-6e468cc28ea83d2791af65d38245f29a8230bae9f3b80524567c37b8a56df8d6",
+        "finding-c842ccd8ac07656b22125add56174cde12a9e4e2dd5fdad0df599d06eb6651b8",
+        "finding-99703c5f9131297926652d72982f0608596e799f9b946a9fef678e0cbf4e52b9",
+        "finding-bfb968020e88bf0a25c96caa3f1e39d54ba68165a6f8d499ba713c6f58425e2a",
+        "finding-7c5e28b65741ae7f427ea34faa5813669383234f5fd484d9578d9bb6c4083c1e",
+        "finding-624e17362e312f5b8f53183810e60f40a53f908c92a0df80bb798f9a97faa6cc",
+        "finding-6534f932863104be77b79d5d23de32e435d9d28645377aa4698040c36ff8cb95",
+        "finding-b49a9b09b8740c30f512e7a5f857c20db051951f5929e4d3feac14516a8735f7",
+        "finding-68ef0cf205f50026cb45e291f47371f372839baf8704bbbaeb132f596a79e764",
+        "finding-c35de85057f3060266fa931d477645e6450f111bcd891aaae663ce615927e562",
+        "finding-30db16b77c4e56375d617ecf46a2929099cbc2684298e8661f82799bdf160d28",
+        "finding-0a6931bdc14ca8b04fcaf7d0061c771f8dad8d56469e45937078c446cdf66372",
+        "finding-b65e6d00f3ee6d666fb8f8955c6294ff0411450685b6729cd1d1a7872d35103d",
+        "finding-9b30738551d0229def6f3807629ceaad1d94628b97a6a80ea08123d1abe5480f",
+        "finding-891de7fc2410be3e4cb675f3b92baf749caf194c38ac0d200a37525a6a38e71e",
+        "finding-f8efd6f6cb8c01d7e2289fe860b9060719676105c3e895bd428f86358ea41630",
+        "finding-8eaa6a956e2e8ba39ae960ac3ac9e2772908de1bbad97dfa0ee657ef3e87c9c9",
+        "finding-7e46fffec0ced622156c2b237d7616407f863efe6113bdec13194c042e6f05b2",
+        "finding-a931ec5ce307b24b479680d17e964a6eb5f22a6742b1ffe1003e017a1881b7df",
+        "finding-cac8e4cced8d3ed9306bbef8b717d10ed7827ed1f2d95273aaa89f3a2ff412a2",
+        "finding-7b07878d797af90825043bdcf476522e264401db7594a22884418c96c99a462b",
+        "finding-b87c3e1a01fab345b7b0a55f2c6b845dc3e5733950c69ccc33e51e4c2e8547b5",
+        "finding-a1d353d84e33d9660089e8ac14a9386fddeb687c32e1af6098e49ddbe744942a",
+        "finding-7c4c38888037a0d7c46647b50830c5f87f667730cf13f9b8a3b73e414b5e83fc",
+        "finding-aaf0f5bcb59d50a6f8d62852c78fcc31b94f119b3c48f249cb37f7650d6ab5ce",
+        "finding-ae18897dbacb3db3a36628e327e814affb6949162cf40be013a250d43fbe7511",
+        "finding-e142f872f7d5bdd49bda4ceab5b7549b8fec7940f7f4c5cb1b78aadc20814460",
+        "finding-ea6644cd75536a4cb2aff5d5fd25bceb5872ba5a97da7f337e93e50ff0635603",
+        "finding-46c11bb1a10c2fef349e93f5212bc8688c0bfb1d211b971ff7236fc455d6edad",
+        "finding-661bace736f0e4cb0a87192064bc95e864786191ee85c2bf54857e8410a06c72",
+        "finding-859fb02fe771dd8ac2c1a84411f1c75143470d95310e9cd4bd5b03b085052848",
+        "finding-7363c6f9d0318f48570c11d3b0d6d7a17b63a294b6586a8da13e386a658a5bf7",
+        "finding-4e6550554e6fdd242b06627ed4246d271f229115fdb0097b85c40b5e56bd5d47",
+        "finding-49e757938a4f11bee788383f24600674e615b16f86d93a4cc9a505ec651e94cc",
+        "finding-c154f3f55d7050af1b64cbe5f6b8d81956e2ed3dae42db00948347ea1d4ae637",
+        "finding-abb2b37250ab51b44fec315c9a7e246f29228020468e6b7a4ca560d1f7a66f9d",
+        "finding-e1e81962bb4344d603d1cdbb91cf3b9e72052ddadadd722055b5cd98748cfe90",
+        "finding-b678b9b288d090048baa6e60d0078324d78be0f12ba6394c2a8fad0354315f92",
+        "finding-2d6a60b3eb6b3bb7cbf7ef806dfe4199a11de6b85c68eaef7a9baa42d26672e1",
+        "finding-fa90e5505c862c1c43820c00529112c5e44af0da8ea61a61d7e587edb2c9c235",
+        "finding-6afbc49b4096455a50a78a88584edc74fd95c2d0c185d89655829b68e6b8a1a0",
+        "finding-a5f5dd6d471debf30c4d9ed365cd83cadcca3df9925322f7cbaa120be27eaa75",
+        "finding-c441ded68fd4fc6f3177b8da2eb04afe8d815ed8a5795a73f1216b891b3f702f",
+        "finding-61657321bb974b7a7dee7f9d7ed24dc926eff702ddc2bfcbe6c8f44ab2c37cd7",
+        "finding-846d755bba3afe2db4b6f6e791373002bd7e321eb01b7e7d5c20b12ef16e5c8e",
+        "finding-956154ad93ac0aff1f62cb6291885d9c95ac28eb7c6eaabef6e9a6ab0f712afd",
+        "finding-8822ee12ee8f15bb7735270997a42c9e2a4efd8b80688f5be0ee7f368e06a2ad",
+        "finding-a2ca0cd7f4b4f8e416320f46208b55876bb9f423baa1fe6c4d31359eaba4a0bb",
+        "finding-744cb16d0467ccc5752f8be2557f3f22dfe14c619c09782986274dafb9d95fa4",
+        "finding-c25a8c25493cb3a75fb7fa4d12ffa7138a75f63a09cd0d8a74b00d9bb10c0e06",
+        "finding-614ca6650d2d651188109080966c00229929eaa134b1fddd240460908f72260b",
+        "finding-ee96aeaeb10911f8863b1216156f1e9320e402e0ae65412e5f15c8b540b913da",
+        "finding-5045c706f66f71f6e1951377c5f09ac88987d2d97ffd140960481cca0ee2fe02",
+        "finding-0ceb5b12869ee328f5b0f912f811bbd5f601fcf938f6448fb9a61d33a4eb7cfa",
+        "finding-4a66e5f942d8fd97b670065d07708fae3724a740862d8c7ebd908d5f5c436d5f",
+        "finding-83c1e88010bc8a3131a49f65ba540eb7aec8c3719d1bc2acef5853f336a1f21e",
+        "finding-2d2157e132d1541d9b7981291972c480bbe20affcb9f16aeec3f70522fbd907c",
+        "finding-b490090bfa7f91d712ec893c455df51a627fc7ecab97121a92a3fd0739154f20",
+        "finding-6f02295fe0c1a6109a9c672be4f13ee9c10ee40a784bac44a1c16278df6e40e9",
+        "finding-50e4e07598e498013b244be03f4075c783c86233342f5a35dd454267f0c6f5ae",
+        "finding-a395964779c683ecf94cdc70732b4d71e703926b56c795ca10784af61323e433",
+        "finding-f13073e014d366d249e8e601614063d280e4c9ca53b3f499294d0b69ce3a5623",
+        "finding-3e92cf6b0ff6bc157539f8fb8938e3e4661699fd5567891c4e6bcc71f9a88dda",
+        "finding-5495b92da53608bcbf3200f85e699f8f6490b03f91d2fc137592d5cf68e86557",
+        "finding-ca82916459807ac05200b41e908b64575c6d23dc912176189c3011f695efcce7",
+        "finding-636fe5c635a0add7a150ccad940abe639b1eac0ea365087cd3a3698da700dd0d",
+        "finding-ca1a74a80f2c74eef5da252c50fe9ad2d6928e17cddbd4c0caf859bfe5518149",
+        "finding-5cd597fb9017ec043331d2b99936799c4c8e6dccd7ee40d06adbaeedad9c33c9",
+        "finding-aa5041750767b9f1e4b8d6725baba7e16c7bb04feaf06bcb25861f09f649141a",
+        "finding-7279febea2b7b0a0d8a90f69f7c73e194c0cddb1f0bf1c58e00ae916c2369ee4",
+        "finding-3c175145f0e42080f3526ae8e3a2c2434b7a458bc8d692813c1e39a2953e3e29",
+        "finding-7ed758c05acfec2fae9d7c358ff1cff477b66e6fc0c6b35aab685b9910ba1dcf",
+        "finding-8ea222f9c18b31bcb49c1cc4555d31fbff03b46ab77491f188b15f9bf52c1a02"
+      ],
+      "ungrouped_finding_ids": []
+    }
+  },
+  "distinct-measures": {
+    "material": {
+      "findings": [
+        {
+          "end_line": 11,
+          "finding_id": "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+          "observations": [
+            {
+              "cell_id": "u-008-672a02d3::upstream-trace",
+              "lens": "upstream-trace",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-008-672a02d3"
+            }
+          ],
+          "practical_consequence": "The team can report reuse and consistency while failing to measure whether responses are delivered promptly, so the promised newsroom performance cannot be fully evaluated.",
+          "quote": "**Signature.** Proof before promotion \u00b7 **KPI.** Approved-answer reuse \u2014 count, Conversation Management response register \u00b7 Escalated unresolved proof gaps \u2014 count, Observatory escalation log \u00b7 Message consistency in live responses \u2014 1-5 score, Weekly response-quality checklist \u00b7 **Months.** 1 to 12",
+          "quote_sha256": "b0933916257522484bdaa40cbee38e7f83b6c31feee9fcb45d853583a2cc8822",
+          "reason": "The KPI list omits the separately required response-time measure. The complete artifact's Month 9 calendar also lists response quality, approved-answer reuse, message consistency and craft-story engagement, so it does not restore response time elsewhere.",
+          "source_end_line": 189,
+          "source_id": "execution-toolkit",
+          "source_quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+          "source_start_line": 189,
+          "start_line": 11,
+          "status": "grounded",
+          "upstream_trace": {
+            "quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+            "quote_sha256": "90bac1d5b1ed851fa232e480438c0f9f1f7695b080747e044c058a5c4e962e8a",
+            "source_id": "execution-toolkit",
+            "source_value_sha256": "aa8657071e6e8c27c8572ddd9ec50dba81944a09ea19f23209345c716a919d09",
+            "strategy": "registered-source-exact-quote"
+          }
+        },
+        {
+          "end_line": 11,
+          "finding_id": "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+          "observations": [
+            {
+              "cell_id": "u-008-672a02d3::upstream-trace",
+              "lens": "upstream-trace",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-1",
+              "unit_id": "u-008-672a02d3"
+            }
+          ],
+          "practical_consequence": "Issues may be logged or escalated without any measure showing whether they are actually resolved, leaving a material part of the operating loop unaccountable.",
+          "quote": "**Signature.** Proof before promotion \u00b7 **KPI.** Approved-answer reuse \u2014 count, Conversation Management response register \u00b7 Escalated unresolved proof gaps \u2014 count, Observatory escalation log \u00b7 Message consistency in live responses \u2014 1-5 score, Weekly response-quality checklist \u00b7 **Months.** 1 to 12",
+          "quote_sha256": "b0933916257522484bdaa40cbee38e7f83b6c31feee9fcb45d853583a2cc8822",
+          "reason": "The KPI list counts escalated unresolved proof gaps but omits the separately required issue-resolution measure; counting unresolved gaps is not evidence of resolution. No other delivered-page KPI restores that measure.",
+          "source_end_line": 189,
+          "source_id": "execution-toolkit",
+          "source_quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+          "source_start_line": 189,
+          "start_line": 11,
+          "status": "grounded",
+          "upstream_trace": {
+            "quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+            "quote_sha256": "90bac1d5b1ed851fa232e480438c0f9f1f7695b080747e044c058a5c4e962e8a",
+            "source_id": "execution-toolkit",
+            "source_value_sha256": "aa8657071e6e8c27c8572ddd9ec50dba81944a09ea19f23209345c716a919d09",
+            "strategy": "registered-source-exact-quote"
+          }
+        },
+        {
+          "end_line": 11,
+          "finding_id": "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085",
+          "observations": [
+            {
+              "cell_id": "u-008-672a02d3::upstream-trace",
+              "lens": "upstream-trace",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-2",
+              "unit_id": "u-008-672a02d3"
+            }
+          ],
+          "practical_consequence": "The weekly monitoring plan cannot determine whether the always-on team is responding within an acceptable interval, so delays may go unidentified and uncorrected.",
+          "quote": "**Signature.** Proof before promotion \u00b7 **KPI.** Approved-answer reuse \u2014 count, Conversation Management response register \u00b7 Escalated unresolved proof gaps \u2014 count, Observatory escalation log \u00b7 Message consistency in live responses \u2014 1-5 score, Weekly response-quality checklist \u00b7 **Months.** 1 to 12",
+          "quote_sha256": "b0933916257522484bdaa40cbee38e7f83b6c31feee9fcb45d853583a2cc8822",
+          "reason": "The registered toolkit requires response time as a Month 9 measure, but this KPI line lists approved-answer reuse, escalated proof gaps, and message consistency only. The target on unit line 9 mentions response readiness, which is not a defined response-time measure, and the complete calendar's Month 9 row likewise substitutes response quality. No other supplied page line restores response time as a measured KPI.",
+          "source_end_line": 189,
+          "source_id": "execution-toolkit",
+          "source_quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+          "source_start_line": 189,
+          "start_line": 11,
+          "status": "grounded",
+          "upstream_trace": {
+            "quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+            "quote_sha256": "90bac1d5b1ed851fa232e480438c0f9f1f7695b080747e044c058a5c4e962e8a",
+            "source_id": "execution-toolkit",
+            "source_value_sha256": "aa8657071e6e8c27c8572ddd9ec50dba81944a09ea19f23209345c716a919d09",
+            "strategy": "registered-source-exact-quote"
+          }
+        },
+        {
+          "end_line": 11,
+          "finding_id": "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20",
+          "observations": [
+            {
+              "cell_id": "u-008-672a02d3::upstream-trace",
+              "lens": "upstream-trace",
+              "outcome": "disagreement",
+              "owner_choice": null,
+              "seat": "reader-2",
+              "unit_id": "u-008-672a02d3"
+            }
+          ],
+          "practical_consequence": "The programme can count escalations and consistent wording without measuring whether live issues are actually resolved, leaving a required operating outcome unread.",
+          "quote": "**Signature.** Proof before promotion \u00b7 **KPI.** Approved-answer reuse \u2014 count, Conversation Management response register \u00b7 Escalated unresolved proof gaps \u2014 count, Observatory escalation log \u00b7 Message consistency in live responses \u2014 1-5 score, Weekly response-quality checklist \u00b7 **Months.** 1 to 12",
+          "quote_sha256": "b0933916257522484bdaa40cbee38e7f83b6c31feee9fcb45d853583a2cc8822",
+          "reason": "The registered toolkit separately requires issue resolution as a Month 9 measure. This KPI line measures escalated unresolved proof gaps rather than resolution of issues, and neither the unit's targets nor the complete calendar's Month 9 KPI supplies an issue-resolution measure.",
+          "source_end_line": 189,
+          "source_id": "execution-toolkit",
+          "source_quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+          "source_start_line": 189,
+          "start_line": 11,
+          "status": "grounded",
+          "upstream_trace": {
+            "quote": "Response time, issue resolution, message consistency and approved-answer reuse.",
+            "quote_sha256": "90bac1d5b1ed851fa232e480438c0f9f1f7695b080747e044c058a5c4e962e8a",
+            "source_id": "execution-toolkit",
+            "source_value_sha256": "aa8657071e6e8c27c8572ddd9ec50dba81944a09ea19f23209345c716a919d09",
+            "strategy": "registered-source-exact-quote"
+          }
+        }
+      ]
+    },
+    "result": {
+      "input_sha256": "1255b020300ebb2dd92f988be9a0fe3ee8dce1be02de9795f0bcafdb36f2b70e",
+      "matrix_sha256": "6c36c0cdd33e5901ebfc57c0d9618cd8a45032be25abe95aa38add8dc28de30c",
+      "original_finding_count": 4,
+      "owner_confirmed_findings_excluded": 0,
+      "proposed_groups": [
+        {
+          "finding_ids": [
+            "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+            "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+          ],
+          "reader_explanations": [
+            {
+              "finding_ids": [
+                "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+                "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+              ],
+              "issue": "The Conversation Management loop omits the required response-time KPI.",
+              "why_same_issue": "Both findings allege that the same KPI line, under the same artifact-wide scope, fails to measure response time required by the execution toolkit. Their differing consequences\u2014 incomplete evaluation versus unidentified delays\u2014are effects of that single omission."
+            },
+            {
+              "finding_ids": [
+                "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+                "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+              ],
+              "issue": "The Conversation Management KPI set omits the required response-time measure.",
+              "why_same_issue": "Both findings allege the same omission in the same artifact-wide KPI scope: the registered toolkit requires response time, but the Activation Card and Month 9 calendar provide no defined response-time KPI. Their different consequences\u2014 incomplete evaluation versus unidentified delays\u2014are effects of that single missing measure."
+            }
+          ],
+          "status": "proposed-for-owner-review"
+        },
+        {
+          "finding_ids": [
+            "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+            "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+          ],
+          "reader_explanations": [
+            {
+              "finding_ids": [
+                "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+                "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+              ],
+              "issue": "The Conversation Management loop omits the required issue-resolution KPI.",
+              "why_same_issue": "Both findings allege that the same KPI line, under the same artifact-wide scope, measures unresolved escalations but not actual issue resolution, and that no other delivered-page KPI restores that required measure. Their practical consequences describe the same missing obligation."
+            },
+            {
+              "finding_ids": [
+                "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+                "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+              ],
+              "issue": "The Conversation Management KPI set omits the required issue-resolution measure.",
+              "why_same_issue": "Both findings allege the same omission in the same artifact-wide KPI scope: the registered toolkit separately requires issue resolution, while the delivered KPI set counts unresolved escalations without measuring whether issues are resolved. The observations differ only in how they describe the resulting accountability gap."
+            }
+          ],
+          "status": "proposed-for-owner-review"
+        }
+      ],
+      "readers": [
+        {
+          "error": null,
+          "groups": [
+            {
+              "finding_ids": [
+                "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+                "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+              ],
+              "issue": "The Conversation Management loop omits the required response-time KPI.",
+              "why_same_issue": "Both findings allege that the same KPI line, under the same artifact-wide scope, fails to measure response time required by the execution toolkit. Their differing consequences\u2014 incomplete evaluation versus unidentified delays\u2014are effects of that single omission."
+            },
+            {
+              "finding_ids": [
+                "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+                "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+              ],
+              "issue": "The Conversation Management loop omits the required issue-resolution KPI.",
+              "why_same_issue": "Both findings allege that the same KPI line, under the same artifact-wide scope, measures unresolved escalations but not actual issue resolution, and that no other delivered-page KPI restores that required measure. Their practical consequences describe the same missing obligation."
+            }
+          ],
+          "status": "completed"
+        },
+        {
+          "error": null,
+          "groups": [
+            {
+              "finding_ids": [
+                "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+                "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085"
+              ],
+              "issue": "The Conversation Management KPI set omits the required response-time measure.",
+              "why_same_issue": "Both findings allege the same omission in the same artifact-wide KPI scope: the registered toolkit requires response time, but the Activation Card and Month 9 calendar provide no defined response-time KPI. Their different consequences\u2014 incomplete evaluation versus unidentified delays\u2014are effects of that single missing measure."
+            },
+            {
+              "finding_ids": [
+                "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+                "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+              ],
+              "issue": "The Conversation Management KPI set omits the required issue-resolution measure.",
+              "why_same_issue": "Both findings allege the same omission in the same artifact-wide KPI scope: the registered toolkit separately requires issue resolution, while the delivered KPI set counts unresolved escalations without measuring whether issues are resolved. The observations differ only in how they describe the resulting accountability gap."
+            }
+          ],
+          "status": "completed"
+        }
+      ],
+      "schema_version": 1,
+      "scope": "review-only; no owner ruling or automatic finding merge",
+      "selected_finding_ids": [
+        "finding-c38afe9b17f6d5d3c47a5da7ff2ef7228bef31c3ea95eac8b9522874e1f527de",
+        "finding-fd5d8f4d370660c5479ad63eb1ebd6956acc86e5852786a9495f138dfcf4b655",
+        "finding-d356512f9db1c0bc23ebac866b76b48b6d04eb2c3d0c3e4ca1feeae9fae13085",
+        "finding-dd253a7ca473f85c0fcd45d4353bbc897bb4e86cbfc5d5aa6a21af9cdf78fd20"
+      ],
+      "status": "completed",
+      "unassessed_finding_ids": [
+        "finding-a652343bfb1a95ef9661886a81bc50b19431759c371f4c07a09e740225f03d34",
+        "finding-fd7c5f0475808c2a762ffd58590874fb9c2283aebd8faea19015f53deaba3021",
+        "finding-bacd4fd35fd5cc36b27712ba585e948fc4b312a338cfc08eb70a090c158b37ac",
+        "finding-3b49c5a77affef862eeab37ff0cd9359baa489bf8cc70ad915371e69c898d78d",
+        "finding-a612d513d6722fc7d8e03b78056bd86f552fc33abeeb1b2b156ca137ff9b9b18",
+        "finding-530bcfa9c2769d4e1cc3f0238e821975a2263efd23aff88587dac288c1750e78",
+        "finding-c5532f1f86c78ecdf8985ff4dc2bce3a1751125a2604d4f39546d79b05e9753c",
+        "finding-3ed366af8210552d23d6882c7223462ca12583ae4be6fae37ff11502c1e8fae7",
+        "finding-b4e17381eb0b7018b6ca58017802baa2831235bf96973887ac9742ee8be35094",
+        "finding-812a283e492d620c6ea6b1bc6d0006291cf8aa15dd9fb7a9860fd4f2c2195a64",
+        "finding-516bc4d7113b8b27deed0b8fd5d49c716ae136247647dee4a5f9e7875507f1df",
+        "finding-370bd454c53e88ee537ce056a0e949d6a22d466ba79fad989a48682bea478eae",
+        "finding-258720e6b53306e766d6651d54b26b92302eacfc256f69c0aeca729f04bd5b8c",
+        "finding-77153613ab17cd8faae52b3c3d7c79156cab7919dd0a40a85863a5ebdf0d3c69",
+        "finding-d91307ac9d778b69f8f0277ebc9aef29de6bfc898f275a33b011e28112f3ef69",
+        "finding-7a67cd46941a23d3768c60f013a078a4219fa591f1fecbeaffef7664ea9b8f68",
+        "finding-e5a96b1af43ddb0d32c731070269865b25fa5dca27b0ef3e76dc58ebd42c2c93",
+        "finding-8cf4a524d957675b979ac56aaf2e1bacb0f83a468cdfe4af3cf207f1230fa4b5",
+        "finding-f22ccd066bb568cba7ccc18ccaf1fea53e354a6585b948964cc01b96567c400c",
+        "finding-d7e220f2b012639a782153c26d8dc8096e4f227e903dee4974d3f0519afa39ef",
+        "finding-1623a009a32b6f8e64bbda104d8b3b17379c3b9b0c42a186866abe5fa6379c67",
+        "finding-f736ababd45e06b380dd5fda8cc475999c4cb92396f6ae01be15f9bc04d06753",
+        "finding-878f139e9aef37fd14b9e3fd74eecf7cafd8e4b8f92a92e2aead58ff8932cfe8",
+        "finding-8ec2002b6fa58b3481163ad2589806f4999082a38242d361cccd19af18d6e195",
+        "finding-722f198983ce7d8fd99dbfc30a716e55956764e2996f78abadc5936adf9ae4f1",
+        "finding-74bb7ed5db0787c283620512336b69e62affa6a764b586950a1aebd2f373f5dd",
+        "finding-61d611443ca00f21cdabe23abcbc2c71755ebc9917f45df7c4c03985129e17c4",
+        "finding-35470f2c1da498d8d6e61e02782cc6ac6fe6b3be081b6de329425b6235bbbdb0",
+        "finding-f384111dabef57472aa381dcb697df8d8a7d38a9a62409f31196ade4aabc1c41",
+        "finding-32e3de626d60e325530b9280ef8445f3dcc00a0801ecbf2359e68d32f033450d",
+        "finding-17488b785047180f6d30a62d56ff713305a36d66af0f0ea83f0afebbf8c576e1",
+        "finding-727880c9c70dcf138721ff021540497d9eb0c5e5d08beb3bbd4b491f6d80b614",
+        "finding-4d17aa651da7b3447e5e39098f19911b0d72668bcd689420640564acd9b6b259",
+        "finding-5f170d22e88d25277f8339622ed1373acc1a774e78acdeec12c29e5fb2b91189",
+        "finding-cb003e11d1cec6a596e08266c972f1f5ab8b0a831f10655096c60e28a807b15c",
+        "finding-780dbbabfa593a2f418fb3573c0e909bfbcf63e6026bea9a33b9f8f44c8f6a33",
+        "finding-7216bd00ef31d41f2e56cad19999cf1015ddc00211de0201e7d41cc86467e85c",
+        "finding-12402df30e3653e6f17a087c3f37a16ff4a7353f6672b7db273d536e984e0397",
+        "finding-371a47b31c66af93f30b4708e9e89095e49062fbe46cd1eb8a79741922aeefff",
+        "finding-11474ee4dd1e012d174833473963cfaa09928907f71e99f28dd56667fd5acedc",
+        "finding-51cd0f97a5ee1722b404543a9af9912ae932e92fd0e394d2e1889a8b31fcf1ae",
+        "finding-bfa32bb7897175f7d38a8f9a7c226ca2a5d26982ac2aabdd54de33e143efa6fc",
+        "finding-d6b69892e9e588db8f80f5b3f3e6dbffade4f70f3dbc5e270c4da6d13efae6d8",
+        "finding-ee292d86fec13602a0b43f7bc840dc5969d219869bad7fc6590977a3521aedba",
+        "finding-c1b277b22373ac199dcf4f9437d6fe0176f93fbb75c05de36d83e75f08ba39fd",
+        "finding-6e468cc28ea83d2791af65d38245f29a8230bae9f3b80524567c37b8a56df8d6",
+        "finding-c842ccd8ac07656b22125add56174cde12a9e4e2dd5fdad0df599d06eb6651b8",
+        "finding-99703c5f9131297926652d72982f0608596e799f9b946a9fef678e0cbf4e52b9",
+        "finding-bfb968020e88bf0a25c96caa3f1e39d54ba68165a6f8d499ba713c6f58425e2a",
+        "finding-7c5e28b65741ae7f427ea34faa5813669383234f5fd484d9578d9bb6c4083c1e",
+        "finding-624e17362e312f5b8f53183810e60f40a53f908c92a0df80bb798f9a97faa6cc",
+        "finding-6534f932863104be77b79d5d23de32e435d9d28645377aa4698040c36ff8cb95",
+        "finding-b49a9b09b8740c30f512e7a5f857c20db051951f5929e4d3feac14516a8735f7",
+        "finding-68ef0cf205f50026cb45e291f47371f372839baf8704bbbaeb132f596a79e764",
+        "finding-c35de85057f3060266fa931d477645e6450f111bcd891aaae663ce615927e562",
+        "finding-30db16b77c4e56375d617ecf46a2929099cbc2684298e8661f82799bdf160d28",
+        "finding-0a6931bdc14ca8b04fcaf7d0061c771f8dad8d56469e45937078c446cdf66372",
+        "finding-b65e6d00f3ee6d666fb8f8955c6294ff0411450685b6729cd1d1a7872d35103d",
+        "finding-9b30738551d0229def6f3807629ceaad1d94628b97a6a80ea08123d1abe5480f",
+        "finding-891de7fc2410be3e4cb675f3b92baf749caf194c38ac0d200a37525a6a38e71e",
+        "finding-f8efd6f6cb8c01d7e2289fe860b9060719676105c3e895bd428f86358ea41630",
+        "finding-8eaa6a956e2e8ba39ae960ac3ac9e2772908de1bbad97dfa0ee657ef3e87c9c9",
+        "finding-7e46fffec0ced622156c2b237d7616407f863efe6113bdec13194c042e6f05b2",
+        "finding-a931ec5ce307b24b479680d17e964a6eb5f22a6742b1ffe1003e017a1881b7df",
+        "finding-cac8e4cced8d3ed9306bbef8b717d10ed7827ed1f2d95273aaa89f3a2ff412a2",
+        "finding-7b07878d797af90825043bdcf476522e264401db7594a22884418c96c99a462b",
+        "finding-b87c3e1a01fab345b7b0a55f2c6b845dc3e5733950c69ccc33e51e4c2e8547b5",
+        "finding-a1d353d84e33d9660089e8ac14a9386fddeb687c32e1af6098e49ddbe744942a",
+        "finding-7c4c38888037a0d7c46647b50830c5f87f667730cf13f9b8a3b73e414b5e83fc",
+        "finding-aaf0f5bcb59d50a6f8d62852c78fcc31b94f119b3c48f249cb37f7650d6ab5ce",
+        "finding-ae18897dbacb3db3a36628e327e814affb6949162cf40be013a250d43fbe7511",
+        "finding-e142f872f7d5bdd49bda4ceab5b7549b8fec7940f7f4c5cb1b78aadc20814460",
+        "finding-ea6644cd75536a4cb2aff5d5fd25bceb5872ba5a97da7f337e93e50ff0635603",
+        "finding-46c11bb1a10c2fef349e93f5212bc8688c0bfb1d211b971ff7236fc455d6edad",
+        "finding-661bace736f0e4cb0a87192064bc95e864786191ee85c2bf54857e8410a06c72",
+        "finding-859fb02fe771dd8ac2c1a84411f1c75143470d95310e9cd4bd5b03b085052848",
+        "finding-7363c6f9d0318f48570c11d3b0d6d7a17b63a294b6586a8da13e386a658a5bf7",
+        "finding-4e6550554e6fdd242b06627ed4246d271f229115fdb0097b85c40b5e56bd5d47",
+        "finding-49e757938a4f11bee788383f24600674e615b16f86d93a4cc9a505ec651e94cc",
+        "finding-c154f3f55d7050af1b64cbe5f6b8d81956e2ed3dae42db00948347ea1d4ae637",
+        "finding-abb2b37250ab51b44fec315c9a7e246f29228020468e6b7a4ca560d1f7a66f9d",
+        "finding-e1e81962bb4344d603d1cdbb91cf3b9e72052ddadadd722055b5cd98748cfe90",
+        "finding-b678b9b288d090048baa6e60d0078324d78be0f12ba6394c2a8fad0354315f92",
+        "finding-2d6a60b3eb6b3bb7cbf7ef806dfe4199a11de6b85c68eaef7a9baa42d26672e1",
+        "finding-fa90e5505c862c1c43820c00529112c5e44af0da8ea61a61d7e587edb2c9c235",
+        "finding-6afbc49b4096455a50a78a88584edc74fd95c2d0c185d89655829b68e6b8a1a0",
+        "finding-a5f5dd6d471debf30c4d9ed365cd83cadcca3df9925322f7cbaa120be27eaa75",
+        "finding-c441ded68fd4fc6f3177b8da2eb04afe8d815ed8a5795a73f1216b891b3f702f",
+        "finding-61657321bb974b7a7dee7f9d7ed24dc926eff702ddc2bfcbe6c8f44ab2c37cd7",
+        "finding-846d755bba3afe2db4b6f6e791373002bd7e321eb01b7e7d5c20b12ef16e5c8e",
+        "finding-956154ad93ac0aff1f62cb6291885d9c95ac28eb7c6eaabef6e9a6ab0f712afd",
+        "finding-8822ee12ee8f15bb7735270997a42c9e2a4efd8b80688f5be0ee7f368e06a2ad",
+        "finding-a2ca0cd7f4b4f8e416320f46208b55876bb9f423baa1fe6c4d31359eaba4a0bb",
+        "finding-744cb16d0467ccc5752f8be2557f3f22dfe14c619c09782986274dafb9d95fa4",
+        "finding-d612478a841a8e4cf32329d18023f3c1cd91a1953bb27a8a4eebb6143f469a4a",
+        "finding-1f98140183b3871c4f007fccbb5e16bbe3419f48d07e228089e1807bd74d373d",
+        "finding-8c3f45e30374b335ecbf98e3803124bd3540cb9de205200e1a75fe3cadb0c5b8",
+        "finding-268c8c72e22f65c11ec8df47881ed684408b438453c6268d7253ea58f2aed503",
+        "finding-1377a3cbc82f56bc3d78be13b490238756e1f31a5023d80c36b40b26e833308f",
+        "finding-2dc4913af927d074419318f67060e3d84fdd70dbc04c45ae59ee166d96044a99",
+        "finding-663e32ca794004443ac1d14a3ea3d83767a6d0bc3d6f770737da6b18cf5a5a36",
+        "finding-154b17739137af0e6966dac4b27f4d7d16259881ca162d858a84dbead0433dd5",
+        "finding-60a69ebc3128c34215c2d811ecec5ce790540907ee301f9b5690c4a70e7a47a3",
+        "finding-e70d92863788ddcfa33d113c3fa42214bee07a52344ee924ce3d00fa4e178e6c",
+        "finding-023936d906c60f275b31256212f9bbc7b357f755bab4b609f085075fb1b0b568",
+        "finding-8e0c84e97e8c5173eefc00d26fb3dfdd3b5b138b6f77d2b9be0caec39e78fdbd",
+        "finding-c25a8c25493cb3a75fb7fa4d12ffa7138a75f63a09cd0d8a74b00d9bb10c0e06",
+        "finding-614ca6650d2d651188109080966c00229929eaa134b1fddd240460908f72260b",
+        "finding-ee96aeaeb10911f8863b1216156f1e9320e402e0ae65412e5f15c8b540b913da",
+        "finding-5045c706f66f71f6e1951377c5f09ac88987d2d97ffd140960481cca0ee2fe02",
+        "finding-0ceb5b12869ee328f5b0f912f811bbd5f601fcf938f6448fb9a61d33a4eb7cfa",
+        "finding-4a66e5f942d8fd97b670065d07708fae3724a740862d8c7ebd908d5f5c436d5f",
+        "finding-83c1e88010bc8a3131a49f65ba540eb7aec8c3719d1bc2acef5853f336a1f21e",
+        "finding-2d2157e132d1541d9b7981291972c480bbe20affcb9f16aeec3f70522fbd907c",
+        "finding-b490090bfa7f91d712ec893c455df51a627fc7ecab97121a92a3fd0739154f20",
+        "finding-6f02295fe0c1a6109a9c672be4f13ee9c10ee40a784bac44a1c16278df6e40e9",
+        "finding-50e4e07598e498013b244be03f4075c783c86233342f5a35dd454267f0c6f5ae",
+        "finding-a395964779c683ecf94cdc70732b4d71e703926b56c795ca10784af61323e433",
+        "finding-f13073e014d366d249e8e601614063d280e4c9ca53b3f499294d0b69ce3a5623",
+        "finding-3e92cf6b0ff6bc157539f8fb8938e3e4661699fd5567891c4e6bcc71f9a88dda",
+        "finding-5495b92da53608bcbf3200f85e699f8f6490b03f91d2fc137592d5cf68e86557",
+        "finding-ca82916459807ac05200b41e908b64575c6d23dc912176189c3011f695efcce7",
+        "finding-636fe5c635a0add7a150ccad940abe639b1eac0ea365087cd3a3698da700dd0d",
+        "finding-ca1a74a80f2c74eef5da252c50fe9ad2d6928e17cddbd4c0caf859bfe5518149",
+        "finding-5cd597fb9017ec043331d2b99936799c4c8e6dccd7ee40d06adbaeedad9c33c9",
+        "finding-aa5041750767b9f1e4b8d6725baba7e16c7bb04feaf06bcb25861f09f649141a",
+        "finding-7279febea2b7b0a0d8a90f69f7c73e194c0cddb1f0bf1c58e00ae916c2369ee4",
+        "finding-3c175145f0e42080f3526ae8e3a2c2434b7a458bc8d692813c1e39a2953e3e29",
+        "finding-7ed758c05acfec2fae9d7c358ff1cff477b66e6fc0c6b35aab685b9910ba1dcf",
+        "finding-8ea222f9c18b31bcb49c1cc4555d31fbff03b46ab77491f188b15f9bf52c1a02"
+      ],
+      "ungrouped_finding_ids": []
+    }
+  }
+}

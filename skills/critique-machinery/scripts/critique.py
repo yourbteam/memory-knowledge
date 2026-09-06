@@ -3846,6 +3846,10 @@ def main(argv: list[str] | None = None) -> int:
     suggestions_parser.add_argument("--work", required=True)
     suggestions_parser.add_argument("--out", required=True)
     suggestions_parser.add_argument("--finding", action="append")
+    review_parser = sub.add_parser("review-groups", help="reopen preserved proposals with exact evidence and no model calls")
+    review_parser.add_argument("--work", required=True)
+    review_parser.add_argument("--receipt", required=True)
+    review_parser.add_argument("--out", required=True)
     grouping_parser = sub.add_parser("group-findings", help="record the owner decision that named findings describe one problem")
     grouping_parser.add_argument("--work", required=True)
     grouping_parser.add_argument("--finding", action="append", required=True)
@@ -3948,6 +3952,8 @@ def main(argv: list[str] | None = None) -> int:
             result = finding_inventory(Path(args.work), matrix)
         elif args.command == "suggest-groups":
             result = suggest_finding_groups(Path(args.work), Path(args.out), args.finding)
+        elif args.command == "review-groups":
+            result = review_finding_groups(Path(args.work), Path(args.receipt), Path(args.out))
         elif args.command == "group-findings":
             result = group_findings(Path(args.work), args.finding, args.because)
         elif args.command == "trend":
@@ -4056,6 +4062,96 @@ def consensus_issue_proposals(readers, finding_ids):
     return {"status": "completed", "proposed_groups": proposed, "ungrouped_finding_ids": singles}
 
 
+def group_review_lines(material, result):
+    """Render preserved proposals and their evidence; never decide equivalence."""
+    by_id = {f["finding_id"]: f for f in material["findings"]}
+    lines = ["# Proposed issue groups", "",
+             "Review proposals only. Every original finding and owner ruling remains unchanged.",
+             "Grouping is not a verdict that an allegation is correct.", "",
+             f"Selected findings: {len(by_id)}. Proposals: {len(result['proposed_groups'])}. "
+             f"Left separate: {len(result['ungrouped_finding_ids'])}. "
+             f"Outside this review: {len(result.get('unassessed_finding_ids', []))}.", ""]
+
+    def evidence(identity):
+        f = by_id[identity]
+        lines.extend([f"### Finding {identity}", "", f"Evidence status: {f['status']}",
+                      f"Reason: {f.get('reason') or 'No reason recorded'}", "",
+                      f"Consequence: {f.get('practical_consequence') or 'No consequence recorded'}", "",
+                      f"Page evidence (unit lines {f.get('start_line')}–{f.get('end_line')}):", ""])
+        lines.extend("> " + line for line in (f.get("quote") or "No page quotation recorded").splitlines())
+        if f.get("source_quote"):
+            lines.extend(["", f"Source {f.get('source_id')} (lines {f.get('source_start_line')}–{f.get('source_end_line')}):", ""])
+            lines.extend("> " + line for line in f["source_quote"].splitlines())
+        if f.get("claim_error"):
+            lines.extend(["", f"Unresolved evidence: {f['claim_error']}"])
+        lines.append("")
+        for o in f["observations"]:
+            lines.append(f"- Reader location: {o['cell_id']} / {o['seat']} — {o['outcome']}; owner ruling: {o['owner_choice'] or 'none recorded'}")
+        lines.append("")
+
+    for number, group in enumerate(result["proposed_groups"], 1):
+        lines.extend([f"## Proposal {number} — {len(group['finding_ids'])} findings", ""])
+        for seat, explanation in zip(READER_SEATS, group["reader_explanations"]):
+            lines.extend([f"{seat}: {explanation['issue']}", f"Why grouped: {explanation['why_same_issue']}", ""])
+        for identity in group["finding_ids"]:
+            evidence(identity)
+    lines.extend(["## Observations left separate", ""])
+    for identity in result["ungrouped_finding_ids"]:
+        evidence(identity)
+    if result["status"] != "completed":
+        lines.extend(["Grouping could not be established. Every finding remains separate.", ""])
+    return lines
+
+
+def review_finding_groups(work: Path, receipt: Path, out: Path):
+    """Reopen a current grouping receipt without readers or owner mutations."""
+    if out.exists() or repo_for(out) != repo_for(work):
+        raise Refusal("review-groups needs a new output file inside the run repository")
+    paths = [receipt / "input.json", receipt / "result.json"]
+    if any(not p.is_file() or p.is_symlink() for p in paths):
+        raise Refusal("review-groups requires preserved regular input.json and result.json files")
+    before = {str(p): digest_file(p) for p in paths}
+    material, result = (json.loads(p.read_text()) for p in paths)
+    if not isinstance(material, dict) or not isinstance(result, dict):
+        raise Refusal("grouping input.json and result.json must be objects; restore the original receipt")
+    _, matrix = load_matrix(work)
+    if digest_file(work / "matrix.json") != result.get("matrix_sha256"):
+        raise Refusal("grouping matrix changed; preserve this proposal and generate a fresh grouping receipt")
+    if result.get("input_sha256") != before[str(paths[0])]:
+        raise Refusal("grouping input changed; restore its original evidence before review")
+    inventory = finding_inventory(work, matrix)
+    known = {f["finding_id"]: f for f in inventory["evidence_identical_groups"]}
+    ids = result.get("selected_finding_ids", [])
+    if not isinstance(ids, list) or any(not isinstance(i, str) for i in ids) or len(set(ids)) != len(ids) or any(i not in known for i in ids):
+        raise Refusal("grouping selection must name distinct existing finding IDs")
+    if material.get("findings") != [known[i] for i in ids]:
+        raise Refusal("grouping findings differ from current recorded evidence; generate a fresh receipt")
+    confirmed = {i for g in inventory["owner_confirmed_groups"] for i in g["finding_ids"]}
+    if confirmed.intersection(ids):
+        raise Refusal("owner grouping changed for this selection; generate a fresh receipt")
+    all_ids = [f["finding_id"] for f in inventory["evidence_identical_groups"]
+               if f["status"] == "grounded" and f["finding_id"] not in confirmed]
+    if (not set(ids) <= set(all_ids) or result.get("original_finding_count") != len(ids)
+            or result.get("unassessed_finding_ids") != [i for i in all_ids if i not in ids]
+            or result.get("owner_confirmed_findings_excluded") != len(confirmed)):
+        raise Refusal("grouping scope counts or excluded findings changed; generate a fresh receipt")
+    try:
+        expected = ({"status": "completed", "proposed_groups": [], "ungrouped_finding_ids": ids}
+                    if len(ids) < 2 and result.get("readers") == [] else
+                    consensus_issue_proposals(result.get("readers", []), ids))
+    except (TypeError, KeyError, ValueError) as exc:
+        raise Refusal(f"grouping reader partitions are malformed ({exc}); restore the original result") from exc
+    if any(result.get(k) != expected[k] for k in ("status", "proposed_groups", "ungrouped_finding_ids")):
+        raise Refusal("grouping proposals differ from the recorded reader partitions; restore the original result")
+    lines = group_review_lines(material, result)
+    if any(digest_file(Path(p)) != h for p, h in before.items()) or digest_file(work / "matrix.json") != result["matrix_sha256"]:
+        raise Refusal("grouping evidence changed during review; no output written")
+    out.write_text("\n".join(lines) + "\n")
+    return {"status": "completed", "path": str(out.resolve()), "sha256": digest_file(out),
+            "finding_count": len(ids), "proposal_count": len(expected["proposed_groups"]),
+            "reader_calls": 0, "owner_decisions_changed": False}
+
+
 def suggest_finding_groups(work: Path, out: Path, selected_ids: list[str] | None = None):
     manifest, matrix = load_matrix(work)
     if missing_cells(matrix):
@@ -4109,21 +4205,7 @@ def suggest_finding_groups(work: Path, out: Path, selected_ids: list[str] | None
                    "owner_confirmed_findings_excluded": len(decided),
                    "readers": readers})
     (out / "result.json").write_bytes(canonical(result))
-    lines = ["# Proposed issue groups", "", "These are proposals for human review. All original observations and owner decisions remain unchanged.", ""]
-    by_id = {finding["finding_id"]: finding for finding in findings}
-    for index, group in enumerate(result["proposed_groups"], 1):
-        lines += [f"## Proposal {index}", ""]
-        for seat, explanation in zip(READER_SEATS, group["reader_explanations"]):
-            lines.append(f"{seat}: {explanation['issue']} — {explanation['why_same_issue']}")
-        for identity in group["finding_ids"]:
-            lines.append(f"- {identity}: {by_id[identity]['reason']}")
-        lines.append("")
-    lines += ["## Observations left separate", ""]
-    for identity in result["ungrouped_finding_ids"]:
-        lines.append(f"- {identity}: {by_id[identity]['reason']}")
-    if result["status"] != "completed":
-        lines += ["", "Grouping could not be established. Inspect the preserved reader errors; nothing was combined."]
-    (out / "review.md").write_text("\n".join(lines) + "\n")
+    (out / "review.md").write_text("\n".join(group_review_lines(material, result)) + "\n")
     return result
 
 

@@ -268,3 +268,19 @@ A changed or missing receipt or changed inputs appear as stale; no previous pass
 survives that change. Run `assess-quality` into a fresh receipt to assess the current state.
 Runs without a plan explicitly say not-planned. These statuses cover only declared checks;
 they do not establish complete source coverage or improve semantic reader recall.
+
+## Evidence available inside grouping reviews
+
+`suggest-groups` writes a self-contained review page: every selected finding includes exact
+page and registered source quotations, reason, consequence, reader locations and recorded owner
+choice. Proposals remain proposals; neither equivalence nor correctness is automatically decided.
+
+Reopen an existing current receipt without model calls:
+
+```bash
+python3 scripts/critique.py review-groups --work <run> --receipt <grouping-receipt> --out <new-review.md>
+```
+
+The command refuses changed matrices, inputs, findings or inconsistent partitions before writing
+an output. Owner-confirmed selections require a fresh receipt. Every original finding remains
+accessible; distinct or disputed findings remain separate. No owner answer is recorded.
