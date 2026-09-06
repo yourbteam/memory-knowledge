@@ -2603,6 +2603,7 @@ def matrix_status(work: Path) -> dict[str, Any]:
     return {
         "status": "partial" if missing or unresolved else "complete",
         "recording_status": "partial" if missing or half_recorded else "complete",
+        "quality_assessment": quality_status(work),
         "unit_count": len({cell["unit_id"] for cell in matrix["cells"]}),
         "lens_count": len(matrix["lenses"]),
         "cell_count": len(matrix["cells"]),
@@ -2675,6 +2676,7 @@ def reporting_route(work: Path, route: str, cell_id: str | None = None) -> dict[
             "route": route,
             "cells": len(matrix["cells"]),
             "located_defects": len(defects),
+            "quality_assessment": quality_status(work),
             "located_defects_unit": "legacy defect cells, not independent repairs",
             "finding_inventory": finding_inventory(work, matrix),
             "recording_refusals": len(refusals),
@@ -2765,6 +2767,14 @@ def reporting_route(work: Path, route: str, cell_id: str | None = None) -> dict[
         if cell.get("owner_ruling"):
             lines.extend([f"- owner ruling ({cell['owner_ruling']['choice']}): {cell['owner_ruling']['because']}"])
         lines.append("")
+    quality = quality_status(work)
+    lines.extend(["## Declared quality checks", "", quality["scope"], "",
+                  f"Assessment: **{quality['status']}**", ""])
+    for check in quality["criteria"]:
+        lines.append(f"- {check['criterion_id']}: {check['verdict']}")
+    if quality.get("reason"):
+        lines.append(quality["reason"])
+    lines.append("")
     lines.extend(finding_lines(finding_inventory(work, matrix)))
     output = Path(cell_id) if cell_id else work / "critique-findings.md"
     output.write_text("\n".join(lines), encoding="utf-8")
@@ -3465,6 +3475,58 @@ def experiment() -> int:
     return 0
 
 
+def quality_status(work: Path) -> dict[str, Any]:
+    """Expose declared-check coverage separately from reading/owner completion."""
+    scope = "declared checks only; not complete source coverage or artifact approval"
+    if not (work / "quality-plan.json").exists():
+        if (work / "quality-assessment-current.json").exists():
+            return {"status": "stale", "scope": scope, "criteria": [],
+                    "reason": "The assessed quality plan is missing; restore its original evidence."}
+        return {"status": "not-planned", "scope": scope, "criteria": []}
+    known = []
+    try:
+        manifest, _ = load_matrix(work)
+        plan = _quality_plan(work, manifest)
+        known = [{"criterion_id": c["id"], "verdict": "stale"} for c in plan["criteria"]]
+        pending = [{"criterion_id": c["id"], "verdict": "pending"} for c in plan["criteria"]]
+        link = work / "quality-assessment-current.json"
+        if not link.exists():
+            return {"status": "pending", "scope": scope, "criteria": pending}
+        if link.is_symlink():
+            raise Refusal("quality assessment pointer is linked; preserve it and assess a new receipt")
+        pointer = json.loads(link.read_text())
+        if set(pointer) != {"schema_version", "result_path", "result_sha256"} or pointer["schema_version"] != 1:
+            raise Refusal("quality assessment pointer is malformed; assess a new receipt")
+        path = Path(pointer["result_path"])
+        if path.is_symlink() or not path.is_file() or repo_for(path) != repo_for(work):
+            raise Refusal("quality assessment receipt is missing, linked or outside the run repository")
+        if digest_file(path) != pointer["result_sha256"]:
+            raise Refusal("quality assessment receipt changed; preserve it and assess a new receipt")
+        result = json.loads(path.read_text())
+        required_inputs = {"matrix.json", "unit-manifest.json", "sources.json", "quality-plan.json",
+                           "quality-execution.json", "quality-recovery-before.json", "quality-recovery-start.json", "quality-recovery.json"}
+        hashes = result["input_hashes"]
+        if set(hashes) != required_inputs or any(
+                (digest_file(work / name) if (work / name).is_file() else None) != value
+                for name, value in hashes.items()):
+            raise Refusal("quality assessment inputs changed; assess the current run into a new receipt")
+        rows = result["results"]
+        if [r["criterion_id"] for r in rows] != [c["id"] for c in plan["criteria"]]:
+            raise Refusal("quality assessment does not cover every declared check exactly once in order")
+        allowed = {"satisfied", "not-satisfied", "cannot-assess"}
+        if any(r["verdict"] not in allowed for r in rows):
+            raise Refusal("quality assessment contains an invalid verdict")
+        verdicts = [r["verdict"] for r in rows]
+        verdict = "not-satisfied" if "not-satisfied" in verdicts else "cannot-assess" if "cannot-assess" in verdicts else "satisfied"
+        if verdict != result["verdict"]:
+            raise Refusal("quality assessment summary disagrees with its check results")
+        return {"status": verdict, "scope": scope,
+                "criteria": [{"criterion_id": r["criterion_id"], "verdict": r["verdict"]} for r in rows],
+                "receipt": str(path), "receipt_sha256": pointer["result_sha256"]}
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, Refusal) as exc:
+        return {"status": "stale", "scope": scope, "criteria": known, "reason": str(exc)}
+
+
 def plan_quality(work: Path, criteria_path: Path) -> dict[str, Any]:
     manifest, matrix = load_matrix(work)
     target = work / "quality-plan.json"
@@ -3676,6 +3738,15 @@ def assess_quality(work: Path, out: Path) -> dict[str, Any]:
               "results": results, "input_hashes": hashes, "unread_cells": incomplete,
               "invalid_full_round_seats": invalid, "full_round_execution_bound": round_bound, "owner_questions_unchanged": owner_queue(work)["open_count"]}
     (out / "result.json").write_bytes(canonical(result))
+    pointer = {"schema_version": 1, "result_path": str((out / "result.json").resolve()),
+               "result_sha256": digest_file(out / "result.json")}
+    with tempfile.NamedTemporaryFile(dir=work, prefix=".quality-assessment-", delete=False) as handle:
+        pending = Path(handle.name)
+        handle.write(canonical(pointer))
+    try:
+        pending.replace(work / "quality-assessment-current.json")
+    finally:
+        pending.unlink(missing_ok=True)
     return result
 
 

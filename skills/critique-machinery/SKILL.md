@@ -255,3 +255,16 @@ the receipt. Preserve an interrupted recovery for diagnosis instead of rerunning
 Quality observers select an evidence identifier belonging to the reader being assessed. Code
 copies the exact original text into the assessment. Missing or wrong-reader evidence is refused.
 These checks establish evidence integrity, not correctness of the model's semantic judgment.
+
+## Declared quality checks remain visible
+
+`status` and `report` show `quality_assessment` separately from reading completion and
+owner decisions. `document` includes the same declared-check outcomes. An unassessed plan
+remains pending. After `assess-quality`, every declared criterion remains visible even if
+its result is not-satisfied or cannot-assess. Reports preserve findings and owner rulings.
+
+The assessment pointer binds the retained receipt to the current plan, matrix and input hashes.
+A changed or missing receipt or changed inputs appear as stale; no previous passing verdict
+survives that change. Run `assess-quality` into a fresh receipt to assess the current state.
+Runs without a plan explicitly say not-planned. These statuses cover only declared checks;
+they do not establish complete source coverage or improve semantic reader recall.
