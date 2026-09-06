@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "goal_measure": {
+    "name": "winning atoms",
+    "total": 17,
+    "won": 17
+  },
+  "deferred_goal": {
+    "name": "deferred atoms won",
+    "total": 4,
+    "won": 4,
+    "approved_outcome": "RM-N01 and RM-N04 pass replayable tamper-evident closure proof.",
+    "max_elapsed_hours": 12,
+    "max_prototype_attempts": 32
+  },
+  "approved_envelope": {
+    "outcome": "All 17 recorded atoms pass their real-path closure proof.",
+    "max_elapsed_hours": 60,
+    "max_prototype_attempts": 144,
+    "approved_prerequisites": ["RM-N02", "RM-N03"],
+    "new_atoms": "record_only",
+    "commits": false,
+    "deployments": false,
+    "paid_api_calls": false
+  },
+  "atoms": [
+    {"id": "RM-00", "status": "won", "prototype_attempts": 4, "winning_evidence": ["experiments/rm00/run-4/summary.json", "experiments/rm00/focused-proof-1"]},
+    {"id": "RM-01", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm01/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_published_command_surface_matches_real_cli"]},
+    {"id": "RM-02", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm02/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_documented_answer_example_executes_its_state_transition"]},
+    {"id": "RM-03", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm03/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_manual_and_reader_grounding_share_one_substantive_contract"]},
+    {"id": "RM-04", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm04/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_public_disclosure_and_private_state_boundary_are_exact"]},
+    {"id": "RM-05", "status": "won", "prototype_attempts": 2, "winning_evidence": ["experiments/rm05/run-2/summary.json", "tests/test_requirements_machinery_cover.py::test_reader_execution_outcomes_fail_closed_before_semantic_parsing"]},
+    {"id": "RM-06", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm06/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_reader_policy_is_validated_at_every_cli_command_boundary"]},
+    {"id": "RM-07", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm07/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_checkability_record_replays_and_detects_evidence_tampering"]},
+    {"id": "RM-08", "status": "won", "prototype_attempts": 3, "winning_evidence": ["experiments/rm08/run-3/summary.json", "tests/test_requirements_machinery_cover.py::test_no_answer_piece_is_a_first_class_owner_decision"]},
+    {"id": "RM-09", "status": "won", "prototype_attempts": 2, "winning_evidence": ["experiments/rm09/run-2/summary.json", "tests/test_requirements_machinery_cover.py::test_completed_empty_obligations_are_distinct_from_absence"]},
+    {"id": "RM-10", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm10/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_first_dedupe_owner_pair_has_stable_complete_queue_identity"]},
+    {"id": "RM-11", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm11/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_failed_shared_rule_preserves_both_sources_and_attempts"]},
+    {"id": "RM-12", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm12/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_checkability_identity_changes_with_the_active_target"]},
+    {"id": "RM-13", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm13/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_zero_ruling_absence_and_explicit_empty_assemble_identically"]},
+    {"id": "RM-14", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm14/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_work_path_guard_requires_nested_repository_containment"]},
+    {"id": "RM-15", "status": "won", "prototype_attempts": 1, "winning_evidence": ["experiments/rm15/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_run_identity_is_immutable_and_detects_artifact_drift"]},
+    {"id": "RM-16", "status": "won", "prototype_attempts": 3, "winning_evidence": ["experiments/rm16/run-3/summary.json", "tests/test_requirements_machinery_cover.py::test_empirical_claim_report_is_complete_and_tamper_evident", "managed Codex staging proof: 41/41 claims and 14/14 commands"]}
+  ],
+  "new_atoms": [
+    {
+      "id": "RM-N01",
+      "status": "won",
+      "prototype_attempts": 2,
+      "gap": "The generic experiment specification records an adapter command path but does not hash-bind the adapter file, so an edited adapter can change a rerun without changing the frozen specification.",
+      "evidence": ["experiments/rmn01/run-4/summary.json", "tests/test_experiment_machinery.py", "managed codex+claude staging adapter proof"]
+    },
+    {
+      "id": "RM-N02",
+      "status": "won_prerequisite",
+      "prototype_attempts": 1,
+      "gap": "The managed-skill registry cannot regenerate or globally validate because requirements-playbook is listed but absent and three existing machinery source hashes already drift from the checked-in projection manifest.",
+      "evidence": ["experiments/rmn02/run-1/summary.json", "experiments/rmn02/promoted-proof"]
+    },
+    {
+      "id": "RM-N03",
+      "status": "won_prerequisite",
+      "prototype_attempts": 3,
+      "gap": "The canonical blocker catalog helper cannot read the current event ledger because an existing event contains the unknown field external_state_only.",
+      "evidence": ["experiments/rmn03/run-3/summary.json", "focused:6 passed", "accumulated:161 passed, 3 pre-existing state drifts"]
+    },
+    {
+      "id": "RM-N04",
+      "status": "won",
+      "prototype_attempts": 1,
+      "gap": "Owner-driven split creates fresh child checkability votes but persists only derived flags, not the replayable raw/parsed record used by the main requirements pass.",
+      "evidence": ["experiments/rmn04/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_split_children_replay_full_checkability_and_refuse_tampering", "managed codex+claude staging split proof"]
+    },
+    {
+      "id": "RM-N05",
+      "status": "won",
+      "prototype_attempts": 1,
+      "gap": "Fresh generated Codex and Claude Requirements Machinery policies omit the recommended reader command required by their runtime consumer.",
+      "evidence": ["experiments/rmn05/run-1/summary.json", "tests/test_client_skill_projections.py::ProjectionManifestTests::test_repository_requirements_projection_accepts_each_required_reader_before_state"]
+    },
+    {
+      "id": "RM-N06",
+      "status": "won",
+      "prototype_attempts": 1,
+      "gap": "Experiment adapter attestation can name a non-executed argument or symbolic link instead of the bytes actually launched.",
+      "evidence": ["experiments/rmn06/run-1/summary.json", "tests/test_experiment_machinery.py::test_adapter_must_be_the_executed_operand_and_not_a_symlink"]
+    },
+    {
+      "id": "RM-N07",
+      "status": "won",
+      "prototype_attempts": 1,
+      "gap": "Split-child replay trusts mutable child markers and does not reconcile the persisted parent-child graph.",
+      "evidence": ["experiments/rmn07/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_split_children_replay_full_checkability_and_refuse_tampering"]
+    },
+    {
+      "id": "RM-N08",
+      "status": "won",
+      "prototype_attempts": 1,
+      "gap": "Malformed split-child checkability containers can escape controlled refusal with an internal exception.",
+      "evidence": ["experiments/rmn08/run-1/summary.json", "tests/test_requirements_machinery_cover.py::test_split_children_replay_full_checkability_and_refuse_tampering"]
+    }
+  ],
+  "promotion_installation": {
+    "status": "complete",
+    "completed_at_utc": "2026-08-26T21:13:53Z",
+    "atom_count": 25,
+    "atom_ids": [
+      "RM-00", "RM-01", "RM-02", "RM-03", "RM-04", "RM-05", "RM-06", "RM-07",
+      "RM-08", "RM-09", "RM-10", "RM-11", "RM-12", "RM-13", "RM-14", "RM-15",
+      "RM-16", "RM-N01", "RM-N02", "RM-N03", "RM-N04", "RM-N05", "RM-N06",
+      "RM-N07", "RM-N08"
+    ],
+    "canonical_promotion": {
+      "manifest": "working-agreement/client-skill-projections.json",
+      "managed_skills": [
+        "experiment-machinery", "requirements-machinery", "requirements-playbook"
+      ],
+      "repository_only_atoms": ["RM-N03"]
+    },
+    "installed_clients": {
+      "codex": {
+        "root": "/Users/kamenkamenov/.codex/skills",
+        "experiment-machinery": "39bd019a5903d062e8f5ec5cbaead2aeb423cf0c481ebe9605516e9524825340",
+        "requirements-machinery": "98684ffd2ffd9f91edb82897000fec3b0e580ee4e451ef7e68076e9e52b0f172",
+        "requirements-playbook": "1e9206bef12ee15dfa6c764a9858fc44f5f98d89702dd86558b374c17619ac16"
+      },
+      "claude": {
+        "root": "/Users/kamenkamenov/.claude/skills",
+        "experiment-machinery": "39bd019a5903d062e8f5ec5cbaead2aeb423cf0c481ebe9605516e9524825340",
+        "requirements-machinery": "ba9e8af57fcac8db9ea736d37ed298f818375bd211eb91d69eeb96be840cfbcc",
+        "requirements-playbook": "1e9206bef12ee15dfa6c764a9858fc44f5f98d89702dd86558b374c17619ac16"
+      }
+    },
+    "verification": [
+      "31 accumulated repository tests passed",
+      "all three selected installed projections MATCH for Codex and Claude",
+      "both installed Requirements Machinery CLIs accepted their generated reader policy and reached the no-register boundary",
+      "both installed Experiment Machinery runners selected the RM-N06 candidate at 4/4"
+    ],
+    "preserved_out_of_scope_drift": [
+      "auto-capture", "description-machinery", "implementation-machine",
+      "requirements-machine", "sequence-runner"
+    ]
+  }
+}
