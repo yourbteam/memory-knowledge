@@ -235,3 +235,11 @@ Two isolated readers independently partition the selected grounded observations.
 The receipt's `review.md` preserves every proposed group's member IDs and original reasons, both reader explanations, and all observations left separate. Raw prompts, schemas, replies and event traces remain beside it. Failed or malformed proposal readers produce no groups. Every reader has the existing 180-second process-group bound and client isolation controls; no retry is automatic. A changed critique matrix refuses proposal admission.
 
 Existing `findings`, `ask-owner`, `group-findings` and owner rulings keep their meanings. Apply a proposed group with `group-findings` only after the owner explicitly confirms equivalence and supplies the recorded reason. The machinery never supplies that approval itself.
+
+## Qualify a full-round experiment
+
+After opening a new run, before any model reading, freeze a JSON list of acceptance criteria with `plan-quality --work RUN --criteria FILE`. Each criterion has exactly id, unit_id, lens and requirement strings and names an applicable model cell. Define the criteria from independently checked real failures and successes before running a candidate. The plan binds the complete artifact, source registry, unit manifest and exact reader implementation. Changing those inputs requires a new run.
+
+Run the ordinary complete `read-run`, then `assess-quality --work RUN --out NEW_DIRECTORY`. Focused reads, missing replies and failed transports cannot qualify as a complete round. An isolated observer assesses both original seats separately for each frozen criterion, citing original observation words. Every criterion must be satisfied; an unknown result cannot qualify. Raw observations, prompts, traces and refusals stay visible. The command does not change findings, owner decisions, the artifact, or promotion state.
+
+This is acceptance against the declared criteria, not proof that every possible defect was found. A later discovered full-round failure must become a frozen regression criterion before another candidate comparison; a focused probe passing never replaces this full-round check. Observers remain fallible: inspect the cited raw evidence and calibrate proposed criteria on known positive and negative records before relying on a new acceptance set.
