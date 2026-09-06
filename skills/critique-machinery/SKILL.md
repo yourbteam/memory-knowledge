@@ -133,3 +133,72 @@ is the same shape as a reader's — a response with the lens, verdict and unit l
 contradicted fact under its cell. A page that contradicts itself across units was invisible to the
 unit-by-unit seats: on 2026-09-05 both seats cleared a B Team map whose Senior craft story series
 read "Sustain" while the card ran Months 6 to 12; this lens locates five such rows on that page.
+
+
+## Individual findings (reader contract 2)
+
+New reader replies carry a findings list per lens. Each finding has its own page span,
+registered producer span when relevant, reason, and concrete consequence. A clear reply
+has no findings. Every finding survives intake, storage, owner inspection, located output,
+and the completed document. An ungrounded item remains visible and keeps the owner queue
+open; two matching aggregate verdicts do not establish agreement on different finding lists.
+Historical replies remain interpreted against their captured schema; they are never rewritten
+into the new format.
+
+Use `findings --work RUN` to inspect all grounded and unresolved findings with their reader,
+lens, source, and owner provenance. Automatic consolidation only joins identical grounded
+evidence, reasons and consequences. Differently worded claims may still describe the same
+problem. This inventory is not an independent repair count. The existing defect-cell count
+remains separately labeled as a legacy measure.
+
+When the owner explicitly confirms that differently worded entries describe one problem,
+record that decision with `group-findings --work RUN --finding ID --finding ID --because
+"the owner's exact words"`. The selected IDs must be grounded entries in the same run.
+All original observations remain visible alongside the owner grouping. Never supply this
+owner decision on the reader's behalf.
+
+
+## Whole-artifact counterevidence
+
+Public `read-cell`, `read-run`, and `retry-failed` supply the entire bound delivered
+page (including its headings and preamble), every numbered unit, and the complete
+selected payload. Code rechecks page, state, payload and unit identity before sending
+it; it never clips this context. Each reader's evidence preserves artifact-context.json
+and its hash in the input envelope and intake.
+
+Before alleging absence, readers inspect that context for the strongest counterevidence.
+A relationship legitimately expressed elsewhere must not be demanded again in every
+unit. Hidden payload data does not prove that a required visible statement is rendered.
+An absence finding explains why the available counterevidence does not fulfill the
+actual registered commitment. This is semantic reader judgment, not a code proof of
+absence. Direct internal reads without whole-artifact context are labeled unit-only and
+must not claim whole-artifact absence. Reader questions derive expectations from the
+artifact's purpose and registered evidence, without imposing a calendar or annual format.
+
+
+Before selecting final findings, readers inventory all explicit source commitments
+relevant to the selected unit and inspect each separately against the complete artifact.
+Individually specified measures and obligations are not replaced by one broad outcome
+check. The inventory is a reader instruction, not a deterministic completeness guarantee;
+real unfocused reads must establish whether it improves recall.
+
+
+## Verify one correction
+
+Use `verify-correction --before BEFORE_RUN --after AFTER_RUN --finding FINDING_ID
+--after-unit UNIT_ID --out NEW_RECEIPT_DIRECTORY` after the artifact's own renderer has
+produced the revised page and the after run has been opened. The receipt directory must
+be new and outside both runs. Critique does not rewrite or render the artifact.
+
+The command verifies immutable page/payload/source bindings and checks the existing
+grounded finding against unchanged source commitments. Two blind readers first re-establish the original defect on the before artifact, then
+two blind readers assess the after artifact against the same finding. Corrected requires
+both before readers to find the defect and both after readers to find its criterion
+fulfilled, with an actual artifact change. Both after readers retaining the established
+defect means not-corrected. An unestablished original finding, mixed, invalid or ungrounded
+responses mean cannot-assess. Raw reader evidence and the scoped receipt remain available.
+
+The result is always specified-finding-only. The receipt exposes unread after cells,
+open owner questions, other known after findings, and other before findings explicitly
+not reassessed. It never clears the whole card or artifact, changes a run's existing
+reader state, invents an owner ruling, or assumes other before findings still exist.

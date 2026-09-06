@@ -223,8 +223,9 @@ def test_read_cell_runs_two_separate_blind_calls(tmp_path: Path, monkeypatch: py
 
     def fake_reader(
         root, source_context, focus, selected, lenses, evidence_root=None, upstream_sources=None,
-        batch_id=None, seat=None, attempt=1,
+        batch_id=None, seat=None, attempt=1, artifact_context=None,
     ):
+        assert artifact_context["scope"] == "complete-delivered-artifact-and-bound-payload"
         evidence_roots.append(evidence_root)
         judgments = [{"lens": lenses[0], "verdict": "clear", "quote": quote}]
         return fake_valid_result(module, lenses, judgments, evidence_root)
@@ -390,8 +391,9 @@ def test_read_run_batches_each_unit_and_blind_seat_then_completes(tmp_path: Path
 
     def fake_reader(
         root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
-        batch_id=None, seat=None, attempt=1,
+        batch_id=None, seat=None, attempt=1, artifact_context=None,
     ):
+        assert artifact_context["scope"] == "complete-delivered-artifact-and-bound-payload"
         calls.append((unit["unit_id"], tuple(lenses), evidence_root))
         quote = module.collapsed(unit["text"])[:120]
         judgments = [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
@@ -487,8 +489,9 @@ def test_no_upstream_is_visible_terminal_state_and_never_launched(
 
     def fake_reader(
         root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
-        batch_id=None, seat=None, attempt=1,
+        batch_id=None, seat=None, attempt=1, artifact_context=None,
     ):
+        assert artifact_context["scope"] == "complete-delivered-artifact-and-bound-payload"
         calls.append(tuple(lenses))
         quote = module.collapsed(unit["text"])[:120]
         judgments = [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
@@ -630,8 +633,9 @@ def test_read_run_continues_after_one_atomic_cell_refusal(
 
     def fake_reader(
         root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
-        batch_id=None, seat=None, attempt=1,
+        batch_id=None, seat=None, attempt=1, artifact_context=None,
     ):
+        assert artifact_context["scope"] == "complete-delivered-artifact-and-bound-payload"
         assert upstream_sources and upstream_sources[0]["source_id"] == "roadmap"
         quote = module.collapsed(unit["text"])[:120]
         judgments = []
@@ -690,8 +694,9 @@ def test_no_reference_is_visible_terminal_state_and_documented(tmp_path: Path, m
 
     def fake_reader(
         root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
-        batch_id=None, seat=None, attempt=1,
+        batch_id=None, seat=None, attempt=1, artifact_context=None,
     ):
+        assert artifact_context["scope"] == "complete-delivered-artifact-and-bound-payload"
         calls.append(tuple(lenses))
         quote = module.collapsed(unit["text"])[:120]
         judgments = [{"lens": lens, "verdict": "clear", "quote": quote} for lens in lenses]
@@ -831,7 +836,7 @@ def test_reply_intake_has_five_exclusive_actionable_outcomes() -> None:
     schema = module.reader_schema(lenses)
     valid = json.dumps({
         "judgments": [{
-            "lens": "buyer-read", "verdict": "clear", "start_line": 1, "end_line": 1,
+            "lens": "buyer-read", "verdict": "clear", "start_line": 1, "end_line": 1, "findings": [],
         }]
     })
     cases = [
@@ -922,8 +927,9 @@ def test_failed_seat_gets_one_retry_and_preserves_both_attempts(
 
     def timeout_again(
         root, source_context, focus, unit, lenses, evidence_root=None, upstream_sources=None,
-        batch_id=None, seat=None, attempt=1,
+        batch_id=None, seat=None, attempt=1, artifact_context=None,
     ):
+        assert artifact_context["scope"] == "complete-delivered-artifact-and-bound-payload"
         calls.append((batch_id, seat, attempt))
         evidence_root.mkdir(parents=True)
         (evidence_root / "reader-intake.json").write_text("{}")
@@ -970,7 +976,7 @@ def test_frozen_v3_replies_classify_47_valid_and_3_malformed_without_normalizati
         unit_id = batch_id.removeprefix("batch-")
         seat = path.parent.name
         result = module.classify_reader_reply(
-            result_events[0], module.reader_schema(lenses_by_unit[unit_id]), lenses_by_unit[unit_id],
+            result_events[0], json.loads((path.parent / "reader-schema.json").read_text()), lenses_by_unit[unit_id],
             batch_id=batch_id, seat=seat, attempt=1, evidence_path=str(path.parent),
         )
         outcomes.append(result["outcome"])

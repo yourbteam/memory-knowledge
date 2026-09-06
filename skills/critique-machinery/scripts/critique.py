@@ -1007,6 +1007,12 @@ def _reader_outcome(cell: dict[str, Any]) -> str:
         return "no-answer"
     if not all(value and value.get("status") == "answered" for value in values):
         return "pending"
+    if any("findings" in value for value in values):
+        if not all("findings" in value for value in values):
+            return "disagreement"
+        identities = [set(item["finding_id"] for item in value["findings"]) for value in values]
+        if identities[0] != identities[1]:
+            return "disagreement"
     verdicts = [value["verdict"] for value in values]
     if verdicts == ["clear", "clear"]:
         return "agreement-clear"
@@ -1034,6 +1040,7 @@ def _apply_reader_claim(
     source_id: str | None = None,
     source_quote: str | None = None,
     intake: dict[str, Any] | None = None,
+    findings: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     cell_id = cell["cell_id"]
     if cell.get("status") == "not-applicable":
@@ -1058,6 +1065,8 @@ def _apply_reader_claim(
         raise Refusal(
             f"verdict {verdict!r} is not allowed for cell {cell_id!r}; choose exactly one of {list(VERDICTS)}."
         )
+    if findings is not None:
+        return _apply_findings(work, manifest, cell, seat, verdict, quote, findings, intake)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
     unit = units[cell["unit_id"]]
     unit_text = collapsed(unit["text"])
@@ -1114,6 +1123,134 @@ def _apply_reader_claim(
     return cell
 
 
+
+def finding_identity(unit: dict[str, Any], finding: dict[str, Any]) -> str:
+    """Exact grounded evidence and claim identity, never a semantic duplicate judgment."""
+    fields = ("quote", "source_id", "source_quote", "reason", "practical_consequence")
+    payload = {key: finding.get(key) for key in fields}
+    payload["unit_sha256"] = digest_bytes(unit["text"].encode())
+    payload["source_value_sha256"] = finding.get("upstream_trace", {}).get("source_value_sha256")
+    return "finding-" + digest_bytes(canonical(payload))
+
+
+def _apply_findings(work, manifest, cell, seat, verdict, quote, findings, intake):
+    if not isinstance(findings, list) or (verdict == "clear" and findings) or (verdict in {"revise", "reject"} and not findings):
+        raise Refusal(f"cell {cell['cell_id']!r} has findings inconsistent with verdict {verdict!r}; clear requires none and a defect requires at least one")
+    unit = next(unit for unit in manifest["units"] if unit["unit_id"] == cell["unit_id"])
+    saved = []
+    for index, incoming in enumerate(findings):
+        item = copy.deepcopy(incoming)
+        try:
+            if item.get("claim_error"):
+                raise Refusal(item["claim_error"])
+            for field in ("reason", "practical_consequence"):
+                if not isinstance(item.get(field), str) or not item[field].strip():
+                    raise Refusal(f"finding {index + 1} lacks {field}; state its concrete failure and consequence")
+            probe = {**copy.deepcopy(cell), "readers": {}}
+            # A cell-wide trace cannot substitute for this individual finding's citation.
+            probe.pop("upstream_trace", None)
+            _apply_reader_claim(work, manifest, probe, seat, verdict, item.get("quote"),
+                                item.get("source_id"), item.get("source_quote"), intake)
+            recorded = probe["readers"][seat]
+            if recorded["status"] != "answered":
+                raise Refusal(f"finding {index + 1} lacks sufficient exact page words")
+            if item.get("source_id") or item.get("source_quote"):
+                recorded["upstream_trace"] = validated_trace(work, cell["cell_id"], item.get("source_id"), item.get("source_quote"))
+            item.update({key: recorded[key] for key in ("quote", "quote_sha256", "upstream_trace") if key in recorded})
+            item["status"] = "grounded"
+            item["finding_id"] = finding_identity(unit, item)
+        except Refusal as exc:
+            item["status"] = "ungrounded"
+            item["claim_error"] = str(exc)
+            item["finding_id"] = "unresolved-" + digest_bytes(canonical({"cell": cell["cell_id"], "seat": seat, "index": index, "claim": incoming}))
+        saved.append(item)
+    if not saved:
+        probe = {**copy.deepcopy(cell), "readers": {}}
+        _apply_reader_claim(work, manifest, probe, seat, verdict, quote, intake=intake)
+        reader = probe["readers"][seat]
+    else:
+        reader = {"status": "answered", "verdict": verdict, "quote": collapsed(quote or "") or None,
+                  "verdict_strategy": VERDICT_STRATEGY, **({"intake": copy.deepcopy(intake)} if intake else {})}
+    reader["reader_contract_version"] = 2
+    reader["findings"] = saved
+    if any(item["status"] != "grounded" for item in saved):
+        reader["status"] = "ungrounded-defect"
+    cell["readers"][seat] = reader
+    cell["outcome"] = _reader_outcome(cell)
+    cell["status"] = "judged" if cell["outcome"].startswith("agreement-") else "unresolved"
+    return cell
+
+
+def distinct_findings(matrix):
+    """Keep every observation; merge only exactly identical grounded evidence and claims."""
+    grouped = {}
+    for cell in matrix["cells"]:
+        for seat, reader in cell.get("readers", {}).items():
+            for item in reader.get("findings", []):
+                identity = item["finding_id"]
+                if identity not in grouped:
+                    grouped[identity] = {**copy.deepcopy(item), "observations": []}
+                grouped[identity]["observations"].append({"cell_id": cell["cell_id"], "unit_id": cell["unit_id"],
+                    "lens": cell["lens"], "seat": seat, "outcome": cell["outcome"],
+                    "owner_choice": cell.get("resolved_verdict")})
+    return list(grouped.values())
+
+
+def finding_inventory(work, matrix):
+    entries = distinct_findings(matrix)
+    path = work / "owner-finding-groups.json"
+    groups = json.loads(path.read_text()) if path.is_file() else {"schema_version": 1, "groups": []}
+    known = {item["finding_id"] for item in entries}
+    for group in groups["groups"]:
+        if not set(group["finding_ids"]) <= known:
+            raise Refusal("owner finding grouping references missing evidence; preserve the original run")
+    return {"identity_rule": "exact grounded evidence, reason and consequence; different wording may still describe the same repair",
+            "independent_repair_count": None, "evidence_identical_groups": entries,
+            "owner_confirmed_groups": groups["groups"],
+            "legacy_defect_cells_without_finding_identity": sum(
+                _is_located_defect(cell) and not any("findings" in reader for reader in cell.get("readers", {}).values())
+                for cell in matrix["cells"])}
+
+
+def group_findings(work, finding_ids, because):
+    """Record an explicit owner equivalence decision without deleting any observations."""
+    manifest, matrix = load_matrix(work)
+    inventory = finding_inventory(work, matrix)
+    known = {item["finding_id"]: item for item in inventory["evidence_identical_groups"]}
+    if len(finding_ids) < 2 or len(set(finding_ids)) != len(finding_ids):
+        raise Refusal("group-findings requires at least two distinct finding IDs from findings")
+    if not because.strip():
+        raise Refusal("group-findings requires the owner's exact reason in --because")
+    if any(identity not in known or known[identity]["status"] != "grounded" for identity in finding_ids):
+        raise Refusal("group-findings accepts only grounded finding IDs in this run; inspect findings first")
+    groups = inventory["owner_confirmed_groups"]
+    if any(set(finding_ids) & set(group["finding_ids"]) for group in groups):
+        raise Refusal("a selected finding already has an owner grouping; preserve that decision")
+    record = {"group_id": "owner-group-" + digest_bytes(canonical(sorted(finding_ids))),
+              "finding_ids": list(finding_ids), "because": because, "page_sha256": manifest["page"]["sha256"]}
+    groups.append(record)
+    (work / "owner-finding-groups.json").write_bytes(canonical({"schema_version": 1, "groups": groups}))
+    return record
+
+
+def finding_lines(inventory):
+    lines = ["## Individual findings", "", inventory["identity_rule"],
+             "These are evidence-identical groups, not a count of independent repairs.", ""]
+    for item in inventory["evidence_identical_groups"]:
+        lines += [f"### {item['finding_id']} — {item['status']}",
+                  f"Page: {item.get('quote') or 'no grounded page words'}",
+                  f"Reason: {item.get('reason') or 'missing reason'}", f"Consequence: {item.get('practical_consequence') or 'missing consequence'}"]
+        if item.get("source_quote"):
+            lines.append(f"Producer {item.get('source_id')}: {item['source_quote']}")
+        if item.get("claim_error"):
+            lines.append(f"Unresolved evidence: {item['claim_error']}")
+        for observation in item["observations"]:
+            lines.append(f"Observed: {observation['cell_id']} / {observation['lens']} / {observation['seat']} — {observation['outcome']}; owner: {observation['owner_choice']}")
+        lines.append("")
+    for group in inventory["owner_confirmed_groups"]:
+        lines += [f"Owner confirms same finding: {', '.join(group['finding_ids'])}", f"Reason: {group['because']}", ""]
+    return lines
+
 def record_reader(
     work: Path,
     cell_id: str,
@@ -1164,6 +1301,7 @@ def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, An
                 claim.get("source_id"),
                 claim.get("source_quote"),
                 claim.get("intake"),
+                claim.get("findings"),
             )
         except Refusal as exc:
             failures.append({"seat": seat, "reason": str(exc)})
@@ -1173,6 +1311,7 @@ def record_cell_readers(work: Path, cell_id: str, claims: dict[str, dict[str, An
                 "status": "recording-refused" if any(item["seat"] == seat for item in failures) else "claim-captured",
                 "verdict": claims[seat].get("verdict"),
                 "quote": collapsed(claims[seat].get("quote") or "") or None,
+                **({"findings": copy.deepcopy(claims[seat]["findings"])} if "findings" in claims[seat] else {}),
                 "source_id": claims[seat].get("source_id"),
                 "source_quote": collapsed(claims[seat].get("source_quote") or "") or None,
                 **({"intake": copy.deepcopy(claims[seat]["intake"])} if claims[seat].get("intake") else {}),
@@ -1199,12 +1338,12 @@ def record_judgment(work: Path, cell_id: str, verdict: str, quote: str | None) -
 
 LENS_QUESTIONS = {
     "buyer-read": "Can the client buyer act confidently on what this unit says, without a conflicting status or instruction?",
-    "cfo": "Does this unit make the full annual program and its planning coverage visible enough to fund and govern?",
+    "cfo": "Does this unit make the resource commitments and decision boundaries needed for its stated purpose clear, without contradictions or unsupported financial claims?",
     "journalist": "Would a skeptical journalist find a material contradiction or unsupported status inside this unit?",
     "employee-insider": "Can an informed employee tell what has actually been decided without conflicting internal signals?",
     "competitor-counter-position": "Does the unit expose an inconsistency a competitor could quote to undermine credibility?",
-    "benchmark-vs-reference": "Does this calendar unit meet the professional reference shape of twelve explicitly labeled months?",
-    "upstream-trace": "Does this calendar unit preserve the upstream promise of a visible full-year cadence?",
+    "benchmark-vs-reference": "Does this unit meet the relevant expectations evidenced by the registered professional reference, accounting for the artifact's purpose?",
+    "upstream-trace": "Does this unit preserve the relevant commitments in the registered producer sources, considering where the complete artifact fulfills them?",
 }
 
 
@@ -1219,9 +1358,22 @@ def reader_schema(lenses: list[str]) -> dict[str, Any]:
         properties["end_line"] = {"type": "integer"}
         required.extend(("start_line", "end_line"))
     if "upstream-trace" in lenses:
-        properties["source_id"] = {"type": "string"}
-        properties["source_start_line"] = {"type": "integer"}
-        properties["source_end_line"] = {"type": "integer"}
+        properties["source_id"] = {"type": ["string", "null"]}
+        properties["source_start_line"] = {"type": ["integer", "null"]}
+        properties["source_end_line"] = {"type": ["integer", "null"]}
+        required.extend(("source_id", "source_start_line", "source_end_line"))
+    finding_properties = {
+        "start_line": {"type": "integer"}, "end_line": {"type": "integer"},
+        "reason": {"type": "string"}, "practical_consequence": {"type": "string"},
+        "source_id": {"type": ["string", "null"]},
+        "source_start_line": {"type": ["integer", "null"]},
+        "source_end_line": {"type": ["integer", "null"]},
+    }
+    properties["findings"] = {"type": "array", "items": {
+        "type": "object", "properties": finding_properties,
+        "required": list(finding_properties), "additionalProperties": False,
+    }}
+    required.append("findings")
     return {
         "type": "object",
         "properties": {
@@ -1245,6 +1397,13 @@ def reader_schema(lenses: list[str]) -> dict[str, Any]:
 def _schema_problems(schema: dict[str, Any], value: Any, path: str = "$") -> list[str]:
     problems: list[str] = []
     kind = schema.get("type")
+    if isinstance(kind, list):
+        alternatives = [_schema_problems({**schema, "type": option}, value, path) for option in kind]
+        if any(not errors for errors in alternatives):
+            return []
+        return [f"{path} expected one of {kind!r}, received {type(value).__name__}"]
+    if kind == "null":
+        return [] if value is None else [f"{path} expected null, received {type(value).__name__}"]
     kinds = {"object": dict, "array": list, "string": str}
     if kind == "integer" and (type(value) is not int):
         return [f"{path} expected integer, received {type(value).__name__}"]
@@ -1324,6 +1483,20 @@ def classify_reader_reply(
                     problems.append(
                         f"$.judgments lens order was {received_lenses!r}; expected exactly {lenses!r}"
                     )
+                for index, judgment in enumerate(judgments):
+                    if not isinstance(judgment, dict) or "findings" not in judgment:
+                        continue  # Historical replies are checked against their captured schema.
+                    findings = judgment["findings"]
+                    if isinstance(findings, list):
+                        if judgment.get("verdict") == "clear" and findings:
+                            problems.append(f"$.judgments[{index}] is clear but lists defects; use an empty findings list or a defect verdict")
+                        if judgment.get("verdict") in {"reject", "revise"} and not findings:
+                            problems.append(f"$.judgments[{index}] claims a defect with no findings; list every grounded finding or return clear")
+                        for number, finding in enumerate(findings):
+                            if isinstance(finding, dict):
+                                for field in ("reason", "practical_consequence"):
+                                    if not isinstance(finding.get(field), str) or not finding[field].strip():
+                                        problems.append(f"$.judgments[{index}].findings[{number}].{field} is empty; explain the concrete failure and consequence")
                 if problems:
                     outcome = "malformed"
                     failure_detail = "; ".join(problems)
@@ -1331,6 +1504,7 @@ def classify_reader_reply(
                     outcome = "valid"
     intake = {
         "schema_version": 1,
+        "reader_contract_version": 2 if "findings" in schema.get("properties", {}).get("judgments", {}).get("items", {}).get("properties", {}) else 1,
         "request_id": f"{batch_id}::{seat}",
         "batch_id": batch_id,
         "seat": seat,
@@ -1382,6 +1556,11 @@ def ground_reader_result(
         for source in upstream_sources or []
     }
     for item in result["judgments"]:
+        if "findings" in item:
+            for finding in item["findings"]:
+                nested = {**finding, "lens": item["lens"], "verdict": item["verdict"]}
+                ground_reader_result({"outcome": "valid", "judgments": [nested]}, unit, upstream_sources)
+                finding.update({key: value for key, value in nested.items() if key not in {"lens", "verdict"}})
         if not QUOTE_REQUIRED:
             continue
         start = item.get("start_line")
@@ -1394,7 +1573,9 @@ def ground_reader_result(
             )
         else:
             item["quote"] = "\n".join(unit_lines[start - 1 : end])
-        if item.get("lens") == "upstream-trace" and item.get("verdict") in {"reject", "revise"}:
+        if (
+            item.get("lens") == "upstream-trace" and item.get("verdict") in {"reject", "revise"}
+        ) or any(item.get(key) is not None for key in ("source_id", "source_start_line", "source_end_line")):
             source_id = item.get("source_id")
             source_start = item.get("source_start_line")
             source_end = item.get("source_end_line")
@@ -1474,6 +1655,8 @@ def _reader_judgments(
     batch_id: str | None = None,
     seat: str | None = None,
     attempt: int = 1,
+    artifact_context: dict[str, Any] | None = None,
+    finding_scope: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     policy_path = Path(__file__).resolve().parents[1] / "client-model-policy.json"
     if not policy_path.is_file():
@@ -1492,7 +1675,7 @@ def _reader_judgments(
     if not executable:
         raise Refusal(f"model reader unavailable: install the {client} client so the command resolves to {runtime}.")
     schema = reader_schema(lenses)
-    evidence_root = evidence_root or Path(os.environ["EXPERIMENT_RESULT_PATH"]).parent
+    evidence_root = (evidence_root or Path(os.environ["EXPERIMENT_RESULT_PATH"]).parent).resolve()
     if evidence_root.exists():
         raise Refusal(
             f"batch {batch_id!r}, seat {seat!r}, attempt {attempt} already has evidence at "
@@ -1523,27 +1706,66 @@ def _reader_judgments(
         numbered = "\n".join(f"{index}: {line}" for index, line in enumerate(lines, 1))
         source_sections.append(f"SOURCE {source['source_id']}\n{numbered}")
     producer_material = "\n\n".join(source_sections) or "No producer material applies to the requested lenses."
+    artifact_material = "Whole-artifact context was not supplied. This is a bounded unit reading; do not claim whole-artifact absence."
+    artifact_context_sha256 = None
+    if artifact_context is not None:
+        artifact_context_sha256 = digest_bytes(canonical(artifact_context))
+        (evidence_root / "artifact-context.json").write_bytes(canonical(artifact_context))
+        numbered_page = "\n".join(f"{index}: {line}" for index, line in enumerate(artifact_context["page_text"].splitlines(), 1))
+        numbered_units = []
+        for context_unit in artifact_context["units"]:
+            numbered_units.append(
+                f"UNIT {context_unit['unit_id']} — {context_unit['label']} — "
+                f"page block IDs {context_unit['territory_blocks']}"
+            )
+        artifact_material = (
+            "COMPLETE DELIVERED PAGE — numbered page lines\n" + numbered_page
+            + "\n\nCOMPLETE UNIT INDEX — labels and page block identities (full text is in the page above)\n" + "\n\n".join(numbered_units)
+            + "\n\nBOUND PAYLOAD — structured source of the delivered artifact, not proof of visible rendering\n"
+            + json.dumps(artifact_context["payload"], ensure_ascii=False, sort_keys=True, indent=2)
+        )
+    scope_instruction = ""
+    finding_scope_sha256 = None
+    if finding_scope is not None:
+        finding_scope_sha256 = digest_bytes(canonical(finding_scope))
+        (evidence_root / "finding-scope.json").write_bytes(canonical(finding_scope))
+        scope_instruction = (
+            "CORRECTION VERIFICATION — SPECIFIED FINDING ONLY\n"
+            "Assess whether the supplied original finding applies to the artifact for the stated evaluation_phase (before or after). Do not assume the original finding is correct or treat a before/after label as evidence. On either version decide whether the alleged failure is established by the supplied evidence. All instructions about relevant commitments, inventory and final findings are restricted to this original issue. Inspect the full supplied artifact for evidence that actually satisfies the same source criterion; changed wording alone is not correction. Return clear only if the issue does not apply because the criterion is fulfilled, with exact evaluated-unit words that support every distinct part of the original criterion. If that criterion has multiple conditions or roles, select enough lines to show each is fulfilled; a heading or unrelated unchanged promise is insufficient. Return revise or reject only for a surviving manifestation of this original issue, explaining its connection to the original criterion. Do not add unrelated defects or treat this scoped verdict as approval of the whole unit, lens or artifact.\n"
+            + json.dumps(finding_scope, ensure_ascii=False, sort_keys=True, indent=2)
+        )
     upstream_instruction = (
         "For an upstream-trace reject or revise, also return source_id, source_start_line, and "
         "source_end_line selecting exact words from one REGISTERED PRODUCER SOURCE. The selected producer "
-        f"quote must be {TRACE_GROUNDING_RULE}. These fields are optional for clear. Code verifies this "
+        f"quote must be {TRACE_GROUNDING_RULE}. All three source fields must be present; use null "
+        "for each outer source field when clear or when the judgment is for another lens; individual findings may cite registered producer evidence under any lens. Code verifies this "
         "same rule; never infer or paraphrase it."
         if "upstream-trace" in lenses
         else ""
     )
     prompt = f"""Judge one immutable delivered-page unit through each named lens.
 Return exactly one judgment per lens, in the listed order.
+Within each judgment, list every independently grounded defect in findings. Do not hide a second defect behind the representative judgment span. Each finding must select its own exact unit lines, explain the failure in reason, and state its concrete practical_consequence. Use registered source citations whenever a finding relies on producer material; citations are mandatory for every upstream finding. Return null source fields only when no producer evidence is being cited. Clear judgments have an empty findings list. The judgment verdict describes the listed findings collectively; its outer span is a representative passage only. Do not invent findings to fill the list.
 Vocabulary: {vocabulary_instruction}
-{grounding_instruction} Do not use knowledge outside the unit.
+{grounding_instruction} Use only the supplied unit, complete delivered artifact, bound payload, and registered evidence; do not import outside knowledge.
 {upstream_instruction}
-Reject or revise only when the quoted words themselves demonstrate a concrete failure of the lens question. Do not penalize a general risk, a style preference, or context absent from this unit. If no concrete failure is present, return clear or fine and quote the strongest words that establish clarity when the schema asks for a quote.
+Reject or revise only when exact supplied evidence establishes a concrete failure of the lens question. Do not penalize a general risk, a style preference, or information legitimately supplied elsewhere in the artifact. If no concrete failure is established, return clear and quote the strongest relevant passage when the schema asks for a quote.
 When a defect is an absent item in a sequential table, prove one gap by selecting the complete row immediately before it through the complete row immediately after it.
 
 FIXED FOCUS
 {focus}
 
+{scope_instruction}
+
 RECORDED SOURCE CONTEXT
 {source_context}
+
+WHOLE-ARTIFACT COUNTEREVIDENCE
+{artifact_material}
+
+Before selecting final findings, make an inventory of every explicit producer commitment relevant to this unit's purpose and claims. Where a source names several required measures, approvals, conditions, or other obligations, check each separately against the complete artifact. A broad outcome measure does not replace a separately specified measure, and finding one important defect does not complete the inspection. For every relevant commitment, either locate the evidence that fulfills it or retain the independently grounded deficit; discard speculative demands that the sources do not actually require. Finish that inventory before choosing the final findings list.
+
+Before alleging that something is missing, examine all supplied delivered-page lines, units, and bound payload for the strongest counterevidence. Derive the required location from the cited commitment: do not require every commitment to be repeated in every unit. If another section or an explicit payload relationship fulfills a structural linkage requirement, do not allege that linkage is absent from the artifact. A payload value alone does not establish that information is visible on the delivered page; preserve that distinction when visibility itself is required. Explain in the finding's reason why any located counterevidence does not satisfy the specific commitment, citing its page/unit lines or exact payload path when relevant. If the evidence does not establish a defect, do not invent one. Code proves what context was supplied, not that semantic absence has been proved.
 
 REGISTERED PRODUCER SOURCES
 {producer_material}
@@ -1581,6 +1803,9 @@ Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or
             "instruction_sha256": digest_bytes(prompt.encode("utf-8")),
             "schema_sha256": digest_file(schema_path),
             "isolated_working_directory": True,
+            "artifact_context_sha256": artifact_context_sha256,
+            "finding_scope_sha256": finding_scope_sha256,
+            "artifact_context_scope": "complete-delivered-artifact-and-bound-payload" if artifact_context is not None else "unit-only",
             "client_controls": argv[1:],
         }
         (evidence_root / "reader-input-envelope.json").write_bytes(canonical(envelope))
@@ -1640,6 +1865,9 @@ Return one JSON object matching EXACT REPLY SCHEMA. Nothing may appear before or
                     raw_reply, schema, lenses, batch_id=batch_id, seat=seat, attempt=attempt,
                     evidence_path=relative_evidence, exit_code=completed.returncode,
                 )
+    result["intake"]["finding_scope_sha256"] = finding_scope_sha256
+    result["intake"]["artifact_context_sha256"] = artifact_context_sha256
+    result["intake"]["artifact_context_scope"] = "complete-delivered-artifact-and-bound-payload" if artifact_context is not None else "unit-only"
     (evidence_root / "reader-intake.json").write_bytes(canonical(result["intake"]))
     if result["outcome"] != "valid":
         return result
@@ -1668,6 +1896,38 @@ def upstream_sources_for_run(work: Path, manifest: dict[str, Any]) -> list[dict[
     return sources
 
 
+
+def artifact_context_for_run(work: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    """Verify and expose the entire immutable page and its bound payload without clipping."""
+    page_path = Path(manifest["page"]["path"])
+    page_bytes = page_path.read_bytes()
+    if digest_bytes(page_bytes) != manifest["page"]["sha256"]:
+        raise Refusal(f"artifact context refused: delivered page {page_path} changed since open; open a new run with the intended page")
+    bound = manifest["payload"]
+    state_path = Path(bound["state_path"])
+    state_bytes = state_path.read_bytes()
+    if digest_bytes(state_bytes) != bound["state_sha256"]:
+        raise Refusal(f"artifact context refused: bound state {state_path} changed since open; open a new run with the intended payload")
+    payload = lookup(json.loads(state_bytes), bound["key"])
+    if digest_bytes(canonical(payload)) != bound["value_sha256"]:
+        raise Refusal("artifact context refused: selected payload differs from its opened value; open a new run")
+    page = page_bytes.decode("utf-8")
+    blocks = page_blocks(page)
+    units = enumerate_units(payload, blocks)
+    if units != manifest["units"]:
+        raise Refusal("artifact context refused: unit index differs from the complete bound page; preserve this run and reopen")
+    assigned = [block for unit in units for block in unit["territory_blocks"]]
+    if sorted(assigned) != list(range(len(blocks))):
+        raise Refusal("artifact context refused: unit index does not cover every page block exactly once; preserve this run and reopen")
+    return {"schema_version": 1, "scope": "complete-delivered-artifact-and-bound-payload",
+            "unit_manifest_sha256": digest_bytes(canonical(manifest)),
+            "page_sha256": manifest["page"]["sha256"], "page_text": page,
+            "page_byte_count": len(page_bytes), "page_line_count": len(page.splitlines()),
+            "units": copy.deepcopy(units), "payload": payload,
+            "payload_key": bound["key"], "payload_value_sha256": bound["value_sha256"],
+            "state_sha256": bound["state_sha256"]}
+
+
 def read_cell(work: Path, cell_id: str) -> dict[str, Any]:
     manifest, matrix = load_matrix(work)
     matches = [cell for cell in matrix["cells"] if cell["cell_id"] == cell_id]
@@ -1683,7 +1943,8 @@ def read_cell(work: Path, cell_id: str) -> dict[str, Any]:
     if cell.get("readers"):
         raise Refusal(f"cell {cell_id!r} already has reader evidence; open a new run instead of replacing it.")
     unit = next(unit for unit in manifest["units"] if unit["unit_id"] == cell["unit_id"])
-    source_context = "No external source is available for this blind reading. Judge only the immutable unit."
+    source_context = "Judge the target unit against the immutable complete artifact and registered evidence supplied below."
+    artifact_context = artifact_context_for_run(work, manifest)
     focus = LENS_QUESTIONS[cell["lens"]]
     sources = upstream_sources_for_run(work, manifest)
     claims = {}
@@ -1691,7 +1952,7 @@ def read_cell(work: Path, cell_id: str) -> dict[str, Any]:
         evidence_root = work / "reader-evidence" / digest_bytes(cell_id.encode())[:16] / seat / "attempt-001"
         result = _reader_judgments(
             repo_for(work), source_context, focus, unit, [cell["lens"]], evidence_root=evidence_root,
-            upstream_sources=sources, batch_id=cell_id, seat=seat, attempt=1,
+            upstream_sources=sources, batch_id=cell_id, seat=seat, attempt=1, artifact_context=artifact_context,
         )
         claims[seat] = _claims_from_reader_result(result, [cell["lens"]])[cell["lens"]]
     return record_cell_readers(work, cell_id, claims)
@@ -1699,7 +1960,8 @@ def read_cell(work: Path, cell_id: str) -> dict[str, Any]:
 
 def read_run(work: Path) -> dict[str, Any]:
     manifest, matrix = load_matrix(work)
-    source_context = "No external source is available for this blind reading. Judge only the immutable unit."
+    source_context = "Judge the target unit against the immutable complete artifact and registered evidence supplied below."
+    artifact_context = artifact_context_for_run(work, manifest)
     sources = upstream_sources_for_run(work, manifest)
     jobs = []
     for unit in manifest["units"]:
@@ -1716,7 +1978,7 @@ def read_run(work: Path) -> dict[str, Any]:
         return job, _reader_judgments(
             repo_for(work), source_context, "Judge every listed lens for this unit.",
             unit, lenses, evidence_root=evidence_root, upstream_sources=sources,
-            batch_id=batch_id, seat=seat, attempt=1,
+            batch_id=batch_id, seat=seat, attempt=1, artifact_context=artifact_context,
         )
 
     launched = []
@@ -1836,12 +2098,14 @@ def _replace_failed_reader(
             claim.get("source_id"),
             claim.get("source_quote"),
             claim.get("intake"),
+            claim.get("findings"),
         )
     except Refusal as exc:
         current = {
             "status": "recording-refused",
             "verdict": claim.get("verdict"),
             "quote": collapsed(claim.get("quote") or "") or None,
+            **({"findings": copy.deepcopy(claim["findings"])} if "findings" in claim else {}),
             "source_id": claim.get("source_id"),
             "source_quote": collapsed(claim.get("source_quote") or "") or None,
             "intake": copy.deepcopy(claim.get("intake")),
@@ -1868,7 +2132,8 @@ def retry_failed(work: Path) -> dict[str, Any]:
     groups = _failed_reader_groups(matrix)
     retryable = [group for group in groups if group["attempt"] == 1]
     sources = upstream_sources_for_run(work, manifest)
-    source_context = "No external source is available for this blind reading. Judge only the immutable unit."
+    source_context = "Judge the target unit against the immutable complete artifact and registered evidence supplied below."
+    artifact_context = artifact_context_for_run(work, manifest)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
     outcomes = []
     for group in retryable:
@@ -1889,7 +2154,7 @@ def retry_failed(work: Path) -> dict[str, Any]:
             upstream_sources=sources,
             batch_id=group["batch_id"],
             seat=group["seat"],
-            attempt=2,
+            attempt=2, artifact_context=artifact_context,
         )
         outcomes.append(result["intake"])
         claims = _claims_from_reader_result(result, group["lenses"])
@@ -1944,6 +2209,121 @@ def _reply_attempt_records(matrix: dict[str, Any]) -> list[dict[str, Any]]:
                         )
                     records[key] = intake
     return [records[key] for key in sorted(records)]
+
+
+
+def _correction_sources(work, manifest):
+    sources = upstream_sources_for_run(work, manifest)
+    for source in sources:
+        actual = source_record(source["source_id"], Path(source["state_path"]), source["key"])
+        if actual != source:
+            raise Refusal(f"correction verification refused: registered source {source['source_id']!r} differs from its bound source state; preserve the run and reopen")
+    return sources
+
+
+def verify_correction(before: Path, after: Path, finding_id: str, after_unit_id: str, out: Path) -> dict[str, Any]:
+    before, after, out = before.resolve(), after.resolve(), out.resolve()
+    if out.exists() or any(run == out or run in out.parents for run in (before, after)):
+        raise Refusal("verify-correction --out must be a new directory outside both before and after runs; preserve existing evidence")
+    before_manifest, before_matrix = load_matrix(before)
+    after_manifest, after_matrix = load_matrix(after)
+    before_context = artifact_context_for_run(before, before_manifest)
+    after_context = artifact_context_for_run(after, after_manifest)
+    before_sources = _correction_sources(before, before_manifest)
+    after_sources = _correction_sources(after, after_manifest)
+    def identities(sources):
+        return sorted(({"source_id": source["source_id"], "value_sha256": source["value_sha256"],
+                        "text_sha256": digest_bytes(source["text"].encode())} for source in sources), key=lambda source: source["source_id"])
+    source_identity = identities(before_sources)
+    if source_identity != identities(after_sources):
+        raise Refusal("verify-correction requires unchanged registered source identities and values; a changed requirement is not a correction of the original finding")
+    inventory = distinct_findings(before_matrix)
+    matches = [item for item in inventory if item["finding_id"] == finding_id]
+    if len(matches) != 1 or matches[0]["status"] != "grounded":
+        raise Refusal(f"finding {finding_id!r} is not one grounded existing finding; select an ID from the before run's findings inventory")
+    finding = matches[0]
+    origin = finding["observations"][0]
+    before_unit = next(unit for unit in before_manifest["units"] if unit["unit_id"] == origin["unit_id"])
+    if finding_identity(before_unit, finding) != finding_id:
+        raise Refusal("before finding identity does not match its persisted grounded claim and evidence")
+    if collapsed(finding.get("quote") or "") not in collapsed(before_unit["text"]):
+        raise Refusal("before finding's quoted words no longer match its bound unit")
+    if finding.get("source_id") or finding.get("source_quote"):
+        validated_trace(before, origin["cell_id"], finding.get("source_id"), finding.get("source_quote"))
+    lens = origin["lens"]
+    if lens == CODE_LENS:
+        raise Refusal("verify-correction model readers cannot replace a code-owned consistency check")
+    after_units = [unit for unit in after_manifest["units"] if unit["unit_id"] == after_unit_id]
+    if len(after_units) != 1:
+        raise Refusal(f"after unit {after_unit_id!r} is not unique in the after artifact; select an existing unit ID")
+    after_unit = after_units[0]
+    cell = next(cell for cell in after_matrix["cells"] if cell["unit_id"] == after_unit_id and cell["lens"] == lens)
+    if cell.get("status") == "not-applicable":
+        raise Refusal("the original finding lens is not applicable in the after run; use a run retaining the same evidence basis")
+    scope = {"scope": "specified-finding-only", "finding_id": finding_id, "original_unit_id": before_unit["unit_id"],
+             "original_unit_text": before_unit["text"], "original_finding": finding, "after_unit_id": after_unit_id}
+    out.mkdir(parents=True)
+    (out / "request.json").write_bytes(canonical(scope))
+    phase_results, phase_verdicts = {}, {}
+    for phase, phase_work, phase_manifest, phase_context, phase_sources, unit, base_cell in (
+        ("before", before, before_manifest, before_context, before_sources, before_unit,
+         next(item for item in before_matrix["cells"] if item["cell_id"] == origin["cell_id"])),
+        ("after", after, after_manifest, after_context, after_sources, after_unit, cell),
+    ):
+        results, verdicts = {}, []
+        phase_scope = {**scope, "evaluation_phase": phase, "evaluated_unit_id": unit["unit_id"]}
+        for seat in READER_SEATS:
+            result = _reader_judgments(repo_for(phase_work), "Assess only the supplied existing finding against this artifact and unchanged producer evidence.",
+                f"Evaluate the {phase} artifact against the original finding; unrelated issues are outside this scoped judgment.",
+                unit, [lens], evidence_root=out / phase / seat, upstream_sources=phase_sources,
+                batch_id=f"correction-{phase}-{finding_id}", seat=seat, attempt=1, artifact_context=phase_context, finding_scope=phase_scope)
+            results[seat] = result
+            verdict = None
+            if result["outcome"] == "valid":
+                claim = _claims_from_reader_result(result, [lens])[lens]
+                transient = {**copy.deepcopy(base_cell), "readers": {}}
+                try:
+                    if "findings" not in claim:
+                        raise Refusal("correction reader must use the current structured findings contract")
+                    _apply_reader_claim(phase_work, phase_manifest, transient, seat, claim.get("verdict"), claim.get("quote"),
+                        claim.get("source_id"), claim.get("source_quote"), claim.get("intake"), claim["findings"])
+                    grounded = transient["readers"][seat]
+                    results[seat]["grounded_claim"] = grounded
+                    if grounded["status"] == "answered":
+                        verdict = grounded["verdict"]
+                except Refusal as exc:
+                    results[seat]["claim_error"] = str(exc)
+            verdicts.append(verdict)
+        phase_results[phase], phase_verdicts[phase] = results, verdicts
+    before_verdicts, after_verdicts = phase_verdicts["before"], phase_verdicts["after"]
+    artifact_changed = (before_context["page_sha256"], before_context["payload_value_sha256"]) != (after_context["page_sha256"], after_context["payload_value_sha256"])
+    if not all(verdict in {"revise", "reject"} for verdict in before_verdicts):
+        status = "cannot-assess"
+        reason = "original-finding-not-established" if before_verdicts == ["clear", "clear"] else "before-assessment-inconclusive"
+    elif after_verdicts == ["clear", "clear"] and artifact_changed:
+        status, reason = "corrected", "original-defect-established-and-after-criterion-fulfilled"
+    elif all(verdict in {"revise", "reject"} for verdict in after_verdicts):
+        status, reason = "not-corrected", "original-defect-survives"
+    else:
+        status, reason = "cannot-assess", "unchanged-artifact-opposed-verdicts" if after_verdicts == ["clear", "clear"] else "after-assessment-inconclusive"
+    receipt = {"schema_version": 1, "status": status, "reason": reason, "artifact_changed": artifact_changed, "scope": "specified-finding-only", "whole_artifact_clear": False,
+        "selected_finding_id": finding_id, "selected_finding": finding, "after_unit_id": after_unit_id,
+        "before_run": str(before), "after_run": str(after), "before_page_sha256": before_context["page_sha256"],
+        "after_page_sha256": after_context["page_sha256"],
+        "before_artifact_context_sha256": digest_bytes(canonical(before_context)),
+        "after_artifact_context_sha256": digest_bytes(canonical(after_context)),
+        "source_registry_sha256": digest_bytes(canonical(source_identity)), "source_identities": source_identity,
+        "finding_scope_sha256": digest_bytes(canonical(scope)), "before_readers": phase_results["before"], "readers": phase_results["after"], "phase_verdicts": phase_verdicts,
+        "after_outstanding": {"unread_cell_ids": missing_cells(after_matrix),
+            "owner_question_ids": [owner_item(cell)["decision_id"] for cell in unresolved_cells(after_matrix)],
+            "known_findings": distinct_findings(after_matrix)},
+        "other_before_findings_not_reassessed": [item for item in inventory if item["finding_id"] != finding_id],
+        "limits": ["This result concerns only the selected original finding, not the entire unit, lens, or artifact.",
+                   "Other before findings were not reassessed; no claim is made that they remain or were corrected.",
+                   "Neither run's reader verdicts nor owner rulings are changed.",
+                   "Unread work and unrecorded human decisions were not assessed; an empty recorded owner queue does not resolve them, and no assignments were made."]}
+    (out / "receipt.json").write_bytes(canonical(receipt))
+    return receipt
 
 
 def matrix_status(work: Path) -> dict[str, Any]:
@@ -2036,6 +2416,8 @@ def reporting_route(work: Path, route: str, cell_id: str | None = None) -> dict[
             "route": route,
             "cells": len(matrix["cells"]),
             "located_defects": len(defects),
+            "located_defects_unit": "legacy defect cells, not independent repairs",
+            "finding_inventory": finding_inventory(work, matrix),
             "recording_refusals": len(refusals),
         }
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
@@ -2124,6 +2506,7 @@ def reporting_route(work: Path, route: str, cell_id: str | None = None) -> dict[
         if cell.get("owner_ruling"):
             lines.extend([f"- owner ruling ({cell['owner_ruling']['choice']}): {cell['owner_ruling']['because']}"])
         lines.append("")
+    lines.extend(finding_lines(finding_inventory(work, matrix)))
     output = Path(cell_id) if cell_id else work / "critique-findings.md"
     output.write_text("\n".join(lines), encoding="utf-8")
     return {"status": "complete", "route": route, "cells": len(matrix["cells"]), "findings": len(findings), "path": str(output.resolve()), "sha256": digest_file(output)}
@@ -2549,6 +2932,18 @@ def located(work: Path, only: str = "disputed") -> str:
         lines.append(f"### {cell['cell_id']} — {cell['outcome']} — unit: {unit['label']}")
         for seat in READER_SEATS:
             judgment = _stored_reader_judgment(work, cell, seat)
+            if "findings" in judgment:
+                reader = cell["readers"][seat]
+                lines.append(f" {seat}: {judgment['verdict']} — {len(reader.get('findings', []))} captured findings")
+                for finding in reader.get("findings", []):
+                    lines.extend([f"   {finding['finding_id']} L{finding.get('start_line')}-{finding.get('end_line')} — {finding['status']}",
+                                  f"   Page: {finding.get('quote')}", f"   Reason: {finding.get('reason') or 'missing reason'}",
+                                  f"   Consequence: {finding.get('practical_consequence') or 'missing consequence'}"])
+                    if finding.get("source_quote"):
+                        lines.append(f"   Source {finding.get('source_id')} L{finding.get('source_start_line')}-{finding.get('source_end_line')}: {finding['source_quote']}")
+                    if finding.get("claim_error"):
+                        lines.append(f"   Unresolved evidence: {finding['claim_error']}")
+                continue
             start = judgment.get("start_line")
             end = judgment.get("end_line")
             if type(start) is not int or type(end) is not int or start < 1 or end < start or end > len(unit_lines):
@@ -2889,6 +3284,18 @@ def main(argv: list[str] | None = None) -> int:
     located_parser = sub.add_parser("located", help="print persisted reader and source spans without reader calls")
     located_parser.add_argument("--work", required=True)
     located_parser.add_argument("--only", choices=("disputed", "defects", "all"), default="disputed")
+    correction_check = sub.add_parser("verify-correction", help="verify one grounded finding against a new rendered artifact without clearing either run")
+    correction_check.add_argument("--before", required=True)
+    correction_check.add_argument("--after", required=True)
+    correction_check.add_argument("--finding", required=True)
+    correction_check.add_argument("--after-unit", required=True)
+    correction_check.add_argument("--out", required=True)
+    findings_parser = sub.add_parser("findings", help="show all finding evidence and owner groupings without reader calls")
+    findings_parser.add_argument("--work", required=True)
+    grouping_parser = sub.add_parser("group-findings", help="record the owner decision that named findings describe one problem")
+    grouping_parser.add_argument("--work", required=True)
+    grouping_parser.add_argument("--finding", action="append", required=True)
+    grouping_parser.add_argument("--because", required=True)
     trend_parser = sub.add_parser(
         "trend", help="located defects per completed run of one deliverable, ordered by page version, with deltas"
     )
@@ -2976,6 +3383,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "located":
             print(located(Path(args.work), args.only), end="")
             return 0
+        elif args.command == "verify-correction":
+            result = verify_correction(Path(args.before), Path(args.after), args.finding, args.after_unit, Path(args.out))
+        elif args.command == "findings":
+            _, matrix = load_matrix(Path(args.work))
+            result = finding_inventory(Path(args.work), matrix)
+        elif args.command == "group-findings":
+            result = group_findings(Path(args.work), args.finding, args.because)
         elif args.command == "trend":
             result = trend([Path(work) for work in args.work])
         else:
