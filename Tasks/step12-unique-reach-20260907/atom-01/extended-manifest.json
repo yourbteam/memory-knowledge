@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "case_source_root": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/runtime",
+  "atomic_step": {
+    "outcome": "Report platform reach separately and prevent unsupported combined unique-person reach.",
+    "practical_value": "The operator keeps usable channel counts without claiming the same audience twice as distinct people.",
+    "stopping_condition": "Founder reach declares platform identity scope and no unsupported combined person total through targeted recovery and accepted export. Each targeted resume preserves its 55 unselected calculations and 33 prior phases; the owner-approved c6-k1 qualification correction is the only additional changed measurement.",
+    "id": "step12-unique-reach",
+    "captured_cases": [
+      {
+        "id": "cross-platform-reach",
+        "source_ref": "Tasks/bteam-corporate-demo/state/up-run-90a4ab8be6e9.json",
+        "sha256": "8de70debbd3f62286ae5db1d3377a40d9871548494f967bd2635987836ced7ef",
+        "kind": "failure",
+        "expected_outcome": "Report platform-specific account reach with its identity unit, not combined unique people without evidenced identity resolution."
+      },
+      {
+        "id": "registered-advocates",
+        "source_ref": "Tasks/bteam-corporate-demo/state/up-run-90a4ab8be6e9.json",
+        "sha256": "8de70debbd3f62286ae5db1d3377a40d9871548494f967bd2635987836ced7ef",
+        "kind": "success",
+        "expected_outcome": "Retain c10-k1 legitimate register-based distinct-person participation without introducing cross-platform prerequisites."
+      }
+    ]
+  },
+  "mini_probes": [
+    {
+      "id": "identity-scope",
+      "goal": "Report platform reach separately and prevent unsupported combined unique-person reach.",
+      "practical_value": "The operator keeps usable channel counts without claiming the same audience twice as distinct people.",
+      "work_type": "hybrid",
+      "work_type_reason": "Real model definitions require source-grounded semantic qualification; code preserves selected scope and measured output identities.",
+      "allowed_paths": [
+        "src/up_harness/roadmap_measurements.py",
+        "tests/unit/test_unique_reach.py"
+      ],
+      "inputs": [
+        {
+          "case_id": "cross-platform-reach"
+        },
+        {
+          "case_id": "registered-advocates"
+        }
+      ],
+      "approaches": [
+        {
+          "id": "control",
+          "hypothesis": "Existing source-fidelity instructions suffice to preserve identity scope.",
+          "implementation": "Unchanged production prompts with captured fresh definition and audit.",
+          "predicted_tradeoff": "Within-platform account deduplication can still be labelled unique people."
+        },
+        {
+          "id": "candidate",
+          "hypothesis": "An explicit shared identity-scope rule preserves separate platform counts and prevents unsupported combined-person reach.",
+          "implementation": "IDENTITY_REACH_SCOPE at all three existing prompt entrypoints, with captured fresh definition and audit.",
+          "predicted_tradeoff": "Must retain valid single-register person counts and usable platform counts."
+        }
+      ],
+      "proof": {
+        "success_criterion": "Founder reach declares platform identity scope and no unsupported combined person total through targeted recovery and accepted export. Each targeted resume preserves its 55 unselected calculations and 33 prior phases; the owner-approved c6-k1 qualification correction is the only additional changed measurement.",
+        "failure_criterion": "Ambiguous person/account identity, implied cross-platform deduplication, lost usable platform counts, or altered unrelated measurements."
+      },
+      "evaluation": {
+        "metrics": [
+          {
+            "name": "identity-quality",
+            "direction": "maximize"
+          }
+        ],
+        "across_cases": [
+          {
+            "name": "identity-quality",
+            "method": "worst"
+          }
+        ]
+      },
+      "winner_output": {
+        "artifact": "identity-scope",
+        "description": "Report platform reach separately and prevent unsupported combined unique-person reach."
+      }
+    }
+  ],
+  "composition": {
+    "consumes": [
+      {
+        "probe_id": "identity-scope",
+        "artifact": "identity-scope"
+      }
+    ],
+    "assembly_contract": "Report platform reach separately and prevent unsupported combined unique-person reach.",
+    "final_validation": {
+      "operator_path": "Exact captured live writer/audit calls through real targeted recovery and rendering. Candidate additionally replays owner-approved c6-k1 correction before accepted export. First-stage reach quality reviewed independently before that unrelated correction; no matched speed or broad reliability claim.",
+      "case_ids": [
+        "cross-platform-reach",
+        "registered-advocates"
+      ],
+      "success_criterion": "Founder reach declares platform identity scope and no unsupported combined person total through targeted recovery and accepted export. Each targeted resume preserves its 55 unselected calculations and 33 prior phases; the owner-approved c6-k1 qualification correction is the only additional changed measurement.",
+      "failure_criterion": "Ambiguous person/account identity, implied cross-platform deduplication, lost usable platform counts, or altered unrelated measurements."
+    }
+  }
+}

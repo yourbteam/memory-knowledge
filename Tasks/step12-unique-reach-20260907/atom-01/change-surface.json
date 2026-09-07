@@ -1,0 +1,16 @@
+{
+  "atomic_step_id": "step12-unique-reach",
+  "baseline_sha256": "ed76b40a8f768c52292fe4130ca70e431ca88023b09c7288b5dcf6a34260bedf",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "5735dc3319f3ece89e06f7e01338f6938642b9145b33f6512a32671699e2b495",
+      "before_mode": 420,
+      "before_sha256": "b73e6819db46a111dca412ffdfb747aafeaf2d64df1b2e1ae804576209750333",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_measurements.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

@@ -1,0 +1,12 @@
+{
+  "scope": "One shared identity/reach instruction added to all three existing measurement prompt entrypoints; no schema changes, normalization, special-case metric aliases or changes to Claude parallel code.",
+  "class_sweep": "3 prompt entrypoints found, 3 covered.",
+  "evidence": [
+    "reference.json",
+    "export-verification.json",
+    "promoted-verification.json",
+    "experiment-01/final-verdict.json"
+  ],
+  "retained_behavior": "Real advocate register distinct-person definition unchanged and accepted; each recovery preserved55 unselected calculations,33 prior phases; final total54 unchanged plus2 approved corrections.",
+  "limits": "One fresh control/candidate comparison, plus approved targeted correction. No claim of statistical reliability or general speed improvement. Previously unresolved unchanged findings are not repaired merely because audit verdicts changed."
+}

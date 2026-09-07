@@ -1,0 +1,31 @@
+{
+  "source_path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-90a4ab8be6e9.json",
+  "sha256": "8de70debbd3f62286ae5db1d3377a40d9871548494f967bd2635987836ced7ef",
+  "failure": {
+    "metric": "Founder-post reach",
+    "scale": "distinct-count people",
+    "instrument": "LinkedIn analytics and Substack analytics",
+    "measurement": {
+      "aggregation": "distinct-count",
+      "counted_event": "Unique recipient accounts shown or delivered the published Month 5 Signed by Humans founder launch post in LinkedIn analytics or Substack analytics during the measurement period, using platform-reported reach, unique viewers, unique recipients or equivalent account-level audience reached fields rather than reactions, comments, shares, saves, clicks or inbound replies.",
+      "exclusions": "Exclude duplicate reach records for the same account within the same platform and measurement period, non-human bot/test traffic identified by the analytics platform, and records not tied to the founder launch post. Do not exclude reached accounts because the post, proof link, approval route, engagement quality or later response failed another campaign requirement.",
+      "kind": "count",
+      "unit": "people"
+    }
+  },
+  "retained_success": {
+    "metric": "Employee advocate participation",
+    "scale": "distinct-count people",
+    "instrument": "Employee advocacy participation register",
+    "measurement": {
+      "aggregation": "distinct-count",
+      "counted_event": "Each registered employee advocate or approved supporter advocate who, after Conversation Management training, sends or publishes at least one Month 11 Signed by Humans advocacy post or share using the provided language or proof link.",
+      "exclusions": "Drafts, prepared posts, approvals, training attendance without a sent or published advocacy action, duplicate actions by the same person, unregistered advocates, and activity outside the Month 11 employee advocacy push.",
+      "kind": "count",
+      "unit": "people"
+    }
+  },
+  "framework_requirement": "- Do not present impressions as actual reach unless the data supports deduplication",
+  "assessment": "Current definition calls account reach across two platforms distinct people but only describes within-platform duplicate removal. No actual audience rows or cross-platform identity map are supplied; do not invent either.",
+  "acceptance": "Keep platform-specific reach usable; disclose identity unit and platform scope; no combined unique-person total without evidenced cross-platform deduplication. Preserve valid register-based participation count."
+}

@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "tests": 15,
+  "runner_sha256": "5b3f844d837480a34f9674e26ee5b783d1e9ce759c6bb6cd765a8a884e346333",
+  "test_sha256": "9145c852142054465fc4a81b1fcc120a42e8a252bfdd5991b76b9fb9fc78e419",
+  "model_edge": "artificial for routing only",
+  "live_calls": 0,
+  "observed_preservation": {
+    "calculations": 55,
+    "preceding_phases": 33
+  }
+}

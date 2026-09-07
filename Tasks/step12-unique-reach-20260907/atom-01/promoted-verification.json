@@ -1,0 +1,42 @@
+{
+  "module_sha256": "5735dc3319f3ece89e06f7e01338f6938642b9145b33f6512a32671699e2b495",
+  "installed_module_matches_live_candidate": true,
+  "exact_live_prompt_replay": true,
+  "raw": {
+    "target": {
+      "metric": "Founder-post reach",
+      "scale": "distinct-count items",
+      "instrument": "LinkedIn analytics and Substack analytics",
+      "measurement": {
+        "aggregation": "distinct-count",
+        "counted_event": "Distinct platform identity items observed by the named analytics instrument as reached by the published Month 5 Signed by Humans founder launch post: LinkedIn account/profile reach deduplicated within LinkedIn for the measurement period, and Substack unique viewer, subscriber or recipient records deduplicated within Substack for the measurement period. Keep LinkedIn and Substack deduplicated platform counts separately usable; combined unique-person reach is unavailable unless a registered common-person identity method links records across platforms.",
+        "exclusions": "Exclude impression-only totals, reactions, comments, shares, saves, clicks, inbound replies, duplicate records for the same observed account or recipient-record identity within the same platform and measurement period, non-human bot/test traffic identified by the analytics platform, and records not tied to the founder launch post. Do not exclude reached account or recipient-record items because the post, proof link, approval route, engagement quality or later response failed another campaign requirement.",
+        "kind": "count",
+        "unit": "items"
+      }
+    },
+    "rendered": "distinct-count of Distinct platform identity items observed by the named analytics instrument as reached by the published Month 5 Signed by Humans founder launch post: LinkedIn account/profile reach deduplicated within LinkedIn for the measurement period, and Substack unique viewer, subscriber or recipient records deduplicated within Substack for the measurement period. Keep LinkedIn and Substack deduplicated platform counts separately usable; combined unique-person reach is unavailable unless a registered common-person identity method links records across platforms. (items); excludes: Exclude impression-only totals, reactions, comments, shares, saves, clicks, inbound replies, duplicate records for the same observed account or recipient-record identity within the same platform and measurement period, non-human bot/test traffic identified by the analytics platform, and records not tied to the founder launch post. Do not exclude reached account or recipient-record items because the post, proof link, approval route, engagement quality or later response failed another campaign requirement.",
+    "retained": {
+      "metric": "Employee advocate participation",
+      "scale": "distinct-count people",
+      "instrument": "Employee advocacy participation register",
+      "measurement": {
+        "aggregation": "distinct-count",
+        "counted_event": "Each registered employee advocate or approved supporter advocate who, after Conversation Management training, sends or publishes at least one Month 11 Signed by Humans advocacy post or share using the provided language or proof link.",
+        "exclusions": "Drafts, prepared posts, approvals, training attendance without a sent or published advocacy action, duplicate actions by the same person, unregistered advocates, and activity outside the Month 11 employee advocacy push.",
+        "kind": "count",
+        "unit": "people"
+      }
+    },
+    "retained_rendered": "distinct-count of Each registered employee advocate or approved supporter advocate who, after Conversation Management training, sends or publishes at least one Month 11 Signed by Humans advocacy post or share using the provided language or proof link. (people); excludes: Drafts, prepared posts, approvals, training attendance without a sent or published advocacy action, duplicate actions by the same person, unregistered advocates, and activity outside the Month 11 employee advocacy push.",
+    "preserved": true,
+    "preserved_per_resume": 55,
+    "preserved_measurements": 54,
+    "preserved_phases": 33,
+    "target_audit": "satisfied",
+    "retained_audit": "satisfied",
+    "exact_live_prompts": true,
+    "exported": true
+  },
+  "limitation": "Post-promotion captured-edge replay uses installed measurement module with the isolated stable harness; Claude parallel code excluded. Fresh live validation used same exact module before promotion."
+}

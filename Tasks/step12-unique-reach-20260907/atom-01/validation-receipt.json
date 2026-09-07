@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-unique-reach",
+  "promotion_event_sha256": "2267578392f6d9de4106d6a69732f415dcf0ece89cfe5d2c94424dec924a3377",
+  "cases": [
+    {
+      "case_id": "cross-platform-reach",
+      "verdict": "satisfied",
+      "reason": "Fresh live definition separates platform account counts and withholds unsupported unique-person totals; accepted Word and Markdown exports contain it. Exact installed module also passed post-promotion captured-edge production recovery and export.",
+      "evidence": [
+        {
+          "case_id": "cross-platform-reach",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/promoted-verification.json",
+          "sha256": "a3e59c219de877123a60868e3856ed6cf53b2ca80f6366d12c3ae9b687e6a5b8"
+        },
+        {
+          "case_id": "cross-platform-reach",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/export-verification.json",
+          "sha256": "5d7fb7e2cb4d411f315c6ef70e635e7075875d204955fedffd695f0e76d3d075"
+        },
+        {
+          "case_id": "cross-platform-reach",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/canonical-artifacts.json",
+          "sha256": "1e79519256087216bd21b2161a53a6b2da37c49ca65a7d1fa2eadd5c783ccf41"
+        }
+      ]
+    },
+    {
+      "case_id": "registered-advocates",
+      "verdict": "satisfied",
+      "reason": "The captured c10-k1 employee advocate register count remains byte-identical, uses distinct people, and received grounded satisfied audit verdicts. Each targeted recovery preserved55 unselected calculations and33 completed phases.",
+      "evidence": [
+        {
+          "case_id": "registered-advocates",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/promoted-verification.json",
+          "sha256": "a3e59c219de877123a60868e3856ed6cf53b2ca80f6366d12c3ae9b687e6a5b8"
+        },
+        {
+          "case_id": "registered-advocates",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/export-verification.json",
+          "sha256": "5d7fb7e2cb4d411f315c6ef70e635e7075875d204955fedffd695f0e76d3d075"
+        },
+        {
+          "case_id": "registered-advocates",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/canonical-artifacts.json",
+          "sha256": "1e79519256087216bd21b2161a53a6b2da37c49ca65a7d1fa2eadd5c783ccf41"
+        }
+      ]
+    }
+  ]
+}

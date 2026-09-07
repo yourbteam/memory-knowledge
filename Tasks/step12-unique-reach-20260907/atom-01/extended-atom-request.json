@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-unique-reach",
+  "outcome": "Report platform reach separately and prevent unsupported combined unique-person reach.",
+  "practical_value": "The operator keeps usable channel counts without claiming the same audience twice as distinct people.",
+  "stopping_condition": "Founder reach declares platform identity scope and no unsupported combined person total through targeted recovery and accepted export. Each targeted resume preserves its 55 unselected calculations and 33 prior phases; the owner-approved c6-k1 qualification correction is the only additional changed measurement.",
+  "allowed_paths": [
+    "src/up_harness/roadmap_measurements.py",
+    "tests/unit/test_unique_reach.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "cross-platform-reach",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-90a4ab8be6e9.json",
+      "sha256": "8de70debbd3f62286ae5db1d3377a40d9871548494f967bd2635987836ced7ef",
+      "kind": "failure",
+      "expected_outcome": "Report platform-specific account reach with its identity unit, not combined unique people without evidenced identity resolution."
+    },
+    {
+      "case_id": "registered-advocates",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-90a4ab8be6e9.json",
+      "sha256": "8de70debbd3f62286ae5db1d3377a40d9871548494f967bd2635987836ced7ef",
+      "kind": "success",
+      "expected_outcome": "Retain c10-k1 legitimate register-based distinct-person participation without introducing cross-platform prerequisites."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

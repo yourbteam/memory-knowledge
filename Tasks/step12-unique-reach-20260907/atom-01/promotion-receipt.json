@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-unique-reach",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "1868c605eae7c531699adabf682a5c5e0516491b24ef778f30fa9a30dc2d1019",
+  "experiment_assembly_sha256": "000c10c03194262e13ac865a4aea8d07472fccaf5322e4b164da8ca9a42839f6",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/roadmap_measurements.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/change-surface.json",
+    "sha256": "eb03aed49fd13f3ebec6138595934130a6504265840eebae988e4b695084063b"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/review.json",
+    "sha256": "dba86cb663449ba80d923627d755fe79ea81a9b8800cc23cc5b94f31088e302e"
+  },
+  "evidence": [
+    {
+      "case_id": "cross-platform-reach",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/promoted-verification.json",
+      "sha256": "a3e59c219de877123a60868e3856ed6cf53b2ca80f6366d12c3ae9b687e6a5b8"
+    },
+    {
+      "case_id": "registered-advocates",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-unique-reach-20260907/atom-01/promoted-verification.json",
+      "sha256": "a3e59c219de877123a60868e3856ed6cf53b2ca80f6366d12c3ae9b687e6a5b8"
+    }
+  ]
+}

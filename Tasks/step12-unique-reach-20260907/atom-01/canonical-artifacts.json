@@ -1,0 +1,24 @@
+{
+  "files": [
+    "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-cc14b50a1141.json",
+    "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-157041016a8e.json",
+    "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-90a4ab8be6e9/recoveries/up-run-157041016a8e/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+    "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-90a4ab8be6e9/recoveries/up-run-157041016a8e/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx"
+  ],
+  "manifest": {
+    "run_id": "up-run-157041016a8e",
+    "source_run_id": "up-run-cc14b50a1141",
+    "plan_sha256": "7a12b23d48131aed70efe18ae3e90fe4411adf51060079dad4687e6cdc84054d",
+    "files": [
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-90a4ab8be6e9/recoveries/up-run-157041016a8e/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+        "sha256": "a560f760c75fe97361a277abcc7cddb81f43f188b2227db9ff3dd0a2ecff931c"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-90a4ab8be6e9/recoveries/up-run-157041016a8e/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+        "sha256": "b2ac4c9aecc3a8c43b31578b56c7d95b897232b883144f4d478cf25b776a243f"
+      }
+    ]
+  },
+  "origin": "Exact accepted isolated live output imported without changing content; original evidence retained."
+}

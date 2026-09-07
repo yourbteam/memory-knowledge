@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "atom_verdict": "win",
+  "candidate_definition": "satisfied by direct source review and fresh grounded audit",
+  "canonical_reach_promotion": true,
+  "new_exported_step12": true,
+  "candidate_run": "up-run-cc14b50a1141",
+  "control_run": "up-run-0eb6dba88053",
+  "live_model_calls": 6,
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "max_attempts": 1,
+  "retries": 0,
+  "control_durations_seconds": [
+    35.094,
+    250.824
+  ],
+  "candidate_durations_seconds": [
+    61.385,
+    181.063
+  ],
+  "speed_claim": "No general speed claim from one pair; candidate total 242.448s vs control 285.918s, with different terminal audit outcomes.",
+  "preserved_measurements": 55,
+  "preserved_completed_phases": 33,
+  "unresolved_export_blocker": null,
+  "parallel_work": "Claude Big Idea and Step7 excluded; no edits to those files. Both live runs used captured isolated harness.",
+  "formal_experiment": "Passed complete Development-Probe comparison, composition and validation; promoted installed module passed captured-edge recovery and export; atom authorize-next succeeded.",
+  "next_proposed_extension": null,
+  "final_run": "up-run-157041016a8e",
+  "extension_calls": 2,
+  "extension_durations_seconds": [
+    56.376,
+    149.474
+  ],
+  "final_changed_measurements": [
+    "c4-k7",
+    "c6-k1"
+  ],
+  "final_unchanged_measurements": 54,
+  "quality_limit": "Quality gain is grounded for these two corrections only. Audit acceptance does not close older unchanged findings without their own evidence."
+}

@@ -1,0 +1,43 @@
+{
+  "criteria": {
+    "identity-quality": {
+      "requirement": "Platform-specific reach is usable with actual observed identity units; no combined unique-person reach without evidenced identity resolution; preserve the actual register-based advocate count and 55 unrelated calculations.",
+      "source_quote": "Do not present impressions as actual reach unless the data supports deduplication",
+      "observed_definition_reviews": {
+        "68bc672f5bdb28fcaa06df5c26ff2fb655ae354bbbf0e90088f4cf9ecedb028c": {
+          "verdict": "not-satisfied",
+          "target": {
+            "metric": "Founder-post reach",
+            "scale": "distinct-count people",
+            "instrument": "LinkedIn analytics and Substack analytics",
+            "measurement": {
+              "aggregation": "distinct-count",
+              "counted_event": "Unique people or account-level recipients reached by the published Month 5 Signed by Humans founder launch post, as reported by LinkedIn analytics or Substack analytics through reach, unique viewers, unique recipients or an equivalent deduplicated audience-reached field for that specific post during the measurement period.",
+              "exclusions": "Exclude duplicate records for the same person or account within the same platform and measurement period, analytics-identified bot or test traffic, records not tied to the founder launch post, and impression-only records where the source cannot support deduplicated reach. Do not exclude reached people because they did not react, comment, click, reshare, enquire, meet proof-boundary requirements or create a later response.",
+              "kind": "count",
+              "unit": "people"
+            }
+          },
+          "reason": "People unit and people-or-account counted event conflate identities. Only within-platform duplicate removal is stated; no separate reporting or unavailable combined-person total. Audit acceptance would not cure this semantic defect."
+        },
+        "ff55a912ae93849d421f1a0d9b66444486e3af1b69958886c3bf1a93f3c4a700": {
+          "verdict": "satisfied",
+          "target": {
+            "metric": "Founder-post reach",
+            "scale": "distinct-count items",
+            "instrument": "LinkedIn analytics and Substack analytics",
+            "measurement": {
+              "aggregation": "distinct-count",
+              "counted_event": "Distinct platform identity items observed by the named analytics instrument as reached by the published Month 5 Signed by Humans founder launch post: LinkedIn account/profile reach deduplicated within LinkedIn for the measurement period, and Substack unique viewer, subscriber or recipient records deduplicated within Substack for the measurement period. Keep LinkedIn and Substack deduplicated platform counts separately usable; combined unique-person reach is unavailable unless a registered common-person identity method links records across platforms.",
+              "exclusions": "Exclude impression-only totals, reactions, comments, shares, saves, clicks, inbound replies, duplicate records for the same observed account or recipient-record identity within the same platform and measurement period, non-human bot/test traffic identified by the analytics platform, and records not tied to the founder launch post. Do not exclude reached account or recipient-record items because the post, proof link, approval route, engagement quality or later response failed another campaign requirement.",
+              "kind": "count",
+              "unit": "items"
+            }
+          },
+          "reason": "Separate platform account/recipient counts remain usable; items avoids pretending platform accounts are unique people; combined unique-person reach explicitly unavailable without registered common-person record linkage. No identity evidence is invented."
+        }
+      }
+    }
+  },
+  "scope": "Direct semantic review of actual live outputs against registered sources; exact-byte labels are regression oracles, not a general-purpose semantic judge. Frozen before candidate audit completion."
+}

@@ -3785,7 +3785,9 @@ def _validate_successor_corrections(
                 raise WorkMemoryError("missing-repository-root", 3)
             raw_hash = sha256_bytes(_safe_file(roots[repository_key], relative).read_bytes())
             effective_expected_hash = effective_artifact_hashes[artifact_key]
-            if raw_hash != effective_expected_hash:
+            if raw_hash != effective_expected_hash and not (
+                transition_matches_effective_bundle and raw_hash == expected_hash
+            ):
                 raise WorkMemoryError("successor-correction-artifact-hash-mismatch", 3)
 
 

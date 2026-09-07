@@ -1,0 +1,17 @@
+{
+  "control_error": "successor-correction-artifact-hash-mismatch",
+  "candidate_unchanged_accepted": true,
+  "tampered_files_refused": [
+    "src/up_harness/engine/runner.py",
+    "tests/unit/test_completed_roadmap_recovery.py",
+    "Tasks/step12-unique-reach-20260907/atom-01/live_resume.py",
+    "operations/sequences/discovery/2026-09-07-step-12-open-response-duration.md",
+    "operations/sequences/discovery/2026-09-07-step-12-open-response-duration.dependencies.json"
+  ],
+  "maintained_function_identical": true,
+  "ledger_unchanged": true,
+  "live_model_calls": 0,
+  "bundle_hash": "a71c1b9164151a2f189d5f348af596c5f521bc18b7e81be53b8bd53d5eab04e7",
+  "correction_id": "dfc7103d-b095-4f42-ab5e-84383814a1c0",
+  "scope": "isolated validator prototype only; no actual select mutation"
+}
