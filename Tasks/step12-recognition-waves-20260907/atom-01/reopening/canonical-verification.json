@@ -1,0 +1,59 @@
+{
+  "status": "passed",
+  "canonical_run_id": "up-run-df375f49a6e3",
+  "fresh_candidate_run_id": "up-run-5ecf2d42952b",
+  "fresh_control_run_id": "up-run-ccaa739b0d82",
+  "canonical_edge": "Exact prompt-hash-bound replay of actual fresh candidate audit, no additional live calls.",
+  "preserved_original_measurements": 60,
+  "changed": [
+    {
+      "id": "c3-k6",
+      "metric": "Recognition of The B Team as a proof-led AI engineering partner",
+      "identity_preserved": true
+    },
+    {
+      "id": "c8-k1",
+      "metric": "Technical-buyer trust in The Stop Line",
+      "identity_preserved": true
+    }
+  ],
+  "all_corrected62_preserved": true,
+  "preserved_phases": 33,
+  "pending_findings": 0,
+  "dependency_checks": {
+    "checks": {
+      "settled_analytics_survive_unrelated_real_edits": true,
+      "changed_full_calculation_reopens": true,
+      "changed_card_context_reopens": true,
+      "changed_sources_reopen": true,
+      "omissions_remain_draft_wide": true,
+      "unresolved_not_silently_closed": true,
+      "prior_grounded_context_available": true,
+      "legacy_analytics_proof_recovered": true
+    },
+    "passed": true,
+    "current_pending": 3,
+    "pending_metrics": [
+      "Issues resolved inside approved answer routes",
+      "Issues resolved inside approved answer routes",
+      "Issues resolved inside approved answer routes"
+    ],
+    "original52_after_two_real_changes": 17
+  },
+  "artifacts": {
+    "run_id": "up-run-df375f49a6e3",
+    "source_run_id": "up-run-0b12827dc71a",
+    "plan_sha256": "671f457a4911291d6d044851fc132f356d4ffc2a1df78bec2b4ac2d281a6d2e2",
+    "files": [
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-df375f49a6e3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+        "sha256": "12a151335c22298e12fe59540356d04935feec5fc39d3b9a3bd7d3c898691922"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-df375f49a6e3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+        "sha256": "1a25883ab2b6f78486a811408f1f8158d8a6f874c07e9e375a0314dec5351f09"
+      }
+    ]
+  },
+  "scope_limit": "Both fresh audits exported identical Markdown. Reopening upgrade shows mechanical continuity benefit; additional semantic quality/speed advantage not demonstrated."
+}

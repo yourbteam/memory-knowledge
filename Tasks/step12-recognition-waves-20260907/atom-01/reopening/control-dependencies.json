@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "settled_analytics_survive_unrelated_real_edits": false,
+    "changed_full_calculation_reopens": true,
+    "changed_card_context_reopens": true,
+    "changed_sources_reopen": true,
+    "omissions_remain_draft_wide": true,
+    "unresolved_not_silently_closed": true,
+    "prior_grounded_context_available": false,
+    "legacy_analytics_proof_recovered": false
+  },
+  "passed": false,
+  "current_pending": 5,
+  "pending_metrics": [
+    "Time on technical proof content",
+    "Issues resolved inside approved answer routes",
+    "Issues resolved inside approved answer routes",
+    "Time on The Stop Line proof page",
+    "Issues resolved inside approved answer routes"
+  ],
+  "original52_after_two_real_changes": 52
+}

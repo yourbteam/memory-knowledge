@@ -1,0 +1,28 @@
+{
+  "assembly_sha256": "4ea76c4b481b16dcec8af67c2c1b1de1708a43ea36115eb3c106280f314d931f",
+  "atomic_step_id": "step12-recognition-waves",
+  "cases": [
+    {
+      "case_id": "recognition-later-waves",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Separate baseline and follow-up populations, unchanged recognition coding, wave counts/rates and percentage-point change. Negative answers and later waves remain eligible; changed audience/item/stimulus/coding/sampling/weighting requires comparability before change claims. No target or baseline result invented. Existing survey name is explicitly baseline instrument reused. Canonical recovery must additionally preserve the other data and pass full acceptance/export.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "within-wave-preference",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Actual saved within-wave definition passes unchanged through the producer boundary; this mechanical test does not substitute for a live reader judgment.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

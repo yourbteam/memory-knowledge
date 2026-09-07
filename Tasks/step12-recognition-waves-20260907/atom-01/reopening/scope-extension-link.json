@@ -1,0 +1,23 @@
+{
+  "owner_approval": "extension approved",
+  "predecessor": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/extension-controller",
+  "predecessor_baseline_sha256": "6604db5f1bfd9b3fc072e1fd1260279821c8d650ab1cad7e8c11b5d8882b9aa9",
+  "reason": "Controller supersession requires identical paths; owner explicitly authorized this wider reopening boundary. Prior runs remain intact. New baseline is verified below against every overlapping original file; no canonical product change has yet been applied.",
+  "prior_baseline": {
+    "allowed_paths": [
+      "src/up_harness/roadmap_measurements.py",
+      "tests/unit/test_recognition_waves.py"
+    ],
+    "atomic_step_id": "step12-recognition-waves",
+    "files": [
+      {
+        "mode": 420,
+        "path": "src/up_harness/roadmap_measurements.py",
+        "sha256": "c4e51ef6e46c62b12226240c1ca3f8fae7ac9c5e1df364f27186af610406a1d8",
+        "size": 41095
+      }
+    ],
+    "repository_root": "/Users/kamenkamenov/united-partners",
+    "schema_version": 1
+  }
+}

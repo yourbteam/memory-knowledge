@@ -1,0 +1,8 @@
+{
+  "predecessor": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/controller",
+  "earlier_link": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/scope-extension-link.json",
+  "overlapping_baseline_files_identical": true,
+  "additional_test": "tests/unit/test_roadmap_findings.py",
+  "reason": "Necessary expectation adjustment for the approved dependency policy; no new product behavior.",
+  "native_supersession": false
+}

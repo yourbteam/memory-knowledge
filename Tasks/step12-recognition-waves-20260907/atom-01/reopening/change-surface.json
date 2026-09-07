@@ -1,0 +1,48 @@
+{
+  "atomic_step_id": "step12-recognition-waves",
+  "baseline_sha256": "fd762b307507cbd923f900c616e6a725f80bfdfcd5378efa97496645354899e5",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "4cc87d246577c700946b851038785e397f5906c33b641336feaca5524a5c1b7e",
+      "before_mode": 420,
+      "before_sha256": "b96f78736551e6c69377abc3f385270b175133cbd3c9e898d70423782c72c92a",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_findings.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "8a8d0144251aea8164f853d1cb3699102e86c91930f7a898dad1acf8c898e055",
+      "before_mode": 420,
+      "before_sha256": "c4e51ef6e46c62b12226240c1ca3f8fae7ac9c5e1df364f27186af610406a1d8",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_measurements.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "9a5a31497ea9395482c542b508e1c8d464ea36bcca8a0104b0b84fc73ce45586",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "tests/unit/test_finding_dependencies.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "fbee5d78595f20f5ebb44531d178e96f23552f3d1010d0dca8f2998c82e8bb1d",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "tests/unit/test_recognition_waves.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "1d2ee2eff2426bf1b3b9d1cbc5aeac7e7bf479c4c41a5faf838c64bb50821e61",
+      "before_mode": 420,
+      "before_sha256": "a5249b86076d71b8eb03ce0706976ab9aecfca972778b68b53b2f707b257b984",
+      "kind": "changed",
+      "path": "tests/unit/test_roadmap_findings.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

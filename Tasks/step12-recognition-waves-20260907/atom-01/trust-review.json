@@ -1,0 +1,20 @@
+{
+  "measurement": {
+    "aggregation": "ratio-times-100",
+    "denominator": "For the baseline wave and each eligible follow-up wave separately: sampled CTOs and architecture owners in the technical-buyer audience who were shown the approved The Stop Line proof stimulus and gave a valid trust response. Baseline is the first buyer interview or commissioned survey wave before launch; the target is set in that same wave after the baseline is read. Do not pool respondents across waves. For each follow-up, report follow-up percent minus baseline percent in percentage points alongside that wave's numerator, denominator and rate.",
+    "exclusions": "Exclude duplicate responses from the same respondent within the wave, respondents outside the technical-buyer audience, incomplete responses with no trust judgement and responses not exposed to the approved proof stimulus. Keep baseline and follow-up audience eligibility, question or stimulus, response coding, sampling and weighting comparable; report changed methods or audience mix explicitly and withhold a comparable change claim unless comparability is established. Do not silently reset the baseline or invent a baseline result, target, deadline or approval.",
+    "kind": "percentage",
+    "numerator": "For each separately reported baseline or follow-up wave, respondents in that wave's denominator who say The Stop Line gives enough evidence to take a next meeting.",
+    "unit": "percent"
+  },
+  "sha256": "074bf473fb043021fe141935d42fe3eeba51fc02bffe6e27040502d7e4e0aacc",
+  "verdict": "satisfied",
+  "reason": "The trust response still means sufficient evidence for a next meeting. Baseline and each follow-up use separate sampled CTO/architecture-owner populations, rates and percentage-point difference. The original baseline and first-wave target-setting dependency remain; eligibility, question/stimulus, coding, sampling and weighting require comparability. Changed methods cannot support an unqualified change claim. No measured result or target invented.",
+  "source_refs": [
+    "source-586",
+    "source-618",
+    "source-686",
+    "source-798",
+    "source-800"
+  ]
+}

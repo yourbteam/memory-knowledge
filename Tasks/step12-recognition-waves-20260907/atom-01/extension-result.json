@@ -1,0 +1,41 @@
+{
+  "run_id": "up-run-0b12827dc71a",
+  "targets": [
+    {
+      "id": "c3-k6",
+      "verdict": "satisfied",
+      "reason": "The recognition measure preserves separate baseline and follow-up waves, comparable methods and percentage-point change reporting without inventing baseline or target values.",
+      "evidence_ref": "c3-k6/measurement/numerator"
+    },
+    {
+      "id": "c8-k1",
+      "verdict": "satisfied",
+      "reason": "The technical-buyer trust calculation preserves separate baseline and follow-up waves, comparable methods and percentage-point change reporting.",
+      "evidence_ref": "c8-k1/measurement/denominator"
+    }
+  ],
+  "remaining_judgments": [
+    {
+      "id": "c7-k2",
+      "verdict": "not-satisfied",
+      "reason": "The calculation still counts only resolved issues and gives no denominator or separate open eligible issue accounting for issue-resolution coverage.",
+      "evidence_ref": "c7-k2/measurement/exclusions"
+    }
+  ],
+  "omissions": [],
+  "error": "finding_resolution_invalid: f-0e394060c26428f75d3b (Time on technical proof content): disproved/not-applicable requires source evidence as well as a current calculation; f-a3dee888869ae344e895 (Time on The Stop Line proof page): disproved/not-applicable requires source evidence as well as a current calculation",
+  "timing": [
+    {
+      "role": "tactical_roadmap_card_measurements",
+      "seconds": 59.026
+    },
+    {
+      "role": "tactical_roadmap_measurement_audit",
+      "seconds": 257.115
+    }
+  ],
+  "preserved_other_measurements": 60,
+  "preserved_prior_phases": 33,
+  "exported": false,
+  "promoted": false
+}

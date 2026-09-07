@@ -1,0 +1,27 @@
+{
+  "control": {
+    "verdict": "not-satisfied",
+    "reason": "Denominator and exclusions restrict all observations to first message-testing wave; cannot measure later increase.",
+    "measurement": {
+      "aggregation": "ratio-times-100",
+      "denominator": "Distinct respondent people in the first message-testing wave before launch who are owners of midsize businesses or technical buyers, are asked the recognition item for The B Team as the proof-led AI engineering partner behind The Stop Line, and have a valid opportunity to answer. Deduplicate only within the survey instrument and wave using the respondent identity the instrument actually records; if it records only accounts or recipient records without person identity, the people-based percentage is unavailable until person identity is established for that scope.",
+      "exclusions": "Exclude respondents outside the owner-of-midsize-businesses or technical-buyer audiences, duplicate respondent records within the first wave, test or staff records, records outside the first message-testing wave before launch, and records with no opportunity to answer the recognition item. Do not exclude eligible respondents because they do not recognise The B Team, choose another association, give a negative answer, lack meeting intent, or fail unrelated campaign governance, approval or quality requirements. Exclude impression-only totals from this measure.",
+      "kind": "percentage",
+      "numerator": "Denominator respondents whose survey answer recognises The B Team as a proof-led AI engineering partner behind The Stop Line by attributing The B Team to AI engineering and to proof-led evidence, approved proof, traceable claims, senior responsibility or visible limits, rather than only to generic software delivery, broad AI capability, unaided awareness, meeting intent or an unrelated association.",
+      "unit": "percent"
+    }
+  },
+  "candidate": {
+    "verdict": "satisfied",
+    "reason": "Separate baseline and follow-up populations, unchanged recognition coding, wave counts/rates and percentage-point change. Negative answers and later waves remain eligible; changed audience/item/stimulus/coding/sampling/weighting requires comparability before change claims. No target or baseline result invented. Existing survey name is explicitly baseline instrument reused.",
+    "limitation": "Operational future definition, not real measured campaign improvement. Full acceptance pending.",
+    "measurement": {
+      "aggregation": "ratio-times-100",
+      "denominator": "For the baseline first message-testing wave before launch and for each eligible follow-up wave through 30 June 2027, count sampled owners of midsize businesses and technical buyers who are asked the same recognition item for The B Team as a proof-led AI engineering partner behind The Stop Line and have a valid opportunity to answer. Keep each wave separate; do not pool respondents across waves. The instrument name identifies the baseline wave, but the same item, stimulus, audience eligibility, sampling and weighting basis must be repeated or reported as changed.",
+      "exclusions": "Exclude respondents outside the owners-of-midsize-businesses or technical-buyer audiences, duplicate respondent records within the wave and deduplication scope actually observed, test or staff records, and records with no opportunity to answer the recognition item. Do not exclude eligible respondents because they do not recognise The B Team, choose another association, give a negative answer, lack meeting intent, appear in a later eligible wave, or fail unrelated campaign governance or quality requirements. Withhold a comparable change claim for any follow-up wave unless audience, question/stimulus, response coding, sampling and weighting comparability is established.",
+      "kind": "percentage",
+      "numerator": "For each separate wave, count denominator respondents whose answer recognises The B Team as a proof-led AI engineering partner, meaning the response attributes The B Team to AI engineering and to proof-led evidence, approved proof, traceable claims, senior responsibility or visible limits rather than only to generic software delivery, broad AI capability or unrelated awareness. Report each wave's numerator, denominator and percent rate. For every comparable follow-up wave, report change as follow-up percent minus baseline percent in percentage points. Do not invent the baseline result, target, approval or target-setting outcome; preserve that the baseline and target are set in the first message-testing wave.",
+      "unit": "percent"
+    }
+  }
+}

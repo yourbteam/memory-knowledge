@@ -1,0 +1,92 @@
+[
+  {
+    "blocker_id": "blk-aea33b5e8d657202054d4642",
+    "correction": {
+      "blocker_id": "blk-aea33b5e8d657202054d4642",
+      "blocker_view_hash": "bac2a7d97d85c9cce363a92620865dfaa2fbb83709269222d1efbaddd21c3be7",
+      "changed_artifact_hashes": [
+        "d5a11fffcd2ded58c101fd156f679915bb73a354a2737d07b2d1cd09381f12fc"
+      ],
+      "correction_id": "078fd399-eebe-476f-a0b9-fd405eff21a5",
+      "event_id": "ab5b0d29-c6b9-4c96-8bdd-ab10e9604955",
+      "event_ids": [
+        "ab5b0d29-c6b9-4c96-8bdd-ab10e9604955",
+        "dedb0a51-c980-4a06-ab0d-f2eaee8b80c9"
+      ],
+      "idempotent_event_ids": [],
+      "ledger_hash": "813eb0a152bd8def2685f796ea26c119b874db5dec2261db95c2a8bb1c72984d",
+      "occurrence_id": "a4ad6124-bbeb-46d5-9f56-8e2d883779de",
+      "ok": true,
+      "previous_ledger_hash": "e77294aac62b21d2ed8cb4bcd58dc1848bdbc57895490c4ca3e109f861d18949",
+      "transition_event_id": "dedb0a51-c980-4a06-ab0d-f2eaee8b80c9"
+    },
+    "verification": {
+      "blocker_view_hash": "75c81f7ad2425bb08f30558d9e0c84342e6cb838c504c048133067dbce77268b",
+      "event_ids": [
+        "b0649a9e-6442-4c5d-9627-5d20803c27e4"
+      ],
+      "idempotent_event_ids": [],
+      "ledger_hash": "27ef4154db737b34b8fdd777bc8575adb8a58f6434b7f167444c581ba56ca684",
+      "ok": true,
+      "previous_ledger_hash": "813eb0a152bd8def2685f796ea26c119b874db5dec2261db95c2a8bb1c72984d",
+      "verification_event_id": "b0649a9e-6442-4c5d-9627-5d20803c27e4"
+    },
+    "closure": {
+      "blocker_view_hash": "a09dcc00fbd724bcf49379787243673007f4ff50c1a106829f1ddfffaba53efc",
+      "event_id": "366ba137-aa61-4448-a27f-a75e0f80beae",
+      "event_ids": [
+        "366ba137-aa61-4448-a27f-a75e0f80beae"
+      ],
+      "idempotent_event_ids": [],
+      "ledger_hash": "ce5afa1f2c96529f69ccd1b4d7214309d858f2ad98317081511005252015683f",
+      "ok": true,
+      "previous_ledger_hash": "26e11655ebda4bb60812b35cb1f8c770c9f0ae564aa6ac792bcd71b262938fea",
+      "to_status": "closed"
+    }
+  },
+  {
+    "blocker_id": "blk-a494ad91e03da45a1c27bc42",
+    "correction": {
+      "blocker_id": "blk-a494ad91e03da45a1c27bc42",
+      "blocker_view_hash": "b458b7d2abfa9d596edb93bacfb95eb6329c8dc874e2119a1d284fff8fa227c0",
+      "changed_artifact_hashes": [
+        "d5a11fffcd2ded58c101fd156f679915bb73a354a2737d07b2d1cd09381f12fc"
+      ],
+      "correction_id": "8a4a7c96-a8e8-4235-96f9-12d78fd15b4e",
+      "event_id": "6432b3d7-728b-449d-b904-bb5f53d9d69c",
+      "event_ids": [
+        "6432b3d7-728b-449d-b904-bb5f53d9d69c",
+        "879c6054-22c3-4ff3-b49e-857d5f03484c"
+      ],
+      "idempotent_event_ids": [],
+      "ledger_hash": "ffe3ed765722a5e6abab585519084660472fba240a97648928ef783d2a05eaf8",
+      "occurrence_id": "39024a68-af1c-4797-b540-e39ca07ceeec",
+      "ok": true,
+      "previous_ledger_hash": "ce5afa1f2c96529f69ccd1b4d7214309d858f2ad98317081511005252015683f",
+      "transition_event_id": "879c6054-22c3-4ff3-b49e-857d5f03484c"
+    },
+    "verification": {
+      "blocker_view_hash": "10a679ba40190279560424b4cec94c53e0bcf926fa908d2b8c0db016454a8c0c",
+      "event_ids": [
+        "a4024f6f-687d-4f91-a7e8-b338b00ad8ef"
+      ],
+      "idempotent_event_ids": [],
+      "ledger_hash": "f2c08fcea69e2c09d5bc260c73a80f96fdf92eeb805a751a2017c4231ad8a2bc",
+      "ok": true,
+      "previous_ledger_hash": "ffe3ed765722a5e6abab585519084660472fba240a97648928ef783d2a05eaf8",
+      "verification_event_id": "a4024f6f-687d-4f91-a7e8-b338b00ad8ef"
+    },
+    "closure": {
+      "blocker_view_hash": "85214e936bed48f93c17bd6d90505c0ca9f94a27c37598b8bb97a329afd6bb12",
+      "event_id": "dc4afa62-b561-46c7-a533-6643550808a1",
+      "event_ids": [
+        "dc4afa62-b561-46c7-a533-6643550808a1"
+      ],
+      "idempotent_event_ids": [],
+      "ledger_hash": "55fe33e0837097f8b1bf7a22b8d979f23f7a93f7896fa4ee14aae60b82ecad57",
+      "ok": true,
+      "previous_ledger_hash": "79362678bd587bf05a248c0ed0dfd200dd1f2712964fdf7451e9cd0f45ffb170",
+      "to_status": "closed"
+    }
+  }
+]

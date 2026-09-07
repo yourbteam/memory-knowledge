@@ -1,0 +1,34 @@
+[
+  {
+    "case": "recognition-later-waves",
+    "approach": "control",
+    "satisfied": false,
+    "exported": true,
+    "error": null,
+    "preserved": true
+  },
+  {
+    "case": "within-wave-preference",
+    "approach": "control",
+    "satisfied": true,
+    "exported": null,
+    "error": null,
+    "preserved": true
+  },
+  {
+    "case": "recognition-later-waves",
+    "approach": "candidate",
+    "satisfied": true,
+    "exported": true,
+    "error": null,
+    "preserved": true
+  },
+  {
+    "case": "within-wave-preference",
+    "approach": "candidate",
+    "satisfied": true,
+    "exported": null,
+    "error": null,
+    "preserved": true
+  }
+]

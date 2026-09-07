@@ -1,0 +1,33 @@
+test_card_context_change_reopens (test_finding_dependencies.Tests.test_card_context_change_reopens) ... ok
+test_complete_affected_calculation_change_reopens (test_finding_dependencies.Tests.test_complete_affected_calculation_change_reopens) ... ok
+test_missing_legacy_proof_does_not_allow_reuse (test_finding_dependencies.Tests.test_missing_legacy_proof_does_not_allow_reuse) ... ok
+test_missing_measurement_reopens (test_finding_dependencies.Tests.test_missing_measurement_reopens) ... ok
+test_omissions_remain_draft_wide (test_finding_dependencies.Tests.test_omissions_remain_draft_wide) ... ok
+test_prior_context_is_rederived_not_trusted_when_reloaded (test_finding_dependencies.Tests.test_prior_context_is_rederived_not_trusted_when_reloaded) ... ok
+test_real_unrelated_calculation_change_keeps_settled_measurement (test_finding_dependencies.Tests.test_real_unrelated_calculation_change_keeps_settled_measurement) ... ok
+test_source_change_reopens (test_finding_dependencies.Tests.test_source_change_reopens) ... ok
+test_unresolved_requires_explicit_adjudication (test_finding_dependencies.Tests.test_unresolved_requires_explicit_adjudication) ... ok
+test_actual_followup_definition_survives_writer_and_renderer (test_recognition_waves.Tests.test_actual_followup_definition_survives_writer_and_renderer) ... ok
+test_instrument_rename_is_still_refused (test_recognition_waves.Tests.test_instrument_rename_is_still_refused) ... ok
+test_missing_measurement_writer_receives_same_longitudinal_scope (test_recognition_waves.Tests.test_missing_measurement_writer_receives_same_longitudinal_scope) ... ok
+test_real_within_wave_preference_remains_admissible (test_recognition_waves.Tests.test_real_within_wave_preference_remains_admissible) ... ok
+test_selected_recognition_keeps_61_other_slots (test_recognition_waves.Tests.test_selected_recognition_keeps_61_other_slots) ... ok
+test_disproof_needs_sources (test_roadmap_findings.Tests.test_disproof_needs_sources) ... ok
+test_explicit_resolution_is_bound_to_current_artifact (test_roadmap_findings.Tests.test_explicit_resolution_is_bound_to_current_artifact) ... ok
+test_fixed_omission_still_needs_calculation (test_roadmap_findings.Tests.test_fixed_omission_still_needs_calculation) ... ok
+test_full_lineage_contains_47 (test_roadmap_findings.Tests.test_full_lineage_contains_47) ... ok
+test_missing_parent_refused (test_roadmap_findings.Tests.test_missing_parent_refused) ... ok
+test_nonapplicable_omission_uses_source_applicability_evidence (test_roadmap_findings.Tests.test_nonapplicable_omission_uses_source_applicability_evidence) ... ok
+test_plan_history_tamper_refused (test_roadmap_findings.Tests.test_plan_history_tamper_refused) ... ok
+test_real_unchanged_four (test_roadmap_findings.Tests.test_real_unchanged_four) ... ok
+test_silence_does_not_close (test_roadmap_findings.Tests.test_silence_does_not_close) ... ok
+test_unchanged_cannot_be_fixed (test_roadmap_findings.Tests.test_unchanged_cannot_be_fixed) ... ok
+test_unrelated_calculation_cannot_clear (test_roadmap_findings.Tests.test_unrelated_calculation_cannot_clear) ... ok
+test_unresolved_stays_open (test_roadmap_findings.Tests.test_unresolved_stays_open) ... ok
+test_voice_selection_never_selects_writer (test_roadmap_findings.Tests.test_voice_selection_never_selects_writer) ... ok
+test_voice_selection_rejects_unknown_and_mixed_targets (test_roadmap_findings.Tests.test_voice_selection_rejects_unknown_and_mixed_targets) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 12.750s
+
+OK

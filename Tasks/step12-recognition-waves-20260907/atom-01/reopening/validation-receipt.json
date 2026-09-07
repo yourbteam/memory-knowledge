@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-recognition-waves",
+  "promotion_event_sha256": "e65005236755eb14f6ded1b1b24b8b581a0611c86db9d6084aa1c031f0888311",
+  "cases": [
+    {
+      "case_id": "recognition-later-waves",
+      "verdict": "satisfied",
+      "reason": "Installed canonical targeted audit recovery preserves all62 corrected calculations and33 phases, explicitly resolves remaining observations, retains dependency rejection behavior and exports.",
+      "evidence": [
+        {
+          "case_id": "recognition-later-waves",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/canonical-recognition-later-waves/observed.json",
+          "sha256": "f2e01883534933ab3ca0dc4e061fa21e73081e4b341cc9f112eb5bb35803b461"
+        }
+      ]
+    },
+    {
+      "case_id": "within-wave-preference",
+      "verdict": "satisfied",
+      "reason": "Installed canonical producer accepts the actual within-wave measurement unchanged; this mechanical preservation check does not claim a new semantic reader trial.",
+      "evidence": [
+        {
+          "case_id": "within-wave-preference",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/canonical-within-wave-preference/observed.json",
+          "sha256": "a5bf5772746d133b2e9d5ad1abb3616da7510d6d36a289ed785d62db721678d5"
+        }
+      ]
+    }
+  ]
+}

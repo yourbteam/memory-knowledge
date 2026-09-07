@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed",
+  "change_surface_sha256": "d5a11fffcd2ded58c101fd156f679915bb73a354a2737d07b2d1cd09381f12fc",
+  "blocking_findings": [],
+  "evidence": [
+    "Nine dependency tests, five longitudinal tests and14 existing finding tests pass.",
+    "Exact captured prompt replay of final code reproduces62 accepted judgments, zero omissions, three explicit source-backed resolutions and export.",
+    "Control also exports identical Markdown: no additional artifact quality or speed claim for reopening instructions.",
+    "Closure dependencies include complete affected/cited measurement items, non-KPI card context and all sources; changed/missing dependencies reopen. Omissions remain draft-wide.",
+    "Prior explanatory context is rederived at load, never trusted after evidence changes.",
+    "Earlier control writer retained first-wave-only restriction; actual candidate writer fixes baseline/follow-up recognition; trust continuation similarly source-grounded."
+  ],
+  "conclusion": "Fixes the approved producer and finding-evidence boundaries; no output normalization or special-case card aliases.",
+  "unresolved_uncertainty": "Limited captured cases establish these behaviors, not universal semantic reliability. Uncited semantic cross-measurement dependencies are not automatically discovered; fresh full audit remains required."
+}

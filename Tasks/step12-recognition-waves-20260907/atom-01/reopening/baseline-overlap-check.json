@@ -1,0 +1,45 @@
+{
+  "old": {
+    "allowed_paths": [
+      "src/up_harness/roadmap_measurements.py",
+      "tests/unit/test_recognition_waves.py"
+    ],
+    "atomic_step_id": "step12-recognition-waves",
+    "files": [
+      {
+        "mode": 420,
+        "path": "src/up_harness/roadmap_measurements.py",
+        "sha256": "c4e51ef6e46c62b12226240c1ca3f8fae7ac9c5e1df364f27186af610406a1d8",
+        "size": 41095
+      }
+    ],
+    "repository_root": "/Users/kamenkamenov/united-partners",
+    "schema_version": 1
+  },
+  "new": {
+    "allowed_paths": [
+      "src/up_harness/roadmap_measurements.py",
+      "tests/unit/test_recognition_waves.py",
+      "src/up_harness/roadmap_findings.py",
+      "tests/unit/test_finding_dependencies.py"
+    ],
+    "atomic_step_id": "step12-recognition-waves",
+    "files": [
+      {
+        "mode": 420,
+        "path": "src/up_harness/roadmap_findings.py",
+        "sha256": "b96f78736551e6c69377abc3f385270b175133cbd3c9e898d70423782c72c92a",
+        "size": 10072
+      },
+      {
+        "mode": 420,
+        "path": "src/up_harness/roadmap_measurements.py",
+        "sha256": "c4e51ef6e46c62b12226240c1ca3f8fae7ac9c5e1df364f27186af610406a1d8",
+        "size": 41095
+      }
+    ],
+    "repository_root": "/Users/kamenkamenov/united-partners",
+    "schema_version": 1
+  },
+  "overlapping_files_byte_identical": true
+}

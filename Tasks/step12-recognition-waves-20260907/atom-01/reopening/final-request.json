@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-recognition-waves",
+  "outcome": "Step12 recognition and technical-buyer trust usable across comparable survey waves.",
+  "practical_value": "The operator can track the source-required recognition change from its first-wave baseline without pooling waves or inventing a target.",
+  "stopping_condition": "Dependency probes preserve settled measurement findings only on unchanged evidence, reopen changed evidence, and the real saved corrected62-measure roadmap exports with33 phases preserved.",
+  "allowed_paths": [
+    "src/up_harness/roadmap_measurements.py",
+    "tests/unit/test_recognition_waves.py",
+    "src/up_harness/roadmap_findings.py",
+    "tests/unit/test_finding_dependencies.py",
+    "tests/unit/test_roadmap_findings.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "recognition-later-waves",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-0b12827dc71a.json",
+      "sha256": "4fdf03a8805117e194a2f7ff24893e882d082b2a6abc45f30a0310ff7f7bd70a",
+      "kind": "failure",
+      "expected_outcome": "Retain corrected recognition/trust and all62 calculations, explicitly adjudicate remaining true disputes, preserve33 phases and export."
+    },
+    {
+      "case_id": "within-wave-preference",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-06dff58af1cc.json",
+      "sha256": "9c1e90fe9e30bcd73d8c309b2a8418a7e2e0c9972f096dd09ce8332ca06f8e57",
+      "kind": "success",
+      "expected_outcome": "Preserve the actual within-wave message preference definition; do not turn a within-wave comparison into a cross-wave measure."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-recognition-waves",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "8d8275db73815eca5ae96d97eee0130cfed8047cc33c5b183100372ae889341e",
+  "experiment_assembly_sha256": "4ea76c4b481b16dcec8af67c2c1b1de1708a43ea36115eb3c106280f314d931f",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/roadmap_findings.py",
+    "src/up_harness/roadmap_measurements.py",
+    "tests/unit/test_finding_dependencies.py",
+    "tests/unit/test_recognition_waves.py",
+    "tests/unit/test_roadmap_findings.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/change-surface.json",
+    "sha256": "d5a11fffcd2ded58c101fd156f679915bb73a354a2737d07b2d1cd09381f12fc"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/review.json",
+    "sha256": "7c7735d82551f2bb9c0437d7f2038f3c0286bef9d9e61ef3f276b72c5b19a4c7"
+  },
+  "evidence": [
+    {
+      "case_id": "recognition-later-waves",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/extension-replay-candidate-recognition-later-waves/observed.json",
+      "sha256": "407ea396d64b9a630419c09ec378a28eb7c85da69e0b5317e6dc21d8ca9bab81"
+    },
+    {
+      "case_id": "within-wave-preference",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-recognition-waves-20260907/atom-01/reopening/extension-replay-candidate-within-wave-preference/observed.json",
+      "sha256": "a5bf5772746d133b2e9d5ad1abb3616da7510d6d36a289ed785d62db721678d5"
+    }
+  ]
+}

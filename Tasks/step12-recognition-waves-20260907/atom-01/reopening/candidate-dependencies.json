@@ -1,0 +1,20 @@
+{
+  "checks": {
+    "settled_analytics_survive_unrelated_real_edits": true,
+    "changed_full_calculation_reopens": true,
+    "changed_card_context_reopens": true,
+    "changed_sources_reopen": true,
+    "omissions_remain_draft_wide": true,
+    "unresolved_not_silently_closed": true,
+    "prior_grounded_context_available": true,
+    "legacy_analytics_proof_recovered": true
+  },
+  "passed": true,
+  "current_pending": 3,
+  "pending_metrics": [
+    "Issues resolved inside approved answer routes",
+    "Issues resolved inside approved answer routes",
+    "Issues resolved inside approved answer routes"
+  ],
+  "original52_after_two_real_changes": 17
+}
