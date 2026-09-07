@@ -1,0 +1,18 @@
+{
+  "source_ref": "source-reference.json",
+  "source_sha256": "78f2d242d35e439bc6b4ad0445c1d723031e36d441f38d2e6051b0d8001ddcc2",
+  "original_verdict": "not-satisfied",
+  "original_reason": "The original definition and exclusion repeat qualified meeting/qualified-meeting route without an operational rule.",
+  "new_measurement": {
+    "aggregation": "count",
+    "counted_event": "One tracked event from The Stop Line proof page or a connected inbound route where website analytics or inbound-response records show a visitor clicked to request or book a meeting route intended for the named audiences and The Stop Line proof-page outcome. The click qualifies when the route is attributable to the page or campaign tagging, expresses meeting-request or booking intent, and is sent or published to the recipient system; it is not required to become an approved meeting, booked meeting, sales-qualified lead, completed sale or later reply.",
+    "exclusions": "Exclude internal team traffic, bot or spam traffic, test clicks, duplicate recordings of the same click event within the same instrument scope, broken clicks not sent to the recipient system, clicks not attributable to The Stop Line proof page or connected inbound route, clicks to routes not intended for meeting request or booking, and irrelevant-event clicks. Do not exclude eligible unsuccessful clicks because the meeting is not later approved, booked, converted to a lead or closed.",
+    "kind": "count",
+    "unit": "events"
+  },
+  "new_definition_verdict": "satisfied",
+  "new_reason": "Meeting-request or booking purpose plus attributable campaign/page route and transmitted click provide observable event/destination eligibility. The definition explicitly excludes later approval, booking, sales qualification or sales outcomes from eligibility. It does not invent URLs or claim existing qualification agreement.",
+  "retained_qualifier_scope": "Audience and proof-page purpose remain contextual boundaries; the new definition supplies the actual operational route tests rather than repeating qualified.",
+  "limitation": "This assesses the proposed measurement definition. No campaign analytics records, configured URL inventory or numerical campaign result were supplied or invented.",
+  "harness_change_needed": "Not demonstrated; existing production prompt produced a satisfactory definition on its first call. Wait for full audit/export before closing."
+}

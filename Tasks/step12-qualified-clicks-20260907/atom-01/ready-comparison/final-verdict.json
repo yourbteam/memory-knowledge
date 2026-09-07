@@ -1,0 +1,28 @@
+{
+  "assembly_sha256": "656081bee0645eec2d700d01f2e13910ab3b1ef43a7357c86cf5b4302d5b948c",
+  "atomic_step_id": "step12-qualified-clicks",
+  "cases": [
+    {
+      "case_id": "missing-output-measures",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Compared exact additions with the frozen source-bound review; verified full audit, exported artifact and retained work from production-path execution.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "retained-measurements",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Compared exact additions with the frozen source-bound review; verified full audit, exported artifact and retained work from production-path execution.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

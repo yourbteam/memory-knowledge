@@ -1,0 +1,57 @@
+{
+  "run_id": "up-run-9863cc7b7c18",
+  "source_run_id": "up-run-dfa3e91124c8",
+  "status": "blocked",
+  "state_sha256": "9565745637157e9bb52f4daa6f4fadede0370f6183bb973853fe431c40a60fbb",
+  "original_measurements_preserved": 56,
+  "prior_phases_preserved": 33,
+  "additions": [
+    {
+      "id": "c5-k5",
+      "metric": "Partner packs delivered",
+      "scale": "count events",
+      "instrument": "Partner-pack delivery register and distribution log",
+      "measurement": {
+        "aggregation": "count",
+        "counted_event": "Each partner proof pack delivery recorded during the measurement period when the pack is sent, published, handed over or otherwise made available to an intended referral partner, ecosystem partner or enterprise-buyer route, with observable evidence of the delivery event, period and recipient or channel scope.",
+        "exclusions": "Exclude draft packs, prepared but undelivered packs, approvals, later downloads, later briefings, duplicate delivery records for the same pack delivery in the same instrument scope, failed sends, inaccessible links and deliveries of unrelated assets. Do not exclude eligible partner pack deliveries because the recipient did not download, attend a briefing, refer a lead or meet unrelated campaign quality requirements.",
+        "kind": "count",
+        "unit": "events"
+      }
+    },
+    {
+      "id": "c11-k6",
+      "metric": "Assets published",
+      "scale": "count items",
+      "instrument": "Published-asset register and campaign distribution log",
+      "measurement": {
+        "aggregation": "count",
+        "counted_event": "Each campaign asset recorded as sent or published during the measurement period for The Stop Line or Signed by Humans, including proof pages, founder posts, partner material, technical proof stories, social-pack posts, earned outreach assets, employee advocacy posts, scorecards or approved toolkit assets when the register shows the asset reached its intended public, partner, employee, sales or owned-channel audience.",
+        "exclusions": "Exclude drafts, prepared assets, approvals, internal-only review copies, duplicate publication records for the same asset in the same channel and period, failed sends or failed page loads, and records that cannot identify the asset and publication channel. Do not exclude eligible published assets because they later received no downloads, briefings, engagement, proof-page visits, meetings, leads or unrelated campaign-governance results.",
+        "kind": "count",
+        "unit": "items"
+      }
+    }
+  ],
+  "audit_satisfied": 58,
+  "audit_total": 58,
+  "remaining_omissions": [
+    {
+      "source_quote": "| Month 4 | Launch | Platform and owned proof | The Stop Line proof launch | The B Team makes AI credible by showing The Stop Line before it promotes the AI claim. | Press release | Earned and Owned | Proof-page visits, earned coverage quality and qualified meeting clicks. |",
+      "missing_measure": "Earned coverage quality for the Month 4 proof launch",
+      "reason": "The presented quality coverage measure is scoped to Month 10 earned validation outreach, so the launch-period earned coverage quality KPI is not represented."
+    },
+    {
+      "source_quote": "**Targets, per creator.** 1 blog / long post \u00b7 3\u20135 social updates over ~14 days \u00b7 2\u20133 posts per day during a live challenge \u00b7 an agreed number of pieces committed up front",
+      "missing_measure": "Influencer or creator committed-output delivery per creator",
+      "reason": "No presented measure counts the source's per-creator blog or long post, social update, live-challenge posting or agreed committed-piece targets."
+    }
+  ],
+  "accepted_export": false,
+  "calls": 2,
+  "retries": 0,
+  "durations": [
+    37.552,
+    233.502
+  ]
+}

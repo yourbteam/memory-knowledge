@@ -1,0 +1,20 @@
+{
+  "verified": true,
+  "files": [
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/candidate/Tasks/bteam-corporate-demo/artifacts/up-run-157041016a8e/recoveries/up-run-d8d309db8c75/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+      "sha256": "74fcb0a388b13043899814e130b061fe32b86ef3094d58070269019d0e20485f"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/candidate/Tasks/bteam-corporate-demo/artifacts/up-run-157041016a8e/recoveries/up-run-d8d309db8c75/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+      "sha256": "deeccafab33ae8d6668c9db6370c34f78152d0c3d9e7c438b5ba97047e998ca1"
+    }
+  ],
+  "checks": [
+    "All five corrected/added metrics present in Markdown and Word",
+    "Click remains click, without booking/sales prerequisite",
+    "Agreed coverage threshold not invented",
+    "Creator commitments conditional and missing agreement explicit"
+  ],
+  "limit": "Content inspected; no new layout design or visual-layout improvement claimed."
+}

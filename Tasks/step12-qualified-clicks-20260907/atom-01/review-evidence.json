@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed",
+  "change_surface_sha256": "75da03a2e631470b3271514202745165093335936fbb6e69a61aa22aec9cd8f5",
+  "blocking_findings": [],
+  "evidence": [
+    "10 canonical saved-state omission-recovery checks passed",
+    "6 retained completed-recovery checks passed with same implementation",
+    "Live60/60 audit and export; all58 prior measures/33phases preserved",
+    "Calibrated control/candidate replay and complete assembly passed exact captured cases"
+  ],
+  "boundary_review": "Core recovery selection and source-bound additive generation; no alias normalization or legacy shape conversion. Existing measurements remain caller-owned and full audit/export remain required. No unrelated or Claude parallel changes.",
+  "limits": "Two successful omission generations observed. No general guarantee that future audits find every source omission in one pass; no overall reliability or speedup percentage claimed."
+}

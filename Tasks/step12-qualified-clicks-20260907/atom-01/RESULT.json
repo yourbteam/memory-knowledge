@@ -1,0 +1,63 @@
+{
+  "status": "win-promoted",
+  "goal": {
+    "now": 1,
+    "total": 1
+  },
+  "accepted_step12_run": "up-run-d8d309db8c75",
+  "audit": "60 satisfied of60; no omissions",
+  "preserved_this_continuation": "58 measurements and33 prior completed phases",
+  "earlier_click_correction": "preserved; total delta from previous published157 is one clarified click definition plus four source-bound output measurements",
+  "new_measures": [
+    "Assets published",
+    "Partner packs delivered",
+    "Earned coverage quality for the Month4 proof launch",
+    "Conditional creator committed-output delivery per creator"
+  ],
+  "fresh_continuation_calls": 2,
+  "fresh_continuation_seconds": 313.1,
+  "retries": 0,
+  "machinery": "Saved omission recovery now available in the canonical harness. No whole-roadmap regeneration required. Ten canonical recovery tests and six retained recovery tests pass. Calibrated captured-edge comparison and assembly passed; installed path replay passed without additional model calls.",
+  "scope": {
+    "code": [
+      "src/up_harness/roadmap_measurements.py",
+      "src/up_harness/roadmap_recovery.py",
+      "src/up_harness/recovery.py",
+      "tests/unit/test_omission_recovery.py"
+    ],
+    "retained_artifacts": [
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-dfa3e91124c8.json",
+        "sha256": "ec75660ff296c658b0647f5dda2628d9706aad345b52d60dd08baf9229c7063b"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-9863cc7b7c18.json",
+        "sha256": "9565745637157e9bb52f4daa6f4fadede0370f6183bb973853fe431c40a60fbb"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-d8d309db8c75.json",
+        "sha256": "9e169cf9a4baf80825c0074e5c802f529394a29323e1dc6d8e7da4e7b38735b0"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-157041016a8e/recoveries/up-run-d8d309db8c75/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+        "sha256": "deeccafab33ae8d6668c9db6370c34f78152d0c3d9e7c438b5ba97047e998ca1"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-157041016a8e/recoveries/up-run-d8d309db8c75/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+        "sha256": "74fcb0a388b13043899814e130b061fe32b86ef3094d58070269019d0e20485f"
+      },
+      {
+        "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-157041016a8e/recoveries/up-run-d8d309db8c75/manifest.json",
+        "sha256": "052f9e1be1643d97e4526c5a08cb8e08b4e40ebf7daa97cbfeaafc5421edb3db"
+      }
+    ]
+  },
+  "committed": false,
+  "pushed": false,
+  "limits": [
+    "Latest acceptance is one successful live audit, not a guarantee of exhaustive future semantic coverage.",
+    "Creator commitments and agreed quality thresholds remain explicit source-dependent decisions.",
+    "Overall workflow status remains blocked outside the completed Step12 composition/gate; this task validates the Step12 export."
+  ],
+  "record_integrity": "Earlier original controller request remains unpromoted; owner-expanded implementation is completed in extension-controller. Previous failed experiments retained. Blocker independently closed in actual memory-knowledge ledger; atom closeout reads product-root ledger."
+}

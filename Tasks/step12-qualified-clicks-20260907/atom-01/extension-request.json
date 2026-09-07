@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-qualified-clicks",
+  "outcome": "Export the retained corrected qualified-click roadmap with the two confirmed missing output measures added, preserving all existing work.",
+  "practical_value": "An operator can count eligible clicks consistently instead of guessing which meeting routes qualify.",
+  "stopping_condition": "Accepted Step12 export with Assets published and Partner packs delivered, all 56 existing measurements and33 completed phases preserved.",
+  "allowed_paths": [
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/roadmap_recovery.py",
+    "src/up_harness/recovery.py",
+    "tests/unit/test_omission_recovery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "missing-output-measures",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-dfa3e91124c8.json",
+      "sha256": "ec75660ff296c658b0647f5dda2628d9706aad345b52d60dd08baf9229c7063b",
+      "kind": "failure",
+      "expected_outcome": "Accepted Step12 export with Assets published and Partner packs delivered, all 56 existing measurements and33 completed phases preserved."
+    },
+    {
+      "case_id": "retained-measurements",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-dfa3e91124c8.json",
+      "sha256": "ec75660ff296c658b0647f5dda2628d9706aad345b52d60dd08baf9229c7063b",
+      "kind": "success",
+      "expected_outcome": "All56 existing measures, including corrected click and platform reach, and33 phases remain byte-equivalent."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

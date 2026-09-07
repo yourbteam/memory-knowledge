@@ -1,0 +1,25 @@
+{
+  "verdict": "satisfied",
+  "assessor": "direct source-bound inspection by Codex; separate from generator and full live audit",
+  "additions_sha256": "b3d1d39954665f3bdf944068e791c7e980a322a213fb9d316989d6cd11506c81",
+  "source_quote": "Level 1 measures outputs: assets published, proof labels completed, partner packs delivered and approved claims linked to proof.",
+  "findings": [
+    {
+      "measure": "Partner packs delivered",
+      "finding": "Counts evidenced delivery to the named partner/buyer route. Excludes preparation, failed delivery and duplicate records, while preserving deliveries with no later download, briefing or lead. Appropriate partner proof pack card."
+    },
+    {
+      "measure": "Assets published",
+      "finding": "Counts campaign assets actually distributed to intended audiences with publication-channel evidence. Excludes drafts, approval-only and internal review records. Appropriate campaign close scorecard card; no invented published totals."
+    },
+    {
+      "measure": "Earned coverage quality for the Month4 proof launch",
+      "finding": "Explicit Month4 population includes unfavorable and low-quality items. Retains all seven source-listed criteria and unavailable aggregate until agreed threshold exists. Does not substitute Month10 activity."
+    },
+    {
+      "measure": "Influencer or creator committed-output delivery per creator",
+      "finding": "Population is upfront commitments for eligible participating creators, not independent journalists. Keeps blog/longpost,3-5 updates,2-3 per live-challenge-day and agreed-pieces categories. Missing commitment or selected range value makes creator-category aggregate unavailable; no fabricated engagement, contract or target."
+    }
+  ],
+  "limitation": "Operational definitions, not evidence that an instrument or observations already exist. Counts use declared channel/period scope; these are not unique-person metrics. Creator commitment population must be read per creator/category as explicitly required; independent editorial activity is not a commitment."
+}

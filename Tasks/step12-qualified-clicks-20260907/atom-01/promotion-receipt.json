@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-qualified-clicks",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "bc220a879c22833936c71a6f08fe73aa210011172b5a774685f8b09d973575c7",
+  "experiment_assembly_sha256": "656081bee0645eec2d700d01f2e13910ab3b1ef43a7357c86cf5b4302d5b948c",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/recovery.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/roadmap_recovery.py",
+    "tests/unit/test_omission_recovery.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/final-change-surface.json",
+    "sha256": "75da03a2e631470b3271514202745165093335936fbb6e69a61aa22aec9cd8f5"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/retained-surface-review.json",
+    "sha256": "84754e9fc7932a49868f5de7d023e9f9213219b30e17610eed36f63a696a1e8e"
+  },
+  "evidence": [
+    {
+      "case_id": "missing-output-measures",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/ready-replay-candidate/result.json",
+      "sha256": "cfe98d774b3ea7d76666396f815e33164c777e7fa6b9d646020c1f6780b941b1"
+    },
+    {
+      "case_id": "retained-measurements",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/ready-replay-candidate/result.json",
+      "sha256": "cfe98d774b3ea7d76666396f815e33164c777e7fa6b9d646020c1f6780b941b1"
+    }
+  ]
+}

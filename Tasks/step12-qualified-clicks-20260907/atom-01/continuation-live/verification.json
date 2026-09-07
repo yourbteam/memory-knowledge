@@ -1,0 +1,48 @@
+{
+  "run_id": "up-run-d8d309db8c75",
+  "source_run_id": "up-run-9863cc7b7c18",
+  "status": "blocked",
+  "state_sha256": "9e169cf9a4baf80825c0074e5c802f529394a29323e1dc6d8e7da4e7b38735b0",
+  "original_measurements_preserved": 58,
+  "prior_phases_preserved": 33,
+  "additions": [
+    {
+      "id": "c2-k8",
+      "metric": "Earned coverage quality for the Month 4 proof launch",
+      "scale": "percentage",
+      "instrument": "Month 4 launch earned-coverage quality rubric",
+      "measurement": {
+        "aggregation": "ratio-times-100",
+        "denominator": "All eligible Month 4 earned coverage items published by third-party media, analysts, named experts, professional influencers or credible earned routes about The Stop Line proof launch or its press-release route during the launch reporting period, including positive, neutral, negative, high-quality, low-quality and proof-missing items.",
+        "exclusions": "Exclude paid placements, owned posts, shared posts, unpublished drafts, internal mentions, duplicate syndications with no new editorial item, out-of-period items and coverage not tied to The Stop Line proof launch or press-release route. Do not exclude eligible coverage because it fails quality criteria, lacks proof citations, is unfavorable, or fails unrelated campaign governance or quality requirements.",
+        "kind": "percentage",
+        "numerator": "Aggregate unavailable until the agreed quality threshold required by the registered source is recorded. Score each denominator item against the source-listed criteria: priority outlet or influencer, priority-audience relevance, key-message inclusion, positive or neutral tone, brand or spokesperson prominence, desired call to action and original reporting versus syndication; once the agreed threshold exists, count items meeting it.",
+        "unit": "percent"
+      }
+    },
+    {
+      "id": "c9-k5",
+      "metric": "Influencer or creator committed-output delivery per creator",
+      "scale": "percentage",
+      "instrument": "Influencer and creator output commitment register",
+      "measurement": {
+        "aggregation": "ratio-times-100",
+        "denominator": "All influencer or creator output commitments recorded up front for eligible participating creators during the measurement period, using the source-listed target categories: one blog or long post; the selected committed number from the 3-5 social updates over about 14 days range; the selected committed number from the 2-3 posts per day live-challenge range for each eligible live-challenge day; and any other agreed committed pieces. If the source-required upfront commitment or selected value is not recorded for a creator or category, that creator-category aggregate is unavailable until recorded while the underlying criteria remain reported.",
+        "exclusions": "Exclude draft, prepared or approved-but-unpublished pieces, duplicate captures of the same creator piece in the same platform scope, internal or test records, items outside the agreed measurement period, items not attributable to the eligible creator activation, and outputs outside the source-listed or up-front committed categories. Do not exclude eligible delivered output because later engagement, download, briefing, lead, sales-stage, approval, disclosure, proof-link, quality or unrelated campaign-governance requirements failed unless the registered source makes that later condition part of output delivery.",
+        "kind": "percentage",
+        "numerator": "Denominator commitments whose matching creator output was sent, published or otherwise delivered by the eligible creator to the intended platform or channel during the agreed period, with observable evidence of creator identity, output type, publication or delivery time, platform or channel scope, and duplicate boundaries.",
+        "unit": "percent"
+      }
+    }
+  ],
+  "audit_satisfied": 60,
+  "audit_total": 60,
+  "remaining_omissions": [],
+  "accepted_export": true,
+  "calls": 2,
+  "retries": 0,
+  "durations": [
+    104.488,
+    208.612
+  ]
+}

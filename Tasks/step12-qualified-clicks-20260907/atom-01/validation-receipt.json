@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-qualified-clicks",
+  "promotion_event_sha256": "d0e5de7ae4a8439231f21cbb6a24e9af59fedc36ca9ae2b400273f50c49ef0a7",
+  "cases": [
+    {
+      "case_id": "missing-output-measures",
+      "verdict": "satisfied",
+      "reason": "Canonical installed recovery reproduced the fresh live result from exact captured responses: four grounded additions, final60/60 audit and export, original56 measures and33 phases unchanged. Fresh source986 continuation independently preserved58 measures. No extra model calls.",
+      "evidence": [
+        {
+          "case_id": "missing-output-measures",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/canonical-confirmation/result.json",
+          "sha256": "43e23238bfba367ea9288c94a52687a1ead5103ff54f2800aa91c4143024e888"
+        }
+      ]
+    },
+    {
+      "case_id": "retained-measurements",
+      "verdict": "satisfied",
+      "reason": "Canonical installed recovery reproduced the fresh live result from exact captured responses: four grounded additions, final60/60 audit and export, original56 measures and33 phases unchanged. Fresh source986 continuation independently preserved58 measures. No extra model calls.",
+      "evidence": [
+        {
+          "case_id": "retained-measurements",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-qualified-clicks-20260907/atom-01/canonical-confirmation/result.json",
+          "sha256": "43e23238bfba367ea9288c94a52687a1ead5103ff54f2800aa91c4143024e888"
+        }
+      ]
+    }
+  ]
+}
