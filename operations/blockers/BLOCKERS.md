@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `405aae6fbf432ff0a6f734eea283482159b92a60d7f5ff7ccd9e3ab0c3326a1d`
+Ledger-SHA256: `6a469582f4296dfd802c96b3ae2427b7b4464f8254e3bc92b412341662303300`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -4812,6 +4812,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A purpose-relevant unit crossing a deterministic region edge is presented only as a clipped fragment and is recorded as a gap even though the frozen source contains the complete readable unit.
 - Evidence: In live canary p3 region-r01-c01, the model recorded the dashboard value as gap because only $8,10 was visible at the right crop edge and recorded a red callout as gap because its text continued below the bottom crop edge.
 
+## blk-69a3cafc2ff9b676f8fc7989
+
+- Status: `closed`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `open-response-duration`
+- Surface: `duration-definition`
+- Symptom: Targeted rewrite gives open observations an age but does not separate them from completed response-time aggregation.
+- Evidence: /Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-f6054282cbfb.json
+
 ## blk-69b59f33ae5466ecc1a524bd
 
 - Status: `non-gap`
@@ -7660,6 +7669,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-ledger-write`
 - Symptom: run-start could not append its durable event inside the workspace sandbox.
 - Evidence: Two sandboxed invocations returned PermissionError; the same command succeeded unchanged with approved elevated repository-write access.
+
+## blk-ae72da02965c31d661df4d8a
+
+- Status: `closed`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `duration-instrument-scope`
+- Surface: `duration-audit`
+- Symptom: Final audit newly rejects c2-k2 and c8-k3 only for missing open-case reporting despite instrument-defined duration endpoints.
+- Evidence: /Users/kamenkamenov/memory-knowledge/Tasks/step12-open-response-duration-20260907/atom-01/confirmation/verification.json
 
 ## blk-ae9411e160019d27b47474d8
 
