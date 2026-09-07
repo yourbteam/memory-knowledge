@@ -1,0 +1,9 @@
+{
+  "status": "completed",
+  "verdict": "passed",
+  "product_changes": [],
+  "saved_result": "up-run-f1a9dd510aef",
+  "scope": "One calculation changed, 55 others and 33 completed phases preserved. No unrelated fixes, model changes or commits.",
+  "semantic_limits": "Explicitly proposed evaluative rubric; no observed campaign performance or inter-rater reliability claim.",
+  "implementation_decision": "No new implementation justified; keep the actual canonical saved improvement."
+}

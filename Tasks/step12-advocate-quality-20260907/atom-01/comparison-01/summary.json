@@ -1,0 +1,124 @@
+{
+  "champion": null,
+  "evaluation": {
+    "assessment": {
+      "criteria": [
+        {
+          "id": "quality",
+          "metric": "quality",
+          "reference_pointer": "/quality"
+        }
+      ],
+      "output_fields": [
+        "raw"
+      ],
+      "reference": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-reference.json",
+        "sha256": "67e7907fb8f5101d0daa208a522cbc0807a188dbdfc9329cb4007bd4e4e53a37"
+      }
+    },
+    "calibration": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-calibration.json",
+      "sha256": "fa8b4c7c61dbdc96c794d3ad0a8398a7838c4bad481818aff2819f22630509ab"
+    },
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-judge.py",
+        "sha256": "3268febd0f9817e922805909769d78adcd9ed97f3ce96df9207e81a96a92272d"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "quality"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 30000,
+    "variant_timeout_ms": 60000
+  },
+  "experiment_id": "advocate-quality-targeted-recovery",
+  "frozen_input_sha256": "bc18fea60d0a01c17f6c7312d3c7f7f49fd81f4e2227ff126a35e3907e50bef0",
+  "hypothesis": "On the same saved failure, existing targeted rewrite produces a usable quality definition whereas re-auditing unchanged activity does not. This is an observed operational setup comparison, not a product-code or equal-cost model benchmark.",
+  "promotion_applied": false,
+  "ranking": [],
+  "schema_version": 1,
+  "selection_outcome": "no-qualified-candidate",
+  "status": "no-eligible-variant",
+  "target": {
+    "entrypoint": "probe.py",
+    "machinery": "up-harness",
+    "phase": "compose-tactical-roadmap",
+    "source": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-source",
+      "sha256": "85f175401622a00cea6fdf30323833480a4d1622e32a93a2e4f59d188dcb6139"
+    }
+  },
+  "target_source_sha256": "85f175401622a00cea6fdf30323833480a4d1622e32a93a2e4f59d188dcb6139",
+  "variants": [
+    {
+      "duration_ms": 310,
+      "eligible": false,
+      "error": null,
+      "exit_code": 1,
+      "integrity_errors": [
+        "the variant did not write result.json"
+      ],
+      "metrics": {},
+      "outcome": {},
+      "qualification_failures": [
+        {
+          "actual": null,
+          "metric": "quality",
+          "minimum": 1.0
+        }
+      ],
+      "qualified": false,
+      "reported_metrics": {},
+      "result_sha256": null,
+      "status": "failed",
+      "stderr_sha256": "e559ea54d7fc95f397128e3a16b3474822d1c29c63a228ce0c31266b97fa40c3",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": null,
+      "timed_out": false,
+      "timeout_ms": 60000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 300,
+      "eligible": false,
+      "error": null,
+      "exit_code": 1,
+      "integrity_errors": [
+        "the variant did not write result.json"
+      ],
+      "metrics": {},
+      "outcome": {},
+      "qualification_failures": [
+        {
+          "actual": null,
+          "metric": "quality",
+          "minimum": 1.0
+        }
+      ],
+      "qualified": false,
+      "reported_metrics": {},
+      "result_sha256": null,
+      "status": "failed",
+      "stderr_sha256": "b92cc4bfe0ed14044943d608a6ba80d4cefd1b61ee3b131eb5762f203f4c5982",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "telemetry_sha256": null,
+      "timed_out": false,
+      "timeout_ms": 60000,
+      "variant_id": "repair"
+    }
+  ]
+}

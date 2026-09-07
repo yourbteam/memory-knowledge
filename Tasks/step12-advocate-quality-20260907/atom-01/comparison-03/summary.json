@@ -1,0 +1,162 @@
+{
+  "champion": "repair",
+  "evaluation": {
+    "assessment": {
+      "criteria": [
+        {
+          "id": "quality",
+          "metric": "quality",
+          "reference_pointer": "/quality"
+        }
+      ],
+      "output_fields": [
+        "raw"
+      ],
+      "reference": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-reference.json",
+        "sha256": "67e7907fb8f5101d0daa208a522cbc0807a188dbdfc9329cb4007bd4e4e53a37"
+      }
+    },
+    "calibration": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-calibration.json",
+      "sha256": "fa8b4c7c61dbdc96c794d3ad0a8398a7838c4bad481818aff2819f22630509ab"
+    },
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-judge.py",
+        "sha256": "3268febd0f9817e922805909769d78adcd9ed97f3ce96df9207e81a96a92272d"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "quality"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 30000,
+    "variant_timeout_ms": 60000
+  },
+  "experiment_id": "advocate-quality-targeted-recovery",
+  "frozen_input_sha256": "bc18fea60d0a01c17f6c7312d3c7f7f49fd81f4e2227ff126a35e3907e50bef0",
+  "hypothesis": "On the same saved failure, existing targeted rewrite produces a usable quality definition whereas re-auditing unchanged activity does not. This is an observed operational setup comparison, not a product-code or equal-cost model benchmark.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "quality": 1.0
+      },
+      "rank": 1,
+      "variant_id": "repair"
+    }
+  ],
+  "schema_version": 1,
+  "selection_outcome": "selected",
+  "status": "completed",
+  "target": {
+    "entrypoint": "probe.py",
+    "machinery": "up-harness",
+    "phase": "compose-tactical-roadmap",
+    "source": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-advocate-quality-20260907/atom-01/comparison-source",
+      "sha256": "c72adb266265e81c9b00560da694105ef80bb9efeb2628592ff0b3b8816b23b8"
+    }
+  },
+  "target_source_sha256": "c72adb266265e81c9b00560da694105ef80bb9efeb2628592ff0b3b8816b23b8",
+  "variants": [
+    {
+      "duration_ms": 616,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "quality": 0.0
+      },
+      "outcome": {
+        "raw": {
+          "calls": 1,
+          "preserved": true,
+          "target": {
+            "instrument": "LinkedIn analytics and inbound-response records",
+            "measurement": {
+              "aggregation": "count",
+              "counted_event": "Each relevant, non-spam engagement action on a Month 11 advocate post recorded in LinkedIn analytics or inbound-response records, including reactions, substantive comments, reposts or shares, saves where available, proof-page click-throughs, and qualified inbound responses tied to the post.",
+              "exclusions": "Impressions, views without an engagement action, duplicate records of the same action, bot or spam activity, internal QA activity, and engagement not tied to a Month 11 advocate post.",
+              "kind": "count",
+              "unit": "events"
+            },
+            "metric": "Engagement quality on advocate posts",
+            "scale": "count events"
+          },
+          "target_audit": "not-satisfied"
+        }
+      },
+      "qualification_failures": [
+        {
+          "actual": 0.0,
+          "metric": "quality",
+          "minimum": 1.0
+        }
+      ],
+      "qualified": false,
+      "reported_metrics": {},
+      "result_sha256": "645268c99740b7e3a1aa3ce3143612f9b57dcbe1339a1ccef86037b004cdc5bb",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "8ad9947db5b07baf182ac2b0dc66ab134368f10e216cccb31240d649b2268e44",
+      "telemetry_sha256": "d03d1caf3552d221efbd60cdb5a1d3a744cab056012ae030e0868ca7f9362f23",
+      "timed_out": false,
+      "timeout_ms": 60000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 621,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "quality": 1.0
+      },
+      "outcome": {
+        "raw": {
+          "calls": 2,
+          "preserved": true,
+          "target": {
+            "instrument": "LinkedIn analytics and inbound-response records",
+            "measurement": {
+              "aggregation": "mean",
+              "exclusions": "Exclude impressions, views without an engagement action, duplicate records of the same action, bot or spam activity, internal QA activity, and actions not attributable to a Month 11 advocate post. Do not exclude eligible low-quality or off-message engagements; score them according to the rubric.",
+              "kind": "score",
+              "rubric": "Score each eligible LinkedIn analytics or inbound-response engagement action tied to a Month 11 advocate post from 0 to 3 points: 0 = irrelevant, spam-like, hostile without substantive issue, or unrelated to The Stop Line or Signed by Humans; 1 = minimal acknowledgement such as a reaction or generic share with no readable substance; 2 = relevant engagement with readable attention to the post, proof link, senior craft, approved proof boundary, or do-not-say lines, including substantive comments, reposts or saves where available; 3 = high-quality engagement that advances the intended advocacy outcome, such as a substantive comment, repost, share, proof-page click-through, or inbound response that is attributable to the advocate post and engages with approved proof, senior responsibility, limits, or escalation instead of creating unapproved AI claims. Qualified inbound responses are counted only when the named inbound-response record shows observable audience eligibility, topic or intent relevant to The Stop Line or Signed by Humans, attributable event evidence tying it to the post, and duplicate or irrelevant-event exclusions; do not require budget, purchasing authority, sales stage, booked meeting, sale, or later sales qualification unless the source makes that later event part of this named outcome.",
+              "unit": "points"
+            },
+            "metric": "Engagement quality on advocate posts",
+            "scale": "mean points"
+          },
+          "target_audit": "satisfied"
+        }
+      },
+      "qualification_failures": [],
+      "qualified": true,
+      "reported_metrics": {},
+      "result_sha256": "0f2f6f98ac9d11b93c768de6f8f0b92aeb09a021c4430e345db580d2ac045b52",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "77d62018168c001965d6aa9a02e1233d2b90505b918d41e060ba2e40f8a4a638",
+      "telemetry_sha256": "c1a9768d0ec57b9b82ec54aece3b623711cfbffdc83bdc481ef54b5384fc9f72",
+      "timed_out": false,
+      "timeout_ms": 60000,
+      "variant_id": "repair"
+    }
+  ]
+}

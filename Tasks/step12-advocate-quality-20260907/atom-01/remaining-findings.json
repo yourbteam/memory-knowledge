@@ -1,0 +1,20 @@
+{
+  "run_id": "up-run-f1a9dd510aef",
+  "findings": [
+    {
+      "id": "c11-k2",
+      "verdict": "not-satisfied",
+      "reason": "The denominator only includes headline KPIs already on the scorecard, so an omitted required headline KPI would vanish instead of being counted as missing required reporting fields.",
+      "quote": "All headline KPIs included on the one-page executive scorecard for the reporting period."
+    }
+  ],
+  "omissions": [
+    {
+      "source_quote": "**Targets, per creator.** 1 blog / long post \u00b7 3\u20135 social updates over ~14 days \u00b7 2\u20133 posts per day during a live challenge \u00b7 an agreed number of pieces committed up front",
+      "missing_measure": "Creator content delivery against per-creator activation targets",
+      "reason": "The toolkit sets per-creator content targets, but no presented measurement counts committed or delivered creator posts against those target types."
+    }
+  ],
+  "unresolved_prior_observation": "Senior Sofia audience attribution was rejected previously and accepted unchanged now; no fix to that calculation was made. Do not claim it resolved.",
+  "assessment": "Latest audit observations need source-applicability review before a new atom; no unselected repair authorized."
+}
