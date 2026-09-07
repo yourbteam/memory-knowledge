@@ -1,0 +1,7 @@
+{
+  "scope": "One canonical module, identical to the code already promoted before the final live recovery. No additional code edits.",
+  "semantic_evidence": "comparison2/semantic-review.json",
+  "qualification_repair": "Existing targeted resume rewrote only c5-k3 from the latest refusal and full audit accepted all five targets.",
+  "limits": "The fifth outcome needed additional real feedback under unchanged promoted code. Candidate route replay contains ten calls versus six for control; no one-pass or speed-improvement claim. Initial wrong source-inheritance assessment and both failed confirmations remain preserved.",
+  "regressions": "All 55 unselected definitions and 33 phases preserved in final recovery; prior coverage, rubric and duration acceptance retained. Existing 19 checks passed on this exact canonical module."
+}

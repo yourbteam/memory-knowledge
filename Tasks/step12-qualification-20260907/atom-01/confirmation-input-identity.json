@@ -1,0 +1,11 @@
+{
+  "runs": [
+    "up-run-2ddf18d07e27",
+    "up-run-d6c5fb5e7902"
+  ],
+  "identical_prompt_sha256": "113c0c6e283b4bb8ffb4e909eae5fe14945ed5af61224d8565edd8ce493c3aec",
+  "same_saved_source": "up-run-d0d7a3693c77",
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "calculation_changes": 0
+}

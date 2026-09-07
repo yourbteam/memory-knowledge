@@ -1,0 +1,21 @@
+{
+  "control": {
+    "verification_sha256": "0a508f5331165784447ed96a268a44227be4c218b5a32502c69e33e7029f4535",
+    "verdict": "not-satisfied",
+    "reason": "Despite audit acceptance, founder and earned inbound conversation definitions withhold aggregate pending agreed criteria that their sources do not require. This creates false owner dependencies and fails independent source inspection."
+  },
+  "candidate": {
+    "verification_sha256": "04f82dce41832a07626a3e20548706049879351264e50deca970f34030368b17",
+    "verdict": "satisfied",
+    "reason": "Three conversation definitions contain source-grounded audience, topic/intent and attribution rules. Enterprise-lead aggregate explicitly retains its genuine missing agreement. Referred-lead count now uses observable enterprise relevance, audience eligibility, topic/intent, referral evidence and recorded sales qualification rather than inheriting a separate unavailable-aggregate dependency. All five pass the fresh canonical audit; 55 unselected items preserved on the final correction."
+  },
+  "source_reference_sha256": "c17b3e640c68fd537b6756d696e3a1121452c51e859d5c3d57ceab9990b89906",
+  "candidate_item_review": {
+    "c2-k6": "Actual framework attribution requires sales confirmation against agreed definition; missing definition explicitly identified, US/EU eligibility and prequalification campaign touchpoint retained.",
+    "c4-k6": "Card audience and explicit topics cover relevant founder-content buyer, referral and senior Sofia talent conversations. Starts or replies by external contact qualify; no later sale or meeting dependency.",
+    "c5-k3": "Requires matched referral and sales records, enterprise relevance, audience and topic/intent fit, referral attribution and recorded qualification status. It does not invent a sales policy or assert nonexistent agreement. Actual sales qualification remains instrument-owned. This does not prove the contents of a future sales database.",
+    "c8-k5": "Technical-buyer conversation has explicit proof, AI delivery, senior ownership or limits topics and recorded attribution; no sales qualification prerequisite.",
+    "c9-k4": "Audience roles named from card; external inbound enquiry after earned exposure, topic or intent and attribution are explicit; no required organisation reply or later outcome."
+  },
+  "correction_to_initial_review": "Initial c5 interpretation inherited the enterprise-lead agreement too broadly. Two canonical refusals were preserved; the final calculation makes its own operational qualification conditions explicit."
+}

@@ -1,0 +1,380 @@
+{
+  "run_id": "up-run-2ddf18d07e27",
+  "state_sha256": "eced3c275b7eb543c7a89e157c3ab8303f6bd3256c5ec1c217ead97e9f71ffba",
+  "status": "blocked",
+  "fresh_model_calls": 1,
+  "seconds": [
+    191.229
+  ],
+  "all_56_measurements_preserved": true,
+  "completed_phases_preserved": 33,
+  "audit": {
+    "judgments": [
+      {
+        "id": "c1-k1",
+        "verdict": "satisfied",
+        "reason": "The operator can count unresolved conflict areas from the public-profile audit, with the six source-defined conflict types, duplicate handling, correction handling and unresolved items kept in scope.",
+        "quote": "Each unresolved public-profile conflict area found in the Public-profile audit across founding year, headcount, address, legal name, domain identity or nearshore-price language, counted while the audited public source still carries the conflict without evidenced correction."
+      },
+      {
+        "id": "c1-k2",
+        "verdict": "satisfied",
+        "reason": "The operator can identify each approved proof asset by approval status, proof type and reference-register traceability, matching the proof-library source definition.",
+        "quote": "Each distinct approved proof asset in The Stop Line proof library with a recorded approval status and proof type marked as named reference, verifiable anonymous reference, technical artifact or internal demo; reference assets must also be traceable in the client-approved reference register."
+      },
+      {
+        "id": "c1-k3",
+        "verdict": "satisfied",
+        "reason": "The percentage has a clear public-AI-claim denominator and a numerator that preserves proof, owner, stop-line, technical-confirmation and final-signoff requirements before release.",
+        "quote": "Denominator claims that, before being sent or published, show approved proof, a senior owner, the stop line or stated limit, recorded claim-level and AI-language technical confirmation, and final sign-off for positioning, proof lane, claims and public references."
+      },
+      {
+        "id": "c2-k1",
+        "verdict": "satisfied",
+        "reason": "The count measures visits to the named proof page through website analytics and excludes only traffic or events that cannot validly represent that page visit.",
+        "quote": "One website-analytics visit/session in which a visitor views The Stop Line proof page, with campaign tagging read from the required UTM fields where present."
+      },
+      {
+        "id": "c2-k2",
+        "verdict": "satisfied",
+        "reason": "This is an instrument-defined analytics duration with clear page-load start, analytics/session end rules and source-specific exclusions, so open-case outcome accounting is not required.",
+        "quote": "The visitor leaves The Stop Line proof page, closes the session, becomes inactive according to the analytics session-timeout rule, or navigates to another page or tracked action."
+      },
+      {
+        "id": "c2-k3",
+        "verdict": "satisfied",
+        "reason": "The count measures the named proof-item open action on the proof page and defines eligible events, exclusions and duplicate handling without adding outcome requirements.",
+        "quote": "One tracked proof-item open on The Stop Line proof page, where a visitor expands, opens or otherwise inspects the proof behind an approved claim before any meeting request or AI-story acceptance step."
+      },
+      {
+        "id": "c2-k4",
+        "verdict": "satisfied",
+        "reason": "The measure counts the click to a qualified-meeting route, not a later booked meeting or lead, and keeps non-converting eligible clicks in scope.",
+        "quote": "Exclude internal team traffic, bot/spam traffic, test clicks, broken clicks not sent to the recipient system, and clicks not tied to a qualified-meeting route. Do not exclude eligible clicks because the meeting is not later approved, booked or converted to a lead."
+      },
+      {
+        "id": "c2-k5",
+        "verdict": "satisfied",
+        "reason": "The percentage keeps all eligible public AI claims in the denominator and counts only those linked to approved proof with the required owner and limit evidence before release.",
+        "quote": "Eligible public AI claims that, before release, show approved proof, a senior owner and the stop line or stated limit in the claim approval register and public-release checklist."
+      },
+      {
+        "id": "c2-k6",
+        "verdict": "satisfied",
+        "reason": "The aggregate correctly stays unavailable until the source-required agreed enterprise-lead qualification definition exists, then defines market, attribution and distinct-lead rules.",
+        "quote": "Aggregate unavailable until the agreed enterprise-lead qualification definition required by the registered source is recorded. Once recorded, count each distinct lead record for a United States or European Union buyer that sales pipeline records confirm meets that agreed qualification definition and route-attribution records connect to The Stop Line before qualification through The Stop Line proof page, Signed by Humans founder content, partner proof pack or approved referral language."
+      },
+      {
+        "id": "c2-k7",
+        "verdict": "satisfied",
+        "reason": "The operator can count proof-page sessions with a configured engagement event while excluding traffic defects and duplicate engagement hits within the same visit.",
+        "quote": "One website analytics visit/session to The Stop Line proof page during the measurement period that records at least one configured proof-page engagement event, such as an analytics engaged-session event for that page, a proof-item open, or a qualified meeting click from that page."
+      },
+      {
+        "id": "c3-k1",
+        "verdict": "satisfied",
+        "reason": "The preference split has a defined exposed-owner denominator and a numerator for owners choosing the control-led message, without excluding alternative preferences.",
+        "quote": "Sampled owners of midsize businesses in the Owner message test who were exposed to both the control-led message and the artificial-intelligence-capability alternative, both anchored in The Stop Line, and had an opportunity to record one message preference."
+      },
+      {
+        "id": "c3-k2",
+        "verdict": "satisfied",
+        "reason": "The comprehension percentage defines the tested owner population and counts only answers that explain the intended proof, responsibility, limit and owner-control meaning.",
+        "quote": "Respondents in the denominator whose answer correctly explains that The Stop Line gives more control and visibility by showing approved proof, senior responsibility and the limit the system will not cross, without requiring the owner to become a technical buyer."
+      },
+      {
+        "id": "c3-k3",
+        "verdict": "satisfied",
+        "reason": "The trust movement measure uses matched pre- and post-exposure readings from the same wave and keeps flat or negative movement visible in the denominator.",
+        "quote": "Sampled owners in the Owner message test with matched pre-exposure and post-exposure trust readings for The Stop Line in the same wave."
+      },
+      {
+        "id": "c3-k4",
+        "verdict": "satisfied",
+        "reason": "The meeting-intent percentage defines exposure, opportunity to answer and positive intent, while not dropping neutral, negative or missing eligible responses.",
+        "quote": "Exclude non-owner respondents, duplicate respondent records, test or staff records, records outside the test wave, records with no verified message exposure, and records with no opportunity to answer the meeting-intent item; do not exclude negative, neutral or missing eligible intent responses."
+      },
+      {
+        "id": "c3-k5",
+        "verdict": "satisfied",
+        "reason": "The operator can count coded reason-theme occurrences tied to valid message choices, including negative and alternative-message reasons.",
+        "quote": "Each coded theme occurrence recorded in the Owner message-test reason register from a respondent's submitted reason for choosing either tested message, tied to that respondent's valid message choice."
+      },
+      {
+        "id": "c4-k1",
+        "verdict": "satisfied",
+        "reason": "The count is limited to analytics reactions on approved founder launch content by founder and post during the campaign read period.",
+        "quote": "Reactions recorded by LinkedIn analytics or Substack analytics on approved Signed by Humans founder content published for the Month 5 founder launch post, counted by founder and post during the campaign read period."
+      },
+      {
+        "id": "c4-k2",
+        "verdict": "satisfied",
+        "reason": "The count measures comments on the approved founder launch content and avoids excluding eligible comments because of tone, quality or response status.",
+        "quote": "Exclude comments on unapproved content, non-founder content, content outside the Signed by Humans founder launch activity, duplicate analytics records, and comments not attributable to the measured post. Do not exclude negative, neutral, unanswered or low-quality eligible comments unless the analytics source identifies them as spam or platform-invalid."
+      },
+      {
+        "id": "c4-k3",
+        "verdict": "satisfied",
+        "reason": "The measure counts shares and saves only where the platform reports them and correctly treats unavailable saves as unavailable rather than zero.",
+        "quote": "Exclude unavailable metrics, unapproved content, non-founder content, content outside the Signed by Humans founder launch activity, duplicate analytics records, and shares or saves not attributable to the measured post. Do not treat unavailable saves as zero unless the source reports zero."
+      },
+      {
+        "id": "c4-k4",
+        "verdict": "satisfied",
+        "reason": "The count ties proof-page clicks to approved founder content through campaign tags and does not require later conversion.",
+        "quote": "Clicks from approved Signed by Humans founder content to the owned proof page, recorded in the website analytics report through the required campaign tags for the founder content route."
+      },
+      {
+        "id": "c4-k5",
+        "verdict": "satisfied",
+        "reason": "The partner-reshare count has a defined register, content boundary, partner requirement, period and duplicate exclusion.",
+        "quote": "Partner reshares of the approved Signed by Humans founder launch content or social-pack content, recorded in the social-pack reshare register during the Month 5 launch read period."
+      },
+      {
+        "id": "c4-k6",
+        "verdict": "satisfied",
+        "reason": "The qualified inbound conversation rule gives observable audience, topic, intent and attribution criteria and does not turn the conversation into a lead, meeting or sale.",
+        "quote": "Each inbound conversation event in inbound-response records where an external contact from the card audience starts or replies in a conversation connected to approved Signed by Humans founder content by a tracked response, named post reference, tagged click path, reply, direct message, form source or other recorded campaign touchpoint. A conversation qualifies when the record shows observable audience eligibility, topic or intent relevant to Signed by Humans, The Stop Line, proof, senior responsibility, AI-supported delivery, referral, buyer interest or senior Sofia talent interest, and attributable evidence linking it to the founder content. Count the conversation itself; it does not need to become a sales-qualified lead, booked meeting, completed sale or approved follow-up."
+      },
+      {
+        "id": "c4-k7",
+        "verdict": "satisfied",
+        "reason": "The reach measure uses platform-reported unique audience fields rather than engagement actions or impressions, with bot, test and duplicate exclusions.",
+        "quote": "Unique recipient accounts shown or delivered the published Month 5 Signed by Humans founder launch post in LinkedIn analytics or Substack analytics during the measurement period, using platform-reported reach, unique viewers, unique recipients or equivalent account-level audience reached fields rather than reactions, comments, shares, saves, clicks or inbound replies."
+      },
+      {
+        "id": "c4-k8",
+        "verdict": "satisfied",
+        "reason": "The proposed 0-3 rubric supplies observable scale anchors that measure engagement quality for eligible founder-post actions without pretending the rubric was already agreed.",
+        "quote": "Score each eligible engagement event on the founder launch post using the engagement-quality rubric: 0 points for passive or unclear engagement such as a reaction, save or unqualified click with no evident relevance; 1 point for a relevant proof-page click, share or comment showing basic attention to Signed by Humans, The Stop Line, proof or senior ownership; 2 points for an engaged comment, reshare or inbound conversation that reflects understanding of senior responsibility, approved proof or the stop line; 3 points for qualified buyer, partner or senior-talent engagement that asks a substantive question, repeats the proof-led message accurately, or creates a credible follow-up conversation. Eligible events include LinkedIn and Substack reactions, comments, shares, saves where available, proof-page clicks and qualified inbound conversations attributable to the founder launch post."
+      },
+      {
+        "id": "c5-k1",
+        "verdict": "satisfied",
+        "reason": "The download count requires a successful tagged download event for the partner pack and excludes views, other assets and duplicate retries.",
+        "quote": "A successful tagged analytics download event for the partner proof pack asset during the measurement period."
+      },
+      {
+        "id": "c5-k2",
+        "verdict": "satisfied",
+        "reason": "The briefing count measures completed partner briefings delivered through the required proof content, not planned, cancelled or rehearsal sessions.",
+        "quote": "A partner briefing for referral or ecosystem partners that is recorded in the completion register as delivered through its required partner-proof content."
+      },
+      {
+        "id": "c5-k3",
+        "verdict": "not-satisfied",
+        "reason": "The calculation makes the aggregate unavailable until an agreed lead qualification definition is recorded, but the presented source for referred qualified leads does not itself establish that prior-agreement dependency for this particular outcome.",
+        "quote": "Aggregate unavailable until the agreed lead qualification definition required by the registered sources is recorded. Once recorded, count each distinct referred lead that appears in both referral records and sales pipeline records, has an evidenced referral source or campaign touchpoint connected to the partner proof pack or approved referral language before qualification, and sales confirms met that agreed lead definition."
+      },
+      {
+        "id": "c5-k4",
+        "verdict": "satisfied",
+        "reason": "The compliance percentage defines required partner-language AI claim checks as the denominator and counts only checks with proof, owner, limit and approval evidence before release.",
+        "quote": "Eligible partner-language AI claim checks with evidenced compliance in the claim approval register and partner-release checklist: approved proof type, senior owner, stated limit or stop line, and required claim-level approvals before release."
+      },
+      {
+        "id": "c6-k1",
+        "verdict": "satisfied",
+        "reason": "The count measures recorded engagement actions from or attributable to the senior Sofia talent audience on approved senior craft content during the reporting window.",
+        "quote": "Each LinkedIn or Substack engagement action during the monthly Month 6-Month 12 reporting window on approved Signed by Humans senior craft story content by, or attributable to, the senior Sofia talent audience; qualifying actions include platform-recorded reactions, comments, shares, saves where available, newsletter clicks, replies or other recorded engagement actions tied to the craft story asset."
+      },
+      {
+        "id": "c6-k2",
+        "verdict": "satisfied",
+        "reason": "The profile-visit count requires LinkedIn attribution to a senior-talent route and excludes visits without observable talent-route attribution.",
+        "quote": "Each LinkedIn profile visit recorded during the monthly reporting window that is attributable in the LinkedIn analytics report to a senior-talent route, such as the senior craft story series, talent-facing post route, campaign tag or referral path."
+      },
+      {
+        "id": "c6-k3",
+        "verdict": "satisfied",
+        "reason": "The qualified candidate-interest count defines observable Sofia, senior-engineering, candidate-interest and campaign-asset tie criteria without inventing a hiring outcome.",
+        "quote": "Each distinct person from the Sofia senior-engineering talent audience who shows candidate interest through an application, referral, direct inbound message or recruitment-review record, and whose record evidences both senior-engineering qualification and a tie to approved The Stop Line or Signed by Humans story assets."
+      },
+      {
+        "id": "c6-k4",
+        "verdict": "satisfied",
+        "reason": "The buyer-engagement count identifies eligible craft-linked proof actions and correctly treats a response as occurring when sent or published, not merely prepared.",
+        "quote": "Each buyer engagement action during the monthly reporting window tied to craft-linked proof, including an engaged proof-page visit, proof-item open, qualified meeting click, or inbound buyer response connected to a Signed by Humans craft story, The Stop Line proof page, approved proof item or tagged campaign path. A response qualifies when the message or form submission is sent or published to its recipient, not when prepared or approved."
+      },
+      {
+        "id": "c6-k5",
+        "verdict": "satisfied",
+        "reason": "The proof-click count requires source-path evidence from senior craft stories to the proof page or proof item and excludes unattributable traffic.",
+        "quote": "Each website analytics click event from a Signed by Humans senior craft story to The Stop Line proof page or a proof-page item, identified by campaign tags, UTM fields or equivalent source-path evidence for the craft story asset."
+      },
+      {
+        "id": "c7-k1",
+        "verdict": "satisfied",
+        "reason": "The response-time duration states the reporting cutoff, completed-response cohort and completed count, while separately keeping still-open eligible items and their elapsed ages visible.",
+        "quote": "For each reporting read, use the stated reporting cutoff timestamp and calculate mean hours only for eligible conversation items whose first response was sent or published to the recipient by that cutoff; report the completed-response count used. Escalation, preparation, approval, routing, administrative handoff or the reporting cutoff itself does not stop the clock. If no eligible items have a completed response by the cutoff, report the mean as unavailable."
+      },
+      {
+        "id": "c7-k2",
+        "verdict": "satisfied",
+        "reason": "The measure counts only distinct eligible issues recorded as resolved with evidence inside an approved answer route, while unresolved eligible issues remain in the register rather than being excluded from visibility.",
+        "quote": "Exclude duplicate records for the same issue, non-eligible administrative items, and items outside Month 6 through Month 12. Do not exclude unresolved, unsuccessfully handled, escalated or late eligible issues from the register; they simply do not count as resolved."
+      },
+      {
+        "id": "c7-k3",
+        "verdict": "satisfied",
+        "reason": "The consistency percentage has a clear sent-message denominator and counts only messages matching the approved answer set without excluding inconsistent eligible messages.",
+        "quote": "Eligible denominator messages that match the approved answer set: proof comes before promotion, any AI claim stays linked to approved proof, senior ownership and stated limits, and no do-not-say or widened AI promise appears."
+      },
+      {
+        "id": "c7-k4",
+        "verdict": "satisfied",
+        "reason": "The reuse count measures sent or published messages reusing a recorded approved-answer source, not drafts or unapproved custom answers.",
+        "quote": "Each sent or published eligible response or newsroom message that reuses an approved answer from the approved answer set, Q&A/FAQ or Key-Message Table, with the approved answer source recorded in the reuse register."
+      },
+      {
+        "id": "c7-k5",
+        "verdict": "satisfied",
+        "reason": "The escalation count uses the source crisis-tripwire categories and counts recorded escalations sent to a senior person before publication.",
+        "quote": "Each recorded escalation sent to a senior person before publication because an eligible issue triggered a litigation, disclosure, deal, restructuring, life-safety or regulatory crisis tripwire."
+      },
+      {
+        "id": "c8-k1",
+        "verdict": "satisfied",
+        "reason": "The technical-buyer trust percentage defines the sampled technical-buyer denominator and counts respondents who say the proof gives enough evidence for a next meeting.",
+        "quote": "Respondents in the denominator who say The Stop Line gives enough evidence to take a next meeting."
+      },
+      {
+        "id": "c8-k2",
+        "verdict": "satisfied",
+        "reason": "The artifact-view count identifies views of technical proof-story content under The Stop Line and excludes non-technical or untagged content.",
+        "quote": "Website analytics events recording a view of technical proof-story artifact content under The Stop Line, including technical artifacts, architecture notes, approved demos, proof labels or related technical proof assets."
+      },
+      {
+        "id": "c8-k3",
+        "verdict": "satisfied",
+        "reason": "This is an instrument-defined engaged-time duration with tagged technical-proof start and analytics-tool end rules, so open waiting-case accounting is not required.",
+        "quote": "The visitor exits, closes, navigates away from or becomes inactive on the tagged technical proof content session according to the analytics tool's engaged-time rule."
+      },
+      {
+        "id": "c8-k4",
+        "verdict": "satisfied",
+        "reason": "The sales-use count requires buyer-facing use of the technical proof story and excludes internal preparation or approvals not sent or presented to a buyer.",
+        "quote": "A recorded sales use of the technical proof story in a buyer-facing sales context, such as sending, presenting or publishing the story to a prospect or using it in a qualified sales conversation."
+      },
+      {
+        "id": "c8-k5",
+        "verdict": "satisfied",
+        "reason": "The qualified technical conversation rule defines audience eligibility, topic or intent, attribution and exclusions without converting conversations into later sales stages.",
+        "quote": "Count each distinct completed conversation event in inbound-response records or sales pipeline records where an external technical buyer, including a CTO, architecture owner or comparable technical decision or influence role, discusses The Stop Line technical proof story or approved proof assets. A conversation qualifies when the record shows audience eligibility, topic or intent tied to technical proof of AI-supported delivery, senior ownership, claim limits or proof assets, and attribution to the technical proof story or approved proof assets through a recorded touchpoint, reply, message thread, form source, meeting note or tagged campaign path."
+      },
+      {
+        "id": "c9-k1",
+        "verdict": "satisfied",
+        "reason": "The earned-briefing count requires confirmation or accepted invitation from an eligible third-party route and excludes pitch lists, paid placements and unconfirmed invitations.",
+        "quote": "An earned outreach briefing secured in Month 10: a proof-led briefing about The Stop Line with a journalist, analyst, named expert, professional influencer or credible third-party route, recorded after the eligible recipient or representative confirms the briefing or accepts the briefing invitation."
+      },
+      {
+        "id": "c9-k2",
+        "verdict": "satisfied",
+        "reason": "The quality coverage calculation preserves every source-listed criterion and correctly keeps the aggregate unavailable until the agreed threshold required by the source is recorded.",
+        "quote": "Aggregate unavailable until the agreed quality threshold is recorded in the registered sources. Score each denominator item against the source-listed criteria: priority outlet/influencer, priority-audience relevance, key-message inclusion, positive or neutral tone, brand/spokesperson prominence, desired call to action and original reporting vs syndication; once the agreed threshold exists, count items meeting it."
+      },
+      {
+        "id": "c9-k3",
+        "verdict": "satisfied",
+        "reason": "The proof-citation count defines eligible earned coverage and counts distinct cited proof sources or proof types while excluding generic mentions without proof components.",
+        "quote": "A proof citation in earned coverage: one recorded instance in an eligible published earned coverage item where the coverage explicitly cites, links to, quotes or names an approved The Stop Line proof source or proof type, including the proof page, proof library asset, named reference, verifiable anonymous reference, technical artifact, internal demo, senior owner or stated limit. Count one citation per coverage item per distinct cited proof source or proof type."
+      },
+      {
+        "id": "c9-k4",
+        "verdict": "satisfied",
+        "reason": "The qualified inbound conversation rule proposes observable audience, topic, earned-exposure attribution and duplicate-distinction criteria and does not require later lead or meeting outcomes.",
+        "quote": "One distinct inbound conversation thread recorded in inbound-response records and/or sales pipeline records where an eligible external contact in the card audience, meaning a professional influencer, journalist, analyst, named expert or enterprise buyer reached through credible third parties, sends an inbound enquiry or reply after traceable earned exposure to The Stop Line. For this operational calculation, the thread qualifies when the record shows all of: observable audience eligibility; topic or intent tied to The Stop Line proof, proof-led earned coverage, expert discussion, partner or referral opportunity, or enterprise-buyer interest; attributable earned-exposure evidence before the inbound message; and enough recorded thread evidence to distinguish it from duplicates and irrelevant events. Count the conversation thread, not later lead qualification, booked meetings, sales follow-up, sales-qualified status, coverage publication or reporting completion."
+      },
+      {
+        "id": "c10-k1",
+        "verdict": "satisfied",
+        "reason": "The participation count measures distinct registered advocates who actually send or publish an advocacy post or share, not merely attend training or prepare content.",
+        "quote": "Each registered employee advocate or approved supporter advocate who, after Conversation Management training, sends or publishes at least one Month 11 Signed by Humans advocacy post or share using the provided language or proof link."
+      },
+      {
+        "id": "c10-k2",
+        "verdict": "satisfied",
+        "reason": "The post-quality percentage defines the reviewed post population and a source-consistent numerator based on approved language, proof links, proof boundary and escalation routing.",
+        "quote": "Published denominator posts that stay inside approved Signed by Humans language, include approved proof links where the post makes a claim, preserve the proof boundary and do-not-say lines, and route questions the advocate should not answer themselves to escalation rather than inventing claims."
+      },
+      {
+        "id": "c10-k3",
+        "verdict": "not-satisfied",
+        "reason": "The metric promises engagement quality, but the calculation counts mostly undifferentiated engagement actions without a quality scale, anchors or rule that explains score meaning.",
+        "quote": "Each relevant, non-spam engagement action on a Month 11 advocate post recorded in LinkedIn analytics or inbound-response records, including reactions, substantive comments, reposts or shares, saves where available, proof-page click-throughs, and qualified inbound responses tied to the post."
+      },
+      {
+        "id": "c10-k4",
+        "verdict": "satisfied",
+        "reason": "The proof-click count ties proof-page landings to Month 11 advocate posts through campaign identifiers or UTM tags and excludes unattributable traffic.",
+        "quote": "Each website analytics click event landing on the approved proof page from a Month 11 advocate post with the required campaign identifier or UTM tags for the employee advocacy push."
+      },
+      {
+        "id": "c10-k5",
+        "verdict": "satisfied",
+        "reason": "The escalation count is limited to logged advocate questions routed through Conversation Management for proof, claim, technical, legal, disclosure, crisis or approval issues.",
+        "quote": "Each logged escalation from an advocate question in the Month 11 employee advocacy push where the advocate uses the Conversation Management route for a proof, claim, do-not-say, technical, legal, disclosure, crisis-tripwire, or approval question they should not answer themselves."
+      },
+      {
+        "id": "c11-k1",
+        "verdict": "satisfied",
+        "reason": "The scorecard completion count uses the source reporting endpoint: the Month 12 one-page executive scorecard produced within ten working days of the final campaign reading.",
+        "quote": "Executive scorecard completion recorded when the Month 12 one-page after-campaign executive scorecard is produced within ten working days of the final campaign reading."
+      },
+      {
+        "id": "c11-k2",
+        "verdict": "satisfied",
+        "reason": "The percentage keeps all headline KPIs in the denominator and counts only those reporting baseline, target, result and trend in readable fields.",
+        "quote": "Headline KPIs on the scorecard that each report baseline, target, result and trend in readable fields."
+      },
+      {
+        "id": "c11-k3",
+        "verdict": "satisfied",
+        "reason": "The count measures approved Key-Message Table changes after measurement review with evidence, date and approval record, not proposed or drafted changes.",
+        "quote": "Key-Message Table message change approved after the measurement review, where the register shows the changed message, supporting evidence or proof gap, review date and approval record."
+      },
+      {
+        "id": "c11-k4",
+        "verdict": "satisfied",
+        "reason": "The proof-gap count requires a named missing proof, affected claim or message, and Month 12 measurement evidence establishing the gap.",
+        "quote": "Next-year proof gap named in the proof-gap register, with the missing proof, affected claim or message, and the evidence from Month 12 measurement that establishes the gap."
+      },
+      {
+        "id": "c11-k5",
+        "verdict": "satisfied",
+        "reason": "The review-completion count requires the quarter-end evaluation narrative to address whether the campaign contributed to the enterprise-lead target using quarter-end evidence.",
+        "quote": "Quarter-end enterprise-lead contribution review completed when the quarter-end evaluation narrative records whether The Stop Line and Signed by Humans contributed to the enterprise-lead target using the quarter-end review evidence."
+      }
+    ],
+    "omissions": []
+  },
+  "expected_labels": {
+    "c2-k6": "satisfied",
+    "c4-k6": "satisfied",
+    "c5-k3": "satisfied",
+    "c8-k5": "satisfied",
+    "c9-k4": "satisfied",
+    "c9-k2": "satisfied",
+    "c4-k8": "satisfied",
+    "c10-k3": "not-satisfied",
+    "c2-k2": "satisfied",
+    "c7-k1": "satisfied",
+    "c8-k3": "satisfied"
+  },
+  "observed_labels": {
+    "c2-k6": "satisfied",
+    "c4-k6": "satisfied",
+    "c5-k3": "not-satisfied",
+    "c8-k5": "satisfied",
+    "c9-k4": "satisfied",
+    "c9-k2": "satisfied",
+    "c4-k8": "satisfied",
+    "c10-k3": "not-satisfied",
+    "c2-k2": "satisfied",
+    "c7-k1": "satisfied",
+    "c8-k3": "satisfied"
+  },
+  "verdict": "not-satisfied",
+  "artifacts": null
+}

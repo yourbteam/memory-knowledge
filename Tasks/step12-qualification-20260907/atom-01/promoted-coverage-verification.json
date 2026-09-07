@@ -1,0 +1,20 @@
+{
+  "case_id": "retained-coverage",
+  "verdict": "satisfied",
+  "source_sha256": "2a238e98ea09179df2540d2bbf5f54db5b46f30c0dbc2545ca09e7f0b42cd98c",
+  "rendered": "100 \u00d7 (Aggregate unavailable until the agreed quality threshold is recorded in the registered sources. Score each denominator item against the source-listed criteria: priority outlet/influencer, priority-audience relevance, key-message inclusion, positive or neutral tone, brand/spokesperson prominence, desired call to action and original reporting vs syndication; once the agreed threshold exists, count items meeting it.) / (All eligible Month 10 earned coverage items published by third-party media, analysts, experts or professional influencers after earned validation outreach, including positive, neutral, negative, high-quality, low-quality and proof-missing items.); excludes: Exclude paid, owned or shared posts, unpublished drafts, internal mentions, duplicate syndications with no new editorial item and out-of-period items; do not exclude eligible coverage because it fails quality criteria, lacks proof citations or is unfavorable.",
+  "calculation": {
+    "metric": "Quality coverage rate against agreed criteria",
+    "scale": "percentage",
+    "instrument": "Quality coverage rubric",
+    "measurement": {
+      "aggregation": "ratio-times-100",
+      "denominator": "All eligible Month 10 earned coverage items published by third-party media, analysts, experts or professional influencers after earned validation outreach, including positive, neutral, negative, high-quality, low-quality and proof-missing items.",
+      "exclusions": "Exclude paid, owned or shared posts, unpublished drafts, internal mentions, duplicate syndications with no new editorial item and out-of-period items; do not exclude eligible coverage because it fails quality criteria, lacks proof citations or is unfavorable.",
+      "kind": "percentage",
+      "numerator": "Aggregate unavailable until the agreed quality threshold is recorded in the registered sources. Score each denominator item against the source-listed criteria: priority outlet/influencer, priority-audience relevance, key-message inclusion, positive or neutral tone, brand/spokesperson prominence, desired call to action and original reporting vs syndication; once the agreed threshold exists, count items meeting it.",
+      "unit": "percent"
+    }
+  },
+  "proof": "Canonical validator and renderer match frozen pre-atom module on exact captured coverage definition; all seven criteria and unavailable aggregate remain."
+}

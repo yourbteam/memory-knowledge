@@ -1,0 +1,21 @@
+{
+  "run_id": "up-run-7e6f4e8a63f9",
+  "outside_atom": true,
+  "downstream_owner": "Step 12 next-atom selection",
+  "findings": [
+    {
+      "id": "c6-k1",
+      "verdict": "not-satisfied",
+      "reason": "The calculation does not define how the operator identifies or verifies that an engagement is by or attributable to senior Sofia talent, so qualifying observations require guessing.",
+      "quote": "Each LinkedIn or Substack engagement action during the monthly Month 6-Month 12 reporting window on approved Signed by Humans senior craft story content by, or attributable to, the senior Sofia talent audience; qualifying actions include platform-recorded reactions, comments, shares, saves where available, newsletter clicks, replies or other recorded engagement actions tied to the craft story asset."
+    },
+    {
+      "id": "c10-k3",
+      "verdict": "not-satisfied",
+      "reason": "The metric promises engagement quality, but the calculation only counts relevant non-spam engagement actions without a quality scale, anchors or score meaning.",
+      "quote": "Each relevant, non-spam engagement action on a Month 11 advocate post recorded in LinkedIn analytics or inbound-response records, including reactions, substantive comments, reposts or shares, saves where available, proof-page click-throughs, and qualified inbound responses tied to the post."
+    }
+  ],
+  "omissions": [],
+  "caution": "Audit observations; inspect source applicability before another build. Earlier differing audit findings remain preserved."
+}
