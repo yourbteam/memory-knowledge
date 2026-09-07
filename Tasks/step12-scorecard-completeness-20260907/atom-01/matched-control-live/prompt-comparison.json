@@ -1,0 +1,6 @@
+{
+  "control_chars": 80111,
+  "candidate_chars": 81194,
+  "candidate_rule": "REQUIRED-SET COMPLETENESS. When measuring whether a required set was fully reported or delivered, define the denominator from the reporting-period required scope independently of the delivered subset; omitted required items remain in it. Do not infer required membership from whichever rows appear on the artifact being checked. If that required membership cannot be identified in the registered sources for the named scope, explicitly state in the calculation that the completeness aggregate is unavailable until the required membership is recorded; never invent a membership list, assume all campaign KPIs are headline KPIs, or report an undefined denominator as complete. Describe this as missing membership in the supplied scope, not proof that no selection exists anywhere. If a registered source does identify the required membership, preserve it and calculate against it without inventing another approval dependency. This instruction applies to completeness of required sets, not to ordinary event populations or source-consistent proposed qualification and scoring rubrics. ",
+  "same_remaining_tokens": true
+}

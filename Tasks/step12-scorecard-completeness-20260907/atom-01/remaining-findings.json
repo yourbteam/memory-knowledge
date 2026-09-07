@@ -1,0 +1,41 @@
+{
+  "run_id": "up-run-87c53ccd4c78",
+  "findings": [
+    {
+      "id": "c2-k4",
+      "verdict": "not-satisfied",
+      "reason": "The calculation repeats qualified-meeting route but does not define what makes the route qualified, so the operator must guess eligible clicks.",
+      "quote": "One tracked click from The Stop Line proof page or connected inbound route to request or book a qualified meeting, counted when website analytics or inbound-response records show the click was sent or published to the recipient system."
+    },
+    {
+      "id": "c4-k7",
+      "verdict": "not-satisfied",
+      "reason": "The metric promises distinct people across LinkedIn and Substack, but the calculation only defines duplicate handling within the same platform.",
+      "quote": "Exclude duplicate reach records for the same account within the same platform and measurement period, non-human bot/test traffic identified by the analytics platform, and records not tied to the founder launch post. Do not exclude reached accounts because the post, proof link, approval route, engagement quality or later response failed another campaign requirement."
+    },
+    {
+      "id": "c6-k1",
+      "verdict": "not-satisfied",
+      "reason": "The calculation requires engagement by or attributable to senior Sofia talent but gives no observable rule for deciding that audience attribution from the analytics records.",
+      "quote": "Each LinkedIn or Substack engagement action during the monthly Month 6-Month 12 reporting window on approved Signed by Humans senior craft story content by, or attributable to, the senior Sofia talent audience; qualifying actions include platform-recorded reactions, comments, shares, saves where available, newsletter clicks, replies or other recorded engagement actions tied to the craft story asset."
+    },
+    {
+      "id": "c11-k5",
+      "verdict": "not-satisfied",
+      "reason": "A contribution review can be counted without requiring the impact evaluation to record alternative explanations before crediting the campaign.",
+      "quote": "Impact evaluation records the following as possible alternative explanations for any impact-level result, so the reading names what else could have moved the number before it credits the campaign:"
+    }
+  ],
+  "omissions": [],
+  "prior_unresolved_observations": [
+    "Creator delivery omission was reported on parent but is absent in the new audit without a relevant repair. It remains unassessed, not fixed."
+  ],
+  "assessment": "All these unselected definitions are unchanged. Treat audit movement as observations needing source applicability review, not new proven regressions or repairs.",
+  "latest_audit_run": "up-run-966a27dc26af",
+  "latest_audit_verdict_changes": {
+    "c2-k4": "satisfied without any definition change",
+    "c4-k7": "satisfied without any definition change",
+    "c6-k1": "satisfied without any definition change",
+    "c11-k5": "satisfied without any definition change"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "source_run": "up-run-87c53ccd4c78",
+  "source_field": "context.up.cd_s_002.measurement_framework_markdown",
+  "source_section": "### Executive KPIs (at most 5)\n\n- By 30 June 2027, increase approved proof assets for The Stop Line among public AI (artificial intelligence) claims from zero approved assets to the target set at the first client conversation.\n- By 30 June 2027, decrease unresolved public-profile conflicts among buyer-facing public records from six unresolved conflict areas to zero before any public release ships.\n- By 30 June 2027, increase technical-buyer trust in The Stop Line among sampled CTOs and architecture owners from baseline not established; it will be set in the first buyer research wave to the target set in that wave.\n- By 30 June 2027, increase approved Signed by Humans founder visibility among buyer and talent audiences from Matthew Maday's sampled baseline of 2 to 5 reactions and 0 to 2 comments, with Kamen Kamenov's baseline set at his first post, to a lift above each founder's baseline over the first campaign period.\n- By 30 June 2027, increase qualified enterprise leads connected to The Stop Line among United States and European Union buyers from sales tracking starting at zero on 25 August 2026 to two qualified enterprise leads per calendar quarter.\n",
+  "source_sha256": "1b689880485ba29a912611894072d6ed844b5f7628964f91f76ccfbef83a777b",
+  "candidate_run": "up-run-966a27dc26af",
+  "candidate_target": {
+    "metric": "Headline KPIs reported with baseline, target, result and trend",
+    "scale": "percentage",
+    "instrument": "One-page executive scorecard",
+    "measurement": {
+      "aggregation": "ratio-times-100",
+      "denominator": "The five headline Executive KPIs required for the reporting period by the registered Measurement & Evaluation Framework and Month 12 executive scorecard scope: approved proof assets for The Stop Line; unresolved public-profile conflicts; technical-buyer trust in The Stop Line; approved Signed by Humans founder visibility; and qualified enterprise leads connected to The Stop Line. The denominator is this required source-listed set whether each KPI appears on the delivered one-page scorecard or is omitted from it.",
+      "exclusions": "Exclude only supporting diagnostics and non-headline KPIs not required in the source-listed Month 12 executive scorecard scope. Do not exclude omitted required headline KPIs, or required headline KPIs whose baseline, target, result or trend is missing, unavailable, not yet established or unreadable.",
+      "kind": "percentage",
+      "numerator": "Required headline Executive KPIs for the reporting period that appear on the one-page executive scorecard and each show baseline, target, result and trend in readable fields, preserving the registered measurement logic for each KPI.",
+      "unit": "percent"
+    }
+  },
+  "verdict": "source-grounded-definition-improvement",
+  "review": "All five KPI identities in the new denominator match the supplied framework Executive KPIs section. Omitted required KPIs remain in the denominator; the numerator requires presence and all four reporting fields. No missing-membership example was exercised.",
+  "correction": "Earlier review overlooked the Executive KPIs section while searching for headline terminology. The captured required-set case is not evidence that membership is absent. Do not treat its missing-membership expected outcome as established.",
+  "causal_limit": "The current comparison contrasts baseline audit-only with candidate writer plus audit. It does not establish that the prompt addition is necessary: unchanged writer on the same source has not been compared.",
+  "promotion": "withheld pending matched writer comparison",
+  "preserved_measurements": 55,
+  "preserved_completed_phases": 33,
+  "audit": {
+    "satisfied": 56,
+    "omissions": [],
+    "unchanged_verdict_flips": [
+      "c2-k4",
+      "c4-k7",
+      "c6-k1",
+      "c11-k5"
+    ],
+    "interpretation": "These four unchanged definitions were rejected by the previous audit and accepted now; their verdict flips are not repairs."
+  }
+}

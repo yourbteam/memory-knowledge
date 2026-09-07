@@ -1,0 +1,18 @@
+{
+  "status": "completed",
+  "scope": "Matched comparison and correction of the real scorecard omission defect",
+  "prototype_verdict": "discard-unnecessary-code-proposal",
+  "canonical_product_changes": [],
+  "retained_canonical_run": "up-run-90a4ab8be6e9",
+  "candidate_run": "up-run-966a27dc26af",
+  "experiment_selection": "no-demonstrated-advantage",
+  "definition_quality": "both-satisfied",
+  "preserved_calculations": 55,
+  "preserved_completed_phases": 33,
+  "fresh_extension_calls": 2,
+  "total_fresh_calls": 6,
+  "retries": 0,
+  "full_document_limit": "All 56 received satisfied verdicts, but four unchanged definitions flipped from previous rejection to acceptance without repair. Earlier findings remain unassessed; do not declare them fixed.",
+  "controller_disposition": "Original atom request wrongly represented available KPI membership as missing. It remains an unpromoted experimental record, not a completed code atom. This no-code resolution must not be represented as a formal controller promotion.",
+  "next_delta": "No code change is justified by this matched comparison. Retain the corrected canonical Step 12 and require independent assessment before selecting a different defect."
+}

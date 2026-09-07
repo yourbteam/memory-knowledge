@@ -1,0 +1,15 @@
+{
+  "measure": "Scorecard completeness keeps omitted required KPIs visible",
+  "now": 1,
+  "total": 1,
+  "source_run": "up-run-f1a9dd510aef",
+  "result_run": "up-run-90a4ab8be6e9",
+  "proof": [
+    "matched-control-live/verification.json",
+    "matched-review.json",
+    "matched-comparison/summary.json"
+  ],
+  "scope_limit": "The omission correction is proven. Candidate explicitly enumerates five source-listed Executive KPIs. Missing membership is not a demonstrated gap in this real case.",
+  "candidate_run": "up-run-966a27dc26af",
+  "full_atom_status": "Observed defect resolved through existing harness; new-code proposal has no demonstrated advantage"
+}

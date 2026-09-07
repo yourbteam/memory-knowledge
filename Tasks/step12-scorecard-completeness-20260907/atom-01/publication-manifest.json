@@ -1,0 +1,57 @@
+{
+  "files": [
+    {
+      "path": "RESULT.md",
+      "sha256": "971eb116577cef025a8766e22727bd3313ee5ee072a3cb76de910449a4a9e023"
+    },
+    {
+      "path": "final-decision.json",
+      "sha256": "b59a8701f178c14b98f7c5edfe84349db1ac3ff53f88b8ed1085928a5c794b3b"
+    },
+    {
+      "path": "matched-review.json",
+      "sha256": "2e33ed0cf0aa0e6997872931518a0ba415a157809d079bddfc20503c29bd33ac"
+    },
+    {
+      "path": "retained-surface-review.json",
+      "sha256": "aef585bb07d75b156fd08318d3cc47d413a99bfd179c323da2dd7ec37c271fc7"
+    },
+    {
+      "path": "remaining-findings.json",
+      "sha256": "5f729dbd8caf2b0e114cdb992eeeed11011345d9a27f7dc0230bf70e84acea23"
+    },
+    {
+      "path": "goal.json",
+      "sha256": "2fd5430f21cd9d01fea08b9695be0924ad46bac4dacc24bf8e62461929257267"
+    },
+    {
+      "path": "candidate-live/source-review.json",
+      "sha256": "c99969fd2c5f2a3a6e66177e4fd9c1ae87253df05b15d7b14c44f17602518135"
+    },
+    {
+      "path": "candidate-live/verification.json",
+      "sha256": "89fe83e645e021529ae388eebe2f58244a60028759c5ca0b5ca2644f5aff7d29"
+    },
+    {
+      "path": "matched-control-live/verification.json",
+      "sha256": "1eed372141c060bdc39eb8ccfd45abc0d698cff652cfb04a627850e6e7391493"
+    },
+    {
+      "path": "matched-control-live/prompt-comparison.json",
+      "sha256": "af44edbed930c4636bfd99e35a7a6becdec5b97418d944b80c38f41751262f79"
+    },
+    {
+      "path": "prototype0-live/verification.json",
+      "sha256": "1f661f33128bfd18bb72f1f14b4b6f83e2f9cb94e5d49cc8dffbf1e458816fc2"
+    },
+    {
+      "path": "matched-comparison/summary.json",
+      "sha256": "e99ff4b4ba22ec8ea6d9a9b0009e134bbfd74c62b79dd7202f33f2672d7c726f"
+    },
+    {
+      "path": "matched-comparison/ledger.jsonl",
+      "sha256": "513832971b6cc55f3df06e56504a832e08e50279e84ddb68fef2870dd343ca6d"
+    }
+  ],
+  "scope": "Compact final evidence only; no candidate source trees, model transcripts, controller scratch or unrelated artifacts."
+}

@@ -1,0 +1,13 @@
+{
+  "control": {
+    "verdict": "satisfied",
+    "reason": "Required reporting-period headline KPIs are governed by the registered framework, explicitly include omissions, and cannot be excluded for missing/unavailable/unfavourable fields. Numerator requires all four readable fields and preserves source-specified first-read/decision points for not-yet-established baselines or targets."
+  },
+  "repair": {
+    "verdict": "satisfied",
+    "reason": "Explicitly names the five Executive KPIs listed in the framework, retains omitted required members in the denominator, and requires presence and baseline/target/result/trend in the numerator. The five names clarify the source reference but do not demonstrate a functional omission-protection advantage over the matched control."
+  },
+  "independent_basis": "Review actual definitions against framework Executive KPIs and all-four-field reporting requirements, separately from live audit labels.",
+  "causal_conclusion": "Both observed outputs satisfy the approved scorecard correction. Additional prompt has no demonstrated advantage on that outcome in this matched pair; one pair does not establish population reliability.",
+  "unproven_branch": "Missing required membership is not present in this captured case. Do not claim it was tested or is a remaining real Step 12 defect."
+}

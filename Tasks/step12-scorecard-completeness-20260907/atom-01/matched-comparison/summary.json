@@ -1,0 +1,165 @@
+{
+  "champion": null,
+  "evaluation": {
+    "assessment": {
+      "criteria": [
+        {
+          "id": "quality",
+          "metric": "quality",
+          "reference_pointer": "/quality"
+        }
+      ],
+      "output_fields": [
+        "raw"
+      ],
+      "reference": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-scorecard-completeness-20260907/atom-01/matched-reference.json",
+        "sha256": "10089f36d411e980f81cbf11281b1fdd32b07c21c2e855147ffe5d25ccfd91c2"
+      }
+    },
+    "calibration": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-scorecard-completeness-20260907/atom-01/matched-calibration.json",
+      "sha256": "98d973b19000a9b8b1bc0f6c6ef9f0b1f6f65dcbed42a4ae042d19c2132e89ef"
+    },
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-scorecard-completeness-20260907/atom-01/comparison-judge.py",
+        "sha256": "3268febd0f9817e922805909769d78adcd9ed97f3ce96df9207e81a96a92272d"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "quality"
+      }
+    ]
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 30000,
+    "variant_timeout_ms": 60000
+  },
+  "experiment_id": "scorecard-matched-writer-control",
+  "frozen_input_sha256": "2fd6d309c6223b53fee3be2f66f1610f88e4083ef8dcd6cf3ffe83827c11a739",
+  "hypothesis": "Added completeness instruction improves the real targeted writer output on the same frozen source. Exact captured model-edge replays; one live writer and audit per setup, not a reliability estimate.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "quality": 1.0
+      },
+      "rank": 1,
+      "variant_id": "control"
+    },
+    {
+      "metrics": {
+        "quality": 1.0
+      },
+      "rank": 2,
+      "variant_id": "repair"
+    }
+  ],
+  "schema_version": 1,
+  "selection_outcome": "no-demonstrated-advantage",
+  "status": "completed",
+  "target": {
+    "entrypoint": "probe.py",
+    "machinery": "up-harness",
+    "phase": "compose-tactical-roadmap",
+    "source": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-scorecard-completeness-20260907/atom-01/matched-source",
+      "sha256": "90f7ed30c1eda7dd6401ed44a83e6722cb73e60211cde6cffe96a7b95cdd138e"
+    }
+  },
+  "target_source_sha256": "90f7ed30c1eda7dd6401ed44a83e6722cb73e60211cde6cffe96a7b95cdd138e",
+  "variants": [
+    {
+      "duration_ms": 812,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "quality": 1.0
+      },
+      "outcome": {
+        "raw": {
+          "calls": 2,
+          "preserved": true,
+          "target": {
+            "instrument": "One-page executive scorecard",
+            "measurement": {
+              "aggregation": "ratio-times-100",
+              "denominator": "All headline KPIs required for the reporting period by the registered measurement framework and the one-page executive scorecard scope, including required headline KPIs omitted from the scorecard.",
+              "exclusions": "Exclude only supporting diagnostics that are not required headline KPIs for the reporting period. Do not exclude required headline KPIs because baseline, target, result or trend is missing, unavailable, not yet established, unreadable, unfavourable, or because another campaign governance or quality requirement failed.",
+              "kind": "percentage",
+              "numerator": "Required headline KPIs that appear on the one-page executive scorecard and show readable baseline, target, result and trend fields together. A baseline or target that the registered source says is not yet established qualifies only if it is explicitly labelled that way and carries the named first-read or decision point required by the source.",
+              "unit": "percent"
+            },
+            "metric": "Headline KPIs reported with baseline, target, result and trend",
+            "scale": "percentage"
+          },
+          "target_audit": "satisfied"
+        }
+      },
+      "qualification_failures": [],
+      "qualified": true,
+      "reported_metrics": {},
+      "result_sha256": "de7eca3a3a037eb38ccdb3d3a5259ea9a3ae09fcad9101de214650952a78e5a7",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "62bf0479f9f3242bb3213304d03e969a617a8aec09dcb6329cb41686df6bbd91",
+      "telemetry_sha256": "8b0b3616c3136f5f6e398fc8d5fb540f7da59e6c1fd307abef4b5ef70025bcc9",
+      "timed_out": false,
+      "timeout_ms": 60000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 796,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "quality": 1.0
+      },
+      "outcome": {
+        "raw": {
+          "calls": 2,
+          "preserved": true,
+          "target": {
+            "instrument": "One-page executive scorecard",
+            "measurement": {
+              "aggregation": "ratio-times-100",
+              "denominator": "The five headline Executive KPIs required for the reporting period by the registered Measurement & Evaluation Framework and Month 12 executive scorecard scope: approved proof assets for The Stop Line; unresolved public-profile conflicts; technical-buyer trust in The Stop Line; approved Signed by Humans founder visibility; and qualified enterprise leads connected to The Stop Line. The denominator is this required source-listed set whether each KPI appears on the delivered one-page scorecard or is omitted from it.",
+              "exclusions": "Exclude only supporting diagnostics and non-headline KPIs not required in the source-listed Month 12 executive scorecard scope. Do not exclude omitted required headline KPIs, or required headline KPIs whose baseline, target, result or trend is missing, unavailable, not yet established or unreadable.",
+              "kind": "percentage",
+              "numerator": "Required headline Executive KPIs for the reporting period that appear on the one-page executive scorecard and each show baseline, target, result and trend in readable fields, preserving the registered measurement logic for each KPI.",
+              "unit": "percent"
+            },
+            "metric": "Headline KPIs reported with baseline, target, result and trend",
+            "scale": "percentage"
+          },
+          "target_audit": "satisfied"
+        }
+      },
+      "qualification_failures": [],
+      "qualified": true,
+      "reported_metrics": {},
+      "result_sha256": "fae28695da20baf4be8b8307e284b3b3973add72d437697624441e84cf0f1d33",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "d5e7600c9f38cd09abce7511e94b77edf79bc42b848bc91cf0f0a8f951e79bf9",
+      "telemetry_sha256": "faa47e26c209919f065256ed7592271f986633d4646bec9f62bc73e268739580",
+      "timed_out": false,
+      "timeout_ms": 60000,
+      "variant_id": "repair"
+    }
+  ]
+}

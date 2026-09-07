@@ -1,0 +1,15 @@
+{
+  "status": "completed",
+  "verdict": "passed",
+  "product_changes": [],
+  "saved_result": "up-run-90a4ab8be6e9",
+  "scope": "Only c11-k2 changes; 55 other calculations and 33 completed phases preserved.",
+  "conclusion": "The unchanged harness produces the approved omission correction and exports it. Exact-prompt matched comparison finds no demonstrated advantage for the extra instruction. Retain the canonical result and leave the additional code unpromoted.",
+  "evidence": [
+    "matched-control-live/verification.json",
+    "matched-control-live/prompt-comparison.json",
+    "matched-review.json",
+    "matched-comparison/summary.json"
+  ],
+  "unresolved_uncertainty": "Single observed pair does not measure general semantic reliability. Missing membership is absent from this case. Unchanged audit verdict flips do not prove repairs."
+}
