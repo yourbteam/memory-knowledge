@@ -1,0 +1,28 @@
+{
+  "assembly_sha256": "0ebe07108dd983a3dc9cfbc92124012a48242b0ec784fe88940dca89f750154b",
+  "atomic_step_id": "step12-finding-resolution",
+  "cases": [
+    {
+      "case_id": "unchanged-rejections",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Observed real recovery export decision, preserved draft/phases and explicit historical dispositions; unresolved current findings fail the declared success case.",
+      "verdict": "satisfied"
+    },
+    {
+      "case_id": "accepted-roadmap",
+      "evidence_pointers": [
+        "candidate-stdout",
+        "candidate-telemetry"
+      ],
+      "reason": "Observed real recovery export decision, preserved draft/phases and explicit historical dispositions; unresolved current findings fail the declared success case.",
+      "verdict": "satisfied"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "passed"
+}

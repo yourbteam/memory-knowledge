@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-finding-resolution",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "67607a8c73e11e0fd5964e804f0821ba36db2c41e53eb8881c7ba0e4a79327c1",
+  "experiment_assembly_sha256": "0ebe07108dd983a3dc9cfbc92124012a48242b0ec784fe88940dca89f750154b",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/engine/runner.py",
+    "src/up_harness/recovery.py",
+    "src/up_harness/roadmap_findings.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/roadmap_recovery.py",
+    "tests/unit/test_roadmap_findings.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-finding-resolution-20260907/atom-01/final-change-surface.json",
+    "sha256": "d1536bce78b1660ab6a590e591edf7db06801c8711b33d816916149b038af236"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-finding-resolution-20260907/atom-01/retained-surface-review.json",
+    "sha256": "7abbeeadab66879c1ef7ca35e58a9832250b3ff6d576d334b7825804d1dd1bed"
+  },
+  "evidence": [
+    {
+      "case_id": "unchanged-rejections",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-finding-resolution-20260907/atom-01/final-replay-candidate-unchanged-rejections/observed.json",
+      "sha256": "a199bf7a63a72e7928ea9db8f283d1641b72881596ebe2785bc1c7a7c92f14fc"
+    },
+    {
+      "case_id": "accepted-roadmap",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-finding-resolution-20260907/atom-01/final-replay-candidate-accepted-roadmap/observed.json",
+      "sha256": "b6e45bd71483597c905a64150b0879c6735e448ea4b488cc3098a18ee52e7db3"
+    }
+  ]
+}

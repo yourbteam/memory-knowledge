@@ -1,0 +1,56 @@
+{
+  "atomic_step_id": "step12-finding-resolution",
+  "baseline_sha256": "1b3c7002f39f8b2c136d86bc612725906e2645d8e1a4ac224c97b7cd0fe66e8d",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "a1284e4610c22e4034bd099d9b9e0b0b1e2486de98213931e57113532c0564ec",
+      "before_mode": 420,
+      "before_sha256": "c5ea2228a0b4f6a1142b4e9422c1f52b06fc107cb036fb665e8a84532cdbe0c3",
+      "kind": "changed",
+      "path": "src/up_harness/engine/runner.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "8a093a0e90670ac353254477de2562fa309e09ee812cb9402d0e35e87dcd3bd3",
+      "before_mode": 420,
+      "before_sha256": "3bb2c5a9c801b652428252f35e377e8d6ec80268df92340e4d5c37e3d264e39d",
+      "kind": "changed",
+      "path": "src/up_harness/recovery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "b96f78736551e6c69377abc3f385270b175133cbd3c9e898d70423782c72c92a",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "src/up_harness/roadmap_findings.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "c4e51ef6e46c62b12226240c1ca3f8fae7ac9c5e1df364f27186af610406a1d8",
+      "before_mode": 420,
+      "before_sha256": "ff035481c493371f133033391602ac6d2d37d88c0573ae16bee8ac223057f254",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_measurements.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "17e3376cca7d50635bfa7df03615d82e54761c2ceb562677b30ad4c10b997609",
+      "before_mode": 420,
+      "before_sha256": "a3a33b82dda1f6ecc74d9c64ecf021d90f1bd6a9d7251db90cc18cae266d014e",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_recovery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "a5249b86076d71b8eb03ce0706976ab9aecfca972778b68b53b2f707b257b984",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "tests/unit/test_roadmap_findings.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

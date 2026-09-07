@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "measurements": 62,
+  "earlier_phases_preserved": 33,
+  "original_measurements_preserved": 59,
+  "corrected_existing_measurement": "c11-k5",
+  "additions": [
+    {
+      "card_id": "c2",
+      "metric": "Proof labels completed",
+      "scale": "distinct-count items",
+      "instrument": "Proof-label completion register",
+      "measurement": {
+        "aggregation": "distinct-count",
+        "counted_event": "Each distinct proof label for The Stop Line proof page recorded as completed during the measurement period, tied to a specific approved or release-eligible public AI claim, proof asset or proof-page item, with observable label text, proof type, completion date, page or asset scope and duplicate boundary recorded in the proof-label completion register.",
+        "exclusions": "Exclude draft, proposed, incomplete, missing, duplicate or placeholder proof labels; labels not tied to The Stop Line proof page, its proof items or its release-eligible proof assets; and records outside the measurement period. Do not exclude completed eligible proof labels because a separate approval check, publication, meeting click, download, engagement, campaign-quality requirement or unrelated governance requirement failed.",
+        "kind": "count",
+        "unit": "items"
+      }
+    },
+    {
+      "card_id": "c3",
+      "metric": "Recognition of The B Team as a proof-led AI engineering partner",
+      "scale": "percentage",
+      "instrument": "First message-testing wave recognition survey",
+      "measurement": {
+        "aggregation": "ratio-times-100",
+        "denominator": "Sampled owners of midsize businesses and technical buyers in the first message-testing wave before launch who are asked the recognition item for The B Team as a proof-led AI engineering partner behind The Stop Line and have a valid opportunity to answer.",
+        "exclusions": "Exclude respondents outside the owners-of-midsize-businesses or technical-buyer audiences, duplicate respondent records, test or staff records, records outside the first message-testing wave before launch, and records with no opportunity to answer the recognition item. Do not exclude eligible respondents because they do not recognise The B Team, choose another association, give a negative answer, lack meeting intent, or fail unrelated campaign governance or quality requirements.",
+        "kind": "percentage",
+        "numerator": "Denominator respondents whose answer recognises The B Team as a proof-led AI engineering partner, meaning the response attributes The B Team to AI engineering and to proof-led evidence, approved proof, traceable claims, senior responsibility or visible limits rather than only to generic software delivery, broad AI capability or unrelated awareness.",
+        "unit": "percent"
+      }
+    }
+  ],
+  "prior_findings": 52,
+  "artifacts": [
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-0ddbf443cad3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+      "sha256": "1d0d57b051aab74840952bf8222672d0f12d04f1be49eb06e807abc5519751b4"
+    },
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-0ddbf443cad3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+      "sha256": "09c3b6c5a93778c91322caccc63a34bd86d036ff3148df44fe1f8fb4e275b2d4"
+    }
+  ],
+  "limitation": "Recognition now has a direct first-wave baseline measure. Later-wave comparability is a separate remaining question; this atom does not claim all future semantic judgments are correct."
+}

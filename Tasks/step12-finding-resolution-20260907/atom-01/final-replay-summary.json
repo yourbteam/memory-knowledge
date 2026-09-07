@@ -1,0 +1,50 @@
+[
+  {
+    "approach": "control",
+    "case": "unchanged-rejections",
+    "satisfied": false,
+    "preserved": true,
+    "preserved_phases": 33,
+    "calls": 2,
+    "pending_findings": null,
+    "exported": true,
+    "error": null,
+    "measurements": 56
+  },
+  {
+    "approach": "control",
+    "case": "accepted-roadmap",
+    "satisfied": false,
+    "preserved": true,
+    "preserved_phases": 33,
+    "calls": 0,
+    "pending_findings": null,
+    "exported": false,
+    "error": "Recovery checkpoint is incomplete; select a run with a retained measurement draft.",
+    "measurements": 60
+  },
+  {
+    "approach": "candidate",
+    "case": "unchanged-rejections",
+    "satisfied": true,
+    "preserved": true,
+    "preserved_phases": 33,
+    "calls": 2,
+    "pending_findings": 42,
+    "exported": false,
+    "error": "measurement_audit_invalid: return exactly judgments, omissions, resolutions",
+    "measurements": 56
+  },
+  {
+    "approach": "candidate",
+    "case": "accepted-roadmap",
+    "satisfied": true,
+    "preserved": true,
+    "preserved_phases": 33,
+    "calls": 2,
+    "pending_findings": 0,
+    "exported": true,
+    "error": null,
+    "measurements": 62
+  }
+]

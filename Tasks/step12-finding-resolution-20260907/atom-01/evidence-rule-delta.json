@@ -1,0 +1,5 @@
+{
+  "old": "disproved requires source evidence showing the earlier criticism was wrong and current measurement evidence showing why. not-applicable requires source and current measurement evidence establishing the condition or responsibility boundary. Do not invent applicability ",
+  "new": "disproved requires source evidence showing the earlier criticism was wrong and current measurement evidence showing why. not-applicable requires source evidence establishing the condition or responsibility boundary. An omitted measure that is not applicable needs no invented replacement calculation; a finding about an existing measurement still needs its current calculation evidence. Do not invent applicability ",
+  "reason": "A non-applicable omission needs source applicability evidence, not an invented current measurement. Existing-measure criticism and fixed omissions still require calculation evidence."
+}

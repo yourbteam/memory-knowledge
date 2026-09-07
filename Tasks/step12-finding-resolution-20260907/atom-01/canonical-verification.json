@@ -1,0 +1,40 @@
+[
+  {
+    "case": "unchanged-rejections",
+    "run_id": "up-run-b28af904de15",
+    "artifacts": null,
+    "preserved": true,
+    "preserved_phases": 33,
+    "pending_findings": 42,
+    "exported": false,
+    "error": "measurement_audit_invalid: return exactly judgments, omissions, resolutions",
+    "measurements": 56,
+    "calls": 2
+  },
+  {
+    "case": "accepted-roadmap",
+    "run_id": "up-run-0ddbf443cad3",
+    "artifacts": {
+      "run_id": "up-run-0ddbf443cad3",
+      "source_run_id": "up-run-8ffd770694de",
+      "plan_sha256": "cdc292af61c5b4d4ce3d459abac727984d0e3e094fba57035cb5c0377820f2cd",
+      "files": [
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-0ddbf443cad3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+          "sha256": "1d0d57b051aab74840952bf8222672d0f12d04f1be49eb06e807abc5519751b4"
+        },
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-0ddbf443cad3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+          "sha256": "09c3b6c5a93778c91322caccc63a34bd86d036ff3148df44fe1f8fb4e275b2d4"
+        }
+      ]
+    },
+    "preserved": true,
+    "preserved_phases": 33,
+    "pending_findings": 0,
+    "exported": true,
+    "error": null,
+    "measurements": 62,
+    "calls": 2
+  }
+]

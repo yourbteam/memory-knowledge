@@ -1,0 +1,77 @@
+{
+  "code": [
+    "src/up_harness/roadmap_findings.py",
+    "src/up_harness/roadmap_recovery.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/recovery.py",
+    "src/up_harness/engine/runner.py",
+    "tests/unit/test_roadmap_findings.py"
+  ],
+  "retained_states": [
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-966a27dc26af.json",
+      "sha256": "87b0496a870e0b4b383df1d76ac53c149d4b87325e93c3e3f68df84060d40c63"
+    },
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-ff13a1c18d29.json",
+      "sha256": "07b401bb9f4d294126cd87c5af23ab7f0d93234b2fd1050e244271ea0b478f33"
+    },
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-06dff58af1cc.json",
+      "sha256": "9c1e90fe9e30bcd73d8c309b2a8418a7e2e0c9972f096dd09ce8332ca06f8e57"
+    },
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-37017e940ec0.json",
+      "sha256": "e1ae933a608a6b7d88bf2409cfc0c1bb63a234918efaecf4cf1d557a306d9aa0"
+    },
+    {
+      "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/state/up-run-285b81f73771.json",
+      "sha256": "96c71439ef79a0b045ef0318ac29dab88ffe044d7da3424639f21cf3d29fa426"
+    }
+  ],
+  "canonical_results": [
+    {
+      "case": "unchanged-rejections",
+      "run_id": "up-run-b28af904de15",
+      "artifacts": null,
+      "preserved": true,
+      "preserved_phases": 33,
+      "pending_findings": 42,
+      "exported": false,
+      "error": "measurement_audit_invalid: return exactly judgments, omissions, resolutions",
+      "measurements": 56,
+      "calls": 2
+    },
+    {
+      "case": "accepted-roadmap",
+      "run_id": "up-run-0ddbf443cad3",
+      "artifacts": {
+        "run_id": "up-run-0ddbf443cad3",
+        "source_run_id": "up-run-8ffd770694de",
+        "plan_sha256": "cdc292af61c5b4d4ce3d459abac727984d0e3e094fba57035cb5c0377820f2cd",
+        "files": [
+          {
+            "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-0ddbf443cad3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+            "sha256": "1d0d57b051aab74840952bf8222672d0f12d04f1be49eb06e807abc5519751b4"
+          },
+          {
+            "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-0ddbf443cad3/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+            "sha256": "09c3b6c5a93778c91322caccc63a34bd86d036ff3148df44fe1f8fb4e275b2d4"
+          }
+        ]
+      },
+      "preserved": true,
+      "preserved_phases": 33,
+      "pending_findings": 0,
+      "exported": true,
+      "error": null,
+      "measurements": 62,
+      "calls": 2
+    }
+  ],
+  "additional_canonical_states": [
+    "Tasks/bteam-corporate-demo/state/up-run-b28af904de15.json",
+    "Tasks/bteam-corporate-demo/state/up-run-8ffd770694de.json",
+    "Tasks/bteam-corporate-demo/state/up-run-0ddbf443cad3.json"
+  ]
+}

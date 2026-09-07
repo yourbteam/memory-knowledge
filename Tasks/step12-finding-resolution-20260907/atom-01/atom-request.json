@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-finding-resolution",
+  "outcome": "Prior findings require explicit evidence-backed disposition before Step12 export.",
+  "practical_value": "A new audit cannot silently bless an unchanged defect or force a repair of a disproved criticism.",
+  "stopping_condition": "Real contradictory cases refuse silent clearance; latest accepted60-measure roadmap passes explicit reconciliation and export without changed measurements or earlier phases.",
+  "allowed_paths": [
+    "src/up_harness/roadmap_findings.py",
+    "src/up_harness/roadmap_recovery.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/recovery.py",
+    "src/up_harness/engine/runner.py",
+    "tests/unit/test_roadmap_findings.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "unchanged-rejections",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-87c53ccd4c78.json",
+      "sha256": "2fd6d309c6223b53fee3be2f66f1610f88e4083ef8dcd6cf3ffe83827c11a739",
+      "kind": "failure",
+      "expected_outcome": "A later satisfied audit without explicit resolution cannot erase four recorded findings; no export."
+    },
+    {
+      "case_id": "accepted-roadmap",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-d8d309db8c75.json",
+      "sha256": "9e169cf9a4baf80825c0074e5c802f529394a29323e1dc6d8e7da4e7b38735b0",
+      "kind": "success",
+      "expected_outcome": "Resolve each recorded earlier finding with evidence, retain all60 measurements and33 prior phases, and export after full acceptance."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

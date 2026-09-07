@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-finding-resolution",
+  "promotion_event_sha256": "5b9ce9296fd6111e8b23d536da398e41e9735187b618f59fe01a35d9aafb1de0",
+  "cases": [
+    {
+      "case_id": "unchanged-rejections",
+      "verdict": "satisfied",
+      "reason": "Canonical recovery preserved prior work and refused silent clearance.",
+      "evidence": [
+        {
+          "case_id": "unchanged-rejections",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-finding-resolution-20260907/atom-01/canonical-unchanged-rejections/observed.json",
+          "sha256": "3298bc25a88aa8696303c22b7bc653a7d6a90366711fd347fb9457f7036adf50"
+        }
+      ]
+    },
+    {
+      "case_id": "accepted-roadmap",
+      "verdict": "satisfied",
+      "reason": "Canonical omission and scoped voice recovery exported62 measurements with all52 prior findings explicitly resolved; original60 input measurements and33 phases retained.",
+      "evidence": [
+        {
+          "case_id": "accepted-roadmap",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-finding-resolution-20260907/atom-01/canonical-accepted-roadmap/observed.json",
+          "sha256": "651fa9445426a4c69b0cd6aafd223de631a9775a41db5dd3058026913ca9081f"
+        }
+      ]
+    }
+  ]
+}
