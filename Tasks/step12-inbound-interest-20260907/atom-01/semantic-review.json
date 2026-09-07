@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "method": "Independent inspection of actual saved calculation and registered source rows; production renderer comparison",
+  "source_outcome": "Qualified inbound conversations following earned exposure, named in Month10 toolkit row",
+  "before_problem": "Organisation response required before counting an otherwise qualified inbound thread",
+  "after_observation": "Counts an eligible external inbound enquiry or reply with traceable earned exposure and qualification; no organisation-response precondition",
+  "qualification_retained": true,
+  "earned_attribution_retained": true,
+  "duplicate_and_spam_exclusions_retained": true,
+  "response_record_exclusion_scope": "Excludes prepared response records only where they do not contain an inbound conversation; does not exclude an unanswered inbound thread",
+  "render_diff": "rendered-change.diff",
+  "product_changes": false,
+  "live_audit": "satisfied",
+  "source_unchanged": true,
+  "preserved_measurements": 55,
+  "preserved_completed_phases": 33
+}
