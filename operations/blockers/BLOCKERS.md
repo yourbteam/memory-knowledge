@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `da02d8ca0ee560478a4fb2e08f1f6da67b867d79da473a620070e78887e534eb`
+Ledger-SHA256: `6bc3463ed76a09f1d2f87ce19e20d141b8af332212ac1b57ab36868dd0111ce8`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -3659,6 +3659,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The real persisted Phase 20 correction_pending checkpoint fail-closes before the generated owner-policy correction can inspect the retained payload.
 - Evidence: Child up-run-a1a72a4754e5 failed with attempts 0, no correction activity, and the original inventory issue after the uninitialized-local fix; source namespace contains strategy_phase_checkpoint stage correction_pending.
 
+## blk-522599018b36beaf36f3837c
+
+- Status: `fixed-awaiting-verification`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `prelaunch-card-admission`
+- Surface: `roadmap-phase-admission`
+- Symptom: A baseline interview card is rejected as a public launch because launch matches inside pre-launch.
+- Evidence: up-run-cae0497348d7 first tactical_roadmap reply; activation_cards[4] idea is Run a pre-launch interview or commissioned survey wave; _check_card_phase_placement PUBLISHING_IDEA matches launch inside pre-launch.
+
 ## blk-522fe70b7f67a87f7e9fb0b7
 
 - Status: `non-gap`
@@ -5191,6 +5200,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work_memory.py-select`
 - Symptom: Selection rejected first scripts/run_pytest.sh and then the not-yet-created discovery_candidate_reconciliation.py before a run could start.
 - Evidence: work_memory.py select returned executable-outside-manifest for each recorded executable; a minimal controller scaffold and explicit launcher/controller/test dependencies were required before selection succeeded.
+
+## blk-74feed407a3630bbf1539a2e
+
+- Status: `closed`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `measurement-outcome-writing`
+- Surface: `roadmap-measurement-writer`
+- Symptom: A proof-linkage measurement also requires senior owner and stop line despite the source-reader correction identifying that exact substitution.
+- Evidence: /Users/kamenkamenov/memory-knowledge/Tasks/step12-harness-atoms-20260906/atom-01/gpt55-baseline-01/result.json
 
 ## blk-7554bc3909b5d20c9849ea86
 
@@ -8248,6 +8266,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The prepared deployment command cannot find dotnet, so it would stop before publishing or touching Azure.
 - Evidence: The selected runbook requires the local .dotnet directory on PATH; command -v dotnet returned no path while the prepared argv contained only bash and deploy-api.sh.
 
+## blk-b918dc1d5f80d6d7bed44fa0
+
+- Status: `fixed-awaiting-verification`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `source-measure-identity`
+- Surface: `roadmap-measurement-writing`
+- Symptom: Live calculation writer replaces the source owner preference percentage with a count of internal message selection; engaged proof-page visits also become ordinary visits.
+- Evidence: /Users/kamenkamenov/memory-knowledge/Tasks/step12-harness-atoms-20260906/atom-01/live-05-failure.json and actual up-run-11e67b3bfaaf card6 response a1c8a3cf-3cb5-4f7e-a31b-2fe1be394570.
+
 ## blk-b94da55eefa02f78a7122744
 
 - Status: `superseded`
@@ -8990,6 +9017,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The prepared deployment discovery cannot start because its task identity already owns the registered discovery-bootstrap selection.
 - Evidence: The exact discovery_bootstrap.py start returned bootstrap-selection-conflict; the task receipt already selects registered subject discovery-bootstrap, while bootstrap requires a fresh identity for the generated discovery.
 
+## blk-cc000746b78a125b5256b4dc
+
+- Status: `fixed-awaiting-verification`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `live-measurement-validation`
+- Surface: `step12-measurement-contract`
+- Symptom: Live draft treats escalation as response and an approved response as resolution, and loses prior source measures.
+- Evidence: United Partners up-run-d5ca1ba37590 captured tactical_roadmap response; response-time end_event and issue-resolution numerator contradict the declared readings.
+
 ## blk-cc19a00d79446695934e63ab
 
 - Status: `superseded`
@@ -9405,6 +9441,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `united-partners-phase20-resume`
 - Symptom: Child run up-run-ed1491597a78 resumed at compose-llm-strategy-brief, regenerated a draft, and failed on the same seven inventory issues after one attempt while reporting zero correction policies.
 - Evidence: Registered sequence preflight passed 42 tests; live child up-run-ed1491597a78 recorded 20 phases and failed compose-llm-strategy-brief with the same seven issue identifiers, including public_claim_inventory_claim_classes_invalid:147; terminal summary reported attempts: 1 and correction policies: 0.
+
+## blk-d35d63ea85f66c2999649648
+
+- Status: `fixed-awaiting-verification`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `authorized-scorecard-approval`
+- Surface: `roadmap-approver-admission`
+- Symptom: Whole live draft rejected because Kamen Kamenov is both authorized platform decider and named executive scorecard audience.
+- Evidence: up-run-d9ac22ae7f1d activity16 and tactical_roadmap.c0ef8724-c0cf-4d48-af1f-95d0599df40c.1.response.txt card12; check_card_approvers rejects substring audience overlap despite people containing the same authorized name.
 
 ## blk-d35e3271969ce26b019e946f
 
@@ -10055,6 +10100,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `evaluator-fixed-attempt-path`
 - Symptom: Two prepare-attempt invocations failed because the supplied output did not match the evaluator deterministic fixed token path.
 - Evidence: evaluate_plan_playbook_v2.py:3346-3377 derives the attempt ID from current prepared state, row input hash, and slot; both invocations returned INVALID_PATH before mutation.
+
+## blk-e1f8d64bddd6fbb8494e9863
+
+- Status: `open`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `compose-tactical-roadmap`
+- Surface: `model-generation-availability`
+- Symptom: Full Step12 writer returned no draft before600.038second timeout; retry interrupted and no process remained.
+- Evidence: up-run-e951b064e548 activity22, call2bc614b2-629e-4382-9d69-18555a12648d, prompt73779characters; no response artifact. Separate focused source correction passed202.420seconds.
 
 ## blk-e21de5d09fa243a908328e29
 
@@ -11073,6 +11127,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/work_memory.py`
 - Symptom: A second successor selection was attempted for a correction recorded with reusable_behavior_changed=no and was rejected; dependent activation/start failed closed.
 - Evidence: Correction b1c73f41 had no eligible_corrections entry; successor selection returned successor-correction-not-awaiting-verification. Normal selection 6ea364f7 started run 859be192.
+
+## blk-f92d13b83a2997edd847b9db
+
+- Status: `closed`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `targeted-harness-resume`
+- Surface: `united-partners/roadmap-recovery`
+- Symptom: Resuming one measurement failure calls whole-roadmap generation despite an intact saved eleven-card draft.
+- Evidence: /Users/kamenkamenov/memory-knowledge/Tasks/step12-targeted-resume-20260907/atom-01/prototype-0.json
 
 ## blk-f9342af8345d9a7267cea922
 
