@@ -1,0 +1,48 @@
+{
+  "run_id": "up-run-0d946f20a962",
+  "classification": "incidental system defects outside coverage atom",
+  "assigned_to": "Step 12 next-atom selection; no fixes started",
+  "measurement_qualification": [
+    {
+      "id": "c2-k6",
+      "verdict": "not-satisfied",
+      "reason": "The operator cannot know which leads qualify because the calculation relies on an agreed lead qualification definition that is not supplied or marked unavailable.",
+      "quote": "Each distinct qualified enterprise lead record for a United States or European Union buyer that sales pipeline records confirm met the agreed qualification definition and route-attribution records connect to The Stop Line through a recorded campaign touchpoint before qualification: The Stop Line proof page, Signed by Humans founder content, partner proof pack or approved referral language."
+    },
+    {
+      "id": "c4-k6",
+      "verdict": "not-satisfied",
+      "reason": "The calculation requires inbound conversations to be qualified but does not define the qualification criteria, so the operator must guess which conversations count.",
+      "quote": "Inbound conversations recorded in inbound-response records that are qualified and connected to approved Signed by Humans founder content by a tracked response, named post reference, tagged click path, reply, direct message, form source or other recorded campaign touchpoint."
+    },
+    {
+      "id": "c5-k3",
+      "verdict": "not-satisfied",
+      "reason": "The calculation depends on an agreed lead definition but does not supply that definition or make the aggregate unavailable until it exists.",
+      "quote": "A distinct referred lead recorded in both referral and sales pipeline records that sales has qualified under the agreed lead definition."
+    },
+    {
+      "id": "c8-k5",
+      "verdict": "not-satisfied",
+      "reason": "The calculation names qualified technical conversations but does not define qualification criteria, so the operator must guess which conversations count.",
+      "quote": "A sales or inbound-response record of a qualified technical conversation with a technical buyer, including a CTO or architecture owner, connected to The Stop Line technical proof story or approved proof assets."
+    },
+    {
+      "id": "c9-k4",
+      "verdict": "not-satisfied",
+      "reason": "The calculation requires agreed qualification criteria for inbound conversations but does not supply the criteria or make the aggregate unavailable until recorded.",
+      "quote": "A distinct qualified inbound conversation after earned exposure: one conversation thread in inbound-response records and/or sales pipeline records where an eligible external contact from the card audience sends an inbound enquiry or reply after traceable earned exposure, and the thread meets agreed qualification criteria for coverage, expert discussion, partner or referral opportunity, enterprise-buyer interest or sales follow-up connected to The Stop Line proof."
+    }
+  ],
+  "engagement_quality": [
+    {
+      "id": "c10-k3",
+      "verdict": "not-satisfied",
+      "reason": "The metric promises engagement quality, but the calculation only counts undifferentiated engagement actions without a quality scale, anchors or pass criteria.",
+      "quote": "Each relevant, non-spam engagement action on a Month 11 advocate post recorded in LinkedIn analytics or inbound-response records, including reactions, substantive comments, reposts or shares, saves where available, proof-page click-throughs, and qualified inbound responses tied to the post."
+    }
+  ],
+  "source_check": "qualification-source-check.json",
+  "qualification_analysis": "qualification-finding.json",
+  "omissions": []
+}

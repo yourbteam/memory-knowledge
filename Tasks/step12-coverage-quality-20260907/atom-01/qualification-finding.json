@@ -1,0 +1,22 @@
+{
+  "classification": "incidental system defect",
+  "assigned_to": "next Step 12 measurement qualification atom; not implemented in this atom",
+  "practical_consequence": "Two operators cannot apply an unstated agreed qualification test consistently. The inbound definition contains an unresolved qualification dependency despite its valid removal of an organisation-reply prerequisite.",
+  "evidence": {
+    "source_check": "qualification-source-check.json",
+    "audit_run": "up-run-c1b1bdfadc71",
+    "audit_judgment": {
+      "id": "c9-k4",
+      "verdict": "not-satisfied",
+      "reason": "The measure depends on agreed qualification criteria for inbound conversations but does not supply them or mark the aggregate unavailable until they are recorded.",
+      "quote": "A distinct qualified inbound conversation after earned exposure: one conversation thread in inbound-response records and/or sales pipeline records where an eligible external contact from the card audience sends an inbound enquiry or reply after traceable earned exposure, and the thread meets agreed qualification criteria for coverage, expert discussion, partner or referral opportunity, enterprise-buyer interest or sales follow-up connected to The Stop Line proof."
+    },
+    "all_56_measurements_preserved": true
+  },
+  "test_correction": {
+    "old": "Require the previous overall c9-k4 satisfied label.",
+    "new": "Require exact preservation of all 55 unselected definitions, including the previous no-reply correction. Inspect new audit reasons independently; a legitimate unrelated qualification gap must remain visible.",
+    "reason": "Overall acceptance was broader than the prior proven no-reply correction and would suppress a grounded new defect. No product definition, audit judgment, immutable atom case or goal measure is altered."
+  },
+  "original_verification_sha256": "66bdb65d714cd0ef03c48e3e6af032a1fcaedadf80d8196938ac213b0d2e74c5"
+}

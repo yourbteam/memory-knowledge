@@ -1,0 +1,21 @@
+{
+  "case_id": "retained-duration",
+  "verdict": "satisfied",
+  "source_sha256": "bc2d2f21d69d7871d7996cfe3ce500fb270e84d53e6ea354d6cd25a3c10fa8e6",
+  "promoted_module_sha256": "f00daa8910ebe0dd198d123caae3b40046f820714678a1c798fb3c7cd05e80c6",
+  "calculation": {
+    "metric": "Time on technical proof content",
+    "scale": "mean seconds",
+    "instrument": "Website analytics report with campaign tags",
+    "measurement": {
+      "aggregation": "mean",
+      "end_event": "The visitor exits, closes, navigates away from or becomes inactive on the tagged technical proof content session according to the analytics tool's engaged-time rule.",
+      "exclusions": "Exclude bot traffic, internal test traffic, preview/admin sessions, sessions without the required campaign tags and analytics sessions where time cannot be measured.",
+      "kind": "duration",
+      "start_event": "A visitor opens tagged technical proof content for The Stop Line, using the campaign identifier and UTM tagging for the Month 7 technical proof story.",
+      "unit": "seconds"
+    }
+  },
+  "rendered": "mean seconds from A visitor opens tagged technical proof content for The Stop Line, using the campaign identifier and UTM tagging for the Month 7 technical proof story. to The visitor exits, closes, navigates away from or becomes inactive on the tagged technical proof content session according to the analytics tool's engaged-time rule.; excludes: Exclude bot traffic, internal test traffic, preview/admin sessions, sessions without the required campaign tags and analytics sessions where time cannot be measured.",
+  "proof": "Canonical validate_measurement and measurement_text exercised with exact captured production definition; both unchanged."
+}
