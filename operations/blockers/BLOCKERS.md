@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `6bc3463ed76a09f1d2f87ce19e20d141b8af332212ac1b57ab36868dd0111ce8`
+Ledger-SHA256: `405aae6fbf432ff0a6f734eea283482159b92a60d7f5ff7ccd9e3ab0c3326a1d`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -3469,6 +3469,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `convergence-state-status`
 - Symptom: convergence_state status rejected the Planner package state because task_id is absent
 - Evidence: /private/tmp/plan-playbook-assessment-v2-state.json is not a convergence-state schema
+
+## blk-4ec75a941fa24f80466523f5
+
+- Status: `closed`
+- Subject: `step12-measurements-semantic-blocker`
+- Step: `measurement-audit-evidence`
+- Surface: `measurement-audit`
+- Symptom: The actual audit paraphrases a source quotation for c10-k5 and loses the complete 218-second acceptance result.
+- Evidence: /Users/kamenkamenov/memory-knowledge/Tasks/step12-audit-evidence-20260907/atom-01/prototype-0.json
 
 ## blk-4edbb8641b9676e9b6278e56
 
