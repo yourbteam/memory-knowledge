@@ -1,0 +1,380 @@
+{
+  "$defs": {
+    "sha256": {
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Shape only. Export must verify source bytes, exact reader agreement and final assembly. handoff_sha256 hashes canonical JSON omitting that top-level field; the complete file has a separate digest.",
+  "properties": {
+    "context_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "contract_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "description": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "exporter_source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "handoff_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "input_state_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "machinery": {
+      "enum": [
+        "description-machinery"
+      ]
+    },
+    "questions_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "reader_records": {
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q1"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q1"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q2"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q2"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q3"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q3"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q4"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q4"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q5"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q5"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q6"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q6"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q7"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q7"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q8"
+              },
+              "seat": {
+                "const": "look-1"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "question_id": {
+                "const": "q8"
+              },
+              "seat": {
+                "const": "look-2"
+              }
+            }
+          },
+          "maxContains": 1,
+          "minContains": 1
+        }
+      ],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "answer_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "question_id": {
+            "enum": [
+              "q1",
+              "q2",
+              "q3",
+              "q4",
+              "q5",
+              "q6",
+              "q7",
+              "q8"
+            ]
+          },
+          "seat": {
+            "enum": [
+              "look-1",
+              "look-2"
+            ]
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "question_id",
+          "seat",
+          "path",
+          "sha256",
+          "answer_sha256"
+        ],
+        "type": "object"
+      },
+      "maxItems": 16,
+      "minItems": 16,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "run_identity": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "source_objects": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "origin": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "origin",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "terminal_state": {
+      "enum": [
+        "complete"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "machinery",
+    "contract_version",
+    "run_identity",
+    "input_state_sha256",
+    "questions_sha256",
+    "context_sha256",
+    "reader_records",
+    "description",
+    "source_objects",
+    "terminal_state",
+    "exporter_source_sha256",
+    "handoff_sha256"
+  ],
+  "title": "Description handoff v1",
+  "type": "object"
+}
