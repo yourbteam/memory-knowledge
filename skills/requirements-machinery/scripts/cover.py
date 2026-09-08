@@ -14,6 +14,8 @@ nothing is missing.
 State lives in <dir>. Stopping and coming back later is the same as never stopping.
 """
 import os
+import copy, secrets, stat
+from contextlib import contextmanager
 import argparse, hashlib, importlib.util, json, re, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
 
@@ -1971,11 +1973,18 @@ def _final_semantic_consolidate(items, state, target, work, reader_command, refl
     return untouched + [item for _, item in sorted(survivors)]
 
 
-def _document_material(work, reader_command=None, *, read_only=False):
+def _document_material(work, reader_command=None, *, read_only=False, frozen_state=None):
     """The finished requirements document, written by the machinery with every owner ruling
     applied. Refuses while any ruling is still pending — a document over an unanswered question
     would look complete and be one decision short of the truth."""
-    state = _read(work)
+    if frozen_state is None:
+        state = _read(work)
+    else:
+        if not read_only or reader_command:
+            raise Refused("frozen material is permitted only for recorded-only rendering")
+        state = copy.deepcopy(frozen_state)
+        _validate_run_identity(work, state)
+        _validate_split_checkability_records(state)
     try:
         _rebuild(state).report()
     except register.Incomplete as refusal:
@@ -2227,6 +2236,401 @@ def _render_document_material(state, target, items, rulings):
             sum(1 for it in items if it.get("_drop") or it["how"] == "refused"))
 
 
+REQUIREMENTS_HANDOFF_FIELDS = (
+    "schema_version", "machinery", "contract_version", "target", "source",
+    "coverage_sha256", "terminal_feed_entry_sha256", "requirements_document",
+    "requirements", "rejections", "owner_rulings", "unresolved_count",
+    "exporter_source_sha256", "handoff_sha256",
+)
+SOURCE_FIELDS = ("path", "sha256")
+REQUIREMENTS_DOCUMENT_FIELDS = ("path", "sha256")
+REQUIREMENT_FIELDS = ("requirement_id", "ordinal", "exact_text", "source_anchors")
+SOURCE_ANCHOR_FIELDS = ("piece_id", "sha256", "quote")
+REJECTION_FIELDS = ("identity", "reason")
+OWNER_RULING_FIELDS = ("identity", "choice", "because")
+HANDOFF_MACHINERY_VALUES = ("requirements-machinery",)
+HANDOFF_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+
+
+def requirements_handoff_schema():
+    """Describe the sealed handoff; schema publication never certifies a run."""
+    digest = {"$ref": "#/$defs/sha256"}
+    text = {"type": "string", "minLength": 1}
+
+    def closed(fields, properties):
+        if set(fields) != set(properties):
+            raise ValueError("handoff schema properties differ from named field declarations")
+        return {"type": "object", "properties": properties, "required": list(fields),
+                "additionalProperties": False}
+
+    def rows(item):
+        return {"type": "array", "items": item, "uniqueItems": True}
+
+    anchors = rows(closed(SOURCE_ANCHOR_FIELDS, {
+        "piece_id": dict(text), "sha256": dict(digest), "quote": dict(text),
+    }))
+    anchors["minItems"] = 1
+    result = closed(REQUIREMENTS_HANDOFF_FIELDS, {
+        "schema_version": {"type": "integer", "const": 1},
+        "machinery": {"enum": list(HANDOFF_MACHINERY_VALUES)},
+        "contract_version": {"type": "integer", "const": 1},
+        "target": dict(text),
+        "source": closed(SOURCE_FIELDS, {"path": dict(text), "sha256": dict(digest)}),
+        "coverage_sha256": dict(digest), "terminal_feed_entry_sha256": dict(digest),
+        "requirements_document": closed(REQUIREMENTS_DOCUMENT_FIELDS, {
+            "path": dict(text), "sha256": dict(digest),
+        }),
+        "requirements": rows(closed(REQUIREMENT_FIELDS, {
+            "requirement_id": {"type": "string", "pattern": "^req-[0-9a-f]{16}$", "maxLength": 20},
+            "ordinal": {"type": "integer", "minimum": 1}, "exact_text": dict(text),
+            "source_anchors": anchors,
+        })),
+        "rejections": rows(closed(REJECTION_FIELDS, {"identity": dict(text), "reason": dict(text)})),
+        "owner_rulings": rows(closed(OWNER_RULING_FIELDS, {
+            "identity": dict(text), "choice": dict(text), "because": dict(text),
+        })),
+        "unresolved_count": {"type": "integer", "const": 0},
+        "exporter_source_sha256": dict(digest), "handoff_sha256": dict(digest),
+    })
+    result.update({"$schema": "https://json-schema.org/draft/2020-12/schema",
+                   "title": "Requirements handoff v1",
+                   "description": "Shape only, not completion proof. handoff_sha256 hashes canonical JSON "
+                                  "with that top-level field omitted. Requirement IDs hash exact_text "
+                                  "and canonically sorted source_anchors; source quotes use the "
+                                  "existing Requirements reflow normalization.",
+                   "$defs": {"sha256": {"type": "string", "pattern": HANDOFF_SHA256.pattern,
+                                          "maxLength": 64}}})
+    return result
+
+
+def _handoff_canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False, allow_nan=False).encode("utf-8")
+
+
+def _handoff_json(raw, label):
+    def unique(pairs):
+        obj = {}
+        for key, value in pairs:
+            if key in obj:
+                raise Refused(f"{label}: duplicate key {key!r}; provide one value per key")
+            obj[key] = value
+        return obj
+    def finite(value):
+        raise Refused(f"{label}: non-finite value {value!r}; provide finite JSON values")
+    try:
+        return json.loads(raw, object_pairs_hook=unique, parse_constant=finite)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise Refused(f"{label}: invalid UTF-8 JSON: {error}") from error
+
+
+def _handoff_absolute(value):
+    path = Path(value)
+    if not path.is_absolute() or ".." in path.parts or str(path) != str(value):
+        raise Refused(f"{value!r}: provide a normalized absolute path without '..'")
+    return path
+
+
+@contextmanager
+def _handoff_directory(path):
+    path = _handoff_absolute(str(path))
+    fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for part in path.parts[1:]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            os.close(fd)
+            fd = child
+        yield fd
+    finally:
+        os.close(fd)
+
+
+def _handoff_regular(path):
+    path = _handoff_absolute(str(path))
+    with _handoff_directory(path.parent) as parent:
+        fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        try:
+            info = os.fstat(fd)
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                raise Refused(f"{path}: require a regular input file with no hard-link alias")
+            if info.st_size > 32 * 1024 * 1024:
+                raise Refused(f"{path}: input exceeds the 32 MiB limit")
+            with os.fdopen(fd, "rb", closefd=False) as stream:
+                raw = stream.read(32 * 1024 * 1024 + 1)
+            after = os.fstat(fd)
+            if len(raw) > 32 * 1024 * 1024 or (info.st_size, info.st_mtime_ns, info.st_ctime_ns) != (
+                    after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+                raise Refused(f"{path}: input changed during reading; retry from stable evidence")
+            return raw
+        finally:
+            os.close(fd)
+
+
+def _handoff_verify(evidence):
+    for path, raw in evidence.items():
+        if isinstance(raw, tuple):
+            with _handoff_directory(path) as fd:
+                current = tuple(sorted(os.listdir(fd)))
+        else:
+            current = _handoff_regular(path)
+        if current != raw:
+            raise Refused(f"{path}: evidence changed before publication; no handoff was published")
+
+
+def validate_requirements_handoff(handoff):
+    """Validate the fixed closed output contract and its non-self-referential identities."""
+    def exact(value, fields, label):
+        if type(value) is not dict or set(value) != set(fields):
+            raise Refused(f"{label}: require exactly the declared fields {list(fields)!r}")
+    def text(value, label):
+        if type(value) is not str or not value.strip():
+            raise Refused(f"{label}: require nonempty text")
+    def digest(value, label):
+        if type(value) is not str or not HANDOFF_SHA256.fullmatch(value):
+            raise Refused(f"{label}: require exactly 64 lowercase hexadecimal characters")
+    def rows(value, label):
+        if type(value) is not list:
+            raise Refused(f"{label}: require an ordered list")
+    exact(handoff, REQUIREMENTS_HANDOFF_FIELDS, "handoff")
+    for label, value, wanted in (("schema_version", handoff["schema_version"], 1),
+                                 ("contract_version", handoff["contract_version"], 1),
+                                 ("unresolved_count", handoff["unresolved_count"], 0)):
+        if type(value) is not int or value != wanted:
+            raise Refused(f"{label}: received {value!r}; require integer {wanted}")
+    if handoff["machinery"] not in HANDOFF_MACHINERY_VALUES:
+        raise Refused("machinery: require requirements-machinery")
+    text(handoff["target"], "target")
+    for label, value in (("source", handoff["source"]),
+                         ("requirements_document", handoff["requirements_document"])):
+        exact(value, SOURCE_FIELDS, label)
+        text(value["path"], label + ".path")
+        _handoff_absolute(value["path"])
+        digest(value["sha256"], label + ".sha256")
+    for label, value in (("coverage_sha256", handoff["coverage_sha256"]),
+                         ("terminal_feed_entry_sha256", handoff["terminal_feed_entry_sha256"]),
+                         ("exporter_source_sha256", handoff["exporter_source_sha256"]),
+                         ("handoff_sha256", handoff["handoff_sha256"])):
+        digest(value, label)
+    rows(handoff["requirements"], "requirements")
+    identities = set()
+    for ordinal, item in enumerate(handoff["requirements"], 1):
+        exact(item, REQUIREMENT_FIELDS, f"requirement {ordinal}")
+        if type(item["ordinal"]) is not int or item["ordinal"] != ordinal:
+            raise Refused(f"requirement {ordinal}: ordinal must preserve document order")
+        text(item["exact_text"], f"requirement {ordinal} exact_text")
+        anchors = item["source_anchors"]
+        rows(anchors, f"requirement {ordinal} source_anchors")
+        if not anchors:
+            raise Refused(f"requirement {ordinal}: require at least one source anchor")
+        for anchor in anchors:
+            exact(anchor, SOURCE_ANCHOR_FIELDS, "source anchor")
+            text(anchor["piece_id"], "source anchor piece_id")
+            digest(anchor["sha256"], "source anchor sha256")
+            text(anchor["quote"], "source anchor quote")
+        encoded = [_handoff_canonical(a) for a in anchors]
+        if encoded != sorted(set(encoded)):
+            raise Refused(f"requirement {ordinal}: anchors must be unique and canonically sorted")
+        wanted = "req-" + hashlib.sha256(_handoff_canonical({
+            "exact_text": item["exact_text"], "source_anchors": anchors})).hexdigest()[:16]
+        if item["requirement_id"] != wanted or wanted in identities:
+            raise Refused(f"requirement {ordinal}: identity is duplicated or does not match its text and anchors")
+        identities.add(wanted)
+    for label, records, fields in (("rejections", handoff["rejections"], REJECTION_FIELDS),
+                                    ("owner_rulings", handoff["owner_rulings"], OWNER_RULING_FIELDS)):
+        rows(records, label)
+        identities = set()
+        for record in records:
+            exact(record, fields, label)
+            for field in fields:
+                text(record[field], label + "." + field)
+            if record["identity"] in identities:
+                raise Refused(f"{label}: duplicate identity {record['identity']!r}")
+            identities.add(record["identity"])
+    wanted = hashlib.sha256(_handoff_canonical({
+        key: value for key, value in handoff.items() if key != "handoff_sha256"})).hexdigest()
+    if handoff["handoff_sha256"] != wanted:
+        raise Refused("handoff_sha256 differs from the canonical payload with its own field omitted")
+
+
+def build_requirements_handoff(work, document, expected_coverage_sha256):
+    """Seal recorded material in memory only; never prepare, rebuild, or persist a run."""
+    work, document = _handoff_absolute(str(work)), _handoff_absolute(str(document))
+    if not isinstance(expected_coverage_sha256, str) or not HANDOFF_SHA256.fullmatch(expected_coverage_sha256):
+        raise Refused("expected coverage digest must be exactly 64 lowercase hex characters")
+    evidence = {}
+    def read(path):
+        path = _handoff_absolute(str(path))
+        if path not in evidence:
+            evidence[path] = _handoff_regular(path)
+        return evidence[path]
+    def digest(raw):
+        return hashlib.sha256(raw).hexdigest()
+    def text(value, label):
+        if not isinstance(value, str) or not value.strip():
+            raise Refused(f"{label}: require nonempty recorded text; do not invent a replacement")
+        return value
+    try:
+        coverage = read(work / STATE)
+        if digest(coverage) != expected_coverage_sha256:
+            raise Refused("coverage.json differs from the expected digest; select the approved completed snapshot")
+        state = _handoff_json(coverage, "coverage.json")
+        source = _handoff_absolute(state["source"])
+        if digest(read(source)) != state["source_sha256"]:
+            raise Refused(f"{source}: source bytes differ from the registered digest")
+        pieces = {}
+        for row in state["pieces"]:
+            name = row["id"]
+            if not isinstance(name, str) or not re.fullmatch(r"p-[0-9]+", name) or name in pieces:
+                raise Refused(f"piece identity {name!r}: require a unique registered p-number")
+            raw = read(work / "pieces" / f"{name}.txt")
+            if digest(raw) != row["sha256"] or len(raw.decode("utf-8")) != row["chars"]:
+                raise Refused(f"{name}: piece bytes differ from the registered hash or character count")
+            pieces[name] = (raw.decode("utf-8"), digest(raw))
+        with _handoff_directory(work / "pieces") as fd:
+            piece_names = tuple(sorted(os.listdir(fd)))
+        evidence[work / "pieces"] = piece_names
+        if piece_names != tuple(sorted(f"{name}.txt" for name in pieces)):
+            raise Refused("pieces directory differs from the registered member set")
+        lines = read(work / "feed.jsonl").splitlines()
+        if not lines or not lines[-1]:
+            raise Refused("feed.jsonl has no final completed document event")
+        entries = [_handoff_json(line, f"feed.jsonl line {i + 1}") for i, line in enumerate(lines)]
+        terminal = entries[-1]
+        target = _last_target(state)
+        if (terminal.get("event"), terminal.get("stage"), terminal.get("transition"),
+                terminal.get("status"), terminal.get("exit_code"), terminal.get("target")) != (
+                "controller stop", "document", "completed", "completed", 0, target):
+            raise Refused("feed.jsonl must end with a successful document completion for the current target")
+        if type(terminal["exit_code"]) is not int or terminal.get("output") != str(document):
+            raise Refused("document path differs from the final completion event; select its exact recorded output")
+        document_bytes = read(document)
+        # Freeze every executable sibling consumed by this exporter and its shared renderer.
+        runtime = []
+        with _handoff_directory(HERE) as fd:
+            evidence[HERE] = tuple(sorted(os.listdir(fd)))
+            runtime_names = [name for name in evidence[HERE] if name.endswith(".py")]
+        for name in runtime_names:
+            runtime.append({"path": name, "sha256": digest(read(HERE / name))})
+        material = _document_material(work, read_only=True, frozen_state=state)
+        if material == 3:
+            raise Refused("run is incomplete or has unresolved owner decisions; complete it through the existing flow")
+        payload, retained_count, rejected_count = _render_document_material(*material)
+        if payload != document_bytes:
+            raise Refused("requirements document differs from the pure renderer; no handoff was published")
+        requirements, rejections = [], []
+        for index, item in enumerate(material[2], 1):
+            reason = item.get("_drop")
+            if not reason and item["how"] == "refused":
+                named = (item.get("transcript") or [{}])[-1].get("refusal")
+                reason = ("the pen refused it: " + named) if named else (
+                    "the pen could not produce a statement above the length floor — a fragment; "
+                    "recorded before the floor learned to name itself")
+            if reason:
+                rejections.append({"identity": "item-" + str(index), "reason": text(reason, "rejection reason")})
+                continue
+            exact_text = text(item.get("statement"), f"item {index} statement")
+            pages = item["pages"]
+            if not isinstance(pages, list) or not pages or len(pages) != len(set(pages)) or any(p not in pieces for p in pages):
+                raise Refused(f"item {index}: require unique registered source pages")
+            quotes = item.get("anchors") or [item.get("_materialized_source_duty")]
+            if not isinstance(quotes, list) or not quotes:
+                raise Refused(f"item {index}: no recorded source anchors")
+            anchors = []
+            for quote in quotes:
+                quote = text(quote, f"item {index} source quote")
+                matches = [p for p in pages if reflow.flow(quote) in reflow.flow(pieces[p][0])]
+                if not matches:
+                    raise Refused(f"item {index}: recorded anchor is absent from its source pages")
+                for p in matches:
+                    anchor = {"piece_id": p, "sha256": pieces[p][1], "quote": quote}
+                    if anchor not in anchors:
+                        anchors.append(anchor)
+            if set(pages) != {a["piece_id"] for a in anchors}:
+                raise Refused(f"item {index}: a source page has no corresponding recorded quote")
+            anchors.sort(key=_handoff_canonical)
+            identity = {"exact_text": exact_text, "source_anchors": anchors}
+            requirements.append({"requirement_id": "req-" + digest(_handoff_canonical(identity))[:16],
+                                 "ordinal": len(requirements) + 1, **identity})
+        if len(requirements) != retained_count or len(rejections) != rejected_count:
+            raise Refused("retained or rejected item count differs from the pure renderer")
+        if len({r["requirement_id"] for r in requirements}) != len(requirements):
+            raise Refused("duplicate requirement identity; resolve duplicates before export")
+        rulings = [{"identity": text(key, "ruling identity"), "choice": text(row["choice"], "ruling choice"),
+                    "because": text(row["because"], "ruling reason")} for key, row in sorted(material[3].items())]
+        handoff = {"schema_version": 1, "machinery": "requirements-machinery", "contract_version": 1,
+                   "target": text(target, "target"), "source": {"path": str(source), "sha256": digest(read(source))},
+                   "coverage_sha256": digest(coverage), "terminal_feed_entry_sha256": digest(lines[-1]),
+                   "requirements_document": {"path": str(document), "sha256": digest(document_bytes)},
+                   "requirements": requirements, "rejections": rejections, "owner_rulings": rulings,
+                   "unresolved_count": 0, "exporter_source_sha256": digest(_handoff_canonical(runtime))}
+        handoff["handoff_sha256"] = digest(_handoff_canonical(handoff))
+        if set(handoff) != set(REQUIREMENTS_HANDOFF_FIELDS):
+            raise Refused("exported fields differ from the declared Requirements handoff contract")
+        validate_requirements_handoff(handoff)
+        _handoff_verify(evidence)
+        return handoff, evidence
+    except (OSError, KeyError, TypeError, ValueError, IndexError, AttributeError) as error:
+        raise Refused(f"cannot export Requirements evidence: {error}") from error
+
+
+def export_requirements_handoff(work, document, expected_coverage_sha256,
+                                output_root, output, target_repositories, product_boundaries):
+    """Publish once outside source/product trees, with byte rechecks and no overwrite."""
+    work = _handoff_absolute(str(work))
+    root, output = _handoff_absolute(str(output_root)), _handoff_absolute(str(output))
+    if not target_repositories or not product_boundaries:
+        raise Refused("export requires explicit target repositories and product boundaries")
+    protected = [work, Path(__file__).absolute().parent, *map(lambda p: _handoff_absolute(str(p)), target_repositories),
+                 *map(lambda p: _handoff_absolute(str(p)), product_boundaries)]
+    if output.parent != root:
+        raise Refused("output must be a direct child of the declared external output root")
+    for p in protected:
+        if any(part.is_symlink() for part in (p, *p.parents)) or p.resolve() != p:
+            raise Refused(f"protected boundary {p}: linked aliases are forbidden")
+        if p == root or p in root.parents or root in p.parents:
+            raise Refused("output root overlaps a source, repository or product boundary")
+    if any((p / ".git").exists() for p in (root, *root.parents)):
+        raise Refused("output root is inside a repository; choose external runtime storage")
+    try:
+        with _handoff_directory(root) as parent:
+            try:
+                os.stat(output.name, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                pass
+            else:
+                raise Refused(f"{output}: already exists; choose a new output file")
+            handoff, evidence = build_requirements_handoff(work, document, expected_coverage_sha256)
+            if any(p == root or root in p.parents for p in evidence):
+                raise Refused("output root contains source evidence; choose disjoint runtime storage")
+            payload = json.dumps(handoff, sort_keys=True, indent=2, ensure_ascii=False, allow_nan=False).encode("utf-8") + b"\n"
+            _handoff_verify(evidence)
+            stage = ".requirements-handoff-" + secrets.token_hex(16)
+            fd = os.open(stage, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
+            published = False
+            try:
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(payload); stream.flush(); os.fchmod(stream.fileno(), 0o444); os.fsync(stream.fileno())
+                _handoff_verify(evidence)
+                with _handoff_directory(root) as fresh:
+                    if (os.fstat(fresh).st_dev, os.fstat(fresh).st_ino) != (os.fstat(parent).st_dev, os.fstat(parent).st_ino):
+                        raise Refused("output directory changed before publication")
+                os.link(stage, output.name, src_dir_fd=parent, dst_dir_fd=parent, follow_symlinks=False)
+                published = True
+                os.fsync(parent)
+            except BaseException:
+                if published:
+                    a = os.stat(stage, dir_fd=parent, follow_symlinks=False)
+                    b = os.stat(output.name, dir_fd=parent, follow_symlinks=False)
+                    if (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino):
+                        os.unlink(output.name, dir_fd=parent)
+                raise
+            finally:
+                os.unlink(stage, dir_fd=parent)
+        return {"status": "exported", "path": str(output), "sha256": hashlib.sha256(payload).hexdigest(),
+                "handoff_sha256": handoff["handoff_sha256"]}
+    except (OSError, ValueError, TypeError) as error:
+        raise Refused(f"cannot publish Requirements handoff: {error}") from error
+
 def render_document(work):
     """Reconstruct completed document bytes without writes or model calls.
 
@@ -2473,6 +2877,15 @@ def run_automatic(work, target, out_path, reader_command):
 def build_parser():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
+    sub.add_parser("handoff-schema", allow_abbrev=False)
+    export = sub.add_parser("export-handoff", allow_abbrev=False)
+    export.add_argument("--work", required=True)
+    export.add_argument("--document", required=True)
+    export.add_argument("--expected-coverage-sha256", required=True)
+    export.add_argument("--output-root", required=True)
+    export.add_argument("--output", required=True)
+    export.add_argument("--target-repository", action="append", required=True)
+    export.add_argument("--product-boundary", action="append", required=True)
     o = sub.add_parser("open"); o.add_argument("--source", required=True); o.add_argument("--work", required=True)
     s = sub.add_parser("status"); s.add_argument("--work", required=True)
     a = sub.add_parser("answer"); a.add_argument("--work", required=True); a.add_argument("--piece", required=True)
@@ -2568,6 +2981,19 @@ def main(argv=None):
 
 
 def _dispatch(args):
+    if args.command == "export-handoff":
+        try:
+            result = export_requirements_handoff(args.work, args.document,
+                args.expected_coverage_sha256, args.output_root, args.output,
+                args.target_repository, args.product_boundary)
+        except Refused as error:
+            print(json.dumps({"status": "refused", "reason": str(error)}), file=sys.stderr)
+            return 3
+        print(json.dumps(result, sort_keys=True))
+        return 0
+    if args.command == "handoff-schema":
+        print(json.dumps(requirements_handoff_schema(), indent=2, sort_keys=True))
+        return 0
     if args.command == "open":
         return open_document(args.source, args.work)
     if args.command == "status":

@@ -1,0 +1,502 @@
+{
+  "$defs": {
+    "sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "blocker_ledgers": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "boundaries": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "description_handoff": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "evidence_manifests": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "execution_limits": {
+      "additionalProperties": false,
+      "properties": {
+        "max_input_files": {
+          "maximum": 10000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max_model_attempts_per_seat": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max_single_file_bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max_total_input_bytes": {
+          "maximum": 10737418240,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "model_timeout_ms": {
+          "maximum": 600000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_input_files",
+        "max_single_file_bytes",
+        "max_total_input_bytes",
+        "model_timeout_ms",
+        "max_model_attempts_per_seat"
+      ],
+      "type": "object"
+    },
+    "feature_id": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "machinery_contracts": {
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "working-agreement"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "description-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "description-exporter-source"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "requirements-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "requirements-controller-source"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "info-intake-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "sequence-runner-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "experiment-machinery-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "prototype-driven-implementation-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "atom-building-skill"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "atom-controller-source"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "blocker-catalog-source"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "maxContains": 1,
+          "minContains": 1
+        }
+      ],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "working-agreement",
+              "description-skill",
+              "description-exporter-source",
+              "requirements-skill",
+              "requirements-controller-source",
+              "info-intake-skill",
+              "sequence-runner-skill",
+              "experiment-machinery-skill",
+              "prototype-driven-implementation-skill",
+              "atom-building-skill",
+              "atom-controller-source",
+              "blocker-catalog-source"
+            ]
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "role",
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 12,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "model_runtime": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "provider": {
+          "enum": [
+            "openai-codex-cli"
+          ]
+        },
+        "reasoning_effort": {
+          "enum": [
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ]
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "reasoning_effort"
+      ],
+      "type": "object"
+    },
+    "owner_records": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "requirements_handoff": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "runtime_boundary": {
+      "additionalProperties": false,
+      "properties": {
+        "authorized_root": {
+          "minLength": 1,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "product_edit_boundaries": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "target_repositories": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "authorized_root",
+        "target_repositories",
+        "product_edit_boundaries"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "telemetry_manifests": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "feature_id",
+    "runtime_boundary",
+    "model_runtime",
+    "execution_limits",
+    "description_handoff",
+    "requirements_handoff",
+    "boundaries",
+    "evidence_manifests",
+    "machinery_contracts",
+    "telemetry_manifests",
+    "blocker_ledgers",
+    "owner_records"
+  ],
+  "type": "object"
+}

@@ -134,7 +134,7 @@ split is refused with `replay-owner-split` named as the required graph-and-child
 
 ## Public command surface
 
-The entry point has seventeen public commands. The table is both the human contract and the input to
+The entry point has nineteen public commands. The table is both the human contract and the input to
 `scripts/contract_surface.py`; publication fails if its inventory differs from `cover.py`.
 
 <!-- BEGIN PUBLIC COMMAND SURFACE -->
@@ -157,6 +157,8 @@ The entry point has seventeen public commands. The table is both the human contr
 | `replay-owner-split` | owner decision | Rebuilds only the newest integrity-bound owner split while preserving every unrelated ruling and item. |
 | `run` | document assembly | Derives and advances every automatic stage, stopping only for one owner ruling or the completed document. |
 | `document` | document assembly | Applies completed owner rulings and writes the requirements document. |
+| `handoff-schema` | document assembly | Prints the closed Requirements handoff schema without reading or certifying a run. |
+| `export-handoff` | document assembly | Seals a completed run with its approved coverage digest, without rebuilding or changing it. |
 <!-- END PUBLIC COMMAND SURFACE -->
 
 Source coverage ends with a complete `report`. `relevance` through `obligation-list` interpret that
@@ -337,3 +339,32 @@ The command creates an assessment report and leaves the source, reference, and d
 Up to four independent checks run concurrently; each check keeps its two blind reader seats.
 For N requirements and D reference duties, the upper bound is two reader decisions for each of
 D + N + N(N−1)/2 checks; exact duplicate pairs need no reader.
+
+### Requirements handoff schema
+
+Run `python3 scripts/cover.py handoff-schema` to inspect the closed version-one contract.
+This read-only command accepts no run input and does not export or certify a run.
+
+### Seal a completed Requirements run (opt-in)
+
+Run the following from the Requirements Machinery directory, using absolute paths:
+
+```sh
+python3 scripts/cover.py export-handoff --work /repo/Tasks/task/runs/completed \
+  --document /repo/Tasks/task/runs/completed/requirements.md \
+  --expected-coverage-sha256 <approved-coverage-file-sha256> \
+  --output-root /external/handoffs --output /external/handoffs/requirements-handoff.json \
+  --target-repository /repo --product-boundary /product/repo
+```
+
+The existing external output directory must be disjoint from source and product trees. The file
+must not exist; publication is exclusive and read-only. Supply the coverage hash retained with
+the approved completed run, not a newly accepted hash after unexplained state drift. The exporter
+uses recorded-only shared document rendering, verifies every source quote and the final feed event,
+and rechecks input bytes before publication. No model calls or stateful reconstruction occur.
+The terminal event hash covers its last raw JSON line without the line terminator. The exporter
+source hash covers canonical JSON of sorted Python sibling names and SHA-256 values. Canonical JSON
+uses sorted keys, compact separators and UTF-8 without ASCII escaping. Requirement IDs hash
+`{exact_text, source_anchors}` with anchors sorted by their canonical JSON bytes. The handoff hash
+uses the same encoding with only its own top-level field omitted; the whole file has a separate hash.
+This command does not approve readiness, activate the new machinery, or change the existing run flow.

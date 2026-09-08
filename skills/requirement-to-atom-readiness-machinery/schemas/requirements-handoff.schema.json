@@ -1,0 +1,204 @@
+{
+  "$defs": {
+    "sha256": {
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Shape only, not completion proof. handoff_sha256 hashes canonical JSON with that top-level field omitted. Requirement IDs hash exact_text and canonically sorted source_anchors; source quotes use the existing Requirements reflow normalization.",
+  "properties": {
+    "contract_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "coverage_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "exporter_source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "handoff_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "machinery": {
+      "enum": [
+        "requirements-machinery"
+      ]
+    },
+    "owner_rulings": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "because": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "choice": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "identity": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity",
+          "choice",
+          "because"
+        ],
+        "type": "object"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "rejections": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "identity": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "requirements": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "exact_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "ordinal": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "requirement_id": {
+            "maxLength": 20,
+            "pattern": "^req-[0-9a-f]{16}$",
+            "type": "string"
+          },
+          "source_anchors": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "piece_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "quote": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                }
+              },
+              "required": [
+                "piece_id",
+                "sha256",
+                "quote"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "requirement_id",
+          "ordinal",
+          "exact_text",
+          "source_anchors"
+        ],
+        "type": "object"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "requirements_document": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "target": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "terminal_feed_entry_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "unresolved_count": {
+      "const": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "machinery",
+    "contract_version",
+    "target",
+    "source",
+    "coverage_sha256",
+    "terminal_feed_entry_sha256",
+    "requirements_document",
+    "requirements",
+    "rejections",
+    "owner_rulings",
+    "unresolved_count",
+    "exporter_source_sha256",
+    "handoff_sha256"
+  ],
+  "title": "Requirements handoff v1",
+  "type": "object"
+}

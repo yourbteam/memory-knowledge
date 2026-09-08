@@ -97,7 +97,14 @@ def test_published_command_surface_matches_real_cli() -> None:
 
     result = json.loads(completed.stdout)
     assert result["parity"] is True
-    assert result["documented"] == result["executable"] == 17
+    expected_commands = {
+        "open", "status", "answer", "relevance", "obligations", "obligation-list",
+        "collapse", "requirements", "distill", "ask-owner", "answer-owner",
+        "correct-owner", "replay-owner-split", "run", "document", "bearing", "report",
+        "handoff-schema", "export-handoff",
+    }
+    assert set(result["categories"]) == expected_commands
+    assert result["documented"] == result["executable"] == len(expected_commands)
     assert set(result["categories"].values()) == {
         "coverage", "extraction", "owner decision", "document assembly",
     }

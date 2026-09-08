@@ -143,5 +143,103 @@ class DescriptionExporterBoundaryTests(unittest.TestCase):
         self.assertIn("--target-repository", result.stderr)
 
 
+class RequirementsHandoffSchemaTests(unittest.TestCase):
+    def test_cli_schema_and_rejection(self):
+        module = ROOT / "skills/requirements-machinery/scripts/cover.py"
+        expected = json.loads((ROOT / "skills/requirement-to-atom-readiness-machinery/schemas/requirements-handoff.schema.json").read_text())
+        first = subprocess.run([sys.executable, str(module), "handoff-schema"], capture_output=True, text=True)
+        second = subprocess.run([sys.executable, str(module), "handoff-schema"], capture_output=True, text=True)
+        self.assertEqual(first.returncode, 0)
+        self.assertEqual(first.stderr, "")
+        self.assertEqual(json.loads(first.stdout), expected)
+        self.assertEqual(first.stdout, second.stdout)
+        refused = subprocess.run([sys.executable, str(module), "handoff-schema", "--work", str(module)], capture_output=True, text=True)
+        self.assertEqual(refused.returncode, 2)
+        self.assertEqual(refused.stdout, "")
+
+    def test_closed_schema_digest_and_ordinal(self):
+        from jsonschema import Draft202012Validator
+        schema = json.loads((ROOT / "skills/requirement-to-atom-readiness-machinery/schemas/requirements-handoff.schema.json").read_text())
+        Draft202012Validator.check_schema(schema)
+        def visit(node):
+            if isinstance(node, dict):
+                if node.get("type") == "object":
+                    self.assertFalse(node["additionalProperties"])
+                    self.assertEqual(set(node["required"]), set(node["properties"]))
+                for value in node.values(): visit(value)
+            elif isinstance(node, list):
+                for value in node: visit(value)
+        visit(schema)
+        digest = Draft202012Validator(schema["$defs"]["sha256"])
+        self.assertTrue(digest.is_valid("a" * 64))
+        for value in ["a" * 64 + "\n", "A" * 64, "a" * 63, "a" * 65]:
+            self.assertFalse(digest.is_valid(value))
+        ordinal = Draft202012Validator(schema["properties"]["requirements"]["items"]["properties"]["ordinal"])
+        for value in [0, -1, True, "1"]: self.assertFalse(ordinal.is_valid(value))
+        self.assertTrue(ordinal.is_valid(1))
+
+
+
+class RequirementsExporterBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self.temporary = tempfile.TemporaryDirectory(prefix="requirements-export-")
+        self.addCleanup(self.temporary.cleanup)
+        self.work = Path(self.temporary.name).resolve()
+        path = ROOT / "skills/requirements-machinery/scripts/cover.py"
+        spec = importlib.util.spec_from_file_location("requirements_exporter", path)
+        self.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.module)
+
+    def test_json_rejects_duplicate_and_nonfinite(self):
+        for raw in [b'{"id":1,"id":2}', b'{"id":NaN}', b'{"id":Infinity}']:
+            with self.assertRaises(self.module.Refused):
+                self.module._handoff_json(raw, "captured-state")
+
+    def test_safe_reader_rejects_aliases(self):
+        import os
+        source = self.work / "source"; source.write_bytes(b"captured")
+        alias = self.work / "alias"; alias.symlink_to(source)
+        with self.assertRaises((self.module.Refused, OSError)):
+            self.module._handoff_regular(alias)
+        alias.unlink(); os.link(source, alias)
+        with self.assertRaises(self.module.Refused):
+            self.module._handoff_regular(source)
+
+    def test_evidence_recheck_detects_changes_and_extra_members(self):
+        source = self.work / "source"; source.write_bytes(b"captured")
+        raw = self.module._handoff_regular(source)
+        source.write_bytes(b"modified")
+        with self.assertRaises(self.module.Refused):
+            self.module._handoff_verify({source: raw})
+        members = tuple(sorted(p.name for p in self.work.iterdir()))
+        (self.work / "extra").write_bytes(b"new")
+        with self.assertRaises(self.module.Refused):
+            self.module._handoff_verify({self.work: members})
+
+    def test_publication_refuses_existing_output_before_reading_run(self):
+        output = self.work / "handoff.json"; output.write_bytes(b"user-owned")
+        with self.assertRaisesRegex(self.module.Refused, "already exists"):
+            self.module.export_requirements_handoff(ROOT / "missing-run", ROOT / "missing.md", "a" * 64,
+                self.work, output, [ROOT], [ROOT / "product"])
+        self.assertEqual(output.read_bytes(), b"user-owned")
+
+    def test_cyclic_protected_alias_is_refused_before_reading_run(self):
+        first = self.work / "a"; second = self.work / "b"
+        first.symlink_to(second); second.symlink_to(first)
+        output = self.work / "out"; output.mkdir()
+        with self.assertRaisesRegex(self.module.Refused, "linked aliases are forbidden"):
+            self.module.export_requirements_handoff(ROOT / "missing-run", ROOT / "missing.md", "a" * 64,
+                output, output / "handoff.json", [first], [ROOT])
+        self.assertEqual(list(output.iterdir()), [])
+
+    def test_cli_requires_explicit_export_arguments(self):
+        result = subprocess.run([sys.executable, str(ROOT / "skills/requirements-machinery/scripts/cover.py"),
+            "export-handoff"], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("--expected-coverage-sha256", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
