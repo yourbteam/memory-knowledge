@@ -68,6 +68,37 @@ Code verifies every quote against its builder note and verifies that every expec
 has exactly one judgement from each reader. Count alone never completes a stage. The primary output
 is `noticed-description.md`; `noticed-report.json` is the same observations in build-shaped JSON.
 
+## Opt-in sealed handoff
+
+The additive exporter seals the intent-and-context front door only. Existing front doors,
+defaults and reader calls are unchanged. Invoke from the repository root:
+
+```text
+python3 skills/description-machinery/scripts/export_handoff.py --run /absolute/completed-run \
+    --output-root /absolute/external-runtime --output /absolute/external-runtime/handoff.json \
+    --target-repository /absolute/target-repo --product-boundary /absolute/product-path
+```
+
+Repeat the target and product arguments for every excluded boundary. The output root and
+parent must already exist, be disjoint from the source and excluded paths, and be outside
+Git repositories. Links, existing outputs, incomplete or inconsistent runs and changed
+source bytes are refused. Only after validation does the exporter publish one read-only
+file atomically without overwriting; no source run is written and no model is invoked.
+
+Historical source bytes can be supplied explicitly with `--source-snapshots /absolute/map.json`.
+The map is exactly `{"schema_version": 1, "sources": [{"origin": "original absolute source identity",
+"path": "absolute snapshot location", "sha256": "recorded source digest"}]}` with exactly
+one entry per input-state source. Every digest must match the run's original binding;
+this is not a drift-acceptance flag. In the handoff, source-object `origin` is the verified
+import location (the snapshot path when supplied). The original citation identities remain
+unchanged in the input-state and reader records. Retain those inputs and snapshots until
+the downstream consumer has imported them; the exporter does not copy or relocate them.
+
+The handoff's seal hashes canonical JSON excluding its own seal field. The command also
+returns a separate full-file digest. These establish byte integrity, not an independent
+historical signature or a new semantic judgment of the source quotations. `--schema`
+continues to print the unchanged handoff format without exporting a run.
+
 ## State and changed inputs
 
 Both front doors write `input-state.json` before accepting reader output. It binds the state
