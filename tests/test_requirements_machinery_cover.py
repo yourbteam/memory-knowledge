@@ -1600,3 +1600,67 @@ def test_replay_reopens_legacy_partial_split_and_preserves_unrelated_state(monke
              "anchors": ["Unrelated retained rule"], "checkable": True},
         ]
         assert "check-1" not in after["owner_rulings"][target]
+
+
+def test_read_only_renderer_replays_completed_document_without_writes_or_readers(monkeypatch):
+    cover = load("requirements_cover_pure_renderer", COVER)
+    target = "target requirements"
+    statement = "The final artifact must name one accountable owner."
+    state = {
+        "source": "fixture.pdf", "source_sha256": "a" * 64, "strategy": "fixture",
+        "opened_at": 0, "pieces": [], "answers": {}, "relevance": {"last": target},
+        "distilled": {target: {"items": [{
+            "pages": ["p-0001"], "statement": statement, "how": "verbatim",
+            "anchors": [statement], "checkable": True, "doubt": None,
+        }], "owner_pairs": [], "source_owner_pairs": [],
+            "shared_rule_owner_records": [], "still_for_owner": []}},
+        "requirements": {target: {"rules_stage": {"rules": []},
+                                  "rule_judgement": {"texts": [], "merged": []}}},
+        "collapse": {target: {"entries": []}},
+    }
+    with tempfile.TemporaryDirectory(dir=ROOT / "Tasks") as directory:
+        run = Path(directory) / "run"
+        run.mkdir()
+        bind_run_identity(run, state)
+        path = run / "coverage.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        output = Path(directory) / "requirements.md"
+        assert cover.document(run, output) == 0
+        before = {str(p): p.read_bytes() for p in run.rglob("*") if p.is_file()}
+        def forbidden(*args, **kwargs):
+            raise AssertionError("read-only renderer attempted a state write or model call")
+        monkeypatch.setattr(cover, "_write", forbidden)
+        monkeypatch.setattr(cover.subprocess, "run", forbidden)
+        assert cover.render_document(run) == output.read_bytes()
+        assert cover.render_document(run) == output.read_bytes()
+        assert before == {str(p): p.read_bytes() for p in run.rglob("*") if p.is_file()}
+        completed = json.loads(path.read_text())
+        for damage in ("missing-preparation", "wrong-active", "invalid-merged", "invalid-items"):
+            changed = copy.deepcopy(completed)
+            final = changed["document_preparation"][target]["final_semantic"]
+            if damage == "missing-preparation":
+                final.clear()
+            elif damage == "wrong-active":
+                final["active_signature"] = "0" * 64
+            elif damage == "invalid-merged":
+                final[final["active_signature"]]["merged"] = [[1, 9999]]
+            else:
+                changed["distilled"][target]["items"] = None
+            path.write_text(json.dumps(changed), encoding="utf-8")
+            damaged_bytes = path.read_bytes()
+            with pytest.raises(cover.Refused):
+                cover.render_document(run)
+            assert path.read_bytes() == damaged_bytes
+
+
+def test_document_material_formatting_is_pure_and_utf8():
+    cover = load("requirements_cover_pure_formatting", COVER)
+    state = {"source": "/example/source.md"}
+    items = [{"statement": "Keep café wording unchanged.", "pages": ["p-0001"],
+              "anchors": ["Keep café wording unchanged."], "how": "verbatim"}]
+    before = copy.deepcopy((state, items))
+    first = cover._render_document_material(state, "target", items, {})
+    assert first == cover._render_document_material(state, "target", items, {})
+    assert "café".encode("utf-8") in first[0]
+    assert first[1:] == (1, 0)
+    assert (state, items) == before

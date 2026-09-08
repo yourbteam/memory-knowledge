@@ -1040,7 +1040,7 @@ def distill(work, reader_command):
     return 0
 
 
-def _owner_queue(state, target):
+def _owner_queue(state, target, *, read_only=False):
     """Every ruling only the owner can make, one stable id each, with its material and choices."""
     d = state.get("distilled", {}).get(target)
     if not d:
@@ -1143,7 +1143,7 @@ def _owner_queue(state, target):
     final_record = final_state.get(active_signature, {}) if active_signature else {}
     if final_record and _normalize_final_semantic_record(final_record, rulings):
         work = state.get("_work")
-        if work:
+        if work and not read_only:
             _write(work, state)
     for pair in final_record.get("owner_pairs", []):
         queue.append({
@@ -1170,8 +1170,11 @@ def _owner_queue(state, target):
             # refusal it reads surfaces, instead of recursing back into the detector.
             return set()
         try:
-            import ruling_validity
-            conflicts = ruling_validity.conflicts(state.get("_work", ""))
+            if read_only:
+                conflicts = _load("ruling_validity").conflicts_in_state(state, target)
+            else:
+                import ruling_validity
+                conflicts = ruling_validity.conflicts(state.get("_work", ""))
             stale_conflicts.extend(conflicts)
             for conflict in conflicts:
                 duty = conflict["source_duty"]
@@ -1847,14 +1850,15 @@ def _read_final_semantic_pair(dedupe_mod, reader_command, left, right, pair,
 
 
 def _final_semantic_consolidate(items, state, target, work, reader_command, reflow_mod,
-                                distinct_pairs):
+                                distinct_pairs, *, read_only=False):
     """Run and persist the last meaning check after every owner ruling has materialized."""
     dedupe_mod = _load("dedupe")
     lineage_mod = _load("rule_lineage")
     kept, automatic, reader_pairs = _final_semantic_candidates(
         items, dedupe_mod, reflow_mod, distinct_pairs)
-    print(f"final semantic consolidation: {len(automatic)} code-proven pair(s), "
-          f"{len(reader_pairs)} bounded reader pair(s)", flush=True)
+    if not read_only:
+        print(f"final semantic consolidation: {len(automatic)} code-proven pair(s), "
+              f"{len(reader_pairs)} bounded reader pair(s)", flush=True)
     signature_payload = {
         "policy": FINAL_CONSOLIDATION_POLICY,
         "items": [{"statement": item["statement"], "pages": sorted(item.get("pages") or []),
@@ -1872,6 +1876,9 @@ def _final_semantic_consolidate(items, state, target, work, reader_command, refl
                 .setdefault("final_semantic", {}))
     record = prepared.get(signature)
     if record is None:
+        if read_only:
+            raise Refused("cannot render: final semantic preparation is missing for the current "
+                          "requirements; complete the existing document command first")
         if reader_pairs and not reader_command:
             print("cannot write the document: final semantic consolidation needs the configured "
                   "blind reader", file=sys.stderr)
@@ -1912,11 +1919,29 @@ def _final_semantic_consolidate(items, state, target, work, reader_command, refl
         prepared["active_signature"] = signature
         _write(work, state)
     elif prepared.get("active_signature") != signature:
+        if read_only:
+            raise Refused("cannot render: active final semantic preparation differs from the "
+                          "current requirements; complete the existing document command first")
         prepared["active_signature"] = signature
         _write(work, state)
 
     rulings = state.get("owner_rulings", {}).get(target, {})
-    if _normalize_final_semantic_record(record, rulings):
+    if read_only:
+        if (not isinstance(record, dict) or record.get("signature") != signature
+                or record.get("policy") != FINAL_CONSOLIDATION_POLICY
+                or not isinstance(record.get("merged"), list)
+                or not isinstance(record.get("owner_pairs"), list)):
+            raise Refused("cannot render: final semantic preparation has a missing or invalid "
+                          "signature, policy, merged list, or owner-pair list")
+        for pair in [*record["merged"], *(row["pair"] for row in record["owner_pairs"])]:
+            if max(_canonical_final_pair(pair)) > len(kept):
+                raise Refused(f"cannot render: final semantic pair {pair!r} exceeds "
+                              f"the {len(kept)} retained requirements")
+        for pair in record["owner_pairs"]:
+            ruling = rulings.get(pair["id"])
+            if ruling is not None and ruling.get("choice") not in ("merge", "keep-separate"):
+                raise Refused(f"cannot render: {pair['id']} requires a merge or keep-separate ruling")
+    if _normalize_final_semantic_record(record, rulings) and not read_only:
         _write(work, state)
     unresolved = [pair for pair in record["owner_pairs"] if pair["id"] not in rulings]
     if unresolved:
@@ -1946,7 +1971,7 @@ def _final_semantic_consolidate(items, state, target, work, reader_command, refl
     return untouched + [item for _, item in sorted(survivors)]
 
 
-def document(work, out_path, reader_command=None):
+def _document_material(work, reader_command=None, *, read_only=False):
     """The finished requirements document, written by the machinery with every owner ruling
     applied. Refuses while any ruling is still pending — a document over an unanswered question
     would look complete and be one decision short of the truth."""
@@ -1961,7 +1986,7 @@ def document(work, out_path, reader_command=None):
     error = _reader_coverage_error(state, target, work, include_obligations=True)
     if error:
         return _refuse_reader_coverage(error)
-    queue = _owner_queue(state, target)
+    queue = _owner_queue(state, target, read_only=read_only)
     if queue is None:
         print(f"no distilled record in {work}. Run `cover.py distill` first.", file=sys.stderr)
         return 3
@@ -2089,7 +2114,7 @@ def document(work, out_path, reader_command=None):
     # (three Measurement gate: ..."). One pen pass cleans it: the gate blocks additions, and
     # removing a layout artifact is allowed. Verbatim stands when no reader command is given or
     # the pen fails.
-    if reader_command:
+    if reader_command or read_only:
         distill_mod = _load("distill")
         prepared = (state.setdefault("document_preparation", {}).setdefault(target, {})
                     .setdefault("resurrected", {}))
@@ -2108,6 +2133,9 @@ def document(work, out_path, reader_command=None):
                 entry["how"] = recorded["how"]
                 entry["statement"] = recorded["statement"]
                 continue
+            if read_only:
+                raise Refused(f"cannot render: resurrected requirement {preparation_id} has no "
+                              "valid recorded preparation; complete the document command first")
             if legacy_pre_controller:
                 written, transcript = None, [{
                     "compatibility": "pre-controller-verbatim",
@@ -2155,9 +2183,14 @@ def document(work, out_path, reader_command=None):
     }
     items = _consolidate_kept_items(items, reflow_mod, same_rule_pairs, distinct_pairs)
     items = _final_semantic_consolidate(
-        items, state, target, work, reader_command, reflow_mod, distinct_pairs)
+        items, state, target, work, reader_command, reflow_mod, distinct_pairs, read_only=read_only)
     if items is None:
         return 3
+    return state, target, items, rulings
+
+
+def _render_document_material(state, target, items, rulings):
+    """Pure formatting shared by the existing command and read-only reconstruction."""
     lines = [f"# Requirements — {target}", "",
              f"Source of truth: {Path(state['source']).name}. Every",
              "requirement traces to the verbatim pages named beside it; statements were written by",
@@ -2190,10 +2223,35 @@ def document(work, out_path, reader_command=None):
     lines += ["", "## Owner rulings (recorded)", ""]
     for rid, r in sorted(rulings.items()):
         lines.append(f"- {rid}: {r['choice']} — {r['because']}")
-    Path(out_path).write_text("\n".join(lines))
-    print(f"document written: {out_path} — {n} requirements, "
-          f"{sum(1 for it in items if it.get('_drop') or it['how'] == 'refused')} rejected with "
-          f"reasons, {len(rulings)} rulings recorded inside")
+    return ("\n".join(lines).encode("utf-8"), n,
+            sum(1 for it in items if it.get("_drop") or it["how"] == "refused"))
+
+
+def render_document(work):
+    """Reconstruct completed document bytes without writes or model calls.
+
+    Reuses recorded preparation only. Missing preparation, incomplete coverage, pending
+    owner rulings and malformed state refuse; use the existing document command to prepare
+    a run, never this read path. Diagnostics may be emitted by existing refusal gates.
+    """
+    try:
+        material = _document_material(work, read_only=True)
+        if material == 3:
+            raise Refused("cannot render: the run is incomplete or has unresolved owner decisions")
+        return _render_document_material(*material)[0]
+    except (KeyError, TypeError, ValueError, IndexError, AttributeError) as error:
+        raise Refused(f"cannot render malformed Requirements state: {error}") from error
+
+
+def document(work, out_path, reader_command=None):
+    """Prepare through the existing machinery and write the unchanged requirements format."""
+    material = _document_material(work, reader_command)
+    if material == 3:
+        return 3
+    payload, count, rejected = _render_document_material(*material)
+    Path(out_path).write_text(payload.decode("utf-8"))
+    print(f"document written: {out_path} — {count} requirements, "
+          f"{rejected} rejected with reasons, {len(material[3])} rulings recorded inside")
     return 0
 
 
