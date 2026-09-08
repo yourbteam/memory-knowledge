@@ -85,7 +85,7 @@ import uuid
 from datetime import datetime, timezone
 
 EVENT_FIELDS = ('schema_version', 'sequence', 'event', 'previous', 'payload', 'sha256')
-START_FIELDS = ('request_sha256', 'runtime', 'controller_sha256', 'recorded_at', 'upstream', 'evidence_graph')
+START_FIELDS = ('request_sha256', 'runtime', 'controller_sha256', 'recorded_at', 'upstream', 'evidence_graph', 'interview_state')
 INPUT_FIELDS = ('identity', 'role', 'origin', 'sha256', 'size', 'object_path', 'imported_at')
 GENESIS = '0' * 64
 
@@ -123,9 +123,18 @@ def validate_shape(value, schema, label='request', root=None):
     root = schema if root is None else root
     if '$ref' in schema:
         return validate_shape(value, root['$defs'][schema['$ref'].split('/')[-1]], label, root)
+    if 'anyOf' in schema:
+        failures = []
+        for choice in schema['anyOf']:
+            try:
+                return validate_shape(value, choice, label, root)
+            except Refused as error:
+                failures.append(str(error))
+        raise Refused(f'{label}: got {value!r}; none of the declared alternatives matched: {failures}')
     kind = schema.get('type')
     matches = {'object': type(value) is dict, 'array': type(value) is list,
-               'integer': type(value) is int, 'string': type(value) is str}
+               'integer': type(value) is int, 'string': type(value) is str,
+               'null': value is None, 'boolean': type(value) is bool}
     if kind and not matches[kind]:
         raise Refused(f'{label}: got {type(value).__name__}; expected {kind}')
     if 'const' in schema and value != schema['const']:
@@ -140,6 +149,8 @@ def validate_shape(value, schema, label='request', root=None):
         for key, child in schema['properties'].items():
             validate_shape(value[key], child, f'{label}.{key}', root)
     if kind == 'array':
+        if len(value) > schema.get('maxItems', len(value)):
+            raise Refused(f'{label}: got {len(value)} items; maximum is {schema["maxItems"]}')
         if len(value) < schema.get('minItems', 0):
             raise Refused(f'{label}: got {len(value)} items; need at least {schema["minItems"]}')
         if len({canonical(x) for x in value}) != len(value):
@@ -295,7 +306,8 @@ def projection(events, request):
             'request_sha256': events[0]['payload']['request_sha256'],
             'runtime': events[0]['payload']['runtime'],
             'inputs': [e['payload'] for e in events[1:]],
-            'upstream': events[0]['payload']['upstream']}
+            'upstream': events[0]['payload']['upstream'],
+            'interview_state': events[0]['payload']['interview_state']}
     graph = events[0]['payload']['evidence_graph']
     if graph is not None:
         result.update({key: graph['result'][key] for key in ('status', 'readiness', 'graph_sha256', 'next_action')})
@@ -340,7 +352,8 @@ def start(request_path, work, expected_tip):
         graph = collect_graph(request, captured, work, upstream, now)
         request_bytes = canonical(request) + b'\n'
         records = [('run_started', {'request_sha256': digest(request_bytes), 'runtime': runtime,
-                    'controller_sha256': adapter_code_sha256(), 'recorded_at': now, 'upstream': upstream, 'evidence_graph': graph})]
+                    'controller_sha256': adapter_code_sha256(), 'recorded_at': now, 'upstream': upstream, 'evidence_graph': graph,
+                    'interview_state': initial_interview_state()})]
         files = {'request.json': request_bytes}
         for identity, role, item, raw in captured:
             relative = 'inputs/objects/' + item['sha256']
@@ -353,6 +366,7 @@ def start(request_path, work, expected_tip):
         events = chain(records)
         files['ledger.jsonl'] = b''.join(canonical(e) + b'\n' for e in events)
         files['state.json'] = canonical(projection(events, request)) + b'\n'
+        files['interview-head.json'] = canonical({'ledger_tip': events[-1]['sha256'], 'event_count': len(events)}) + b'\n'
         os.mkdir(stage, 0o700, dir_fd=work_fd)
         created = True
         stage_fd = os.open(stage, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=work_fd)
@@ -405,11 +419,12 @@ def start(request_path, work, expected_tip):
         os.close(work_fd)
 
 
-def replay(work):
+def replay(work, *, locked=False):
     work = absolute(str(work))
     fd = directory(work)
     try:
-        fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        if not locked:
+            fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
         if os.listdir(fd) != ['run']:
             raise Refused(f'{work}: expected exactly the published run directory; incomplete or extra state is forbidden')
         base = work / 'run'
@@ -458,7 +473,7 @@ def replay(work):
             raise Refused('run identity: request or controller bytes differ; resume with the frozen version')
         if first['runtime'] != runtime_identity():
             raise Refused('runtime identity differs from start; resume with the recorded Python and Codex installation')
-        expected_files = {'request.json', 'ledger.jsonl', 'state.json'}
+        expected_files = {'request.json', 'ledger.jsonl', 'state.json', 'interview-head.json'}
         frozen = {}
         for event, (identity, role, item) in zip(events[1:], items):
             value = event['payload']
@@ -496,8 +511,17 @@ def replay(work):
                 expected_files.add(name)
                 if read_file(base / name, 33554432) != canonical(value) + b'\n':
                     raise Refused(f'{name}: projection differs from frozen graph replay')
+        result = projection(events, request)
+        if read_file(base / 'state.json', 33554432) != canonical(result) + b'\n':
+            raise Refused('stored projection differs from ledger replay; do not trust the cached state')
+        interview_state, interview_files, interview_dirs = replay_interviews(
+            work, events, request, rebuilt)
+        result['interview_state'] = interview_state
+        result['ledger_tip'] = events[-1]['sha256']
+        result['event_count'] = len(events)
+        expected_files.update(interview_files)
         actual_files = set()
-        expected_dirs = {'inputs', 'inputs/objects'}
+        expected_dirs = {'inputs', 'inputs/objects'} | interview_dirs
         for path in base.rglob('*'):
             rel = path.relative_to(base).as_posix()
             if path.is_symlink():
@@ -509,9 +533,6 @@ def replay(work):
                 actual_files.add(rel)
         if actual_files != expected_files:
             raise Refused('run membership differs from admitted inputs; restore the exact run members')
-        result = projection(events, request)
-        if read_file(base / 'state.json', 33554432) != canonical(result) + b'\n':
-            raise Refused('stored projection differs from ledger replay; do not trust the cached state')
         return result
     finally:
         os.close(fd)
@@ -527,12 +548,25 @@ def kernel_main():
     begin.add_argument('--expected-tip', required=True)
     for name in ('status', 'verify-replay', 'advance'):
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
+    commands.add_parser('response-schema', allow_abbrev=False)
+    for name in ('prepare-interview', 'admit-interview'):
+        command = commands.add_parser(name, allow_abbrev=False)
+        command.add_argument('work')
+        command.add_argument('--expected-tip', required=True)
+        if name == 'admit-interview':
+            command.add_argument('submission')
     args = parser.parse_args()
     try:
         if args.command == 'schema':
             print(json.dumps(request_schema(), sort_keys=True, indent=2))
             return 0
-        result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
+        if args.command == 'response-schema':
+            print(json.dumps(model_response_schema(), sort_keys=True, indent=2))
+            return 0
+        if args.command in ('prepare-interview', 'admit-interview'):
+            result = interview_action(args.command, args.work, args.expected_tip, getattr(args, 'submission', None))
+        else:
+            result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
         print(canonical(result).decode('utf-8'))
         return 0
     except (Refused, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError, RuntimeError) as error:
@@ -717,6 +751,356 @@ def collect_graph(request, captured, work, upstream, now):
         return None
     return {'members': members, 'before_sha256': GENESIS,
             'after_sha256': result['graph_sha256'], 'result': result}
+
+# Interview engine v1. Submissions are judgments, never launcher or owner authorization.
+import base64
+
+FAMILY_VERDICTS = {
+    'evidence-bearing': ('supports', 'refutes', 'irrelevant', 'cannot_assess'),
+    'evidence-sufficiency': ('satisfied', 'insufficient', 'contradictory', 'cannot_assess'),
+    'dependency-discovery': ('dependency', 'none', 'cannot_assess'),
+    'contradiction-assessment': ('compatible', 'conflict', 'cannot_assess'),
+    'verification-adequacy': ('adequate', 'inadequate', 'cannot_assess'),
+    'atom-cohesion': ('cohesive', 'must_split', 'cannot_assess'),
+    'owner-question-formulation': ('formulated',),
+}
+INTERVIEW_QUESTIONS = {
+    'evidence-bearing': 'Does this exact evidence item support, refute, or not bear on this exact requirement claim?',
+    'evidence-sufficiency': 'Does the admitted evidence establish every listed criterion of this requirement at its declared maturity?',
+    'dependency-discovery': 'Which one listed dependency must hold before this requirement can be tested independently, or are there no more?',
+    'contradiction-assessment': 'Can these two registered requirement claims both hold in one implementation?',
+    'verification-adequacy': 'Would the listed observable and rejection criteria prove the practical outcome without trusting the producer conclusion?',
+    'atom-cohesion': 'Does this proposed atom express one independently testable outcome with complete prerequisites and no hidden second behavior?',
+    'owner-question-formulation': 'What one practical question requests this owner decision using exactly the complete declared answer type and choices?',
+}
+PROPOSED_FACTS = {
+    family: {verdict: family + ':' + verdict for verdict in verdicts if verdict != 'cannot_assess'}
+    for family, verdicts in FAMILY_VERDICTS.items()
+}
+FORBIDDEN_JUDGMENTS = ('owner authority', 'requirements creation', 'scope expansion',
+                       'legal or commercial policy approval', 'model sharing authorization',
+                       'implementation approval', 'execution', 'readiness certification')
+INTERVIEW_LIMIT = 1048576
+
+
+def initial_interview_state():
+    return {'schema_version': 1, 'pending': None, 'attempts': {}, 'proposals': [],
+            'rejections': [], 'status': 'idle'}
+
+
+def family_response_schema(family):
+    if family not in FAMILY_VERDICTS:
+        raise Refused(f'family {family!r}: select one of {tuple(FAMILY_VERDICTS)}')
+    def obj(properties):
+        return {'type': 'object', 'additionalProperties': False,
+                'required': list(properties), 'properties': properties}
+    text = {'type': 'string', 'minLength': 1, 'maxLength': 8192, 'pattern': r'\S'}
+    ids = {'type': 'array', 'items': text, 'uniqueItems': True, 'minItems': 1, 'maxItems': 256}
+    fields = {
+        'schema_version': {'type': 'integer', 'const': 1},
+        'run_id': {'type': 'string', 'pattern': SHA256.pattern},
+        'node_id': text, 'family': {'type': 'string', 'const': family},
+        'attempt': {'type': 'integer', 'minimum': 1, 'maximum': 2},
+        'seat': {'type': 'string', 'enum': ['seat-1', 'seat-2']},
+        'envelope_sha256': {'type': 'string', 'pattern': SHA256.pattern},
+        'verdict': {'type': 'string', 'enum': list(FAMILY_VERDICTS[family])},
+        'evidence_ids': ids,
+        'quotes': {'type': 'array', 'minItems': 1, 'maxItems': 256, 'uniqueItems': True,
+                   'items': obj({'evidence_id': text, 'quote': text})},
+        'reason': text,
+    }
+    if family in ('evidence-sufficiency', 'verification-adequacy'):
+        fields['criteria'] = {'type': 'array', 'minItems': 1, 'maxItems': 256, 'items': obj({
+            'criterion_id': text, 'verdict': {'type': 'string', 'enum': ['satisfied', 'unsatisfied', 'cannot_assess']},
+            'evidence_ids': ids, 'reason': text})}
+    if family == 'dependency-discovery':
+        fields['dependency_id'] = {'anyOf': [text, {'type': 'null'}]}
+        fields['relation'] = {'type': 'string', 'enum': ['requires', 'none']}
+    if family == 'atom-cohesion':
+        fields['requirement_ids'] = ids
+    if family == 'owner-question-formulation':
+        fields.update({'question': {**text, 'maxLength': 500},
+                       'answer_type': {'type': 'string', 'enum': ['enum-choice', 'free-text']},
+                       'choices': {'type': 'array', 'maxItems': 256, 'uniqueItems': True,
+                                   'items': obj({'choice_id': text, 'label': text})}})
+    # JSON round-trip removes every shared schema-field alias before specialization.
+    return decode(canonical(obj(fields)), 'response schema')
+
+
+def model_response_schema():
+    return {'$schema': 'https://json-schema.org/draft/2020-12/schema',
+            'title': 'Readiness model response v1; preparation further binds exact identities',
+            'oneOf': [family_response_schema(family) for family in FAMILY_VERDICTS]}
+
+
+def prepare_payload(work, events, request, graph, state):
+    if state['pending'] is not None:
+        raise Refused('interview already prepared: submit against the retained seat envelopes; do not prepare duplicate calls')
+    if graph is None or not graph['queue']:
+        raise Refused('queue has no pending semantic obligation; admit explicit evidence and a family-bound condition first')
+    item = graph['queue'][0]
+    node = next(n for n in graph['graph']['nodes'] if n['id'] == item['node_id'])
+    spec = node['record'].get('interview')
+    if item['blocking_class'] not in ('semantic', 'owner') or spec is None:
+        raise Refused(f"queue head {item['condition_id']}: no eligible explicit interview contract; resolve the head or admit its family, criteria and evidence references")
+    node_id = node['id']; family = spec['family']
+    prior = [fact for fact in state['proposals'] if fact['node_id'] == node_id]
+    if prior and (family != 'dependency-discovery' or any(f['verdict'] == 'none' for f in prior)):
+        raise Refused(f'node {node_id}: its semantic fact was already proposed; the phase router must consume it, not interview it again')
+    previous_dependencies = [fact['dependency_id'] for fact in prior]
+    attempt_key = node_id + ':' + str(len(prior))
+    attempt = state['attempts'].get(attempt_key, 0) + 1
+    if attempt > request['execution_limits']['max_model_attempts_per_seat']:
+        raise Refused(f'node {node_id}: declared attempt budget exhausted; requires a new explicit recovery decision, not another call')
+    evidence_nodes = {n['record']['evidence']['evidence_id']: n['record'] for n in graph['graph']['nodes'] if n['type'] == 'evidence'}
+    evidence = []
+    for ref in spec['evidence_refs']:
+        record = evidence_nodes[ref['evidence_id']]
+        if not record['fitness']['fit']:
+            raise Refused(f"evidence {ref['evidence_id']}: failed mechanical fitness; recapture it before preparing a semantic judgment")
+        evidence.append({**record['evidence'], 'excerpt': ref['quote'], 'fitness': record['fitness']})
+    semantic = {'family': family, 'question': INTERVIEW_QUESTIONS[family],
+                'required_maturity': spec['required_maturity'],
+                'subjects': [n for n in graph['graph']['nodes'] if n['id'] in spec['subject_ids']],
+                'evidence': evidence, 'criteria': spec['criteria'],
+                'dependency_ids': [i for i in spec['dependency_ids'] if i not in previous_dependencies],
+                'choices': spec['choices'], 'answer_type': spec['answer_type'], 'candidate': spec['candidate'],
+                'allowed_verdicts': list(FAMILY_VERDICTS[family]), 'forbidden_judgments': list(FORBIDDEN_JUDGMENTS)}
+    seats = ('seat-1',) if family == 'owner-question-formulation' else ('seat-1', 'seat-2')
+    run_id = events[0]['sha256']; prefix = f'interviews/{len(events):08d}'
+    envelopes = []
+    for seat in seats:
+        envelope = {'schema_version': 1, 'run_id': run_id, 'node_id': node_id,
+                    'family': family, 'attempt': attempt, 'seat': seat,
+                    'semantic_payload': semantic, 'semantic_payload_sha256': digest(canonical(semantic)),
+                    'predecessor_sha256': events[-1]['sha256'], 'launcher': events[0]['payload']['runtime']['codex'],
+                    'model_runtime': request['model_runtime'],
+                    'timeout_ms': request['execution_limits']['model_timeout_ms'],
+                    'response_path': str(work / 'run' / prefix / (seat + '-response.json')),
+                    'authorization': 'not-granted; preparation and submitted responses do not authorize a launch'}
+        envelope['envelope_sha256'] = digest(canonical(envelope))
+        schema = family_response_schema(family)
+        for key in ('run_id', 'node_id', 'family', 'attempt', 'seat', 'envelope_sha256'):
+            schema['properties'][key]['const'] = envelope[key]
+        schema['properties']['evidence_ids']['items']['enum'] = [r['evidence_id'] for r in spec['evidence_refs']]
+        if 'criteria' in schema['properties']:
+            schema['properties']['criteria']['items']['properties']['criterion_id']['enum'] = [c['criterion_id'] for c in spec['criteria']]
+        envelopes.append({'envelope': envelope, 'response_schema': schema})
+    return {'node_id': node_id, 'family': family, 'attempt': attempt, 'attempt_key': attempt_key, 'envelopes': envelopes}
+
+
+def evaluate_submission(pending, raw, graph, proposals=()):
+    """Derive one finite proposed fact; free text never controls state or authority."""
+    try:
+        if pending is None:
+            raise Refused('no pending interview: duplicate, foreign or exhausted submission retained without semantic advancement; inspect current status')
+        rows = decode(raw, 'seat response submission')
+        if type(rows) is not list or len(rows) != len(pending['envelopes']):
+            raise Refused(f"seat response submission: expected exactly {len(pending['envelopes'])} ordered seat objects, got {type(rows).__name__} with {len(rows) if isinstance(rows, (list, dict)) else 'unknown'} entries")
+        spec = pending['envelopes'][0]['envelope']['semantic_payload']
+        evidence_ids = [e['evidence_id'] for e in spec['evidence']]
+        expected_quotes = {e['evidence_id']: e['excerpt'] for e in spec['evidence']}
+        criterion_ids = [c['criterion_id'] for c in spec['criteria']]
+        comparable = []
+        for row, seat in zip(rows, pending['envelopes']):
+            validate_shape(row, seat['response_schema'], 'response.' + seat['envelope']['seat'])
+            if set(row['evidence_ids']) != set(evidence_ids):
+                raise Refused(f"{row['seat']}: incomplete evidence_ids {row['evidence_ids']!r}; provide exactly {evidence_ids!r}")
+            if len(row['quotes']) != len(expected_quotes) or {r['evidence_id']: r['quote'] for r in row['quotes']} != expected_quotes:
+                raise Refused(f"{row['seat']}: unsupported or incomplete quotes; copy each exact evidence excerpt from its envelope once")
+            verdict = row['verdict']; family = row['family']
+            if verdict == 'cannot_assess':
+                raise Refused(f"{row['seat']}: cannot_assess is not a supported fact; retain the gap and supply missing evidence")
+            key = {'verdict': verdict}
+            if 'criteria' in row:
+                criteria = row['criteria']
+                if [c['criterion_id'] for c in criteria] != criterion_ids:
+                    raise Refused(f"{row['seat']}: criterion coverage/order differs; answer exactly {criterion_ids!r}")
+                for criterion in criteria:
+                    if not set(criterion['evidence_ids']) <= set(evidence_ids):
+                        raise Refused(f"criterion {criterion['criterion_id']}: foreign evidence_ids; use only {evidence_ids!r}")
+                    if criterion['verdict'] == 'cannot_assess':
+                        raise Refused(f"criterion {criterion['criterion_id']}: cannot_assess leaves this obligation unresolved")
+                satisfied = all(c['verdict'] == 'satisfied' for c in criteria)
+                if (verdict in ('adequate', 'satisfied')) != satisfied:
+                    raise Refused(f"{row['seat']}: verdict {verdict} contradicts its criterion outcomes; positive verdict requires all criteria satisfied")
+                key['criteria'] = [{k: c[k] for k in ('criterion_id', 'verdict', 'evidence_ids')} for c in criteria]
+            if family == 'dependency-discovery':
+                selected = row['dependency_id']
+                if verdict == 'dependency':
+                    if selected not in spec['dependency_ids'] or row['relation'] != 'requires':
+                        raise Refused(f"{row['seat']}: dependency {selected!r} is foreign or repeated; choose one of {spec['dependency_ids']!r} with requires")
+                    subject = spec['subjects'][0]['id']
+                    targets = {q['condition_id']: q['node_id'] for q in graph['queue']}
+                    proposed = {'type': 'requires', 'source': subject, 'target': targets.get(selected, selected)}
+                    prior_edges = [{'type': 'requires', 'source': fact['subject_id'], 'target': targets.get(fact['dependency_id'], fact['dependency_id'])} for fact in proposals if fact['family'] == 'dependency-discovery' and fact['verdict'] == 'dependency']
+                    evidence_module().verify_edges(graph['graph']['nodes'], graph['graph']['edges'] + prior_edges + [proposed])
+                elif selected is not None or row['relation'] != 'none':
+                    raise Refused(f"{row['seat']}: none requires null dependency_id and relation none")
+                key.update(dependency_id=selected, relation=row['relation'], subject_id=spec['subjects'][0]['id'])
+            if family == 'atom-cohesion' and set(row['requirement_ids']) != {n['id'] for n in spec['subjects']}:
+                raise Refused(f"{row['seat']}: atom requirement_ids differ; return the complete code-listed set")
+            if family == 'owner-question-formulation':
+                if row['answer_type'] != spec['answer_type'] or row['choices'] != spec['choices']:
+                    raise Refused('owner formulation changes the answer contract; preserve its exact type and complete ordered choices')
+                if row['question'].count('?') != 1 or not row['question'].endswith('?') or '\n' in row['question']:
+                    raise Refused('owner formulation must be one line ending in exactly one question mark; no additional instructions')
+                key.update(question=row['question'], answer_type=row['answer_type'], choices=row['choices'])
+            comparable.append(key)
+        if any(row != comparable[0] for row in comparable[1:]):
+            raise Refused('blind seats disagree on verdict or structured criterion/dependency facts; no fact admitted, retain both responses')
+        return {'status': 'admitted', 'fact': {'node_id': pending['node_id'], 'family': pending['family'],
+                'attempt': pending['attempt'], 'fact_type': PROPOSED_FACTS[pending['family']][rows[0]['verdict']],
+                'evidence_ids': evidence_ids, 'subject_ids': [n['id'] for n in spec['subjects']],
+                'authority': 'proposed-only', **comparable[0]}, 'rejection': None}
+    except (ValueError, KeyError, TypeError) as error:
+        return {'status': 'rejected', 'fact': None, 'rejection': str(error)}
+
+
+def fold_interview(state, event, work, events, request, graph):
+    state = decode(canonical(state), 'interview state')
+    kind = event['event']; payload = event['payload']
+    if kind == 'interview_prepared':
+        expected = prepare_payload(work, events, request, graph, state)
+        if payload != expected:
+            raise Refused('interview preparation differs from the replayed queue, evidence or identities; restore its immutable event')
+        state['pending'] = payload
+        state['attempts'][payload['attempt_key']] = payload['attempt']
+        state['status'] = 'awaiting-responses'
+    elif kind in ('interview_admitted', 'interview_rejected'):
+        if type(payload) is not dict or set(payload) != {'submission_base64', 'submission_sha256', 'result'}:
+            raise Refused('interview admission has no prepared seat set or has unexpected payload fields; preserve the ordered transition chain')
+        raw = base64.b64decode(payload['submission_base64'], validate=True)
+        if len(raw) > INTERVIEW_LIMIT or digest(raw) != payload['submission_sha256']:
+            raise Refused('interview submission bytes exceed the limit or differ from their retained digest')
+        result = evaluate_submission(state['pending'], raw, graph, state['proposals'])
+        if payload['result'] != result or kind != 'interview_' + result['status']:
+            raise Refused('interview result differs from independent replay validation of retained response bytes')
+        if result['status'] == 'admitted':
+            state['proposals'].append(result['fact']); state['status'] = 'proposal-pending'
+        else:
+            state['rejections'].append({'node_id': state['pending']['node_id'] if state['pending'] else None, 'attempt': state['pending']['attempt'] if state['pending'] else None,
+                                        'submission_sha256': payload['submission_sha256'], 'reason': result['rejection']})
+            state['status'] = 'blocked'
+        state['pending'] = None
+    else:
+        raise Refused(f'interview event {kind!r}: expected prepared, admitted or rejected')
+    return state
+
+
+def transition_files(event):
+    files = {'event.json': canonical(event) + b'\n'}
+    if event['event'] == 'interview_prepared':
+        for seat in event['payload']['envelopes']:
+            name = seat['envelope']['seat']
+            files[name + '-envelope.json'] = canonical(seat['envelope']) + b'\n'
+            files[name + '-schema.json'] = canonical(seat['response_schema']) + b'\n'
+    return files
+
+
+def replay_interviews(work, events, request, graph):
+    state = events[0]['payload']['interview_state']
+    if canonical(state) != canonical(initial_interview_state()):
+        raise Refused('initial interview_state differs from the empty version-one state')
+    expected_files = set(); expected_dirs = {'interviews'}
+    root = work / 'run/interviews'
+    if root.is_symlink():
+        raise Refused('interviews directory is linked; restore the run-owned regular directory')
+    if root.exists():
+        paths = sorted(root.iterdir())
+        if len(paths) > 1024:
+            raise Refused('interview history exceeds 1024 transitions; obtain an explicit bounded continuation')
+        for path in paths:
+            name = f'{len(events):08d}'
+            if path.name != name or path.is_symlink() or not path.is_dir():
+                raise Refused(f'interview transaction {path.name!r}: expected unlinked directory {name}; restore the complete ordered history')
+            raw = read_file(path / 'event.json', 4194304)
+            event = decode(raw, 'interview event')
+            if type(event) is not dict or set(event) != set(EVENT_FIELDS):
+                raise Refused('interview event must contain exactly the closed ledger fields')
+            expected = chain([(e['event'], e['payload']) for e in events] + [(event['event'], event['payload'])])[-1]
+            if raw != canonical(expected) + b'\n':
+                raise Refused('interview ledger predecessor, sequence or hash differs; restore its chain')
+            state = fold_interview(state, event, work, events, request, graph)
+            for file, data in transition_files(event).items():
+                if read_file(path / file, 4194304) != data:
+                    raise Refused(f'{path.name}/{file}: bytes differ from the replayed interview')
+                expected_files.add('interviews/' + name + '/' + file)
+            expected_dirs.add('interviews/' + name)
+            events.append(event)
+    expected_head = canonical({'ledger_tip': events[-1]['sha256'], 'event_count': len(events)}) + b'\n'
+    if read_file(work / 'run/interview-head.json', 4096) != expected_head:
+        raise Refused('interview head differs from the complete event history; restore the missing tail or interrupted publication before resuming')
+    return state, expected_files, expected_dirs
+
+
+def interview_action(command, work, expected_tip, submission=None):
+    work = absolute(str(work)); fd = directory(work)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = replay(work, locked=True)
+        require_tip(expected_tip, result['ledger_tip'])
+        base = work / 'run'
+        request = decode(read_file(base / 'request.json', 16777216), 'stored request')
+        events = [decode(line, 'ledger') for line in read_file(base / 'ledger.jsonl', 33554432).splitlines()]
+        graph = events[0]['payload']['evidence_graph']
+        graph = graph['result'] if graph is not None else None
+        state, _, _ = replay_interviews(work, events, request, graph)
+        if len(events) - len(result['inputs']) - 1 >= 1024:
+            raise Refused('interview transition budget exhausted; obtain an explicit bounded continuation')
+        if command == 'prepare-interview':
+            payload = prepare_payload(work, events, request, graph, state); kind = 'interview_prepared'
+        else:
+            raw = read_file(submission, INTERVIEW_LIMIT)
+            assessment = evaluate_submission(state['pending'], raw, graph, state['proposals'])
+            payload = {'submission_base64': base64.b64encode(raw).decode('ascii'),
+                       'submission_sha256': digest(raw), 'result': assessment}
+            kind = 'interview_' + assessment['status']
+        event = chain([(e['event'], e['payload']) for e in events] + [(kind, payload)])[-1]
+        if len(canonical(event)) + 1 > 4194304:
+            raise Refused('interview transaction exceeds 4 MiB; narrow the explicit semantic obligation before publication')
+        fold_interview(state, event, work, events, request, graph)
+        root = base / 'interviews'
+        if not root.exists():
+            root.mkdir(mode=0o700)
+        root_fd = directory(root); stage = '.pending-' + uuid.uuid4().hex
+        try:
+            os.mkdir(stage, 0o700, dir_fd=root_fd)
+            stage_fd = os.open(stage, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+            try:
+                for name, raw in transition_files(event).items():
+                    file_fd = os.open(name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600, dir_fd=stage_fd)
+                    with os.fdopen(file_fd, 'wb') as stream:
+                        stream.write(raw); stream.flush(); os.fchmod(stream.fileno(), 0o444); os.fsync(stream.fileno())
+                os.fsync(stage_fd)
+            finally:
+                os.close(stage_fd)
+            # No old bytes are replaced. Incomplete publication remains visibly refused on replay.
+            check = directory(work)
+            try:
+                if (os.fstat(check).st_dev, os.fstat(check).st_ino) != (os.fstat(fd).st_dev, os.fstat(fd).st_ino):
+                    raise Refused('work directory changed before interview publication; restore its original boundary')
+            finally:
+                os.close(check)
+            os.rename(stage, f'{len(events):08d}', src_dir_fd=root_fd, dst_dir_fd=root_fd)
+            os.fsync(root_fd)
+            base_fd = directory(base)
+            try:
+                head_name = '.head-' + uuid.uuid4().hex
+                head_fd = os.open(head_name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600, dir_fd=base_fd)
+                with os.fdopen(head_fd, 'wb') as stream:
+                    stream.write(canonical({'ledger_tip': event['sha256'], 'event_count': len(events) + 1}) + b'\n')
+                    stream.flush(); os.fchmod(stream.fileno(), 0o444); os.fsync(stream.fileno())
+                os.rename(head_name, 'interview-head.json', src_dir_fd=base_fd, dst_dir_fd=base_fd)
+                os.fsync(base_fd)
+            finally:
+                os.close(base_fd)
+        finally:
+            os.close(root_fd)
+        return replay(work, locked=True)
+    finally:
+        os.close(fd)
+
 
 if __name__ == '__main__':
     raise SystemExit(kernel_main())

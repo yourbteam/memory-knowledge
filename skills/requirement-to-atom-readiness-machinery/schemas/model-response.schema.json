@@ -1,0 +1,933 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "evidence-bearing",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "supports",
+            "refutes",
+            "irrelevant",
+            "cannot_assess"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "criteria": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "criterion_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "evidence_ids": {
+                "items": {
+                  "maxLength": 8192,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "maxItems": 256,
+                "minItems": 1,
+                "type": "array",
+                "uniqueItems": true
+              },
+              "reason": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "verdict": {
+                "enum": [
+                  "satisfied",
+                  "unsatisfied",
+                  "cannot_assess"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "criterion_id",
+              "verdict",
+              "evidence_ids",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "evidence-sufficiency",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "satisfied",
+            "insufficient",
+            "contradictory",
+            "cannot_assess"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason",
+        "criteria"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "dependency_id": {
+          "anyOf": [
+            {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "dependency-discovery",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "requires",
+            "none"
+          ],
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "dependency",
+            "none",
+            "cannot_assess"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason",
+        "dependency_id",
+        "relation"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "contradiction-assessment",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "compatible",
+            "conflict",
+            "cannot_assess"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "criteria": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "criterion_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "evidence_ids": {
+                "items": {
+                  "maxLength": 8192,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "maxItems": 256,
+                "minItems": 1,
+                "type": "array",
+                "uniqueItems": true
+              },
+              "reason": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "verdict": {
+                "enum": [
+                  "satisfied",
+                  "unsatisfied",
+                  "cannot_assess"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "criterion_id",
+              "verdict",
+              "evidence_ids",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "verification-adequacy",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "adequate",
+            "inadequate",
+            "cannot_assess"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason",
+        "criteria"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "atom-cohesion",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "requirement_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "cohesive",
+            "must_split",
+            "cannot_assess"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason",
+        "requirement_ids"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "answer_type": {
+          "enum": [
+            "enum-choice",
+            "free-text"
+          ],
+          "type": "string"
+        },
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "choices": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "choice_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "label": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "choice_id",
+              "label"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "envelope_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "family": {
+          "const": "owner-question-formulation",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "question": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "quote": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reason": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "seat": {
+          "enum": [
+            "seat-1",
+            "seat-2"
+          ],
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "formulated"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "node_id",
+        "family",
+        "attempt",
+        "seat",
+        "envelope_sha256",
+        "verdict",
+        "evidence_ids",
+        "quotes",
+        "reason",
+        "question",
+        "answer_type",
+        "choices"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "Readiness model response v1; preparation further binds exact identities"
+}

@@ -117,3 +117,2056 @@ class EvidenceGraphRuntimeTests(unittest.TestCase):
         authority['record']['answer'] = 'approved'
         with self.assertRaises(adapter.EvidenceRefused):
             adapter.validate(graph, adapter.graph_schema())
+
+
+class InterviewEngineTests(ReadinessKernelTests):
+    # Real prepared state and explicitly transport-adapted research judgments captured 2026-09-08.
+    # This pins deterministic admission, not new model execution or model-output truth.
+    captured_pending = {'attempt': 1,
+ 'attempt_key': 'condition-c80e6a40f897a45920b67b6b:0',
+ 'envelopes': [{'envelope': {'attempt': 1,
+                             'authorization': 'not-granted; preparation and submitted responses do '
+                                              'not authorize a launch',
+                             'envelope_sha256': 'db300c0d93eb60f4e0df137d409445c64f57200047d0063fc8d6efd66d9f5213',
+                             'family': 'verification-adequacy',
+                             'launcher': {'launcher': '/Users/kamenkamenov/.nvm/versions/node/v24.9.0/bin/codex',
+                                          'sha256': '134063e133f0b4244fa3b251acf973d4fe4b4aeeacbdc135211bf480f59f1477',
+                                          'target': '/Users/kamenkamenov/.nvm/versions/node/v24.9.0/lib/node_modules/@openai/codex/bin/codex.js',
+                                          'version': 'codex-cli 0.151.0'},
+                             'model_runtime': {'model': 'gpt-5.5',
+                                               'provider': 'openai-codex-cli',
+                                               'reasoning_effort': 'high'},
+                             'node_id': 'condition-c80e6a40f897a45920b67b6b',
+                             'predecessor_sha256': 'a1478c221c8b61c031d5fe1990ef1df72ce5f4ebe6235492a988bb46f1f11756',
+                             'response_path': '/private/tmp/atom7-probe-S9SWcH/adapter-cases/success/run/interviews/00000089/seat-1-response.json',
+                             'run_id': '33c3041f552c138e5aa73c9c79ecad71c7627564f8df4174e95889da705a8863',
+                             'schema_version': 1,
+                             'seat': 'seat-1',
+                             'semantic_payload': {'allowed_verdicts': ['adequate',
+                                                                       'inadequate',
+                                                                       'cannot_assess'],
+                                                  'answer_type': 'not-applicable',
+                                                  'candidate': None,
+                                                  'choices': [],
+                                                  'criteria': [{'criterion_id': 'independent-evaluator',
+                                                                'quote': '| 6 | Evaluation and '
+                                                                         'final assessment can '
+                                                                         "trust the candidate's "
+                                                                         'own verdict | Critical | '
+                                                                         'A candidate can '
+                                                                         'effectively grade itself '
+                                                                         '|',
+                                                                'source_object_sha256': 'bd123e5ef8d894f79f142407c10417a84a3d1cb227ac8da23887c3bf19b23db0'}],
+                                                  'dependency_ids': [],
+                                                  'evidence': [{'access_receipt': {'outcome': 'accessible',
+                                                                                   'pointer': '/access',
+                                                                                   'source_id': 'telemetry-byte-receipt'},
+                                                                'affected_requirement_ids': ['req-a85e221564f8558a',
+                                                                                             'req-e17b44a659f36a19',
+                                                                                             'req-e51c9757aeaa8d3d'],
+                                                                'capture_method': 'Local capture '
+                                                                                  'of the '
+                                                                                  'previously '
+                                                                                  'recorded '
+                                                                                  'telemetry '
+                                                                                  'findings; '
+                                                                                  'byte-for-byte '
+                                                                                  'reread checked '
+                                                                                  'by SHA-256.',
+                                                                'captured_at_utc': '2026-09-08T16:34:29.161663+00:00',
+                                                                'claim': '| 6 | Evaluation and '
+                                                                         'final assessment can '
+                                                                         "trust the candidate's "
+                                                                         'own verdict | Critical | '
+                                                                         'A candidate can '
+                                                                         'effectively grade itself '
+                                                                         '|',
+                                                                'evidence_id': 'telemetry-review',
+                                                                'excerpt': '| 6 | Evaluation and '
+                                                                           'final assessment can '
+                                                                           "trust the candidate's "
+                                                                           'own verdict | Critical '
+                                                                           '| A candidate can '
+                                                                           'effectively grade '
+                                                                           'itself |',
+                                                                'fitness': {'accessible_at_capture': True,
+                                                                            'authorized_for_declared_use': True,
+                                                                            'current': True,
+                                                                            'fit': True,
+                                                                            'hash_valid': True,
+                                                                            'present': True,
+                                                                            'reproducible': True},
+                                                                'freshness_rule': {'kind': 'immutable',
+                                                                                   'max_age_seconds': 0},
+                                                                'limitations': ['Captured finding '
+                                                                                'about evaluator '
+                                                                                'self-trust, not a '
+                                                                                'new model '
+                                                                                'judgment or '
+                                                                                'current repair '
+                                                                                'verification.'],
+                                                                'model_share_authorization': {'receipt_source_id': None,
+                                                                                              'use': 'local-only'},
+                                                                'origin': '/private/tmp/atom7-probe-S9SWcH/adapter-cases/sources/graph-telemetry-review',
+                                                                'reproduction_receipt': {'outcome': 'reproduced',
+                                                                                         'pointer': '/reproduction',
+                                                                                         'source_id': 'telemetry-byte-receipt'},
+                                                                'required_maturity': 'current-system',
+                                                                'sensitivity_class': 'internal',
+                                                                'source_object_sha256': 'bd123e5ef8d894f79f142407c10417a84a3d1cb227ac8da23887c3bf19b23db0'}],
+                                                  'family': 'verification-adequacy',
+                                                  'forbidden_judgments': ['owner authority',
+                                                                          'requirements creation',
+                                                                          'scope expansion',
+                                                                          'legal or commercial '
+                                                                          'policy approval',
+                                                                          'model sharing '
+                                                                          'authorization',
+                                                                          'implementation approval',
+                                                                          'execution',
+                                                                          'readiness '
+                                                                          'certification'],
+                                                  'question': 'Would the listed observable and '
+                                                              'rejection criteria prove the '
+                                                              'practical outcome without trusting '
+                                                              'the producer conclusion?',
+                                                  'subjects': [{'id': 'req-a85e221564f8558a',
+                                                                'record': {'disposition': 'blocked',
+                                                                           'exact_text': 'The '
+                                                                                         'controller '
+                                                                                         'may '
+                                                                                         'declare '
+                                                                                         'readiness '
+                                                                                         'only '
+                                                                                         'when '
+                                                                                         'deterministic '
+                                                                                         'checks '
+                                                                                         'confirm '
+                                                                                         'that '
+                                                                                         'every '
+                                                                                         'requirement '
+                                                                                         'has a '
+                                                                                         'provenance-bound '
+                                                                                         'disposition, '
+                                                                                         'all '
+                                                                                         'dependencies '
+                                                                                         'and '
+                                                                                         'contradictions '
+                                                                                         'are '
+                                                                                         'resolved, '
+                                                                                         'all '
+                                                                                         'mandatory '
+                                                                                         'evidence '
+                                                                                         'is '
+                                                                                         'current '
+                                                                                         'and '
+                                                                                         'reproducible, '
+                                                                                         'the '
+                                                                                         'package '
+                                                                                         'passes '
+                                                                                         'schema, '
+                                                                                         'integrity, '
+                                                                                         'and '
+                                                                                         'replay '
+                                                                                         'validation, '
+                                                                                         'and '
+                                                                                         'every '
+                                                                                         'proposed '
+                                                                                         'atom has '
+                                                                                         'explicit '
+                                                                                         'verification '
+                                                                                         'and stop '
+                                                                                         'conditions. '
+                                                                                         '`needs_owner` '
+                                                                                         'and '
+                                                                                         '`blocked` '
+                                                                                         'are '
+                                                                                         'valid '
+                                                                                         'resumable '
+                                                                                         'run '
+                                                                                         'outcomes '
+                                                                                         'but '
+                                                                                         'never '
+                                                                                         'readiness, '
+                                                                                         'and only '
+                                                                                         'the '
+                                                                                         'owner '
+                                                                                         'may '
+                                                                                         'approve '
+                                                                                         'the '
+                                                                                         'resulting '
+                                                                                         'atom '
+                                                                                         'sequence '
+                                                                                         'and '
+                                                                                         'authorize '
+                                                                                         'Atom '
+                                                                                         'Building '
+                                                                                         'Machinery '
+                                                                                         'to '
+                                                                                         'begin.',
+                                                                           'maturity': 'unassessed',
+                                                                           'ordinal': 2,
+                                                                           'requirement_id': 'req-a85e221564f8558a',
+                                                                           'source_anchors': [{'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'controller '
+                                                                                                        'may '
+                                                                                                        'declare '
+                                                                                                        'readiness '
+                                                                                                        'only '
+                                                                                                        'when '
+                                                                                                        'deterministic '
+                                                                                                        'checks '
+                                                                                                        'confirm '
+                                                                                                        'that '
+                                                                                                        'every '
+                                                                                                        'requirement '
+                                                                                                        'has '
+                                                                                                        'a '
+                                                                                                        'provenance-bound '
+                                                                                                        'disposition, '
+                                                                                                        'all '
+                                                                                                        'dependencies '
+                                                                                                        'and '
+                                                                                                        'contradictions '
+                                                                                                        'are '
+                                                                                                        'resolved, '
+                                                                                                        'all '
+                                                                                                        'mandatory '
+                                                                                                        'evidence '
+                                                                                                        'is '
+                                                                                                        'current '
+                                                                                                        'and '
+                                                                                                        'reproducible, '
+                                                                                                        'the '
+                                                                                                        'package '
+                                                                                                        'passes '
+                                                                                                        'schema, '
+                                                                                                        'integrity, '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'validation, '
+                                                                                                        'and '
+                                                                                                        'every '
+                                                                                                        'proposed '
+                                                                                                        'atom '
+                                                                                                        'has '
+                                                                                                        'explicit '
+                                                                                                        'verification '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions; '
+                                                                                                        '`needs_owner` '
+                                                                                                        'and '
+                                                                                                        '`blocked` '
+                                                                                                        'are '
+                                                                                                        'valid '
+                                                                                                        'resumable '
+                                                                                                        'run '
+                                                                                                        'outcomes '
+                                                                                                        'but '
+                                                                                                        'never '
+                                                                                                        'readiness, '
+                                                                                                        'and '
+                                                                                                        'only '
+                                                                                                        'the '
+                                                                                                        'owner '
+                                                                                                        'may '
+                                                                                                        'approve '
+                                                                                                        'the '
+                                                                                                        'resulting '
+                                                                                                        'atom '
+                                                                                                        'sequence '
+                                                                                                        'and '
+                                                                                                        'authorize '
+                                                                                                        'Atom '
+                                                                                                        'Building '
+                                                                                                        'Machinery '
+                                                                                                        'to '
+                                                                                                        'begin. '
+                                                                                                        '_Source: '
+                                                                                                        '`/Users/kamenkamenov/memory-knowledge/Tasks/requirement-to-atom-readiness-machinery/sources/owner-answers-v4.md`_ '
+                                                                                                        '## '
+                                                                                                        'q7 '
+                                                                                                        '— '
+                                                                                                        'What '
+                                                                                                        'must '
+                                                                                                        'it '
+                                                                                                        'never '
+                                                                                                        'do, '
+                                                                                                        'and '
+                                                                                                        'what '
+                                                                                                        'makes '
+                                                                                                        'it '
+                                                                                                        'stop '
+                                                                                                        'rather '
+                                                                                                        'than '
+                                                                                                        'guess?',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'},
+                                                                                              {'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'controller '
+                                                                                                        'may '
+                                                                                                        'declare '
+                                                                                                        'readiness '
+                                                                                                        'only '
+                                                                                                        'when '
+                                                                                                        'deterministic '
+                                                                                                        'checks '
+                                                                                                        'confirm '
+                                                                                                        'that '
+                                                                                                        'every '
+                                                                                                        'requirement '
+                                                                                                        'has '
+                                                                                                        'a '
+                                                                                                        'provenance-bound '
+                                                                                                        'disposition, '
+                                                                                                        'all '
+                                                                                                        'dependencies '
+                                                                                                        'and '
+                                                                                                        'contradictions '
+                                                                                                        'are '
+                                                                                                        'resolved, '
+                                                                                                        'all '
+                                                                                                        'mandatory '
+                                                                                                        'evidence '
+                                                                                                        'is '
+                                                                                                        'current '
+                                                                                                        'and '
+                                                                                                        'reproducible, '
+                                                                                                        'the '
+                                                                                                        'package '
+                                                                                                        'passes '
+                                                                                                        'schema, '
+                                                                                                        'integrity, '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'validation, '
+                                                                                                        'and '
+                                                                                                        'every '
+                                                                                                        'proposed '
+                                                                                                        'atom '
+                                                                                                        'has '
+                                                                                                        'explicit '
+                                                                                                        'verification '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions; '
+                                                                                                        '`needs_owner` '
+                                                                                                        'and '
+                                                                                                        '`blocked` '
+                                                                                                        'are '
+                                                                                                        'valid '
+                                                                                                        'resumable '
+                                                                                                        'run '
+                                                                                                        'outcomes '
+                                                                                                        'but '
+                                                                                                        'never '
+                                                                                                        'readiness, '
+                                                                                                        'and '
+                                                                                                        'only '
+                                                                                                        'the '
+                                                                                                        'owner '
+                                                                                                        'may '
+                                                                                                        'approve '
+                                                                                                        'the '
+                                                                                                        'resulting '
+                                                                                                        'atom '
+                                                                                                        'sequence '
+                                                                                                        'and '
+                                                                                                        'authorize '
+                                                                                                        'Atom '
+                                                                                                        'Building '
+                                                                                                        'Machinery '
+                                                                                                        'to '
+                                                                                                        'begin.',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'}]},
+                                                                'type': 'requirement'},
+                                                               {'id': 'req-e17b44a659f36a19',
+                                                                'record': {'disposition': 'blocked',
+                                                                           'exact_text': 'The '
+                                                                                         'machinery '
+                                                                                         'produces '
+                                                                                         'a '
+                                                                                         'versioned, '
+                                                                                         'hash-bound '
+                                                                                         'readiness '
+                                                                                         'package '
+                                                                                         'containing '
+                                                                                         'a '
+                                                                                         'machine-readable '
+                                                                                         'readiness '
+                                                                                         'ledger, '
+                                                                                         'a '
+                                                                                         'requirement-to-evidence-and-dependency '
+                                                                                         'graph, '
+                                                                                         'and a '
+                                                                                         'verdict '
+                                                                                         'with '
+                                                                                         'reasons '
+                                                                                         'for '
+                                                                                         'every '
+                                                                                         'requirement. '
+                                                                                         'While '
+                                                                                         'blocked '
+                                                                                         'it also '
+                                                                                         'contains '
+                                                                                         'the '
+                                                                                         'ordered '
+                                                                                         'unresolved-evidence '
+                                                                                         'and '
+                                                                                         'owner-decision '
+                                                                                         'queue, '
+                                                                                         'and when '
+                                                                                         'ready it '
+                                                                                         'instead '
+                                                                                         'contains '
+                                                                                         'dependency-ordered, '
+                                                                                         'independently '
+                                                                                         'testable '
+                                                                                         'atom '
+                                                                                         'envelopes '
+                                                                                         'defining '
+                                                                                         'scope, '
+                                                                                         'inputs, '
+                                                                                         'boundaries, '
+                                                                                         'prerequisites, '
+                                                                                         'acceptance '
+                                                                                         'checks, '
+                                                                                         'verification '
+                                                                                         'paths, '
+                                                                                         'and stop '
+                                                                                         'conditions, '
+                                                                                         'together '
+                                                                                         'with a '
+                                                                                         'human-readable '
+                                                                                         'report '
+                                                                                         'and '
+                                                                                         'replay '
+                                                                                         'receipt.',
+                                                                           'maturity': 'unassessed',
+                                                                           'ordinal': 5,
+                                                                           'requirement_id': 'req-e17b44a659f36a19',
+                                                                           'source_anchors': [{'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'produces '
+                                                                                                        'a '
+                                                                                                        'versioned, '
+                                                                                                        'hash-bound '
+                                                                                                        'readiness '
+                                                                                                        'package '
+                                                                                                        'containing '
+                                                                                                        'a '
+                                                                                                        'machine-readable '
+                                                                                                        'readiness '
+                                                                                                        'ledger, '
+                                                                                                        'a '
+                                                                                                        'requirement-to-evidence-and-dependency '
+                                                                                                        'graph, '
+                                                                                                        'and '
+                                                                                                        'a '
+                                                                                                        'verdict '
+                                                                                                        'with '
+                                                                                                        'reasons '
+                                                                                                        'for '
+                                                                                                        'every '
+                                                                                                        'requirement; '
+                                                                                                        'while '
+                                                                                                        'blocked '
+                                                                                                        'it '
+                                                                                                        'also '
+                                                                                                        'contains '
+                                                                                                        'the '
+                                                                                                        'ordered '
+                                                                                                        'unresolved-evidence '
+                                                                                                        'and '
+                                                                                                        'owner-decision '
+                                                                                                        'queue, '
+                                                                                                        'and '
+                                                                                                        'when '
+                                                                                                        'ready '
+                                                                                                        'it '
+                                                                                                        'instead '
+                                                                                                        'contains '
+                                                                                                        'dependency-ordered, '
+                                                                                                        'independently '
+                                                                                                        'testable '
+                                                                                                        'atom '
+                                                                                                        'envelopes '
+                                                                                                        'defining '
+                                                                                                        'scope, '
+                                                                                                        'inputs, '
+                                                                                                        'boundaries, '
+                                                                                                        'prerequisites, '
+                                                                                                        'acceptance '
+                                                                                                        'checks, '
+                                                                                                        'verification '
+                                                                                                        'paths, '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions, '
+                                                                                                        'together '
+                                                                                                        'with '
+                                                                                                        'a '
+                                                                                                        'human-readable '
+                                                                                                        'report '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'receipt. '
+                                                                                                        '_Source: '
+                                                                                                        '`/Users/kamenkamenov/memory-knowledge/Tasks/requirement-to-atom-readiness-machinery/sources/owner-answers-v4.md`_ '
+                                                                                                        '## '
+                                                                                                        'q6 '
+                                                                                                        '— '
+                                                                                                        'How '
+                                                                                                        'does '
+                                                                                                        'anybody '
+                                                                                                        'tell '
+                                                                                                        'it '
+                                                                                                        'is '
+                                                                                                        'done, '
+                                                                                                        'and '
+                                                                                                        'who '
+                                                                                                        'decides?',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'},
+                                                                                              {'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'produces '
+                                                                                                        'a '
+                                                                                                        'versioned, '
+                                                                                                        'hash-bound '
+                                                                                                        'readiness '
+                                                                                                        'package '
+                                                                                                        'containing '
+                                                                                                        'a '
+                                                                                                        'machine-readable '
+                                                                                                        'readiness '
+                                                                                                        'ledger, '
+                                                                                                        'a '
+                                                                                                        'requirement-to-evidence-and-dependency '
+                                                                                                        'graph, '
+                                                                                                        'and '
+                                                                                                        'a '
+                                                                                                        'verdict '
+                                                                                                        'with '
+                                                                                                        'reasons '
+                                                                                                        'for '
+                                                                                                        'every '
+                                                                                                        'requirement; '
+                                                                                                        'while '
+                                                                                                        'blocked '
+                                                                                                        'it '
+                                                                                                        'also '
+                                                                                                        'contains '
+                                                                                                        'the '
+                                                                                                        'ordered '
+                                                                                                        'unresolved-evidence '
+                                                                                                        'and '
+                                                                                                        'owner-decision '
+                                                                                                        'queue, '
+                                                                                                        'and '
+                                                                                                        'when '
+                                                                                                        'ready '
+                                                                                                        'it '
+                                                                                                        'instead '
+                                                                                                        'contains '
+                                                                                                        'dependency-ordered, '
+                                                                                                        'independently '
+                                                                                                        'testable '
+                                                                                                        'atom '
+                                                                                                        'envelopes '
+                                                                                                        'defining '
+                                                                                                        'scope, '
+                                                                                                        'inputs, '
+                                                                                                        'boundaries, '
+                                                                                                        'prerequisites, '
+                                                                                                        'acceptance '
+                                                                                                        'checks, '
+                                                                                                        'verification '
+                                                                                                        'paths, '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions, '
+                                                                                                        'together '
+                                                                                                        'with '
+                                                                                                        'a '
+                                                                                                        'human-readable '
+                                                                                                        'report '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'receipt.',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'}]},
+                                                                'type': 'requirement'},
+                                                               {'id': 'req-e51c9757aeaa8d3d',
+                                                                'record': {'disposition': 'blocked',
+                                                                           'exact_text': 'The '
+                                                                                         'machinery '
+                                                                                         'must '
+                                                                                         'never '
+                                                                                         'invent a '
+                                                                                         'requirement, '
+                                                                                         'fact, '
+                                                                                         'dependency, '
+                                                                                         'evidence '
+                                                                                         'item, or '
+                                                                                         'owner '
+                                                                                         'decision; '
+                                                                                         'infer '
+                                                                                         'legal, '
+                                                                                         'business, '
+                                                                                         'permission, '
+                                                                                         'or '
+                                                                                         'promotion '
+                                                                                         'authority; '
+                                                                                         'inspect '
+                                                                                         'an '
+                                                                                         'undeclared '
+                                                                                         'source; '
+                                                                                         'mutate a '
+                                                                                         'product '
+                                                                                         'system; '
+                                                                                         'execute '
+                                                                                         'an '
+                                                                                         'implementation '
+                                                                                         'atom; or '
+                                                                                         'allow a '
+                                                                                         'model to '
+                                                                                         'control '
+                                                                                         'identity, '
+                                                                                         'ordering, '
+                                                                                         'state, '
+                                                                                         'validation, '
+                                                                                         'or '
+                                                                                         'pass/fail '
+                                                                                         'decisions. '
+                                                                                         'It must '
+                                                                                         'stop '
+                                                                                         'with an '
+                                                                                         'explicit '
+                                                                                         'reason '
+                                                                                         'and the '
+                                                                                         'single '
+                                                                                         'next '
+                                                                                         'required '
+                                                                                         'question '
+                                                                                         'whenever '
+                                                                                         'an input '
+                                                                                         'is '
+                                                                                         'missing, '
+                                                                                         'inaccessible, '
+                                                                                         'stale, '
+                                                                                         'unverifiable, '
+                                                                                         'provenance-free, '
+                                                                                         'or '
+                                                                                         'contradictory, '
+                                                                                         'model '
+                                                                                         'outputs '
+                                                                                         'are '
+                                                                                         'invalid '
+                                                                                         'or '
+                                                                                         'disagree '
+                                                                                         'beyond '
+                                                                                         'deterministic '
+                                                                                         'rules, '
+                                                                                         'required '
+                                                                                         'authority '
+                                                                                         'is '
+                                                                                         'absent, '
+                                                                                         'or any '
+                                                                                         'readiness '
+                                                                                         'invariant '
+                                                                                         'fails.',
+                                                                           'maturity': 'unassessed',
+                                                                           'ordinal': 3,
+                                                                           'requirement_id': 'req-e51c9757aeaa8d3d',
+                                                                           'source_anchors': [{'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'must '
+                                                                                                        'never '
+                                                                                                        'invent '
+                                                                                                        'a '
+                                                                                                        'requirement, '
+                                                                                                        'fact, '
+                                                                                                        'dependency, '
+                                                                                                        'evidence '
+                                                                                                        'item, '
+                                                                                                        'or '
+                                                                                                        'owner '
+                                                                                                        'decision; '
+                                                                                                        'infer '
+                                                                                                        'legal, '
+                                                                                                        'business, '
+                                                                                                        'permission, '
+                                                                                                        'or '
+                                                                                                        'promotion '
+                                                                                                        'authority; '
+                                                                                                        'inspect '
+                                                                                                        'an '
+                                                                                                        'undeclared '
+                                                                                                        'source; '
+                                                                                                        'mutate '
+                                                                                                        'a '
+                                                                                                        'product '
+                                                                                                        'system; '
+                                                                                                        'execute '
+                                                                                                        'an '
+                                                                                                        'implementation '
+                                                                                                        'atom; '
+                                                                                                        'or '
+                                                                                                        'allow '
+                                                                                                        'a '
+                                                                                                        'model '
+                                                                                                        'to '
+                                                                                                        'control '
+                                                                                                        'identity, '
+                                                                                                        'ordering, '
+                                                                                                        'state, '
+                                                                                                        'validation, '
+                                                                                                        'or '
+                                                                                                        'pass/fail '
+                                                                                                        'decisions, '
+                                                                                                        'and '
+                                                                                                        'it '
+                                                                                                        'must '
+                                                                                                        'stop '
+                                                                                                        'with '
+                                                                                                        'an '
+                                                                                                        'explicit '
+                                                                                                        'reason '
+                                                                                                        'and '
+                                                                                                        'the '
+                                                                                                        'single '
+                                                                                                        'next '
+                                                                                                        'required '
+                                                                                                        'question '
+                                                                                                        'whenever '
+                                                                                                        'an '
+                                                                                                        'input '
+                                                                                                        'is '
+                                                                                                        'missing, '
+                                                                                                        'inaccessible, '
+                                                                                                        'stale, '
+                                                                                                        'unverifiable, '
+                                                                                                        'provenance-free, '
+                                                                                                        'or '
+                                                                                                        'contradictory, '
+                                                                                                        'model '
+                                                                                                        'outputs '
+                                                                                                        'are '
+                                                                                                        'invalid '
+                                                                                                        'or '
+                                                                                                        'disagree '
+                                                                                                        'beyond '
+                                                                                                        'deterministic '
+                                                                                                        'rules, '
+                                                                                                        'required '
+                                                                                                        'authority '
+                                                                                                        'is '
+                                                                                                        'absent, '
+                                                                                                        'or '
+                                                                                                        'any '
+                                                                                                        'readiness '
+                                                                                                        'invariant '
+                                                                                                        'fails. '
+                                                                                                        '_Source: '
+                                                                                                        '`/Users/kamenkamenov/memory-knowledge/Tasks/requirement-to-atom-readiness-machinery/sources/owner-answers-v4.md`_ '
+                                                                                                        '## '
+                                                                                                        'q8 '
+                                                                                                        '— '
+                                                                                                        'What '
+                                                                                                        'is '
+                                                                                                        'deliberately '
+                                                                                                        'not '
+                                                                                                        'settled '
+                                                                                                        'here, '
+                                                                                                        'and '
+                                                                                                        'left '
+                                                                                                        'to '
+                                                                                                        'whoever '
+                                                                                                        'builds '
+                                                                                                        'it?',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'},
+                                                                                              {'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'must '
+                                                                                                        'never '
+                                                                                                        'invent '
+                                                                                                        'a '
+                                                                                                        'requirement, '
+                                                                                                        'fact, '
+                                                                                                        'dependency, '
+                                                                                                        'evidence '
+                                                                                                        'item, '
+                                                                                                        'or '
+                                                                                                        'owner '
+                                                                                                        'decision; '
+                                                                                                        'infer '
+                                                                                                        'legal, '
+                                                                                                        'business, '
+                                                                                                        'permission, '
+                                                                                                        'or '
+                                                                                                        'promotion '
+                                                                                                        'authority; '
+                                                                                                        'inspect '
+                                                                                                        'an '
+                                                                                                        'undeclared '
+                                                                                                        'source; '
+                                                                                                        'mutate '
+                                                                                                        'a '
+                                                                                                        'product '
+                                                                                                        'system; '
+                                                                                                        'execute '
+                                                                                                        'an '
+                                                                                                        'implementation '
+                                                                                                        'atom; '
+                                                                                                        'or '
+                                                                                                        'allow '
+                                                                                                        'a '
+                                                                                                        'model '
+                                                                                                        'to '
+                                                                                                        'control '
+                                                                                                        'identity, '
+                                                                                                        'ordering, '
+                                                                                                        'state, '
+                                                                                                        'validation, '
+                                                                                                        'or '
+                                                                                                        'pass/fail '
+                                                                                                        'decisions, '
+                                                                                                        'and '
+                                                                                                        'it '
+                                                                                                        'must '
+                                                                                                        'stop '
+                                                                                                        'with '
+                                                                                                        'an '
+                                                                                                        'explicit '
+                                                                                                        'reason '
+                                                                                                        'and '
+                                                                                                        'the '
+                                                                                                        'single '
+                                                                                                        'next '
+                                                                                                        'required '
+                                                                                                        'question '
+                                                                                                        'whenever '
+                                                                                                        'an '
+                                                                                                        'input '
+                                                                                                        'is '
+                                                                                                        'missing, '
+                                                                                                        'inaccessible, '
+                                                                                                        'stale, '
+                                                                                                        'unverifiable, '
+                                                                                                        'provenance-free, '
+                                                                                                        'or '
+                                                                                                        'contradictory, '
+                                                                                                        'model '
+                                                                                                        'outputs '
+                                                                                                        'are '
+                                                                                                        'invalid '
+                                                                                                        'or '
+                                                                                                        'disagree '
+                                                                                                        'beyond '
+                                                                                                        'deterministic '
+                                                                                                        'rules, '
+                                                                                                        'required '
+                                                                                                        'authority '
+                                                                                                        'is '
+                                                                                                        'absent, '
+                                                                                                        'or '
+                                                                                                        'any '
+                                                                                                        'readiness '
+                                                                                                        'invariant '
+                                                                                                        'fails.',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'}]},
+                                                                'type': 'requirement'}]},
+                             'semantic_payload_sha256': '1cff3cbfe9eaba36371bad33b9771647530f043a1ffa3600ec2b70fd1f74e6d2',
+                             'timeout_ms': 300000},
+                'response_schema': {'additionalProperties': False,
+                                    'properties': {'attempt': {'const': 1,
+                                                               'maximum': 2,
+                                                               'minimum': 1,
+                                                               'type': 'integer'},
+                                                   'criteria': {'items': {'additionalProperties': False,
+                                                                          'properties': {'criterion_id': {'enum': ['independent-evaluator'],
+                                                                                                          'maxLength': 8192,
+                                                                                                          'minLength': 1,
+                                                                                                          'pattern': '\\S',
+                                                                                                          'type': 'string'},
+                                                                                         'evidence_ids': {'items': {'maxLength': 8192,
+                                                                                                                    'minLength': 1,
+                                                                                                                    'pattern': '\\S',
+                                                                                                                    'type': 'string'},
+                                                                                                          'maxItems': 256,
+                                                                                                          'minItems': 1,
+                                                                                                          'type': 'array',
+                                                                                                          'uniqueItems': True},
+                                                                                         'reason': {'maxLength': 8192,
+                                                                                                    'minLength': 1,
+                                                                                                    'pattern': '\\S',
+                                                                                                    'type': 'string'},
+                                                                                         'verdict': {'enum': ['satisfied',
+                                                                                                              'unsatisfied',
+                                                                                                              'cannot_assess'],
+                                                                                                     'type': 'string'}},
+                                                                          'required': ['criterion_id',
+                                                                                       'verdict',
+                                                                                       'evidence_ids',
+                                                                                       'reason'],
+                                                                          'type': 'object'},
+                                                                'maxItems': 256,
+                                                                'minItems': 1,
+                                                                'type': 'array'},
+                                                   'envelope_sha256': {'const': 'db300c0d93eb60f4e0df137d409445c64f57200047d0063fc8d6efd66d9f5213',
+                                                                       'pattern': '^[0-9a-f]{64}$',
+                                                                       'type': 'string'},
+                                                   'evidence_ids': {'items': {'enum': ['telemetry-review'],
+                                                                              'maxLength': 8192,
+                                                                              'minLength': 1,
+                                                                              'pattern': '\\S',
+                                                                              'type': 'string'},
+                                                                    'maxItems': 256,
+                                                                    'minItems': 1,
+                                                                    'type': 'array',
+                                                                    'uniqueItems': True},
+                                                   'family': {'const': 'verification-adequacy',
+                                                              'type': 'string'},
+                                                   'node_id': {'const': 'condition-c80e6a40f897a45920b67b6b',
+                                                               'maxLength': 8192,
+                                                               'minLength': 1,
+                                                               'pattern': '\\S',
+                                                               'type': 'string'},
+                                                   'quotes': {'items': {'additionalProperties': False,
+                                                                        'properties': {'evidence_id': {'maxLength': 8192,
+                                                                                                       'minLength': 1,
+                                                                                                       'pattern': '\\S',
+                                                                                                       'type': 'string'},
+                                                                                       'quote': {'maxLength': 8192,
+                                                                                                 'minLength': 1,
+                                                                                                 'pattern': '\\S',
+                                                                                                 'type': 'string'}},
+                                                                        'required': ['evidence_id',
+                                                                                     'quote'],
+                                                                        'type': 'object'},
+                                                              'maxItems': 256,
+                                                              'minItems': 1,
+                                                              'type': 'array',
+                                                              'uniqueItems': True},
+                                                   'reason': {'maxLength': 8192,
+                                                              'minLength': 1,
+                                                              'pattern': '\\S',
+                                                              'type': 'string'},
+                                                   'run_id': {'const': '33c3041f552c138e5aa73c9c79ecad71c7627564f8df4174e95889da705a8863',
+                                                              'pattern': '^[0-9a-f]{64}$',
+                                                              'type': 'string'},
+                                                   'schema_version': {'const': 1,
+                                                                      'type': 'integer'},
+                                                   'seat': {'const': 'seat-1',
+                                                            'enum': ['seat-1', 'seat-2'],
+                                                            'type': 'string'},
+                                                   'verdict': {'enum': ['adequate',
+                                                                        'inadequate',
+                                                                        'cannot_assess'],
+                                                               'type': 'string'}},
+                                    'required': ['schema_version',
+                                                 'run_id',
+                                                 'node_id',
+                                                 'family',
+                                                 'attempt',
+                                                 'seat',
+                                                 'envelope_sha256',
+                                                 'verdict',
+                                                 'evidence_ids',
+                                                 'quotes',
+                                                 'reason',
+                                                 'criteria'],
+                                    'type': 'object'}},
+               {'envelope': {'attempt': 1,
+                             'authorization': 'not-granted; preparation and submitted responses do '
+                                              'not authorize a launch',
+                             'envelope_sha256': 'e3336d10592d6b64420c33a252254c7eed4bf6d62676a1c35334d4ac75409575',
+                             'family': 'verification-adequacy',
+                             'launcher': {'launcher': '/Users/kamenkamenov/.nvm/versions/node/v24.9.0/bin/codex',
+                                          'sha256': '134063e133f0b4244fa3b251acf973d4fe4b4aeeacbdc135211bf480f59f1477',
+                                          'target': '/Users/kamenkamenov/.nvm/versions/node/v24.9.0/lib/node_modules/@openai/codex/bin/codex.js',
+                                          'version': 'codex-cli 0.151.0'},
+                             'model_runtime': {'model': 'gpt-5.5',
+                                               'provider': 'openai-codex-cli',
+                                               'reasoning_effort': 'high'},
+                             'node_id': 'condition-c80e6a40f897a45920b67b6b',
+                             'predecessor_sha256': 'a1478c221c8b61c031d5fe1990ef1df72ce5f4ebe6235492a988bb46f1f11756',
+                             'response_path': '/private/tmp/atom7-probe-S9SWcH/adapter-cases/success/run/interviews/00000089/seat-2-response.json',
+                             'run_id': '33c3041f552c138e5aa73c9c79ecad71c7627564f8df4174e95889da705a8863',
+                             'schema_version': 1,
+                             'seat': 'seat-2',
+                             'semantic_payload': {'allowed_verdicts': ['adequate',
+                                                                       'inadequate',
+                                                                       'cannot_assess'],
+                                                  'answer_type': 'not-applicable',
+                                                  'candidate': None,
+                                                  'choices': [],
+                                                  'criteria': [{'criterion_id': 'independent-evaluator',
+                                                                'quote': '| 6 | Evaluation and '
+                                                                         'final assessment can '
+                                                                         "trust the candidate's "
+                                                                         'own verdict | Critical | '
+                                                                         'A candidate can '
+                                                                         'effectively grade itself '
+                                                                         '|',
+                                                                'source_object_sha256': 'bd123e5ef8d894f79f142407c10417a84a3d1cb227ac8da23887c3bf19b23db0'}],
+                                                  'dependency_ids': [],
+                                                  'evidence': [{'access_receipt': {'outcome': 'accessible',
+                                                                                   'pointer': '/access',
+                                                                                   'source_id': 'telemetry-byte-receipt'},
+                                                                'affected_requirement_ids': ['req-a85e221564f8558a',
+                                                                                             'req-e17b44a659f36a19',
+                                                                                             'req-e51c9757aeaa8d3d'],
+                                                                'capture_method': 'Local capture '
+                                                                                  'of the '
+                                                                                  'previously '
+                                                                                  'recorded '
+                                                                                  'telemetry '
+                                                                                  'findings; '
+                                                                                  'byte-for-byte '
+                                                                                  'reread checked '
+                                                                                  'by SHA-256.',
+                                                                'captured_at_utc': '2026-09-08T16:34:29.161663+00:00',
+                                                                'claim': '| 6 | Evaluation and '
+                                                                         'final assessment can '
+                                                                         "trust the candidate's "
+                                                                         'own verdict | Critical | '
+                                                                         'A candidate can '
+                                                                         'effectively grade itself '
+                                                                         '|',
+                                                                'evidence_id': 'telemetry-review',
+                                                                'excerpt': '| 6 | Evaluation and '
+                                                                           'final assessment can '
+                                                                           "trust the candidate's "
+                                                                           'own verdict | Critical '
+                                                                           '| A candidate can '
+                                                                           'effectively grade '
+                                                                           'itself |',
+                                                                'fitness': {'accessible_at_capture': True,
+                                                                            'authorized_for_declared_use': True,
+                                                                            'current': True,
+                                                                            'fit': True,
+                                                                            'hash_valid': True,
+                                                                            'present': True,
+                                                                            'reproducible': True},
+                                                                'freshness_rule': {'kind': 'immutable',
+                                                                                   'max_age_seconds': 0},
+                                                                'limitations': ['Captured finding '
+                                                                                'about evaluator '
+                                                                                'self-trust, not a '
+                                                                                'new model '
+                                                                                'judgment or '
+                                                                                'current repair '
+                                                                                'verification.'],
+                                                                'model_share_authorization': {'receipt_source_id': None,
+                                                                                              'use': 'local-only'},
+                                                                'origin': '/private/tmp/atom7-probe-S9SWcH/adapter-cases/sources/graph-telemetry-review',
+                                                                'reproduction_receipt': {'outcome': 'reproduced',
+                                                                                         'pointer': '/reproduction',
+                                                                                         'source_id': 'telemetry-byte-receipt'},
+                                                                'required_maturity': 'current-system',
+                                                                'sensitivity_class': 'internal',
+                                                                'source_object_sha256': 'bd123e5ef8d894f79f142407c10417a84a3d1cb227ac8da23887c3bf19b23db0'}],
+                                                  'family': 'verification-adequacy',
+                                                  'forbidden_judgments': ['owner authority',
+                                                                          'requirements creation',
+                                                                          'scope expansion',
+                                                                          'legal or commercial '
+                                                                          'policy approval',
+                                                                          'model sharing '
+                                                                          'authorization',
+                                                                          'implementation approval',
+                                                                          'execution',
+                                                                          'readiness '
+                                                                          'certification'],
+                                                  'question': 'Would the listed observable and '
+                                                              'rejection criteria prove the '
+                                                              'practical outcome without trusting '
+                                                              'the producer conclusion?',
+                                                  'subjects': [{'id': 'req-a85e221564f8558a',
+                                                                'record': {'disposition': 'blocked',
+                                                                           'exact_text': 'The '
+                                                                                         'controller '
+                                                                                         'may '
+                                                                                         'declare '
+                                                                                         'readiness '
+                                                                                         'only '
+                                                                                         'when '
+                                                                                         'deterministic '
+                                                                                         'checks '
+                                                                                         'confirm '
+                                                                                         'that '
+                                                                                         'every '
+                                                                                         'requirement '
+                                                                                         'has a '
+                                                                                         'provenance-bound '
+                                                                                         'disposition, '
+                                                                                         'all '
+                                                                                         'dependencies '
+                                                                                         'and '
+                                                                                         'contradictions '
+                                                                                         'are '
+                                                                                         'resolved, '
+                                                                                         'all '
+                                                                                         'mandatory '
+                                                                                         'evidence '
+                                                                                         'is '
+                                                                                         'current '
+                                                                                         'and '
+                                                                                         'reproducible, '
+                                                                                         'the '
+                                                                                         'package '
+                                                                                         'passes '
+                                                                                         'schema, '
+                                                                                         'integrity, '
+                                                                                         'and '
+                                                                                         'replay '
+                                                                                         'validation, '
+                                                                                         'and '
+                                                                                         'every '
+                                                                                         'proposed '
+                                                                                         'atom has '
+                                                                                         'explicit '
+                                                                                         'verification '
+                                                                                         'and stop '
+                                                                                         'conditions. '
+                                                                                         '`needs_owner` '
+                                                                                         'and '
+                                                                                         '`blocked` '
+                                                                                         'are '
+                                                                                         'valid '
+                                                                                         'resumable '
+                                                                                         'run '
+                                                                                         'outcomes '
+                                                                                         'but '
+                                                                                         'never '
+                                                                                         'readiness, '
+                                                                                         'and only '
+                                                                                         'the '
+                                                                                         'owner '
+                                                                                         'may '
+                                                                                         'approve '
+                                                                                         'the '
+                                                                                         'resulting '
+                                                                                         'atom '
+                                                                                         'sequence '
+                                                                                         'and '
+                                                                                         'authorize '
+                                                                                         'Atom '
+                                                                                         'Building '
+                                                                                         'Machinery '
+                                                                                         'to '
+                                                                                         'begin.',
+                                                                           'maturity': 'unassessed',
+                                                                           'ordinal': 2,
+                                                                           'requirement_id': 'req-a85e221564f8558a',
+                                                                           'source_anchors': [{'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'controller '
+                                                                                                        'may '
+                                                                                                        'declare '
+                                                                                                        'readiness '
+                                                                                                        'only '
+                                                                                                        'when '
+                                                                                                        'deterministic '
+                                                                                                        'checks '
+                                                                                                        'confirm '
+                                                                                                        'that '
+                                                                                                        'every '
+                                                                                                        'requirement '
+                                                                                                        'has '
+                                                                                                        'a '
+                                                                                                        'provenance-bound '
+                                                                                                        'disposition, '
+                                                                                                        'all '
+                                                                                                        'dependencies '
+                                                                                                        'and '
+                                                                                                        'contradictions '
+                                                                                                        'are '
+                                                                                                        'resolved, '
+                                                                                                        'all '
+                                                                                                        'mandatory '
+                                                                                                        'evidence '
+                                                                                                        'is '
+                                                                                                        'current '
+                                                                                                        'and '
+                                                                                                        'reproducible, '
+                                                                                                        'the '
+                                                                                                        'package '
+                                                                                                        'passes '
+                                                                                                        'schema, '
+                                                                                                        'integrity, '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'validation, '
+                                                                                                        'and '
+                                                                                                        'every '
+                                                                                                        'proposed '
+                                                                                                        'atom '
+                                                                                                        'has '
+                                                                                                        'explicit '
+                                                                                                        'verification '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions; '
+                                                                                                        '`needs_owner` '
+                                                                                                        'and '
+                                                                                                        '`blocked` '
+                                                                                                        'are '
+                                                                                                        'valid '
+                                                                                                        'resumable '
+                                                                                                        'run '
+                                                                                                        'outcomes '
+                                                                                                        'but '
+                                                                                                        'never '
+                                                                                                        'readiness, '
+                                                                                                        'and '
+                                                                                                        'only '
+                                                                                                        'the '
+                                                                                                        'owner '
+                                                                                                        'may '
+                                                                                                        'approve '
+                                                                                                        'the '
+                                                                                                        'resulting '
+                                                                                                        'atom '
+                                                                                                        'sequence '
+                                                                                                        'and '
+                                                                                                        'authorize '
+                                                                                                        'Atom '
+                                                                                                        'Building '
+                                                                                                        'Machinery '
+                                                                                                        'to '
+                                                                                                        'begin. '
+                                                                                                        '_Source: '
+                                                                                                        '`/Users/kamenkamenov/memory-knowledge/Tasks/requirement-to-atom-readiness-machinery/sources/owner-answers-v4.md`_ '
+                                                                                                        '## '
+                                                                                                        'q7 '
+                                                                                                        '— '
+                                                                                                        'What '
+                                                                                                        'must '
+                                                                                                        'it '
+                                                                                                        'never '
+                                                                                                        'do, '
+                                                                                                        'and '
+                                                                                                        'what '
+                                                                                                        'makes '
+                                                                                                        'it '
+                                                                                                        'stop '
+                                                                                                        'rather '
+                                                                                                        'than '
+                                                                                                        'guess?',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'},
+                                                                                              {'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'controller '
+                                                                                                        'may '
+                                                                                                        'declare '
+                                                                                                        'readiness '
+                                                                                                        'only '
+                                                                                                        'when '
+                                                                                                        'deterministic '
+                                                                                                        'checks '
+                                                                                                        'confirm '
+                                                                                                        'that '
+                                                                                                        'every '
+                                                                                                        'requirement '
+                                                                                                        'has '
+                                                                                                        'a '
+                                                                                                        'provenance-bound '
+                                                                                                        'disposition, '
+                                                                                                        'all '
+                                                                                                        'dependencies '
+                                                                                                        'and '
+                                                                                                        'contradictions '
+                                                                                                        'are '
+                                                                                                        'resolved, '
+                                                                                                        'all '
+                                                                                                        'mandatory '
+                                                                                                        'evidence '
+                                                                                                        'is '
+                                                                                                        'current '
+                                                                                                        'and '
+                                                                                                        'reproducible, '
+                                                                                                        'the '
+                                                                                                        'package '
+                                                                                                        'passes '
+                                                                                                        'schema, '
+                                                                                                        'integrity, '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'validation, '
+                                                                                                        'and '
+                                                                                                        'every '
+                                                                                                        'proposed '
+                                                                                                        'atom '
+                                                                                                        'has '
+                                                                                                        'explicit '
+                                                                                                        'verification '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions; '
+                                                                                                        '`needs_owner` '
+                                                                                                        'and '
+                                                                                                        '`blocked` '
+                                                                                                        'are '
+                                                                                                        'valid '
+                                                                                                        'resumable '
+                                                                                                        'run '
+                                                                                                        'outcomes '
+                                                                                                        'but '
+                                                                                                        'never '
+                                                                                                        'readiness, '
+                                                                                                        'and '
+                                                                                                        'only '
+                                                                                                        'the '
+                                                                                                        'owner '
+                                                                                                        'may '
+                                                                                                        'approve '
+                                                                                                        'the '
+                                                                                                        'resulting '
+                                                                                                        'atom '
+                                                                                                        'sequence '
+                                                                                                        'and '
+                                                                                                        'authorize '
+                                                                                                        'Atom '
+                                                                                                        'Building '
+                                                                                                        'Machinery '
+                                                                                                        'to '
+                                                                                                        'begin.',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'}]},
+                                                                'type': 'requirement'},
+                                                               {'id': 'req-e17b44a659f36a19',
+                                                                'record': {'disposition': 'blocked',
+                                                                           'exact_text': 'The '
+                                                                                         'machinery '
+                                                                                         'produces '
+                                                                                         'a '
+                                                                                         'versioned, '
+                                                                                         'hash-bound '
+                                                                                         'readiness '
+                                                                                         'package '
+                                                                                         'containing '
+                                                                                         'a '
+                                                                                         'machine-readable '
+                                                                                         'readiness '
+                                                                                         'ledger, '
+                                                                                         'a '
+                                                                                         'requirement-to-evidence-and-dependency '
+                                                                                         'graph, '
+                                                                                         'and a '
+                                                                                         'verdict '
+                                                                                         'with '
+                                                                                         'reasons '
+                                                                                         'for '
+                                                                                         'every '
+                                                                                         'requirement. '
+                                                                                         'While '
+                                                                                         'blocked '
+                                                                                         'it also '
+                                                                                         'contains '
+                                                                                         'the '
+                                                                                         'ordered '
+                                                                                         'unresolved-evidence '
+                                                                                         'and '
+                                                                                         'owner-decision '
+                                                                                         'queue, '
+                                                                                         'and when '
+                                                                                         'ready it '
+                                                                                         'instead '
+                                                                                         'contains '
+                                                                                         'dependency-ordered, '
+                                                                                         'independently '
+                                                                                         'testable '
+                                                                                         'atom '
+                                                                                         'envelopes '
+                                                                                         'defining '
+                                                                                         'scope, '
+                                                                                         'inputs, '
+                                                                                         'boundaries, '
+                                                                                         'prerequisites, '
+                                                                                         'acceptance '
+                                                                                         'checks, '
+                                                                                         'verification '
+                                                                                         'paths, '
+                                                                                         'and stop '
+                                                                                         'conditions, '
+                                                                                         'together '
+                                                                                         'with a '
+                                                                                         'human-readable '
+                                                                                         'report '
+                                                                                         'and '
+                                                                                         'replay '
+                                                                                         'receipt.',
+                                                                           'maturity': 'unassessed',
+                                                                           'ordinal': 5,
+                                                                           'requirement_id': 'req-e17b44a659f36a19',
+                                                                           'source_anchors': [{'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'produces '
+                                                                                                        'a '
+                                                                                                        'versioned, '
+                                                                                                        'hash-bound '
+                                                                                                        'readiness '
+                                                                                                        'package '
+                                                                                                        'containing '
+                                                                                                        'a '
+                                                                                                        'machine-readable '
+                                                                                                        'readiness '
+                                                                                                        'ledger, '
+                                                                                                        'a '
+                                                                                                        'requirement-to-evidence-and-dependency '
+                                                                                                        'graph, '
+                                                                                                        'and '
+                                                                                                        'a '
+                                                                                                        'verdict '
+                                                                                                        'with '
+                                                                                                        'reasons '
+                                                                                                        'for '
+                                                                                                        'every '
+                                                                                                        'requirement; '
+                                                                                                        'while '
+                                                                                                        'blocked '
+                                                                                                        'it '
+                                                                                                        'also '
+                                                                                                        'contains '
+                                                                                                        'the '
+                                                                                                        'ordered '
+                                                                                                        'unresolved-evidence '
+                                                                                                        'and '
+                                                                                                        'owner-decision '
+                                                                                                        'queue, '
+                                                                                                        'and '
+                                                                                                        'when '
+                                                                                                        'ready '
+                                                                                                        'it '
+                                                                                                        'instead '
+                                                                                                        'contains '
+                                                                                                        'dependency-ordered, '
+                                                                                                        'independently '
+                                                                                                        'testable '
+                                                                                                        'atom '
+                                                                                                        'envelopes '
+                                                                                                        'defining '
+                                                                                                        'scope, '
+                                                                                                        'inputs, '
+                                                                                                        'boundaries, '
+                                                                                                        'prerequisites, '
+                                                                                                        'acceptance '
+                                                                                                        'checks, '
+                                                                                                        'verification '
+                                                                                                        'paths, '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions, '
+                                                                                                        'together '
+                                                                                                        'with '
+                                                                                                        'a '
+                                                                                                        'human-readable '
+                                                                                                        'report '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'receipt. '
+                                                                                                        '_Source: '
+                                                                                                        '`/Users/kamenkamenov/memory-knowledge/Tasks/requirement-to-atom-readiness-machinery/sources/owner-answers-v4.md`_ '
+                                                                                                        '## '
+                                                                                                        'q6 '
+                                                                                                        '— '
+                                                                                                        'How '
+                                                                                                        'does '
+                                                                                                        'anybody '
+                                                                                                        'tell '
+                                                                                                        'it '
+                                                                                                        'is '
+                                                                                                        'done, '
+                                                                                                        'and '
+                                                                                                        'who '
+                                                                                                        'decides?',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'},
+                                                                                              {'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'produces '
+                                                                                                        'a '
+                                                                                                        'versioned, '
+                                                                                                        'hash-bound '
+                                                                                                        'readiness '
+                                                                                                        'package '
+                                                                                                        'containing '
+                                                                                                        'a '
+                                                                                                        'machine-readable '
+                                                                                                        'readiness '
+                                                                                                        'ledger, '
+                                                                                                        'a '
+                                                                                                        'requirement-to-evidence-and-dependency '
+                                                                                                        'graph, '
+                                                                                                        'and '
+                                                                                                        'a '
+                                                                                                        'verdict '
+                                                                                                        'with '
+                                                                                                        'reasons '
+                                                                                                        'for '
+                                                                                                        'every '
+                                                                                                        'requirement; '
+                                                                                                        'while '
+                                                                                                        'blocked '
+                                                                                                        'it '
+                                                                                                        'also '
+                                                                                                        'contains '
+                                                                                                        'the '
+                                                                                                        'ordered '
+                                                                                                        'unresolved-evidence '
+                                                                                                        'and '
+                                                                                                        'owner-decision '
+                                                                                                        'queue, '
+                                                                                                        'and '
+                                                                                                        'when '
+                                                                                                        'ready '
+                                                                                                        'it '
+                                                                                                        'instead '
+                                                                                                        'contains '
+                                                                                                        'dependency-ordered, '
+                                                                                                        'independently '
+                                                                                                        'testable '
+                                                                                                        'atom '
+                                                                                                        'envelopes '
+                                                                                                        'defining '
+                                                                                                        'scope, '
+                                                                                                        'inputs, '
+                                                                                                        'boundaries, '
+                                                                                                        'prerequisites, '
+                                                                                                        'acceptance '
+                                                                                                        'checks, '
+                                                                                                        'verification '
+                                                                                                        'paths, '
+                                                                                                        'and '
+                                                                                                        'stop '
+                                                                                                        'conditions, '
+                                                                                                        'together '
+                                                                                                        'with '
+                                                                                                        'a '
+                                                                                                        'human-readable '
+                                                                                                        'report '
+                                                                                                        'and '
+                                                                                                        'replay '
+                                                                                                        'receipt.',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'}]},
+                                                                'type': 'requirement'},
+                                                               {'id': 'req-e51c9757aeaa8d3d',
+                                                                'record': {'disposition': 'blocked',
+                                                                           'exact_text': 'The '
+                                                                                         'machinery '
+                                                                                         'must '
+                                                                                         'never '
+                                                                                         'invent a '
+                                                                                         'requirement, '
+                                                                                         'fact, '
+                                                                                         'dependency, '
+                                                                                         'evidence '
+                                                                                         'item, or '
+                                                                                         'owner '
+                                                                                         'decision; '
+                                                                                         'infer '
+                                                                                         'legal, '
+                                                                                         'business, '
+                                                                                         'permission, '
+                                                                                         'or '
+                                                                                         'promotion '
+                                                                                         'authority; '
+                                                                                         'inspect '
+                                                                                         'an '
+                                                                                         'undeclared '
+                                                                                         'source; '
+                                                                                         'mutate a '
+                                                                                         'product '
+                                                                                         'system; '
+                                                                                         'execute '
+                                                                                         'an '
+                                                                                         'implementation '
+                                                                                         'atom; or '
+                                                                                         'allow a '
+                                                                                         'model to '
+                                                                                         'control '
+                                                                                         'identity, '
+                                                                                         'ordering, '
+                                                                                         'state, '
+                                                                                         'validation, '
+                                                                                         'or '
+                                                                                         'pass/fail '
+                                                                                         'decisions. '
+                                                                                         'It must '
+                                                                                         'stop '
+                                                                                         'with an '
+                                                                                         'explicit '
+                                                                                         'reason '
+                                                                                         'and the '
+                                                                                         'single '
+                                                                                         'next '
+                                                                                         'required '
+                                                                                         'question '
+                                                                                         'whenever '
+                                                                                         'an input '
+                                                                                         'is '
+                                                                                         'missing, '
+                                                                                         'inaccessible, '
+                                                                                         'stale, '
+                                                                                         'unverifiable, '
+                                                                                         'provenance-free, '
+                                                                                         'or '
+                                                                                         'contradictory, '
+                                                                                         'model '
+                                                                                         'outputs '
+                                                                                         'are '
+                                                                                         'invalid '
+                                                                                         'or '
+                                                                                         'disagree '
+                                                                                         'beyond '
+                                                                                         'deterministic '
+                                                                                         'rules, '
+                                                                                         'required '
+                                                                                         'authority '
+                                                                                         'is '
+                                                                                         'absent, '
+                                                                                         'or any '
+                                                                                         'readiness '
+                                                                                         'invariant '
+                                                                                         'fails.',
+                                                                           'maturity': 'unassessed',
+                                                                           'ordinal': 3,
+                                                                           'requirement_id': 'req-e51c9757aeaa8d3d',
+                                                                           'source_anchors': [{'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'must '
+                                                                                                        'never '
+                                                                                                        'invent '
+                                                                                                        'a '
+                                                                                                        'requirement, '
+                                                                                                        'fact, '
+                                                                                                        'dependency, '
+                                                                                                        'evidence '
+                                                                                                        'item, '
+                                                                                                        'or '
+                                                                                                        'owner '
+                                                                                                        'decision; '
+                                                                                                        'infer '
+                                                                                                        'legal, '
+                                                                                                        'business, '
+                                                                                                        'permission, '
+                                                                                                        'or '
+                                                                                                        'promotion '
+                                                                                                        'authority; '
+                                                                                                        'inspect '
+                                                                                                        'an '
+                                                                                                        'undeclared '
+                                                                                                        'source; '
+                                                                                                        'mutate '
+                                                                                                        'a '
+                                                                                                        'product '
+                                                                                                        'system; '
+                                                                                                        'execute '
+                                                                                                        'an '
+                                                                                                        'implementation '
+                                                                                                        'atom; '
+                                                                                                        'or '
+                                                                                                        'allow '
+                                                                                                        'a '
+                                                                                                        'model '
+                                                                                                        'to '
+                                                                                                        'control '
+                                                                                                        'identity, '
+                                                                                                        'ordering, '
+                                                                                                        'state, '
+                                                                                                        'validation, '
+                                                                                                        'or '
+                                                                                                        'pass/fail '
+                                                                                                        'decisions, '
+                                                                                                        'and '
+                                                                                                        'it '
+                                                                                                        'must '
+                                                                                                        'stop '
+                                                                                                        'with '
+                                                                                                        'an '
+                                                                                                        'explicit '
+                                                                                                        'reason '
+                                                                                                        'and '
+                                                                                                        'the '
+                                                                                                        'single '
+                                                                                                        'next '
+                                                                                                        'required '
+                                                                                                        'question '
+                                                                                                        'whenever '
+                                                                                                        'an '
+                                                                                                        'input '
+                                                                                                        'is '
+                                                                                                        'missing, '
+                                                                                                        'inaccessible, '
+                                                                                                        'stale, '
+                                                                                                        'unverifiable, '
+                                                                                                        'provenance-free, '
+                                                                                                        'or '
+                                                                                                        'contradictory, '
+                                                                                                        'model '
+                                                                                                        'outputs '
+                                                                                                        'are '
+                                                                                                        'invalid '
+                                                                                                        'or '
+                                                                                                        'disagree '
+                                                                                                        'beyond '
+                                                                                                        'deterministic '
+                                                                                                        'rules, '
+                                                                                                        'required '
+                                                                                                        'authority '
+                                                                                                        'is '
+                                                                                                        'absent, '
+                                                                                                        'or '
+                                                                                                        'any '
+                                                                                                        'readiness '
+                                                                                                        'invariant '
+                                                                                                        'fails. '
+                                                                                                        '_Source: '
+                                                                                                        '`/Users/kamenkamenov/memory-knowledge/Tasks/requirement-to-atom-readiness-machinery/sources/owner-answers-v4.md`_ '
+                                                                                                        '## '
+                                                                                                        'q8 '
+                                                                                                        '— '
+                                                                                                        'What '
+                                                                                                        'is '
+                                                                                                        'deliberately '
+                                                                                                        'not '
+                                                                                                        'settled '
+                                                                                                        'here, '
+                                                                                                        'and '
+                                                                                                        'left '
+                                                                                                        'to '
+                                                                                                        'whoever '
+                                                                                                        'builds '
+                                                                                                        'it?',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'},
+                                                                                              {'piece_id': 'p-0001',
+                                                                                               'quote': 'The '
+                                                                                                        'machinery '
+                                                                                                        'must '
+                                                                                                        'never '
+                                                                                                        'invent '
+                                                                                                        'a '
+                                                                                                        'requirement, '
+                                                                                                        'fact, '
+                                                                                                        'dependency, '
+                                                                                                        'evidence '
+                                                                                                        'item, '
+                                                                                                        'or '
+                                                                                                        'owner '
+                                                                                                        'decision; '
+                                                                                                        'infer '
+                                                                                                        'legal, '
+                                                                                                        'business, '
+                                                                                                        'permission, '
+                                                                                                        'or '
+                                                                                                        'promotion '
+                                                                                                        'authority; '
+                                                                                                        'inspect '
+                                                                                                        'an '
+                                                                                                        'undeclared '
+                                                                                                        'source; '
+                                                                                                        'mutate '
+                                                                                                        'a '
+                                                                                                        'product '
+                                                                                                        'system; '
+                                                                                                        'execute '
+                                                                                                        'an '
+                                                                                                        'implementation '
+                                                                                                        'atom; '
+                                                                                                        'or '
+                                                                                                        'allow '
+                                                                                                        'a '
+                                                                                                        'model '
+                                                                                                        'to '
+                                                                                                        'control '
+                                                                                                        'identity, '
+                                                                                                        'ordering, '
+                                                                                                        'state, '
+                                                                                                        'validation, '
+                                                                                                        'or '
+                                                                                                        'pass/fail '
+                                                                                                        'decisions, '
+                                                                                                        'and '
+                                                                                                        'it '
+                                                                                                        'must '
+                                                                                                        'stop '
+                                                                                                        'with '
+                                                                                                        'an '
+                                                                                                        'explicit '
+                                                                                                        'reason '
+                                                                                                        'and '
+                                                                                                        'the '
+                                                                                                        'single '
+                                                                                                        'next '
+                                                                                                        'required '
+                                                                                                        'question '
+                                                                                                        'whenever '
+                                                                                                        'an '
+                                                                                                        'input '
+                                                                                                        'is '
+                                                                                                        'missing, '
+                                                                                                        'inaccessible, '
+                                                                                                        'stale, '
+                                                                                                        'unverifiable, '
+                                                                                                        'provenance-free, '
+                                                                                                        'or '
+                                                                                                        'contradictory, '
+                                                                                                        'model '
+                                                                                                        'outputs '
+                                                                                                        'are '
+                                                                                                        'invalid '
+                                                                                                        'or '
+                                                                                                        'disagree '
+                                                                                                        'beyond '
+                                                                                                        'deterministic '
+                                                                                                        'rules, '
+                                                                                                        'required '
+                                                                                                        'authority '
+                                                                                                        'is '
+                                                                                                        'absent, '
+                                                                                                        'or '
+                                                                                                        'any '
+                                                                                                        'readiness '
+                                                                                                        'invariant '
+                                                                                                        'fails.',
+                                                                                               'sha256': '582d1b751894c0367fa0a8f42b028e7f3f7ea8702ac566ec0e5f111160423d60'}]},
+                                                                'type': 'requirement'}]},
+                             'semantic_payload_sha256': '1cff3cbfe9eaba36371bad33b9771647530f043a1ffa3600ec2b70fd1f74e6d2',
+                             'timeout_ms': 300000},
+                'response_schema': {'additionalProperties': False,
+                                    'properties': {'attempt': {'const': 1,
+                                                               'maximum': 2,
+                                                               'minimum': 1,
+                                                               'type': 'integer'},
+                                                   'criteria': {'items': {'additionalProperties': False,
+                                                                          'properties': {'criterion_id': {'enum': ['independent-evaluator'],
+                                                                                                          'maxLength': 8192,
+                                                                                                          'minLength': 1,
+                                                                                                          'pattern': '\\S',
+                                                                                                          'type': 'string'},
+                                                                                         'evidence_ids': {'items': {'maxLength': 8192,
+                                                                                                                    'minLength': 1,
+                                                                                                                    'pattern': '\\S',
+                                                                                                                    'type': 'string'},
+                                                                                                          'maxItems': 256,
+                                                                                                          'minItems': 1,
+                                                                                                          'type': 'array',
+                                                                                                          'uniqueItems': True},
+                                                                                         'reason': {'maxLength': 8192,
+                                                                                                    'minLength': 1,
+                                                                                                    'pattern': '\\S',
+                                                                                                    'type': 'string'},
+                                                                                         'verdict': {'enum': ['satisfied',
+                                                                                                              'unsatisfied',
+                                                                                                              'cannot_assess'],
+                                                                                                     'type': 'string'}},
+                                                                          'required': ['criterion_id',
+                                                                                       'verdict',
+                                                                                       'evidence_ids',
+                                                                                       'reason'],
+                                                                          'type': 'object'},
+                                                                'maxItems': 256,
+                                                                'minItems': 1,
+                                                                'type': 'array'},
+                                                   'envelope_sha256': {'const': 'e3336d10592d6b64420c33a252254c7eed4bf6d62676a1c35334d4ac75409575',
+                                                                       'pattern': '^[0-9a-f]{64}$',
+                                                                       'type': 'string'},
+                                                   'evidence_ids': {'items': {'enum': ['telemetry-review'],
+                                                                              'maxLength': 8192,
+                                                                              'minLength': 1,
+                                                                              'pattern': '\\S',
+                                                                              'type': 'string'},
+                                                                    'maxItems': 256,
+                                                                    'minItems': 1,
+                                                                    'type': 'array',
+                                                                    'uniqueItems': True},
+                                                   'family': {'const': 'verification-adequacy',
+                                                              'type': 'string'},
+                                                   'node_id': {'const': 'condition-c80e6a40f897a45920b67b6b',
+                                                               'maxLength': 8192,
+                                                               'minLength': 1,
+                                                               'pattern': '\\S',
+                                                               'type': 'string'},
+                                                   'quotes': {'items': {'additionalProperties': False,
+                                                                        'properties': {'evidence_id': {'maxLength': 8192,
+                                                                                                       'minLength': 1,
+                                                                                                       'pattern': '\\S',
+                                                                                                       'type': 'string'},
+                                                                                       'quote': {'maxLength': 8192,
+                                                                                                 'minLength': 1,
+                                                                                                 'pattern': '\\S',
+                                                                                                 'type': 'string'}},
+                                                                        'required': ['evidence_id',
+                                                                                     'quote'],
+                                                                        'type': 'object'},
+                                                              'maxItems': 256,
+                                                              'minItems': 1,
+                                                              'type': 'array',
+                                                              'uniqueItems': True},
+                                                   'reason': {'maxLength': 8192,
+                                                              'minLength': 1,
+                                                              'pattern': '\\S',
+                                                              'type': 'string'},
+                                                   'run_id': {'const': '33c3041f552c138e5aa73c9c79ecad71c7627564f8df4174e95889da705a8863',
+                                                              'pattern': '^[0-9a-f]{64}$',
+                                                              'type': 'string'},
+                                                   'schema_version': {'const': 1,
+                                                                      'type': 'integer'},
+                                                   'seat': {'const': 'seat-2',
+                                                            'enum': ['seat-1', 'seat-2'],
+                                                            'type': 'string'},
+                                                   'verdict': {'enum': ['adequate',
+                                                                        'inadequate',
+                                                                        'cannot_assess'],
+                                                               'type': 'string'}},
+                                    'required': ['schema_version',
+                                                 'run_id',
+                                                 'node_id',
+                                                 'family',
+                                                 'attempt',
+                                                 'seat',
+                                                 'envelope_sha256',
+                                                 'verdict',
+                                                 'evidence_ids',
+                                                 'quotes',
+                                                 'reason',
+                                                 'criteria'],
+                                    'type': 'object'}}],
+ 'family': 'verification-adequacy',
+ 'node_id': 'condition-c80e6a40f897a45920b67b6b'}
+    captured_responses = [{'attempt': 1,
+  'criteria': [{'criterion_id': 'independent-evaluator',
+                'evidence_ids': ['telemetry-review'],
+                'reason': 'The excerpt explicitly states that evaluation and final assessment can '
+                          "trust the candidate's own verdict and that the candidate can grade "
+                          'itself.',
+                'verdict': 'unsatisfied'}],
+  'envelope_sha256': 'db300c0d93eb60f4e0df137d409445c64f57200047d0063fc8d6efd66d9f5213',
+  'evidence_ids': ['telemetry-review'],
+  'family': 'verification-adequacy',
+  'node_id': 'condition-c80e6a40f897a45920b67b6b',
+  'quotes': [{'evidence_id': 'telemetry-review',
+              'quote': "| 6 | Evaluation and final assessment can trust the candidate's own "
+                       'verdict | Critical | A candidate can effectively grade itself |'}],
+  'reason': 'The excerpt explicitly states that evaluation and final assessment can trust the '
+            "candidate's own verdict and that the candidate can grade itself.",
+  'run_id': '33c3041f552c138e5aa73c9c79ecad71c7627564f8df4174e95889da705a8863',
+  'schema_version': 1,
+  'seat': 'seat-1',
+  'verdict': 'inadequate'},
+ {'attempt': 1,
+  'criteria': [{'criterion_id': 'independent-evaluator',
+                'evidence_ids': ['telemetry-review'],
+                'reason': 'The excerpt explicitly states that evaluation and final assessment can '
+                          "trust the candidate's own verdict and that the candidate can grade "
+                          'itself.',
+                'verdict': 'unsatisfied'}],
+  'envelope_sha256': 'e3336d10592d6b64420c33a252254c7eed4bf6d62676a1c35334d4ac75409575',
+  'evidence_ids': ['telemetry-review'],
+  'family': 'verification-adequacy',
+  'node_id': 'condition-c80e6a40f897a45920b67b6b',
+  'quotes': [{'evidence_id': 'telemetry-review',
+              'quote': "| 6 | Evaluation and final assessment can trust the candidate's own "
+                       'verdict | Critical | A candidate can effectively grade itself |'}],
+  'reason': 'The excerpt explicitly states that evaluation and final assessment can trust the '
+            "candidate's own verdict and that the candidate can grade itself.",
+  'run_id': '33c3041f552c138e5aa73c9c79ecad71c7627564f8df4174e95889da705a8863',
+  'schema_version': 1,
+  'seat': 'seat-2',
+  'verdict': 'inadequate'}]
+
+    def test_seven_closed_family_contracts_and_projection(self):
+        import jsonschema
+        module = self.module
+        self.assertEqual(len(module.FAMILY_VERDICTS), 7)
+        schema = module.model_response_schema()
+        jsonschema.Draft202012Validator.check_schema(schema)
+        self.assertEqual(schema, json.loads((ROOT / 'skills/requirement-to-atom-readiness-machinery/schemas/model-response.schema.json').read_text()))
+        for family in module.FAMILY_VERDICTS:
+            child = module.family_response_schema(family)
+            self.assertFalse(child['additionalProperties'])
+            self.assertEqual(set(child['required']), set(child['properties']))
+            self.assertNotIn('cannot_assess', module.PROPOSED_FACTS[family])
+            child['properties']['evidence_ids']['items']['enum'] = ['telemetry-review']
+            self.assertNotIn('enum', child['properties']['node_id'])
+            self.assertNotIn('enum', child['properties']['reason'])
+
+    def test_captured_matching_pair_proposes_only_one_fact(self):
+        result = self.module.evaluate_submission(self.captured_pending, self.module.canonical(self.captured_responses), None)
+        self.assertEqual(result['status'], 'admitted')
+        self.assertEqual(result['fact']['fact_type'], 'verification-adequacy:inadequate')
+        self.assertEqual(result['fact']['authority'], 'proposed-only')
+        self.assertNotIn('readiness', result['fact'])
+
+    def test_captured_pair_rejection_mutations(self):
+        import copy
+        for name in ('missing', 'duplicate', 'foreign', 'unsupported', 'disagreeing', 'criterion', 'authority', 'cannot-assess'):
+            rows = copy.deepcopy(self.captured_responses)
+            if name == 'missing': rows.pop()
+            if name == 'duplicate': rows[1] = rows[0]
+            if name == 'foreign': rows[0]['evidence_ids'] = ['foreign']
+            if name == 'unsupported': rows[0]['quotes'][0]['quote'] = 'not in evidence'
+            if name == 'disagreeing':
+                rows[1]['verdict'] = 'adequate'
+                rows[1]['criteria'][0]['verdict'] = 'satisfied'
+            if name == 'criterion': rows[0]['criteria'] = []
+            if name == 'authority': rows[0]['approved'] = True
+            if name == 'cannot-assess': rows[0]['verdict'] = 'cannot_assess'
+            with self.subTest(name=name):
+                result = self.module.evaluate_submission(self.captured_pending, self.module.canonical(rows), None)
+                self.assertEqual(result['status'], 'rejected')
+                self.assertIsNone(result['fact'])
+                self.assertTrue(result['rejection'])
+
+    def test_malformed_and_unprepared_submissions_are_retained_rejections(self):
+        for pending, raw in ((self.captured_pending, b'{'), (None, self.module.canonical(self.captured_responses))):
+            result = self.module.evaluate_submission(pending, raw, None)
+            self.assertEqual(result['status'], 'rejected')
+            self.assertIsNone(result['fact'])
+
+    def test_response_bounds_and_closed_nested_criteria(self):
+        import copy
+        schema = self.captured_pending['envelopes'][0]['response_schema']
+        for mutation in ('extra-field', 'too-many', 'bad-attempt', 'bool-attempt'):
+            row = copy.deepcopy(self.captured_responses[0])
+            if mutation == 'extra-field': row['criteria'][0]['permission'] = 'approved'
+            if mutation == 'too-many': row['evidence_ids'] = ['telemetry-review'] * 257
+            if mutation == 'bad-attempt': row['attempt'] = 3
+            if mutation == 'bool-attempt': row['attempt'] = True
+            with self.subTest(mutation=mutation), self.assertRaises(self.module.Refused):
+                self.module.validate_shape(row, schema)
+
+
+    def test_interview_journal_rejects_equal_valued_wrong_json_types(self):
+        import base64, copy, tempfile
+        module = self.module
+        # Exercise the journal seam with code-created state and the captured response bytes.
+        events = module.chain([('run_started', {'interview_state': module.initial_interview_state()})])
+        raw = module.canonical(self.captured_responses)
+        payload = {'submission_base64': base64.b64encode(raw).decode(), 'submission_sha256': module.digest(raw),
+                   'result': module.evaluate_submission(None, raw, None)}
+        event = module.chain([(e['event'], e['payload']) for e in events] + [('interview_rejected', payload)])[-1]
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory).resolve()
+            transaction = work / 'run/interviews/00000001'
+            transaction.mkdir(parents=True)
+            head = work / 'run/interview-head.json'
+            head.write_bytes(module.canonical({'ledger_tip': event['sha256'], 'event_count': 2}) + b'\n')
+            path = transaction / 'event.json'
+            path.write_bytes(module.canonical(event) + b'\n')
+            state, _, _ = module.replay_interviews(work, copy.deepcopy(events), {}, None)
+            self.assertEqual(len(state['rejections']), 1)
+            for key, value in [('schema_version', True), ('sequence', 2.0)]:
+                changed = copy.deepcopy(event)
+                changed[key] = value
+                path.write_bytes(module.canonical(changed) + b'\n')
+                with self.subTest(key=key), self.assertRaises(module.Refused):
+                    module.replay_interviews(work, copy.deepcopy(events), {}, None)

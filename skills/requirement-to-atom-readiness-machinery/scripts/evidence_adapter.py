@@ -37,6 +37,98 @@ def array(item, minimum=0):
     return {'type': 'array', 'items': item, 'minItems': minimum, 'uniqueItems': True}
 
 
+SEMANTIC_FAMILIES = ('evidence-bearing', 'evidence-sufficiency', 'dependency-discovery',
+                     'contradiction-assessment', 'verification-adequacy', 'atom-cohesion',
+                     'owner-question-formulation')
+SEMANTIC_FIELDS = ('family', 'subject_ids', 'evidence_refs', 'criteria', 'dependency_ids',
+                   'choices', 'answer_type', 'candidate', 'required_maturity')
+
+
+def semantic_schema():
+    text = {'type': 'string', 'minLength': 1, 'maxLength': 8192, 'pattern': r'\S'}
+    return closed(SEMANTIC_FIELDS, {
+        'family': {'enum': list(SEMANTIC_FAMILIES)},
+        'required_maturity': {'enum': ['current-system', 'future-system', 'not-applicable']},
+        'subject_ids': array(text, 1),
+        'evidence_refs': array(closed(('evidence_id', 'quote'), {'evidence_id': text, 'quote': text}), 1),
+        'criteria': array(closed(('criterion_id', 'source_object_sha256', 'quote'), {
+            'criterion_id': text, 'source_object_sha256': {'type': 'string', 'pattern': SHA_PATTERN}, 'quote': text})),
+        'dependency_ids': array(text),
+        'choices': array(closed(('choice_id', 'label'), {'choice_id': text, 'label': text})),
+        'answer_type': {'enum': ['not-applicable', 'enum-choice', 'free-text']},
+        'candidate': {'anyOf': [{'type': 'null'}, closed(
+            ('outcome', 'boundaries', 'prerequisites', 'requirement_ids', 'case_ids'), {
+                'outcome': text, 'boundaries': array(text, 1), 'prerequisites': array(text),
+                'requirement_ids': array(text, 1), 'case_ids': array(text, 1)})]}})
+
+
+def validate_semantic(spec, row, requirements, evidence, sources, aliases, condition_ids):
+    """Bind an explicit obligation to admitted identities. Never infer it from prose."""
+    validate(spec, semantic_schema())
+    family = spec['family']
+    label = 'interview ' + row['condition_id']
+    def require(ok, message):
+        if not ok:
+            raise EvidenceRefused(label + ': ' + message)
+    require(row['resolution_class'] == ('owner-decision' if family == 'owner-question-formulation' else 'semantic-check'),
+            'family ' + family + ' requires an explicit matching semantic-check or owner-decision condition')
+    for field in ('subject_ids', 'evidence_refs', 'criteria', 'dependency_ids', 'choices'):
+        require(len(spec[field]) <= 256, field + ' exceeds 256 items; split the declared obligation before preparation')
+    require((spec['required_maturity'] != 'not-applicable') == (family == 'evidence-sufficiency'),
+            'evidence-sufficiency requires explicit current-system or future-system maturity; other families use not-applicable')
+    subjects = [aliases.get(i, i) for i in spec['subject_ids']]
+    require(len(set(subjects)) == len(subjects) and all(i in requirements for i in subjects),
+            'subject_ids must be distinct sealed requirement identities; foreign or duplicate identity supplied')
+    require(set(subjects) <= {aliases.get(i, i) for i in row['requirement_ids']},
+            'subject_ids exceed the requirements affected by this condition; bind the exact affected set')
+    if family in ('evidence-bearing', 'evidence-sufficiency', 'dependency-discovery'):
+        require(len(subjects) == 1, family + ' requires exactly one subject requirement')
+    if family == 'contradiction-assessment':
+        require(len(subjects) == 2, 'contradiction-assessment requires two distinct registered requirement claims')
+    selected = [ref['evidence_id'] for ref in spec['evidence_refs']]
+    require(len(set(selected)) == len(selected), 'evidence_refs repeats an evidence_id; select each once')
+    for ref in spec['evidence_refs']:
+        require(ref['evidence_id'] in evidence, 'foreign evidence_id ' + ref['evidence_id'] + '; supply an admitted evidence record')
+        record = evidence[ref['evidence_id']]
+        raw = sources.get(record['source_object_sha256'])
+        require(raw is not None, 'evidence ' + ref['evidence_id'] + ' lacks its source object; admit its exact bytes')
+        require(ref['quote'].encode('utf-8') in raw, 'quote for ' + ref['evidence_id'] + ' is absent; copy exact source bytes')
+        require(bool(set(subjects) & set(record['affected_requirement_ids'])),
+                'evidence ' + ref['evidence_id'] + ' has no affected subject; provide a declared subject binding')
+    if family == 'evidence-bearing':
+        require(len(selected) == 1, 'evidence-bearing requires exactly one evidence item')
+    if family == 'contradiction-assessment':
+        require(len(selected) == 2, 'contradiction-assessment requires the two source evidence anchors')
+    criteria = [c['criterion_id'] for c in spec['criteria']]
+    require(len(set(criteria)) == len(criteria), 'criteria repeats an identity; provide each once')
+    require(bool(criteria) == (family in ('evidence-sufficiency', 'verification-adequacy')),
+            'criteria must be nonempty for sufficiency/adequacy and empty for other families')
+    for criterion in spec['criteria']:
+        require(criterion['source_object_sha256'] in {evidence[i]['source_object_sha256'] for i in selected},
+                'criterion ' + criterion['criterion_id'] + ' has no selected evidence metadata; select its evidence record before sharing its quote')
+        raw = sources.get(criterion['source_object_sha256'])
+        require(raw is not None and criterion['quote'].encode('utf-8') in raw,
+                'criterion ' + criterion['criterion_id'] + ' has a foreign hash or absent quote; bind exact admitted bytes')
+    dependencies = [aliases.get(i, i) for i in spec['dependency_ids']]
+    require(len(set(dependencies)) == len(dependencies) and all(i in requirements or i in condition_ids for i in dependencies),
+            'dependency_ids contains duplicate or foreign IDs; use distinct admitted requirements or conditions')
+    require(not set(dependencies) & set(subjects), 'dependency_ids contains the subject itself; remove the self-edge')
+    require(family == 'dependency-discovery' or not dependencies, 'only dependency-discovery may list dependency candidates')
+    choices = [c['choice_id'] for c in spec['choices']]
+    require(len(set(choices)) == len(choices), 'choices repeats a choice_id; list each once')
+    if family == 'owner-question-formulation':
+        require(spec['answer_type'] in ('enum-choice', 'free-text'), 'owner question needs enum-choice or free-text answer_type')
+        require(bool(choices) == (spec['answer_type'] == 'enum-choice'), 'enum-choice requires a complete nonempty choice set; free-text requires no choices')
+    else:
+        require(spec['answer_type'] == 'not-applicable' and not choices, 'non-owner interview cannot define an owner answer or choices')
+    candidate = spec['candidate']
+    require((candidate is not None) == (family == 'atom-cohesion'), 'candidate is required only for atom-cohesion and must otherwise be null')
+    if candidate is not None:
+        require(set(candidate['requirement_ids']) == set(subjects), 'candidate requirement_ids differ from the complete subject set')
+        require(all(i in requirements or i in condition_ids for i in candidate['prerequisites']), 'candidate prerequisites contain an unregistered identity')
+    return {**spec, 'subject_ids': subjects, 'dependency_ids': dependencies}
+
+
 def definitions():
     text = {'type': 'string', 'minLength': 1, 'pattern': r'\S'}
     digest = {'$ref': '#/$defs/sha256'}
@@ -58,6 +150,7 @@ def definitions():
     condition = closed(CONDITION_FIELDS, {'condition_id':text,'resolution_class':{'enum':list(RESOLUTION_CLASSES)},
                        'source_id':text,'source_quote':text,'requirement_ids':array(text,1),
                        'recovery_condition':text,'dependencies':array(text)})
+    condition = {'oneOf': [condition, closed(CONDITION_FIELDS + ('interview',), {**condition['properties'], 'interview': semantic_schema()})]}
     binding = closed(BINDING_FIELDS, {'alias':text,'requirement_id':text,'legacy_document_source_id':text,
                      'legacy_ordinal':{'type':'integer','minimum':1},'legacy_exact_text':text,
                      'current_exact_text':text,'mapping_proof_source_id':{'type':['string','null']}})
@@ -78,6 +171,8 @@ def definitions():
          'independence_rule':{'enum':['independent','producer-only','unassessed']},'status':{'enum':['pending','blocked','verified']}})
     atom = closed(('outcome','boundaries','prerequisites','requirement_ids','case_ids'),
         {'outcome':text,'boundaries':array(text,1),'prerequisites':array(text),'requirement_ids':array(text,1),'case_ids':array(text,1)})
+    verification = {'oneOf': [verification, closed(tuple(verification['required']) + ('interview',), {**verification['properties'], 'interview': semantic_schema()})]}
+    authority = {'oneOf': [authority, closed(tuple(authority['required']) + ('interview',), {**authority['properties'], 'interview': semantic_schema()})]}
     records = [requirement,evidence_node,authority,contradiction,verification,atom]
     node = {'oneOf':[closed(NODE_FIELDS,{'id':text,'type':{'const':kind},'record':record}) for kind,record in zip(NODE_TYPES,records)]}
     queue = closed(QUEUE_FIELDS,{'condition_id':text,'node_id':text,'blocking_class':{'enum':list(BLOCKING_CLASSES)},
@@ -337,6 +432,13 @@ def build_graph(manifests, upstream, read, as_of, parse_blockers=None):
             if any(digest(sources[c['source_id']])==digest(raw) and c['source_quote']==quote and c['resolution_class']=='deterministic-blocker' for c in conditions):continue
             register_condition({'condition_id':'blocker-'+event['occurrence_id'],'resolution_class':'deterministic-blocker','source_id':source_id,
                 'source_quote':quote,'requirement_ids':list(known),'recovery_condition':'Supply complete same-path verification and blocker closeout for '+event['occurrence_id'],'dependencies':[]},len(pending))
+    # Resolve descriptors only after every evidence record and condition has been admitted.
+    evidence_by_id={n['record']['evidence']['evidence_id']:n['record']['evidence'] for n in nodes if n['type']=='evidence'}
+    source_by_hash={digest(raw):raw for raw in sources.values()}
+    for row in conditions:
+        if 'interview' in row:
+            spec=validate_semantic(row['interview'],row,known,evidence_by_id,source_by_hash,aliases,set(condition_nodes))
+            next(n for n in nodes if n['id']==condition_nodes[row['condition_id']])['record']['interview']=spec
     nodes.sort(key=lambda n:n['id']);edges.sort(key=lambda e:(e['type'],e['source'],e['target']))
     if len({n['id'] for n in nodes})!=len(nodes):raise EvidenceRefused('graph: node identity collision')
     layers=verify_edges(nodes,edges)
