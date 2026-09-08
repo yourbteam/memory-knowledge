@@ -85,7 +85,7 @@ import uuid
 from datetime import datetime, timezone
 
 EVENT_FIELDS = ('schema_version', 'sequence', 'event', 'previous', 'payload', 'sha256')
-START_FIELDS = ('request_sha256', 'runtime', 'controller_sha256', 'recorded_at', 'upstream')
+START_FIELDS = ('request_sha256', 'runtime', 'controller_sha256', 'recorded_at', 'upstream', 'evidence_graph')
 INPUT_FIELDS = ('identity', 'role', 'origin', 'sha256', 'size', 'object_path', 'imported_at')
 GENESIS = '0' * 64
 
@@ -289,13 +289,18 @@ def chain(records):
 
 
 def projection(events, request):
-    return {'schema_version': 1, 'feature_id': request['feature_id'],
+    result = {'schema_version': 1, 'feature_id': request['feature_id'],
             'status': 'initialized', 'readiness': 'not-assessed',
             'ledger_tip': events[-1]['sha256'], 'event_count': len(events),
             'request_sha256': events[0]['payload']['request_sha256'],
             'runtime': events[0]['payload']['runtime'],
             'inputs': [e['payload'] for e in events[1:]],
             'upstream': events[0]['payload']['upstream']}
+    graph = events[0]['payload']['evidence_graph']
+    if graph is not None:
+        result.update({key: graph['result'][key] for key in ('status', 'readiness', 'graph_sha256', 'next_action')})
+        result['queue_count'] = len(graph['result']['queue'])
+    return result
 
 
 def start(request_path, work, expected_tip):
@@ -332,15 +337,19 @@ def start(request_path, work, expected_tip):
         upstream = collect_upstreams(request, captured, work, total)
         runtime = runtime_identity()
         now = datetime.now(timezone.utc).isoformat()
+        graph = collect_graph(request, captured, work, upstream, now)
         request_bytes = canonical(request) + b'\n'
         records = [('run_started', {'request_sha256': digest(request_bytes), 'runtime': runtime,
-                    'controller_sha256': adapter_code_sha256(), 'recorded_at': now, 'upstream': upstream})]
+                    'controller_sha256': adapter_code_sha256(), 'recorded_at': now, 'upstream': upstream, 'evidence_graph': graph})]
         files = {'request.json': request_bytes}
         for identity, role, item, raw in captured:
             relative = 'inputs/objects/' + item['sha256']
             files[relative] = raw
             records.append(('input_admitted', {'identity': identity, 'role': role, 'origin': item['path'],
                             'sha256': item['sha256'], 'size': len(raw), 'object_path': relative, 'imported_at': now}))
+        if graph is not None:
+            files['graph.json'] = canonical(graph['result']['graph']) + b'\n'
+            files['queue.json'] = canonical(graph['result']['queue']) + b'\n'
         events = chain(records)
         files['ledger.jsonl'] = b''.join(canonical(e) + b'\n' for e in events)
         files['state.json'] = canonical(projection(events, request)) + b'\n'
@@ -422,6 +431,14 @@ def replay(work):
             if type(member) is not dict or set(member) != {'identity', 'role', 'path', 'sha256'} or member['role'] != 'upstream-evidence':
                 raise Refused('upstream member: require exact identity, role, path and hash fields')
             items.append((member['identity'], member['role'], {'path': member['path'], 'sha256': member['sha256']}))
+        graph = events[0]['payload'].get('evidence_graph')
+        if graph is not None:
+            if type(graph) is not dict or set(graph) != {'members', 'before_sha256', 'after_sha256', 'result'} or type(graph['members']) is not list:
+                raise Refused('graph admission: require exact snapshot members, before/after hashes and result')
+            for member in graph['members']:
+                if type(member) is not dict or set(member) != {'identity', 'role', 'path', 'sha256'} or member['role'] != 'graph-evidence':
+                    raise Refused('graph member: require exact identity, role, path and hash')
+                items.append((member['identity'], member['role'], {'path': member['path'], 'sha256': member['sha256']}))
         if len(events) != len(items) + 1:
             raise Refused('ledger: missing or extra input events; restore the exact complete ledger')
         records = []
@@ -467,6 +484,18 @@ def replay(work):
             raise Refused('upstream import projection differs from replayed evidence')
         if any(row['path'] not in consumed for row in upstream['members']):
             raise Refused('upstream import contains a foreign unused member')
+        rebuilt = verify_graph(request, checked, snapshot_read, first['recorded_at'])
+        if (rebuilt is None) != (graph is None):
+            raise Refused('graph admission differs from the declared manifests')
+        if graph is not None:
+            if rebuilt != graph['result'] or graph['before_sha256'] != GENESIS or graph['after_sha256'] != rebuilt['graph_sha256']:
+                raise Refused('graph admission differs from frozen evidence replay')
+            if any(row['path'] not in consumed for row in graph['members']):
+                raise Refused('graph admission contains an unused source member')
+            for name, value in [('graph.json', rebuilt['graph']), ('queue.json', rebuilt['queue'])]:
+                expected_files.add(name)
+                if read_file(base / name, 33554432) != canonical(value) + b'\n':
+                    raise Refused(f'{name}: projection differs from frozen graph replay')
         actual_files = set()
         expected_dirs = {'inputs', 'inputs/objects'}
         for path in base.rglob('*'):
@@ -496,7 +525,7 @@ def kernel_main():
     begin.add_argument('request')
     begin.add_argument('work')
     begin.add_argument('--expected-tip', required=True)
-    for name in ('status', 'verify-replay'):
+    for name in ('status', 'verify-replay', 'advance'):
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
     args = parser.parse_args()
     try:
@@ -596,7 +625,98 @@ def collect_upstreams(request, captured, work, total):
 
 def adapter_code_sha256():
     return digest(canonical([{'path': name, 'sha256': digest(read_file(Path(__file__).parent / name, 33554432))}
-                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py')]))
+                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py')]))
+
+
+def evidence_module():
+    import importlib.util
+    path = Path(__file__).parent / 'evidence_adapter.py'
+    spec = importlib.util.spec_from_file_location('readiness_evidence_adapter', path)
+    module = importlib.util.module_from_spec(spec)
+    exec(compile(read_file(path, 33554432), str(path), 'exec'), module.__dict__)
+    return module
+
+
+def verify_graph(request, upstream, read, now):
+    manifests = []
+    for field, kind in [('evidence_manifests', 'evidence'), ('telemetry_manifests', 'telemetry'), ('blocker_ledgers', 'blockers')]:
+        for item in request[field]:
+            manifest = decode(read(Path(item['path']), item['sha256']), field)
+            if type(manifest) is not dict or manifest.get('kind') != kind:
+                raise Refused(f'{field}: expected an explicit {kind} manifest, not raw data')
+            manifests.append(manifest)
+    if not manifests:
+        return None
+    handoff = decode(read(Path(request['requirements_handoff']['path']), request['requirements_handoff']['sha256']), 'Requirements handoff')
+    requirements = {**upstream['requirements_record'],
+                    'current_document_sha256': handoff['requirements_document']['sha256']}
+    parser = canonical_blocker_parser(request, read) if request['blocker_ledgers'] else None
+    try:
+        return evidence_module().build_graph(manifests, requirements, read, now, parser)
+    except Exception as error:
+        raise Refused(f'evidence admission: {error}; correct the named record against its source contract') from error
+
+
+def canonical_blocker_parser(request, read):
+    import importlib
+    import types
+    root = Path(__file__).resolve().parents[3] / 'scripts'
+    names = ('blocker_catalog.py', 'work_memory.py', 'sequence_candidate_contract.py', 'prevention_registry.py', 'prevention_adapters.py', 'prevention_contract.py')
+    declared = next(row for row in request['machinery_contracts'] if row['role'] == 'blocker-catalog-source')
+    if read(Path(declared['path']), declared['sha256']) != read_file(root / names[0], 33554432):
+        raise Refused('blocker contract differs from the installed canonical validator; declare its current source')
+    for name in names:
+        raw = read_file(root / name, 33554432)
+        if read(root / name, digest(raw)) != raw:
+            raise Refused(f'{name}: blocker runtime differs from captured source')
+    saved = {name: module for name, module in sys.modules.items() if name == 'scripts' or name.startswith('scripts.')}
+    for name in saved:
+        del sys.modules[name]
+    package = types.ModuleType('scripts')
+    package.__path__ = [str(root)]
+    sys.modules['scripts'] = package
+    try:
+        module = importlib.import_module('scripts.work_memory')
+        if Path(module.__file__).resolve() != (root / 'work_memory.py').resolve():
+            raise Refused('blocker validator loaded outside the installed source boundary')
+        return module.parse_ledger_bytes
+    finally:
+        for name in list(sys.modules):
+            if name == 'scripts' or name.startswith('scripts.'):
+                del sys.modules[name]
+        sys.modules.update(saved)
+
+
+def collect_graph(request, captured, work, upstream, now):
+    known = {str(item['path']): raw for _, _, item, raw in captured}
+    members = []
+    limits = request['execution_limits']
+    total = sum(len(raw) for _, _, _, raw in captured)
+    def read(path, expected):
+        nonlocal total
+        path = absolute(str(path))
+        if str(path) not in known:
+            if overlaps(work, path.parent):
+                raise Refused(f'{path}: graph source overlaps work; freeze it in disjoint storage')
+            raw = read_file(path, limits['max_single_file_bytes'])
+            if digest(raw) != expected:
+                raise Refused(f'{path}: graph source digest mismatch; restore exact declared bytes')
+            total += len(raw)
+            if len(captured) + 1 > limits['max_input_files'] or total > limits['max_total_input_bytes']:
+                raise Refused('graph evidence exceeds the declared input count or byte limit')
+            identity = f'graph-member-{len(members)+1:04d}'
+            item = {'path': str(path), 'sha256': expected}
+            members.append({'identity': identity, 'role': 'graph-evidence', **item})
+            captured.append((identity, 'graph-evidence', item, raw))
+            known[str(path)] = raw
+        if digest(known[str(path)]) != expected:
+            raise Refused(f'{path}: conflicting graph source identity')
+        return known[str(path)]
+    result = verify_graph(request, upstream, read, now)
+    if result is None:
+        return None
+    return {'members': members, 'before_sha256': GENESIS,
+            'after_sha256': result['graph_sha256'], 'result': result}
 
 if __name__ == '__main__':
     raise SystemExit(kernel_main())
