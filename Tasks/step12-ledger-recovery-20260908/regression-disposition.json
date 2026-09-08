@@ -1,0 +1,6 @@
+{
+  "result": "revise",
+  "reason": "The existing lower-level API accepts partial run_closed test records without result; the added stricter lower-level policy is unnecessary for the requested public-selection correction. Retain the proven abandoned-recovery fix and remove that extra policy change.",
+  "suite": "174 passed, 1 failed",
+  "failing_test": "test_successor_validation_carries_inherited_correction_across_overlap"
+}

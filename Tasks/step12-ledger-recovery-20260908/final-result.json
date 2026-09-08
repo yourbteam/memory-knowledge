@@ -1,0 +1,18 @@
+{
+  "outcome": "Original pending checkpoint correction closed, with original abandoned history preserved.",
+  "atom_completed": true,
+  "promoted": true,
+  "prototypes": 2,
+  "regression_tests_passed": 175,
+  "remaining_product_gaps": [],
+  "original_blocker_status": "closed",
+  "remaining_work": "none",
+  "canonical_ledger_sha256": "efaaff605570436e87cac60583cfab7cd3e0f1fee6b4e6f9d67099a65de0ba0a",
+  "changed_product_files": {
+    "scripts/work_memory.py": "1ae7e30dbb5e8f3f9a749ac0509f161c7be41b4cc46422eaa4cd6b256d746adb",
+    "tests/test_abandoned_successor.py": "268f80a7a53b22a5afa9e83a77beb31bc4d4916a28b20abf714d5e26cbfaca63"
+  },
+  "scope": "One public successor terminal eligibility defect found and fixed; lower-level API unchanged.",
+  "committed": false,
+  "pushed": false
+}

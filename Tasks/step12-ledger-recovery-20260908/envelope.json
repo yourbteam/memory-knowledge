@@ -1,0 +1,18 @@
+{
+  "outcome": "Verify and close a corrected blocker after its failed execution was abandoned.",
+  "allowed_paths": [
+    "scripts/work_memory.py",
+    "tests/test_abandoned_successor.py"
+  ],
+  "repository": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration",
+  "evidence_root": "Tasks/step12-ledger-recovery-20260908",
+  "max_prototypes": 3,
+  "excluded": [
+    "commit",
+    "push",
+    "Step12 regeneration",
+    "credentials",
+    "external messages"
+  ],
+  "authorization": "User asked to build this known gap as an atom to a win."
+}

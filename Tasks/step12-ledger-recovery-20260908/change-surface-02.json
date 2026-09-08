@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "step12-abandoned-correction-closure",
+  "baseline_sha256": "2be0c0f7ebabb53bb034a6bd92f90cff77c331a080523fad38cfb6c1b5226fc6",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "1ae7e30dbb5e8f3f9a749ac0509f161c7be41b4cc46422eaa4cd6b256d746adb",
+      "before_mode": 420,
+      "before_sha256": "c14d7ec249af11c0990dbeb89c76cc7a7f8f0f541abe483102cc84e23d514f65",
+      "kind": "changed",
+      "path": "scripts/work_memory.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "268f80a7a53b22a5afa9e83a77beb31bc4d4916a28b20abf714d5e26cbfaca63",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "tests/test_abandoned_successor.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration",
+  "schema_version": 1
+}

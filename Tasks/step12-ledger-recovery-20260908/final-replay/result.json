@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "source_prefix_sha256": "98f28f959d57499d8c805750779a1b524f4eac68f45fe90eac9bc514309f61b0",
+  "source_prefix_preserved": true,
+  "original_predecessor": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+  "new_successor": "700b46a7-8d2e-47fb-b1d4-d2e320555910",
+  "original_correction": "a12d8d76-44b5-4732-8e0b-c38bb2ffb0a6",
+  "blocker_status": "closed",
+  "remaining_work": "none",
+  "run_result": "passed",
+  "already_closed_reselection": "rejected",
+  "final_code_sha256": "1ae7e30dbb5e8f3f9a749ac0509f161c7be41b4cc46422eaa4cd6b256d746adb",
+  "ledger_sha256": "252bbc614f890040868aa9b6f84cca403012800f23baeea09c3208f7f5471b05"
+}

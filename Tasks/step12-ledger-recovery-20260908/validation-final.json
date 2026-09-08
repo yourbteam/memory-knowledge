@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-abandoned-correction-closure",
+  "promotion_event_sha256": "5214693b3acd4aa19356d39be08ba623f0bf02067d7f6a1e5f6db10e753d22c2",
+  "cases": [
+    {
+      "case_id": "abandoned",
+      "verdict": "satisfied",
+      "reason": "Final promoted code preserves exact recorded recovery identity and rejects six invalid histories. Original live correction is closed; final-code full CLI replay preserves ledger prefix through passed closure and rejects reselection. All175 regression tests pass.",
+      "evidence": [
+        {
+          "case_id": "abandoned",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-ledger-recovery-20260908/final-canonical-abandoned/result.json",
+          "sha256": "52d748b46e169e9b4777df63ea4ef83a445215d2ae71be200f38164a956b8f0a"
+        },
+        {
+          "case_id": "abandoned",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-ledger-recovery-20260908/final-replay/result.json",
+          "sha256": "ddf8efcbf71ba6a4fb1c1fc010601e2a18334a37a5821b7de29d6686292a6d75"
+        },
+        {
+          "case_id": "abandoned",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-ledger-recovery-20260908/live/closed.json",
+          "sha256": "9a7c74fc489c1e2b918e0834f002f8b317e2c765debaaecf2d5b848cdaf9c205"
+        }
+      ]
+    },
+    {
+      "case_id": "failed",
+      "verdict": "satisfied",
+      "reason": "Final promoted code preserves exact recorded recovery identity and rejects six invalid histories. Original live correction is closed; final-code full CLI replay preserves ledger prefix through passed closure and rejects reselection. All175 regression tests pass.",
+      "evidence": [
+        {
+          "case_id": "failed",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-ledger-recovery-20260908/final-canonical-failed/result.json",
+          "sha256": "52d748b46e169e9b4777df63ea4ef83a445215d2ae71be200f38164a956b8f0a"
+        },
+        {
+          "case_id": "failed",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-ledger-recovery-20260908/final-replay/result.json",
+          "sha256": "ddf8efcbf71ba6a4fb1c1fc010601e2a18334a37a5821b7de29d6686292a6d75"
+        },
+        {
+          "case_id": "failed",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-ledger-recovery-20260908/live/closed.json",
+          "sha256": "9a7c74fc489c1e2b918e0834f002f8b317e2c765debaaecf2d5b848cdaf9c205"
+        }
+      ]
+    }
+  ]
+}

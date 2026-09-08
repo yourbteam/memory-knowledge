@@ -1,0 +1,513 @@
+{
+  "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+  "events": [
+    {
+      "classification_receipt_hash": "9a7e886a666e7c06bd8b43ce5419083b7ea21ccc224965b0e9013d564da8d1da",
+      "event_id": "d19395d1-42cb-5f7f-9cfb-1069e9ae2653",
+      "event_type": "run_started",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "mode": "discovery",
+      "operation_kind": "workflow-drive",
+      "ownership_event_id": "d26ca6d0-380f-4e54-b5a1-3483eec827b9",
+      "ownership_generation": 1,
+      "ownership_sha256": "7f267f56b4fb84d17b1117d8517740484d4ad529389534a3c1fd00fd29535ab7",
+      "recorded_at_utc": "2026-09-07T20:30:05Z",
+      "repository_roots": {
+        "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+        "memory-knowledge": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration",
+        "taggable-admin-spa": "/Users/kamenkamenov/taggable-admin-spa",
+        "taggable-api": "/Users/kamenkamenov/taggable-api",
+        "taggable-operator-portal": "/Users/kamenkamenov/taggable-operator-portal",
+        "united-partners": "/Users/kamenkamenov/united-partners"
+      },
+      "run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "schema_version": 1,
+      "selection_receipt_hash": "50f35e75f706b836390307fb28fd1f14905d52b9b02a833cc2de551b44c7f524",
+      "source_bundle": [
+        {
+          "path": "Tasks/step12-two-clients-e2e-20260907/run_both.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "c541ac688134f0b84817c912c19cd317193c9c5070ff784c9aab372ffd0a662c"
+        },
+        {
+          "path": "Tasks/step12-two-clients-e2e-20260907/run_client.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "04abbd6ae3f6e2d8e6ce506e068347a32f4c9d31be41f3e5b69a452ce89e8b88"
+        },
+        {
+          "path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.dependencies.json",
+          "repository_key": "memory-knowledge",
+          "sha256": "224df3f8207a57755e1a6c110b1fdb66ff2aa83b905236d0d8c9359fc3820133"
+        },
+        {
+          "path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.md",
+          "repository_key": "memory-knowledge",
+          "sha256": "72d619187a5135c92b56b26c8224b6725ca9418ebefafb0e52192042ebab77b5"
+        },
+        {
+          "path": "scripts/work_memory.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "c14d7ec249af11c0990dbeb89c76cc7a7f8f0f541abe483102cc84e23d514f65"
+        },
+        {
+          "path": "scripts/work_memory_bootstrap.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "4eb3092b3c3df798f79a780ac73b3c5d3d9aef22c96af7229018a5d8286145ba"
+        },
+        {
+          "path": "scripts/work_memory_bootstrap_launcher.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "dbc8e9f7bd95a5858440d034522f11fc7c8871490da79291227bec077371fa88"
+        },
+        {
+          "path": "src/up_harness/engine/runner.py",
+          "repository_key": "united-partners",
+          "sha256": "a1284e4610c22e4034bd099d9b9e0b0b1e2486de98213931e57113532c0564ec"
+        }
+      ],
+      "source_bundle_hash": "85b5d6288b0fea857b1d1bf4a2989e45cbcee372b3de452529feffd5ce27a197",
+      "started_at_utc": "2026-09-07T20:30:05Z",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "task_id": "step12-two-clients-live",
+      "writer_thread_id": "01a0721f-f5be-7610-a7a5-a42135c93b5a"
+    },
+    {
+      "blocker_id": "blk-702ba0da87535048f032c6ea",
+      "boundary": "Child Python environment must inherit the canonical src path",
+      "event_id": "e5f6d4e6-1e26-4d99-8bd4-63042cfa5e64",
+      "event_type": "blocker_opened",
+      "evidence": "Tasks/step12-two-clients-e2e-20260907/bteam-live.log",
+      "fingerprint": "702ba0da87535048f032c6eaa628ad4eaf43f26b6ddc4756d3616af888f1260f",
+      "impact": "No Step12 generation started",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "occurrence_id": "fb75dd21-a3e2-4452-9ce1-3c2e535176e0",
+      "recorded_at_utc": "2026-09-07T20:31:53Z",
+      "run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "schema_version": 1,
+      "status": "open",
+      "step_id": "run-both-step12",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "surface": "child-process-environment",
+      "symptom": "Both child role commands fail before model launch"
+    },
+    {
+      "blocker_id": "blk-702ba0da87535048f032c6ea",
+      "changed_artifact_hashes": [
+        "5aa4d1e3e68a9d57b949c0ffe5fac8e5ed9a859621dfa98f68aa9f229c02d01f"
+      ],
+      "changed_artifacts": [
+        "Tasks/step12-two-clients-e2e-20260907/run_client.py"
+      ],
+      "correction_id": "daad06f6-34e0-425e-ac25-281f9eb67379",
+      "event_id": "dbe083ec-30fb-4b23-8238-19c79b5ab161",
+      "event_type": "correction_recorded",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "occurrence_id": "fb75dd21-a3e2-4452-9ce1-3c2e535176e0",
+      "recorded_at_utc": "2026-09-07T20:32:09Z",
+      "reusable_behavior_changed": true,
+      "run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "schema_version": 1,
+      "solution": "Pass canonical src path in child Python environment; retain failed pre-model launch records separately",
+      "step_id": "run-both-step12",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934"
+    },
+    {
+      "changed_artifact_hashes": [
+        "5aa4d1e3e68a9d57b949c0ffe5fac8e5ed9a859621dfa98f68aa9f229c02d01f"
+      ],
+      "changed_artifacts": [
+        "Tasks/step12-two-clients-e2e-20260907/run_client.py"
+      ],
+      "correction_ids": [
+        "daad06f6-34e0-425e-ac25-281f9eb67379"
+      ],
+      "event_id": "983cf82e-7568-453d-88bf-b3bb5337d6ba",
+      "event_type": "bundle_transition_recorded",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "new_bundle_hash": "4101b0c820ffed14bf4f10e14b5277b239540f2ddc2fd35dc0f78f869582efd3",
+      "old_bundle_hash": "85b5d6288b0fea857b1d1bf4a2989e45cbcee372b3de452529feffd5ce27a197",
+      "recorded_at_utc": "2026-09-07T20:32:09Z",
+      "run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "schema_version": 1,
+      "transition_reason": "correction"
+    },
+    {
+      "blocker_id": "blk-702ba0da87535048f032c6ea",
+      "event_id": "722fee95-3047-4391-ba40-32c62266469e",
+      "event_type": "blocker_transitioned",
+      "from_status": "open",
+      "recorded_at_utc": "2026-09-07T20:32:09Z",
+      "run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "schema_version": 1,
+      "to_status": "fixed-awaiting-verification"
+    },
+    {
+      "blocker_ids": [
+        "blk-702ba0da87535048f032c6ea"
+      ],
+      "completed_at_utc": "2026-09-07T20:32:09Z",
+      "correction_count": 1,
+      "event_id": "25e0eb7a-31b5-4857-b61f-d41371685a27",
+      "event_type": "run_closed",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "recorded_at_utc": "2026-09-07T20:32:09Z",
+      "result": "failed",
+      "run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "schema_version": 1,
+      "sequence_updated": true,
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "verification_quality": "none"
+    },
+    {
+      "classification_receipt_hash": "9a7e886a666e7c06bd8b43ce5419083b7ea21ccc224965b0e9013d564da8d1da",
+      "event_id": "796276d1-b98b-4c7d-b4fc-b1695da37401",
+      "event_type": "run_started",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "mode": "discovery",
+      "operation_kind": "workflow-drive",
+      "ownership_event_id": "d26ca6d0-380f-4e54-b5a1-3483eec827b9",
+      "ownership_generation": 1,
+      "ownership_sha256": "7f267f56b4fb84d17b1117d8517740484d4ad529389534a3c1fd00fd29535ab7",
+      "predecessor_run_id": "1cfac059-c6e0-5e99-a795-acec13c7f2dc",
+      "recorded_at_utc": "2026-09-07T20:32:41Z",
+      "repository_roots": {
+        "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+        "memory-knowledge": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration",
+        "taggable-admin-spa": "/Users/kamenkamenov/taggable-admin-spa",
+        "taggable-api": "/Users/kamenkamenov/taggable-api",
+        "taggable-operator-portal": "/Users/kamenkamenov/taggable-operator-portal",
+        "united-partners": "/Users/kamenkamenov/united-partners"
+      },
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "selection_receipt_hash": "8dac3cf0a96f6e9badbf414d17408eb6109031e8716b24307fc2677078162367",
+      "source_bundle": [
+        {
+          "path": "Tasks/step12-two-clients-e2e-20260907/run_both.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "c541ac688134f0b84817c912c19cd317193c9c5070ff784c9aab372ffd0a662c"
+        },
+        {
+          "path": "Tasks/step12-two-clients-e2e-20260907/run_client.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "5aa4d1e3e68a9d57b949c0ffe5fac8e5ed9a859621dfa98f68aa9f229c02d01f"
+        },
+        {
+          "path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.dependencies.json",
+          "repository_key": "memory-knowledge",
+          "sha256": "224df3f8207a57755e1a6c110b1fdb66ff2aa83b905236d0d8c9359fc3820133"
+        },
+        {
+          "path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.md",
+          "repository_key": "memory-knowledge",
+          "sha256": "72d619187a5135c92b56b26c8224b6725ca9418ebefafb0e52192042ebab77b5"
+        },
+        {
+          "path": "scripts/work_memory.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "c14d7ec249af11c0990dbeb89c76cc7a7f8f0f541abe483102cc84e23d514f65"
+        },
+        {
+          "path": "scripts/work_memory_bootstrap.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "4eb3092b3c3df798f79a780ac73b3c5d3d9aef22c96af7229018a5d8286145ba"
+        },
+        {
+          "path": "scripts/work_memory_bootstrap_launcher.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "dbc8e9f7bd95a5858440d034522f11fc7c8871490da79291227bec077371fa88"
+        },
+        {
+          "path": "src/up_harness/engine/runner.py",
+          "repository_key": "united-partners",
+          "sha256": "a1284e4610c22e4034bd099d9b9e0b0b1e2486de98213931e57113532c0564ec"
+        }
+      ],
+      "source_bundle_hash": "4101b0c820ffed14bf4f10e14b5277b239540f2ddc2fd35dc0f78f869582efd3",
+      "started_at_utc": "2026-09-07T20:32:41Z",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "task_id": "step12-two-clients-live",
+      "verifies_correction_ids": [
+        "daad06f6-34e0-425e-ac25-281f9eb67379"
+      ],
+      "writer_thread_id": "01a0721f-f5be-7610-a7a5-a42135c93b5a"
+    },
+    {
+      "blocker_id": "blk-6d504e5606461390bea65fb8",
+      "boundary": "Reader output must cite existing catalog references; retain evidence and use audit-only recovery",
+      "event_id": "f5ef7ac9-336f-4e36-85b2-779606e1f263",
+      "event_type": "blocker_opened",
+      "evidence": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-two-clients-e2e-20260907/result.json",
+      "fingerprint": "6d504e5606461390bea65fb82eebfd255fc19910df2a95d8219a075fcca08c5e",
+      "impact": "New Step12 deliverable cannot be accepted and exported",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "occurrence_id": "cb6e8233-676d-41db-9409-c59789b3843d",
+      "recorded_at_utc": "2026-09-07T20:59:31Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "status": "open",
+      "step_id": "run-both-step12",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "surface": "audit-evidence-reference",
+      "symptom": "BTeam full audit marks59 satisfied but an invented countted_event reference prevents acceptance"
+    },
+    {
+      "blocker_id": "blk-325e45b539c77e42b84b5feb",
+      "boundary": "Structured source record boundary must distinguish labels from measurement obligations",
+      "event_id": "dfb06cba-f589-4f5f-aaae-5707b3b4cb28",
+      "event_type": "blocker_opened",
+      "evidence": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-two-clients-e2e-20260907/result.json",
+      "fingerprint": "325e45b539c77e42b84b5febffc90c8c88e7a4522466fa3ce97253739b53575a",
+      "impact": "New Step12 deliverable cannot be accepted and exported",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "occurrence_id": "3f3da120-1e7c-4b04-8617-d9f0df53a407",
+      "recorded_at_utc": "2026-09-07T20:59:34Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "status": "open",
+      "step_id": "run-both-step12",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "surface": "source-outcome-coverage",
+      "symptom": "Vivacom correction accounts for real outcomes but structural source labels fail whole-word coverage"
+    },
+    {
+      "blocker_id": "blk-79460505a7c16ff9bc2af9c9",
+      "boundary": "Persist the source-bound audit before entering fallible full-generation correction",
+      "event_id": "5a339b29-40f2-4cd1-885e-7b558d641344",
+      "event_type": "blocker_opened",
+      "evidence": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-two-clients-e2e-20260907/result.json",
+      "fingerprint": "79460505a7c16ff9bc2af9c9b26a179e35fea04db2cdf8a9677dbecde283aa4b",
+      "impact": "New Step12 deliverable cannot be accepted and exported",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "occurrence_id": "651414c5-b7c5-496d-bbe1-6204169b8a4d",
+      "recorded_at_utc": "2026-09-07T20:59:37Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "status": "open",
+      "step_id": "run-both-step12",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "surface": "full-generation-recovery-checkpoint",
+      "symptom": "Targeted omission resume refuses although the live audit recorded five omissions"
+    },
+    {
+      "blocker_ids": [
+        "blk-702ba0da87535048f032c6ea"
+      ],
+      "changed_artifact_hashes": [
+        "5aa4d1e3e68a9d57b949c0ffe5fac8e5ed9a859621dfa98f68aa9f229c02d01f"
+      ],
+      "correction_ids": [
+        "daad06f6-34e0-425e-ac25-281f9eb67379"
+      ],
+      "event_id": "79fe7222-fbbc-4c5a-a827-d8ca8e53c588",
+      "event_type": "verification_recorded",
+      "evidence": "Both real child processes completed15 model calls each; missing module error is absent. /Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/Tasks/step12-two-clients-e2e-20260907/result.json",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "outcome": "passed",
+      "quality": "same-path",
+      "recorded_at_utc": "2026-09-07T20:59:41Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "source_bundle_hash": "4101b0c820ffed14bf4f10e14b5277b239540f2ddc2fd35dc0f78f869582efd3",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934"
+    },
+    {
+      "blocker_id": "blk-702ba0da87535048f032c6ea",
+      "event_id": "408bc378-3a8b-4773-84d7-80a7a3fdbf57",
+      "event_type": "blocker_transitioned",
+      "from_status": "fixed-awaiting-verification",
+      "recorded_at_utc": "2026-09-07T21:00:20Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "to_status": "verified",
+      "verification_event_id": "79fe7222-fbbc-4c5a-a827-d8ca8e53c588"
+    },
+    {
+      "blocker_id": "blk-702ba0da87535048f032c6ea",
+      "event_id": "99fb1e40-6ed0-4b57-83d6-e735bbdc7a47",
+      "event_type": "blocker_transitioned",
+      "from_status": "verified",
+      "recorded_at_utc": "2026-09-07T21:01:46Z",
+      "remaining_work": "none",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "to_status": "closed",
+      "verification_event_id": "79fe7222-fbbc-4c5a-a827-d8ca8e53c588"
+    },
+    {
+      "classification_receipt_hash": "93d3a65cc6fb9ac83c1a5383056286ec70e946cc26377b6c5a3537a61795d2a4",
+      "event_id": "f2b661e0-7088-43e0-9436-b43b230259f6",
+      "event_type": "run_started",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "mode": "discovery",
+      "operation_kind": "workflow-drive",
+      "ownership_event_id": "4950dd5a-a449-4a17-9f37-ec5da181f72c",
+      "ownership_generation": 1,
+      "ownership_sha256": "342d76af2882e28d51eb0a15fa8ba85d8a1a0f803d6123a877ce792326196121",
+      "recorded_at_utc": "2026-09-07T21:14:13Z",
+      "repository_roots": {
+        "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+        "memory-knowledge": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration",
+        "taggable-admin-spa": "/Users/kamenkamenov/taggable-admin-spa",
+        "taggable-api": "/Users/kamenkamenov/taggable-api",
+        "taggable-operator-portal": "/Users/kamenkamenov/taggable-operator-portal",
+        "united-partners": "/Users/kamenkamenov/united-partners"
+      },
+      "run_id": "a02244dc-4126-45fe-bb3c-d08d11368314",
+      "schema_version": 1,
+      "selection_receipt_hash": "6748a950397c845ede2e4bdb60d9d510d1fd542d4be315196ab7215f4178520c",
+      "source_bundle": [
+        {
+          "path": "Tasks/step12-two-clients-e2e-20260907/run_both.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "c541ac688134f0b84817c912c19cd317193c9c5070ff784c9aab372ffd0a662c"
+        },
+        {
+          "path": "Tasks/step12-two-clients-e2e-20260907/run_client.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "5aa4d1e3e68a9d57b949c0ffe5fac8e5ed9a859621dfa98f68aa9f229c02d01f"
+        },
+        {
+          "path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.dependencies.json",
+          "repository_key": "memory-knowledge",
+          "sha256": "224df3f8207a57755e1a6c110b1fdb66ff2aa83b905236d0d8c9359fc3820133"
+        },
+        {
+          "path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.md",
+          "repository_key": "memory-knowledge",
+          "sha256": "72d619187a5135c92b56b26c8224b6725ca9418ebefafb0e52192042ebab77b5"
+        },
+        {
+          "path": "scripts/work_memory.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "c14d7ec249af11c0990dbeb89c76cc7a7f8f0f541abe483102cc84e23d514f65"
+        },
+        {
+          "path": "scripts/work_memory_bootstrap.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "4eb3092b3c3df798f79a780ac73b3c5d3d9aef22c96af7229018a5d8286145ba"
+        },
+        {
+          "path": "scripts/work_memory_bootstrap_launcher.py",
+          "repository_key": "memory-knowledge",
+          "sha256": "dbc8e9f7bd95a5858440d034522f11fc7c8871490da79291227bec077371fa88"
+        },
+        {
+          "path": "src/up_harness/engine/runner.py",
+          "repository_key": "united-partners",
+          "sha256": "d53cb14ac97545635779f49532001129dbce9c54a47dd04da4ab4488fa9dce0f"
+        }
+      ],
+      "source_bundle_hash": "dbe898c408a9dacdbea5f8f4fd5c26fd11014c533b71642a9ab64dc93f9c53f9",
+      "started_at_utc": "2026-09-07T21:14:13Z",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "task_id": "step12-failure-repairs-live",
+      "writer_thread_id": "01a0721f-f5be-7610-a7a5-a42135c93b5a"
+    },
+    {
+      "blocker_id": "blk-79460505a7c16ff9bc2af9c9",
+      "changed_artifact_hashes": [
+        "d53cb14ac97545635779f49532001129dbce9c54a47dd04da4ab4488fa9dce0f"
+      ],
+      "changed_artifacts": [
+        {
+          "path": "src/up_harness/engine/runner.py",
+          "repository_key": "united-partners"
+        }
+      ],
+      "correction_id": "a12d8d76-44b5-4732-8e0b-c38bb2ffb0a6",
+      "event_id": "9010a727-9c96-418c-8755-74ef3da92732",
+      "event_type": "correction_recorded",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "occurrence_id": "651414c5-b7c5-496d-bbe1-6204169b8a4d",
+      "recorded_at_utc": "2026-09-07T21:16:02Z",
+      "reusable_behavior_changed": true,
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "solution": "Persist grounded audit and exact roadmap before correction. Product delta in tactical_roadmap.py plus the bundle-tracked runner save sink; proof recorded in atom-01.",
+      "step_id": "full-generation-audit-checkpoint",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934"
+    },
+    {
+      "changed_artifact_hashes": [
+        "d53cb14ac97545635779f49532001129dbce9c54a47dd04da4ab4488fa9dce0f"
+      ],
+      "changed_artifacts": [
+        {
+          "path": "src/up_harness/engine/runner.py",
+          "repository_key": "united-partners"
+        }
+      ],
+      "correction_ids": [
+        "daad06f6-34e0-425e-ac25-281f9eb67379",
+        "a12d8d76-44b5-4732-8e0b-c38bb2ffb0a6"
+      ],
+      "event_id": "b5a3b295-f996-4c6d-a5bd-605e0c1b29d1",
+      "event_type": "bundle_transition_recorded",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "new_bundle_hash": "dbe898c408a9dacdbea5f8f4fd5c26fd11014c533b71642a9ab64dc93f9c53f9",
+      "old_bundle_hash": "4101b0c820ffed14bf4f10e14b5277b239540f2ddc2fd35dc0f78f869582efd3",
+      "recorded_at_utc": "2026-09-07T21:16:02Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "transition_reason": "correction"
+    },
+    {
+      "blocker_id": "blk-79460505a7c16ff9bc2af9c9",
+      "event_id": "7b5bd163-954e-4e4f-a0a9-4a3ecd29f5d6",
+      "event_type": "blocker_transitioned",
+      "from_status": "open",
+      "recorded_at_utc": "2026-09-07T21:18:38Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "to_status": "fixed-awaiting-verification"
+    },
+    {
+      "completed_at_utc": "2026-09-07T21:18:53Z",
+      "event_id": "19c7592f-2716-4980-80a2-ba4d8ed0e47f",
+      "event_type": "run_abandoned",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "reason": "The two full generation executions already finished blocked. Continue from their saved drafts; retain the two open delivery blockers and verify only the checkpoint correction in a same-task successor.",
+      "recorded_at_utc": "2026-09-07T21:18:53Z",
+      "run_id": "14247c7c-fa77-4ef8-a135-1e22c48ffd75",
+      "schema_version": 1,
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934"
+    },
+    {
+      "blocker_ids": [],
+      "changed_artifact_hashes": [],
+      "correction_ids": [],
+      "event_id": "0f75f18b-c321-4534-a546-435ad4112770",
+      "event_type": "verification_recorded",
+      "evidence": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/delivery/final-verification.json",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "outcome": "passed",
+      "quality": "same-path",
+      "recorded_at_utc": "2026-09-07T22:12:44Z",
+      "run_id": "a02244dc-4126-45fe-bb3c-d08d11368314",
+      "schema_version": 1,
+      "source_bundle_hash": "dbe898c408a9dacdbea5f8f4fd5c26fd11014c533b71642a9ab64dc93f9c53f9",
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934"
+    },
+    {
+      "blocker_ids": [],
+      "completed_at_utc": "2026-09-07T22:12:47Z",
+      "correction_count": 0,
+      "event_id": "4b7e827c-d772-4eab-ad6b-dc55c1a53e1f",
+      "event_type": "run_closed",
+      "lineage_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "recorded_at_utc": "2026-09-07T22:12:47Z",
+      "result": "passed",
+      "run_id": "a02244dc-4126-45fe-bb3c-d08d11368314",
+      "schema_version": 1,
+      "sequence_updated": false,
+      "subject_id": "discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934",
+      "verification_quality": "same-path"
+    }
+  ],
+  "ledger_sha256": "450afc7c8c5e02ab49c706d4a725d76aaef37dd6fa8e6421525872b93735de60",
+  "source_ledger": "/Users/kamenkamenov/memory-knowledge/Tasks/critique-four-atoms-20260906/main-integration/operations/work-memory/events.jsonl",
+  "prefix_length": 9451,
+  "document_path": "operations/sequences/discovery/2026-09-07-two-client-step12-end-to-end-generation.md",
+  "document": "# Sequence Discovery Log: Two-client Step12 end-to-end generation\n\nDiscoveryId: discovery-b8a7432a-604e-5a07-a55c-cacdfaf31934\nStatus: discovery\nCreatedAtUtc: 2026-09-07T20:29:55Z\nBootstrapRequestSha256: 105ac4fb266f4ca2a54d9514aba5080c44b54c03d0ca2c6b1eb7fa4d7579c14f\nRegisteredSequenceMatch: none\n\n## Intended Outcome\n\nGenerate audit and export new Step12 deliverables for BTeam and Vivacom from their designated source folders while preserving earlier work.\n\n## Why This Looks Repeatable\n\nEach promoted Step12 upgrade needs complete client delivery validation beyond targeted recovery.\n\n## Required Inputs, Auth, Or Environment\n\n- The completed BTeam and Vivacom upstream states whose four source documents and locked ideas match their designated folders.\n\n## Commands And Observations\n\n| step | command or action | result | correction or note |\n| --- | --- | --- | --- |\n| run-both-step12 | python3 Tasks/step12-two-clients-e2e-20260907/run_both.py | Two saved child runs with honest Step12 acceptance results and exported deliverables only after the roadmap gate passes. | GPT5.5 high with600 second per-call limits and one attempt; full Step12 restart only with earlier phases preserved. |\n| record-correction | python3 scripts/work_memory.py correct --run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> --step-id <step-id> --changed-artifact <path> --solution <solution> --reusable-behavior-changed yes | required after selected-bundle drift | Use only when the selected controller remains unchanged. |\n| record-protected-correction | python3 scripts/work_memory_bootstrap.py correct --task-id <task-id> --run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> --step-id <step-id> --changed-artifact <path> --solution <solution> --reusable-behavior-changed yes | required after protected selected-bundle drift | Use the activated sealed controller through the canonical guard. |\n| launch-protected-correction | python3 scripts/work_memory_bootstrap_launcher.py correct --task-id <task-id> --run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> --step-id <step-id> --changed-artifact <path> --solution <solution> --reusable-behavior-changed yes | required when the lifecycle controller selects sealed execution | The lifecycle controller constructs this command; operators do not improvise it. |\n| transition-corrected-blocker | python3 scripts/blocker_catalog.py transition --run-id <run-id> --blocker-id <blocker-id> --to-status fixed-awaiting-verification | required after a non-atomic correction | Run only after the correction event and bundle transition are durable. |\n| close-corrected-predecessor | python3 scripts/work_memory.py run-close --run-id <run-id> --result failed | required after every blocker is fixed-awaiting-verification | The corrected bundle must be verified by a fresh bound successor. |\n\n## Failure Handling\n\nPreserve each saved child and telemetry on failure and do not repeat whole generation automatically.\n\n## Verified Path\n\n- Inspect fresh model-call telemetry acceptance and exports and byte equivalence of completed earlier phases.\n\n## Promotion Readiness\n\n- [ ] Commands are stable enough to script or document.\n- [ ] Required inputs are known.\n- [ ] Failure handling is known.\n- [ ] Verification evidence is known.\n- [ ] Ready to promote into `operations/sequences/<sequence-id>/sequence.md`.\n"
+}

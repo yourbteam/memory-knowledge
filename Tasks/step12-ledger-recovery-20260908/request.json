@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-abandoned-correction-closure",
+  "outcome": "Verify and close a corrected blocker after its failed execution was abandoned.",
+  "practical_value": "Completed recovery can close its administrative record while retaining original failure history.",
+  "stopping_condition": "Original checkpoint correction reaches closed through successor selection and same-path verification; invalid predecessor and correction records remain rejected.",
+  "allowed_paths": [
+    "scripts/work_memory.py",
+    "tests/test_abandoned_successor.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "abandoned",
+      "source_ref": "Tasks/step12-ledger-recovery-20260908/cases/abandoned.json",
+      "sha256": "5ce20eddbe1d92213cfd0e2535287844356cf5e92d3e1f9ce676a840a452088d",
+      "kind": "failure",
+      "expected_outcome": "Derive only the recorded active correction and original task; reject nonterminal, successful, duplicate-terminal, missing-correction, reopened and wrong-occurrence variants without changing events."
+    },
+    {
+      "case_id": "failed",
+      "source_ref": "Tasks/step12-ledger-recovery-20260908/cases/failed.json",
+      "sha256": "7639995566e9abb54c2c0c374cd52f86b23da222f9bcaddf32da363f41b930e8",
+      "kind": "success",
+      "expected_outcome": "Derive only the recorded active correction and original task; reject nonterminal, successful, duplicate-terminal, missing-correction, reopened and wrong-occurrence variants without changing events."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "work_memory",
+    "fields": [
+      {
+        "field": "event_type",
+        "shape": "enum",
+        "shape_source": "scripts/work_memory.py::BASE_FIELDS"
+      }
+    ]
+  }
+}

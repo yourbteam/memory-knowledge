@@ -3805,7 +3805,7 @@ def _require_predecessor_task_ownership(
 def _successor_selection_request(
     events: Sequence[dict[str, Any]], predecessor_run_id: str,
 ) -> dict[str, Any]:
-    """Derive every successor identity from the closed corrected predecessor."""
+    """Derive every successor identity from the terminal corrected predecessor."""
 
     starts = [
         event for event in events
@@ -3825,8 +3825,10 @@ def _successor_selection_request(
     ]
     if (
         len(terminal) != 1
-        or terminal[0]["event_type"] != "run_closed"
-        or terminal[0].get("result") != "failed"
+        or (
+            terminal[0]["event_type"] == "run_closed"
+            and terminal[0].get("result") != "failed"
+        )
     ):
         raise WorkMemoryError("successor-predecessor-not-terminal", 3)
     lineage_id = start.get("lineage_id")

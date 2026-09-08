@@ -1,0 +1,8 @@
+{
+  "conclusion": "One public terminal eligibility defect fixed; abandoned and failed records admitted while successful, nonterminal, duplicate and invalid correction records remain refused. Lower-level API unchanged.",
+  "defect_class_found": 1,
+  "defect_class_fixed": 1,
+  "tests": "175 passed",
+  "experiment": "Second complete controlled comparison passed both real cases. First prototype revised to remove unnecessary lower-level tightening.",
+  "remaining_product_findings": []
+}
