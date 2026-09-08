@@ -306,9 +306,9 @@ def fitness(record, sources, as_of):
         reproduction=all(type(proof.get(k)) is list and proof[k] and all(type(x) is str and x.strip() for x in proof[k]) for k in ['constraints','success_cases','rejection_cases']) and bool(proof.get('execution_route'))
     sharing=record['model_share_authorization']
     authorized=sharing['use']!='denied' and record['sensitivity_class']!='secret'
-    # Owner-authority admission is a later capability. Mere receipt presence cannot
-    # authorize model sharing; this atom only establishes fitness for local use.
-    if sharing['use']=='model-authorized':authorized=False
+    # Fitness admits evidence for LOCAL preparation only. A model-authorized label
+    # is not permission: the launcher separately checks exact payload authority.
+    # Local-only and denied evidence remain forbidden at that transmission boundary.
     result={'present':present,'hash_valid':present,'accessible_at_capture':receipt('access_receipt','accessible'),
             'current':current,'reproducible':reproduction,'authorized_for_declared_use':authorized}
     result['fit']=all(result.values());return result

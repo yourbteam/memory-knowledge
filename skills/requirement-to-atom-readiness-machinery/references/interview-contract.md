@@ -7,11 +7,78 @@
 of seat responses. `status`, `advance`, and `verify-replay` independently reconstruct every
 interview transition and expose `interview_state`. `response-schema` emits the static contract.
 
-This engine does not launch a model. Envelopes explicitly withhold launch authorization.
+Preparation and admission do not launch a model. Envelopes explicitly withhold launch authorization.
 Submitted judgments are not proof of process independence, owner permission, or model sharing.
-The separately approved launcher atom supplies those operational guarantees. Here, blind seats
+The opt-in launcher below supplies the transport and permission boundary. Here, blind seats
 mean two separately bound envelopes with identical semantic payloads and no peer response.
 Local-only evidence may be prepared locally but must not be transmitted by a launcher.
+
+## Opt-in Codex launcher
+
+`prepare-launch WORK LAUNCH_DIRECTORY --expected-tip SHA256` freezes the current prepared
+interview as `plan.json`, plus readable per-seat prompts and schemas. This does not call a model
+or change the readiness ledger. Use a separate new launch directory outside the readiness work
+directory and outside repository/instruction ancestry. The plan binds prompt and schema bytes,
+seat identities, the pending interview, ledger tip, launcher identity, explicit provider/model/
+effort, timeout, isolation settings and exact call count.
+
+The plan retains both the canonical response schema and its provider projection. The latter
+replaces unsupported `uniqueItems` keywords with explicit uniqueness guidance at every nested
+array. Returned data must still pass the unchanged canonical local validator, including
+uniqueness, before admission. The authorized schema hash binds the actual provider bytes.
+The CLI's startup unstable-feature notice is suppressed through its documented setting;
+provider errors and tool events remain failures, not ignored warning aliases.
+
+`launch-interview WORK LAUNCH_DIRECTORY AUTHORIZATION_JSON --expected-tip SHA256` requires a
+trusted owner authorization with exactly `schema_version: 1`,
+`decision: "authorize-exact-payload"`, nonempty `owner`, exact `plan_sha256`, `provider`, `model`,
+`reasoning_effort`, `max_calls` equal to the complete seat count, and future UTC `expires_at_utc`.
+This receipt is supplied through the trusted operator channel; the launcher validates its scope,
+not human presence or a cryptographic owner signature. Interview response text cannot authorize
+a launch. Never manufacture this receipt from a model response or infer it from build approval.
+
+Evidence fitness establishes eligibility for local preparation, not model transmission. Both
+local-only and model-authorized labels may pass local fitness; denied or secret evidence may not.
+The launcher requires every selected evidence item to carry model-authorized classification AND
+the separate exact-payload owner receipt. A label, receipt reference, or public sensitivity alone
+never permits a call. The owner must inspect all prompt content, including subjects and criteria,
+not just evidence labels. No unlisted source is fetched to fill missing context.
+
+Before any transmission, one hash-bound reservation is appended to the readiness ledger for that
+prepared attempt. Copying the launch directory, creating another plan, or repeating after a crash
+cannot reserve the same pending interview again. Every seat runs as a fresh `codex exec` process
+in an empty directory, with user configuration/rules ignored, project instruction bytes disabled,
+tool/context-discovery features disabled, explicit OpenAI model/effort, read-only sandbox and no
+resume, fallback provider, or unbounded transport retry. Only a small inherited environment
+allowlist is passed; existing Codex authentication is used without copying or printing credentials.
+
+Preparation inventories local user, admin and bundled skill paths and freezes explicit
+`skills.config` disables in the authorized plan. It reads paths, not skill contents. The inventory
+is bounded, follows links with cycle detection, and is rechecked before each reader process;
+new or removed skill paths require a fresh plan. Historical replay validates the frozen list
+without requiring today's skill installation to remain identical. No installed skill, account
+configuration, HOME or CODEX_HOME value is changed. CLI permission/environment instructions
+remain; "isolated" does not mean that the provider's base instructions disappear.
+
+There is one reader process per seat per prepared attempt, with no launcher retries. The built-in
+OpenAI provider retains its bounded network retry behavior within each process's five-minute
+deadline; the seat count is not a count of HTTP requests. Built-in provider retry fields must not
+be overridden through `model_providers.openai`: the supported CLI rejects those overrides before
+launch. This retry boundary was explicitly approved on 2026-09-08.
+Failure consumes that attempt and retains an
+engine rejection. A second preparation is allowed only within the original declared engine
+attempt budget and requires a fresh exact-payload approval. Interrupted reservations are not
+automatically retried; their state remains visible for explicit recovery. Success of transport
+does not imply semantic agreement: admission still applies the existing paired-response rules.
+
+The launcher retains command, authorized prompt/schema, provider stdout/stderr and response bytes
+inside immutable interview transactions before admitting responses. Local structured telemetry
+records reservation, seat start/completion, failure and terminal outcome. Prompt/schema and each
+retained output member are bounded to 128 KiB. Oversized failure output retains its bounded prefix
+and full hash/size; it cannot become success. The process group is terminated on timeout and any
+remaining descendants are terminated when the leader exits. Provider failure, invalid schema,
+missing completion telemetry or observed tool use cannot fall back or produce an admitted fact.
+Preflight refusals are recorded in local launch telemetry and do not reserve or transmit anything.
 
 ## Explicit semantic obligation (approved prerequisite)
 

@@ -2170,3 +2170,184 @@ class InterviewEngineTests(ReadinessKernelTests):
                 path.write_bytes(module.canonical(changed) + b'\n')
                 with self.subTest(key=key), self.assertRaises(module.Refused):
                     module.replay_interviews(work, copy.deepcopy(events), {}, None)
+
+
+class CodexLaunchTests(unittest.TestCase):
+    def setUp(self):
+        import copy, importlib.util
+        spec = importlib.util.spec_from_file_location('launch_test_kernel', ROOT / 'skills/requirement-to-atom-readiness-machinery/scripts/readiness_controller.py')
+        self.k = importlib.util.module_from_spec(spec); spec.loader.exec_module(self.k)
+        self.m = self.k.launcher_module()
+        self.state = self.k.initial_interview_state()
+        self.state['pending'] = copy.deepcopy(InterviewEngineTests.captured_pending)
+        # Explicit transport adaptation of captured semantic evidence, not owner authority.
+        for item in self.state['pending']['envelopes']:
+            e = item['envelope']
+            for evidence in e['semantic_payload']['evidence']:
+                evidence['model_share_authorization']['use'] = 'model-authorized'
+            e['semantic_payload_sha256'] = self.k.digest(self.k.canonical(e['semantic_payload']))
+            e.pop('envelope_sha256')
+            e['envelope_sha256'] = self.k.digest(self.k.canonical(e))
+            item['response_schema']['properties']['envelope_sha256']['const'] = e['envelope_sha256']
+        self.plan = self.m.plan_for(self.k, Path('/private/tmp/captured-readiness-work'), {'interview_state': self.state, 'ledger_tip': 'a'*64})
+        self.auth = {'schema_version': 1, 'decision': 'authorize-exact-payload', 'owner': 'unit-test-only',
+                     'plan_sha256': self.plan['plan_sha256'], **self.plan['model_runtime'],
+                     'max_calls': 2, 'expires_at_utc': '2099-01-01T00:00:00+00:00'}
+
+    def test_exact_authority_and_retry_reservation(self):
+        import copy
+        payload = {'plan': self.plan, 'authorization': self.auth, 'reserved_at_utc': self.m.now()}
+        self.m.validate_reservation(self.k, payload, self.state)
+        for field, value in [('plan_sha256', 'b'*64), ('provider', 'other'), ('model', 'other'),
+                             ('reasoning_effort', 'low'), ('max_calls', 3), ('max_calls', True),
+                             ('decision', 'model-approved'), ('owner', ''), ('expires_at_utc', '2000-01-01T00:00:00+00:00')]:
+            changed = copy.deepcopy(self.auth); changed[field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(self.k.Refused):
+                self.m.validate_authority(self.k, self.plan, changed, self.m.now())
+        self.state['launches'].append(payload)
+        with self.assertRaisesRegex(self.k.Refused, 'already reserved'):
+            self.m.validate_reservation(self.k, payload, self.state)
+
+    def test_plan_and_sharing_tamper_refuse(self):
+        import copy
+        for use in ('local-only', 'denied'):
+            state = copy.deepcopy(self.state)
+            for item in state['pending']['envelopes']:
+                item['envelope']['semantic_payload']['evidence'][0]['model_share_authorization']['use'] = use
+            plan = self.m.plan_for(self.k, Path('/private/tmp/captured-readiness-work'), {'interview_state': state, 'ledger_tip': 'a'*64})
+            auth = {**self.auth, 'plan_sha256': plan['plan_sha256']}
+            with self.subTest(use=use), self.assertRaisesRegex(self.k.Refused, 'forbids transmission'):
+                self.m.validate_reservation(self.k, {'plan': plan, 'authorization': auth, 'reserved_at_utc': self.m.now()}, state)
+        for key in ('prompt_base64', 'schema_sha256'):
+            plan = copy.deepcopy(self.plan); plan['seats'][0][key] = 'changed'
+            with self.subTest(key=key), self.assertRaisesRegex(self.k.Refused, 'differs'):
+                self.m.validate_reservation(self.k, {'plan': plan, 'authorization': self.auth, 'reserved_at_utc': self.m.now()}, self.state)
+
+    def test_empty_cwd_and_ancestry(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(prefix='atom8-cwd-', dir='/private/tmp') as directory:
+            root = Path(directory); cwd = root / 'cwd'; cwd.mkdir()
+            self.m.safe_cwd(self.k, cwd)
+            p = cwd / 'context'; p.write_text('not empty')
+            with self.assertRaisesRegex(self.k.Refused, 'contains files'):
+                self.m.safe_cwd(self.k, cwd)
+            p.unlink()
+            for name in ('AGENTS.md', 'AGENTS.override.md', '.codex', '.agents', '.git'):
+                p = root / name; p.write_text('context marker')
+                with self.subTest(name=name), self.assertRaisesRegex(self.k.Refused, 'ancestor'):
+                    self.m.safe_cwd(self.k, cwd)
+                p.unlink()
+
+    def test_cli_is_explicit_and_no_shell_or_resume(self):
+        args = self.m.argv_for(self.plan, self.plan['seats'][0], Path('/private/tmp/cwd'), Path('/private/tmp/schema'), Path('/private/tmp/response'))
+        for flag in ('--ignore-user-config', '--ignore-rules', '--strict-config', '--ephemeral', '--output-schema', '--json'):
+            self.assertIn(flag, args)
+        self.assertIn('features.shell_tool=false', args)
+        self.assertIn('project_doc_max_bytes=0', args)
+        self.assertIn('features.unbounded_connection_retries=false', args)
+        # Live codex-cli 0.151.0 refused reserved built-in provider overrides.
+        self.assertFalse(any(arg.startswith('model_providers.openai.') for arg in args))
+        self.assertEqual(self.plan['timeout_ms'], 300000)
+        self.assertEqual(args[-1], '-')
+        self.assertNotIn('resume', args)
+        self.assertEqual(args[args.index('--model')+1], self.plan['model_runtime']['model'])
+
+    def test_provider_projection_preserves_local_uniqueness(self):
+        import copy
+        seat = self.plan['seats'][0]
+        original = copy.deepcopy(seat['response_schema'])
+        projected = self.m.provider_schema(original)
+        self.assertEqual(original, seat['response_schema'])
+        self.assertNotIn('"uniqueItems":', json.dumps(projected))
+        self.assertTrue(original['properties']['evidence_ids']['uniqueItems'])
+        self.assertIn('unique', projected['properties']['evidence_ids']['description'])
+        self.assertEqual(seat['schema_sha256'], self.k.digest(self.k.canonical(projected) + b'\n'))
+        response = copy.deepcopy(InterviewEngineTests.captured_responses[0])
+        response['envelope_sha256'] = seat['envelope_sha256']
+        self.k.validate_shape(response, original)
+        response['evidence_ids'].append(response['evidence_ids'][0])
+        with self.assertRaisesRegex(self.k.Refused, 'duplicate items'):
+            self.k.validate_shape(response, original)
+        for family in self.k.FAMILY_VERDICTS:
+            with self.subTest(family=family):
+                schema = self.k.family_response_schema(family)
+                frozen = copy.deepcopy(schema)
+                self.assertNotIn('"uniqueItems":', json.dumps(self.m.provider_schema(schema)))
+                self.assertEqual(schema, frozen)
+
+    def test_skill_disables_are_frozen_but_checked_before_transmission(self):
+        import tempfile
+        from unittest.mock import patch
+        self.assertTrue(any(s.startswith('skills.config=[') for s in self.plan['settings']))
+        with patch.object(self.m, 'skill_inventory', side_effect=AssertionError('Replay must not inspect current host skills')):
+            self.m.validate_reservation(self.k, {'plan':self.plan,'authorization':self.auth,'reserved_at_utc':self.m.now()}, self.state)
+        with tempfile.TemporaryDirectory(prefix='atom8-skill-drift-',dir='/private/tmp') as temp:
+            directory=Path(temp)
+            with patch.object(self.m, 'skill_inventory', return_value=[*self.plan['disabled_skills'], '/private/tmp/new-skill/SKILL.md']), patch.object(self.m.subprocess, 'Popen') as process:
+                with self.assertRaisesRegex(self.k.Refused, 'skill paths changed'):
+                    self.m.call_seat(self.k,self.plan,self.plan['seats'][0],directory,self.auth)
+                process.assert_not_called()
+        for paths in (['relative/SKILL.md'], ['/private/tmp/not-a-skill'], [None], ['/private/tmp/a/SKILL.md']*2):
+            with self.subTest(paths=paths), self.assertRaises(self.k.Refused):
+                self.m.isolated_settings(self.k, paths)
+
+    def test_captured_provider_edge_and_failures(self):
+        import copy, tempfile
+        from unittest.mock import patch
+        for mode in ('success', 'exit', 'invalid', 'missing-completion', 'tool'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory(prefix='atom8-edge-', dir='/private/tmp') as temp:
+                root = Path(temp); directory = root / 'seat-1'; directory.mkdir()
+                seat = self.plan['seats'][0]
+                response = copy.deepcopy(InterviewEngineTests.captured_responses[0])
+                response['envelope_sha256'] = seat['envelope_sha256']
+                def popen(args, **kwargs):
+                    from types import SimpleNamespace
+                    self.assertEqual(kwargs['stdin'].read(), __import__('base64').b64decode(seat['prompt_base64']))
+                    self.assertNotIn('CODEX_THREAD_ID', kwargs['env'])
+                    self.assertEqual(json.loads(Path(args[args.index('--output-schema')+1]).read_text()), seat['provider_schema'])
+                    raw = b'{}' if mode == 'invalid' else self.k.canonical(response)
+                    Path(args[args.index('--output-last-message')+1]).write_bytes(raw)
+                    event = {'type': 'turn.completed'}
+                    if mode == 'tool': event = {'type': 'item.completed', 'item': {'type': 'command_execution'}}
+                    if mode != 'missing-completion': kwargs['stdout'].write(self.k.canonical(event)+b'\n'); kwargs['stdout'].flush()
+                    if mode == 'tool': kwargs['stdout'].write(b'{"type":"turn.completed"}\n'); kwargs['stdout'].flush()
+                    code = 1 if mode == 'exit' else 0
+                    return SimpleNamespace(returncode=code, poll=lambda: code, pid=2147483647, wait=lambda: code)
+                with patch.object(self.k, 'runtime_identity', return_value={'codex': self.plan['launcher']}), patch.object(self.m.subprocess, 'Popen', side_effect=popen) as process:
+                    if mode == 'success':
+                        self.assertEqual(self.m.call_seat(self.k, self.plan, seat, directory, self.auth), response)
+                    else:
+                        with self.assertRaises(self.k.Refused): self.m.call_seat(self.k, self.plan, seat, directory, self.auth)
+                    self.assertEqual(process.call_count, 1)
+                    self.assertTrue((directory / 'stdout.jsonl').exists())
+                    self.assertTrue((directory / 'stderr.txt').exists())
+
+    def test_timeout_terminates_real_external_edge_process(self):
+        import tempfile, time
+        from unittest.mock import patch
+        plan = {**self.plan, 'timeout_ms': 100}
+        with tempfile.TemporaryDirectory(prefix='atom8-timeout-', dir='/private/tmp') as temp:
+            directory = Path(temp) / 'seat-1'; directory.mkdir()
+            started = time.monotonic()
+            with patch.object(self.k, 'runtime_identity', return_value={'codex': plan['launcher']}), patch.object(self.m, 'argv_for', return_value=[sys.executable, '-c', 'import time; time.sleep(30)']):
+                with self.assertRaisesRegex(self.k.Refused, 'exceeded 100 ms'):
+                    self.m.call_seat(self.k, plan, plan['seats'][0], directory, self.auth)
+            self.assertLess(time.monotonic() - started, 3)
+
+    def test_local_fitness_does_not_grant_transmission(self):
+        import copy
+        # The same captured evidence has valid capture receipts; this isolates only
+        # the explicit sharing label and exercises the actual fitness implementation.
+        pending = InterviewEngineTests.captured_pending
+        record = copy.deepcopy(pending['envelopes'][0]['envelope']['semantic_payload']['evidence'][0])
+        adapter = self.k.evidence_module()
+        sources = {'evidence': record['excerpt'].encode()}
+        record['source_object_sha256'] = adapter.digest(sources['evidence'])
+        sources['receipt'] = json.dumps({'access': {'outcome': 'accessible', 'object_sha256': record['source_object_sha256']},
+                                        'reproduction': {'outcome': 'reproduced', 'object_sha256': record['source_object_sha256']}}).encode()
+        record['access_receipt'] = {'source_id': 'receipt', 'pointer': '/access', 'outcome': 'accessible'}
+        record['reproduction_receipt'] = {'source_id': 'receipt', 'pointer': '/reproduction', 'outcome': 'reproduced'}
+        for use, expected in [('local-only', True), ('model-authorized', True), ('denied', False)]:
+            record['model_share_authorization']['use'] = use
+            with self.subTest(use=use):
+                self.assertEqual(adapter.fitness(record, sources, record['captured_at_utc'])['fit'], expected)

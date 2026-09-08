@@ -549,12 +549,16 @@ def kernel_main():
     for name in ('status', 'verify-replay', 'advance'):
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
     commands.add_parser('response-schema', allow_abbrev=False)
-    for name in ('prepare-interview', 'admit-interview'):
+    for name in ('prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview'):
         command = commands.add_parser(name, allow_abbrev=False)
         command.add_argument('work')
         command.add_argument('--expected-tip', required=True)
         if name == 'admit-interview':
             command.add_argument('submission')
+        if name in ('prepare-launch', 'launch-interview'):
+            command.add_argument('launch_directory')
+        if name == 'launch-interview':
+            command.add_argument('authorization')
     args = parser.parse_args()
     try:
         if args.command == 'schema':
@@ -563,7 +567,9 @@ def kernel_main():
         if args.command == 'response-schema':
             print(json.dumps(model_response_schema(), sort_keys=True, indent=2))
             return 0
-        if args.command in ('prepare-interview', 'admit-interview'):
+        if args.command in ('prepare-launch', 'launch-interview'):
+            result = launcher_module().dispatch(kernel_api(), args)
+        elif args.command in ('prepare-interview', 'admit-interview'):
             result = interview_action(args.command, args.work, args.expected_tip, getattr(args, 'submission', None))
         else:
             result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
@@ -659,7 +665,21 @@ def collect_upstreams(request, captured, work, total):
 
 def adapter_code_sha256():
     return digest(canonical([{'path': name, 'sha256': digest(read_file(Path(__file__).parent / name, 33554432))}
-                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py')]))
+                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py', 'model_interview.py')]))
+
+
+def launcher_module():
+    import importlib.util
+    path = Path(__file__).parent / 'model_interview.py'
+    spec = importlib.util.spec_from_file_location('readiness_model_interview', path)
+    module = importlib.util.module_from_spec(spec)
+    exec(compile(read_file(path, 33554432), str(path), 'exec'), module.__dict__)
+    return module
+
+
+def kernel_api():
+    from types import SimpleNamespace
+    return SimpleNamespace(**globals())
 
 
 def evidence_module():
@@ -785,7 +805,7 @@ INTERVIEW_LIMIT = 1048576
 
 def initial_interview_state():
     return {'schema_version': 1, 'pending': None, 'attempts': {}, 'proposals': [],
-            'rejections': [], 'status': 'idle'}
+            'rejections': [], 'status': 'idle', 'launches': [], 'launch_results': []}
 
 
 def family_response_schema(family):
@@ -967,6 +987,14 @@ def fold_interview(state, event, work, events, request, graph):
         state['pending'] = payload
         state['attempts'][payload['attempt_key']] = payload['attempt']
         state['status'] = 'awaiting-responses'
+    elif kind == 'interview_launch_reserved':
+        if payload['plan']['work'] != str(work) or payload['plan']['ledger_tip'] != events[-1]['sha256']:
+            raise Refused('launch reservation work or predecessor differs from the current run; regenerate its exact plan')
+        launcher_module().validate_reservation(kernel_api(), payload, state)
+        state['launches'].append(payload)
+    elif kind == 'interview_launch_finished':
+        launcher_module().validate_finish(kernel_api(), payload, state)
+        state['launch_results'].append(payload)
     elif kind in ('interview_admitted', 'interview_rejected'):
         if type(payload) is not dict or set(payload) != {'submission_base64', 'submission_sha256', 'result'}:
             raise Refused('interview admission has no prepared seat set or has unexpected payload fields; preserve the ordered transition chain')
@@ -995,6 +1023,10 @@ def transition_files(event):
             name = seat['envelope']['seat']
             files[name + '-envelope.json'] = canonical(seat['envelope']) + b'\n'
             files[name + '-schema.json'] = canonical(seat['response_schema']) + b'\n'
+    if event['event'] == 'interview_launch_finished':
+        for seat in event['payload']['seats']:
+            for name, encoded in seat['files'].items():
+                files[seat['seat'] + '--' + name] = base64.b64decode(encoded, validate=True)
     return files
 
 
@@ -1050,6 +1082,14 @@ def interview_action(command, work, expected_tip, submission=None):
             raise Refused('interview transition budget exhausted; obtain an explicit bounded continuation')
         if command == 'prepare-interview':
             payload = prepare_payload(work, events, request, graph, state); kind = 'interview_prepared'
+        elif command == 'reserve-interview-launch':
+            payload = decode(read_file(submission, INTERVIEW_LIMIT), 'launch reservation')
+            launcher_module().validate_reservation(kernel_api(), payload, state)
+            kind = 'interview_launch_reserved'
+        elif command == 'finish-interview-launch':
+            payload = decode(read_file(submission, 3145728), 'launch completion')
+            launcher_module().validate_finish(kernel_api(), payload, state)
+            kind = 'interview_launch_finished'
         else:
             raw = read_file(submission, INTERVIEW_LIMIT)
             assessment = evaluate_submission(state['pending'], raw, graph, state['proposals'])
