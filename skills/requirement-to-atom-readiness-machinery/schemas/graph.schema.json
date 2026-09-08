@@ -649,6 +649,7 @@
                   "enum": [
                     "unassessed",
                     "blocked",
+                    "satisfied",
                     "mapped"
                   ]
                 },
@@ -995,7 +996,50 @@
                   "additionalProperties": false,
                   "properties": {
                     "answer": {
-                      "type": "null"
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "action_sha256": {
+                              "$ref": "#/$defs/sha256"
+                            },
+                            "disposition": {
+                              "enum": [
+                                "answered",
+                                "deferred"
+                              ]
+                            },
+                            "event_sha256": {
+                              "$ref": "#/$defs/sha256"
+                            },
+                            "quote": {
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "source_sha256": {
+                              "$ref": "#/$defs/sha256"
+                            },
+                            "value": {
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "event_sha256",
+                            "action_sha256",
+                            "source_sha256",
+                            "quote",
+                            "value",
+                            "disposition"
+                          ],
+                          "type": "object"
+                        }
+                      ]
                     },
                     "answer_contract": {
                       "const": "owner-only-pending"
@@ -1021,7 +1065,50 @@
                   "additionalProperties": false,
                   "properties": {
                     "answer": {
-                      "type": "null"
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "action_sha256": {
+                              "$ref": "#/$defs/sha256"
+                            },
+                            "disposition": {
+                              "enum": [
+                                "answered",
+                                "deferred"
+                              ]
+                            },
+                            "event_sha256": {
+                              "$ref": "#/$defs/sha256"
+                            },
+                            "quote": {
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "source_sha256": {
+                              "$ref": "#/$defs/sha256"
+                            },
+                            "value": {
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "event_sha256",
+                            "action_sha256",
+                            "source_sha256",
+                            "quote",
+                            "value",
+                            "disposition"
+                          ],
+                          "type": "object"
+                        }
+                      ]
                     },
                     "answer_contract": {
                       "const": "owner-only-pending"

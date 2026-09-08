@@ -2172,6 +2172,128 @@ class InterviewEngineTests(ReadinessKernelTests):
                     module.replay_interviews(work, copy.deepcopy(events), {}, None)
 
 
+class ExternalRoutingTests(ReadinessKernelTests):
+    def setUp(self):
+        import copy
+        self.k = self.module
+        graph = copy.deepcopy(EvidenceGraphRuntimeTests.captured_graph)
+        self.graph = {'graph':graph, 'graph_sha256':self.k.digest(self.k.canonical(graph)),
+                      'queue':graph['conditions'], 'next_action':graph['conditions'][0],
+                      'status':'blocked', 'readiness':'not-assessed'}
+        self.state = self.k.initial_interview_state()
+
+    def test_original_graph_is_not_rewritten(self):
+        before=self.k.canonical(self.graph)
+        result=self.k.routed_graph(self.graph,self.state)
+        self.assertEqual(self.k.canonical(self.graph),before)
+        self.assertEqual(result['next_action']['condition_id'],'mysql-query-timeout')
+        self.assertEqual(result['readiness'],'not-assessed')
+
+    def test_typed_owner_projection_accepts_bound_record_not_bare_text(self):
+        import copy
+        node=next(n for n in self.graph['graph']['nodes'] if n['type']=='authority_decision')
+        row={'node_id':node['id'],'event_sha256':'a'*64,'action_sha256':'b'*64,
+             'source_sha256':'c'*64,'quote':node['record']['question'],
+             'value':node['record']['question'],'disposition':'deferred'}
+        # Projection-only shape probe. This is not an admitted owner decision.
+        self.state['routing']['answers']=[row]
+        current=self.k.routed_graph(self.graph,self.state)
+        changed=next(n for n in current['graph']['nodes'] if n['id']==node['id'])
+        self.assertEqual(changed['record']['answer']['disposition'],'deferred')
+        self.assertIn(node['id'],[q['node_id'] for q in current['queue']])
+        bad=copy.deepcopy(current['graph']);next(n for n in bad['nodes'] if n['id']==node['id'])['record']['answer']='owner said yes'
+        adapter=self.k.evidence_module()
+        with self.assertRaises(adapter.EvidenceRefused):
+            adapter.validate(bad,adapter.graph_schema())
+
+    def test_owner_schema_rejects_model_actor_and_extra_choices(self):
+        value={'schema_version':1,'run_id':'a'*64,'action_sha256':'b'*64,'node_id':'captured-owner',
+               'actor':'model','route':'owner','source_sha256':'c'*64,'quote':'probe-only',
+               'value':'probe-only','disposition':'answered','supersedes':None,'source_record':None}
+        with self.assertRaises(self.k.Refused):
+            self.k.validate_shape(value,self.k.owner_answer_schema())
+        value['actor']='owner';value['choices']=['invented']
+        with self.assertRaises(self.k.Refused):
+            self.k.validate_shape(value,self.k.owner_answer_schema())
+
+    def test_non_head_external_question_refused(self):
+        from unittest.mock import patch
+        with patch.object(self.k,'frozen_external_inputs',side_effect=AssertionError('must not inspect sources for a non-external head')):
+            with self.assertRaisesRegex(self.k.Refused,'earlier obligation'):
+                self.k.external_action(Path('/private/tmp/unused'),[],{},self.graph,self.state)
+
+    def test_direct_phase_contract_cannot_route_to_skills(self):
+        for route in ('direct-research','direct-plan'):
+            schema=self.k.external_response_schema(route)
+            self.assertEqual(schema['properties']['route']['const'],route)
+            self.assertEqual(schema['properties']['actor']['const'],'direct-phase')
+            self.assertFalse(schema['additionalProperties'])
+
+    def test_research_request_publishes_the_real_manifest_schema(self):
+        from jsonschema import Draft202012Validator
+        schema = self.k.external_response_schema('direct-research')
+        Draft202012Validator.check_schema(schema)
+        self.assertIn('source_files', schema['properties']['manifest']['required'])
+        self.assertIn('evidence', schema['$defs'])
+
+    def test_negative_assessment_does_not_jump_remaining_semantic_work(self):
+        import copy
+        semantic = next(q for q in self.graph['queue'] if q['blocking_class']=='semantic')
+        other = copy.deepcopy(semantic)
+        other['condition_id'] += '-routing-order-probe'
+        other['node_id'] += '-routing-order-probe'
+        node = copy.deepcopy(next(n for n in self.graph['graph']['nodes'] if n['id']==semantic['node_id']))
+        node['id'] = other['node_id'];self.graph['graph']['nodes'].append(node)
+        self.graph['queue'] = [semantic,other]
+        self.graph['graph']['conditions'] = self.graph['queue']
+        self.state['proposals'] = [{'family':'verification-adequacy','verdict':'inadequate','node_id':semantic['node_id']}]
+        result = self.k.routed_graph(self.graph,self.state)
+        self.assertEqual(result['next_action']['node_id'],other['node_id'])
+        self.assertEqual(result['queue'][1]['blocking_class'],'research')
+
+    def test_generated_owner_schema_matches_runtime(self):
+        stored=json.loads((ROOT/'skills/requirement-to-atom-readiness-machinery/schemas/owner-answer.schema.json').read_text())
+        self.assertEqual(stored,self.k.owner_answer_schema())
+
+    def test_late_owner_source_is_captured_without_reading_its_origin(self):
+        import base64
+        from unittest.mock import patch
+        source = Path('/private/tmp/captured-owner-question.txt')
+        node = next(n for n in self.graph['graph']['nodes'] if n['type']=='authority_decision')
+        raw = node['record']['question'].encode()
+        response = {'source_sha256': self.k.digest(raw), 'source_record': {
+            'origin': str(source), 'base64': base64.b64encode(raw).decode()}}
+        request = {'owner_records': [], 'execution_limits': {'max_single_file_bytes':len(raw)}}
+        with patch.object(self.k, 'frozen_external_inputs', side_effect=AssertionError('must use retained bytes')):
+            self.assertEqual(self.k.owner_source(response, Path('/private/tmp/unused'), request), raw)
+            response['source_sha256'] = '0'*64
+            with self.assertRaisesRegex(self.k.Refused, 'differ'):
+                self.k.owner_source(response, Path('/private/tmp/unused'), request)
+
+    def test_planning_candidate_contract_requires_downstream_fields(self):
+        from jsonschema import Draft202012Validator
+        schema = self.k.external_response_schema('direct-plan')
+        Draft202012Validator.check_schema(schema)
+        candidate = schema['properties']['candidates']['items']
+        self.assertIn('schema_version', candidate['required'])
+        self.assertIn('contract_surface', candidate['required'])
+        case = candidate['properties']['captured_cases']['items']
+        self.assertEqual(set(case['required']), {'case_id','source_ref','sha256','kind','expected_outcome'})
+        with self.assertRaises(self.k.Refused):
+            self.k.validate_shape({}, case, 'captured case')
+
+    def test_planning_cannot_skip_unsettled_captured_requirements(self):
+        from unittest.mock import patch
+        # Controlled routing mutation of a captured condition, not a real Plan
+        # classification. Removing blockers is NOT evidence of sufficiency.
+        planning = [dict(self.graph['queue'][0], blocking_class='planning')]
+        self.graph['queue'] = planning
+        self.graph['graph']['conditions'] = planning
+        with patch.object(self.k, 'frozen_external_inputs', side_effect=AssertionError('must refuse before source access')):
+            with self.assertRaisesRegex(self.k.Refused, 'lacks evidence-sufficiency proof'):
+                self.k.external_action(Path('/private/tmp/unused'),[],{},self.graph,self.state)
+
+
 class CodexLaunchTests(unittest.TestCase):
     def setUp(self):
         import copy, importlib.util

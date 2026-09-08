@@ -517,6 +517,11 @@ def replay(work, *, locked=False):
         interview_state, interview_files, interview_dirs = replay_interviews(
             work, events, request, rebuilt)
         result['interview_state'] = interview_state
+        effective = routed_graph(rebuilt, interview_state)
+        if effective is not None:
+            result.update({key:effective[key] for key in ('status','readiness','graph_sha256','next_action')})
+            result['queue_count'] = len(effective['queue'])
+        result['external_action'] = interview_state['routing']['pending']
         result['ledger_tip'] = events[-1]['sha256']
         result['event_count'] = len(events)
         expected_files.update(interview_files)
@@ -549,7 +554,8 @@ def kernel_main():
     for name in ('status', 'verify-replay', 'advance'):
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
     commands.add_parser('response-schema', allow_abbrev=False)
-    for name in ('prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview'):
+    for name in ('prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview',
+                 'prepare-external', 'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
         command = commands.add_parser(name, allow_abbrev=False)
         command.add_argument('work')
         command.add_argument('--expected-tip', required=True)
@@ -559,6 +565,8 @@ def kernel_main():
             command.add_argument('launch_directory')
         if name == 'launch-interview':
             command.add_argument('authorization')
+        if name in ('answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
+            command.add_argument('submission')
     args = parser.parse_args()
     try:
         if args.command == 'schema':
@@ -569,7 +577,8 @@ def kernel_main():
             return 0
         if args.command in ('prepare-launch', 'launch-interview'):
             result = launcher_module().dispatch(kernel_api(), args)
-        elif args.command in ('prepare-interview', 'admit-interview'):
+        elif args.command in ('prepare-interview', 'admit-interview', 'prepare-external',
+                              'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
             result = interview_action(args.command, args.work, args.expected_tip, getattr(args, 'submission', None))
         else:
             result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
@@ -805,7 +814,8 @@ INTERVIEW_LIMIT = 1048576
 
 def initial_interview_state():
     return {'schema_version': 1, 'pending': None, 'attempts': {}, 'proposals': [],
-            'rejections': [], 'status': 'idle', 'launches': [], 'launch_results': []}
+            'rejections': [], 'status': 'idle', 'launches': [], 'launch_results': [],
+            'routing': {'pending': None, 'answers': [], 'results': []}}
 
 
 def family_response_schema(family):
@@ -854,6 +864,9 @@ def model_response_schema():
 
 
 def prepare_payload(work, events, request, graph, state):
+    graph = routed_graph(graph, state)
+    if state['routing']['pending'] is not None:
+        raise Refused('an external question is pending; finish that question before preparing an interview')
     if state['pending'] is not None:
         raise Refused('interview already prepared: submit against the retained seat envelopes; do not prepare duplicate calls')
     if graph is None or not graph['queue']:
@@ -980,6 +993,8 @@ def evaluate_submission(pending, raw, graph, proposals=()):
 def fold_interview(state, event, work, events, request, graph):
     state = decode(canonical(state), 'interview state')
     kind = event['event']; payload = event['payload']
+    if kind.startswith('external_'):
+        return fold_external(state, event, work, events, request, graph)
     if kind == 'interview_prepared':
         expected = prepare_payload(work, events, request, graph, state)
         if payload != expected:
@@ -1001,7 +1016,7 @@ def fold_interview(state, event, work, events, request, graph):
         raw = base64.b64decode(payload['submission_base64'], validate=True)
         if len(raw) > INTERVIEW_LIMIT or digest(raw) != payload['submission_sha256']:
             raise Refused('interview submission bytes exceed the limit or differ from their retained digest')
-        result = evaluate_submission(state['pending'], raw, graph, state['proposals'])
+        result = evaluate_submission(state['pending'], raw, routed_graph(graph, state), state['proposals'])
         if payload['result'] != result or kind != 'interview_' + result['status']:
             raise Refused('interview result differs from independent replay validation of retained response bytes')
         if result['status'] == 'admitted':
@@ -1018,6 +1033,9 @@ def fold_interview(state, event, work, events, request, graph):
 
 def transition_files(event):
     files = {'event.json': canonical(event) + b'\n'}
+    if event['event'] == 'external_prepared':
+        action = event['payload']
+        files[action['artifact']] = canonical(action) + b'\n'
     if event['event'] == 'interview_prepared':
         for seat in event['payload']['envelopes']:
             name = seat['envelope']['seat']
@@ -1080,7 +1098,16 @@ def interview_action(command, work, expected_tip, submission=None):
         state, _, _ = replay_interviews(work, events, request, graph)
         if len(events) - len(result['inputs']) - 1 >= 1024:
             raise Refused('interview transition budget exhausted; obtain an explicit bounded continuation')
-        if command == 'prepare-interview':
+        if command == 'prepare-external':
+            payload = external_action(work, events, request, graph, state); kind = 'external_prepared'
+        elif command in ('answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
+            raw = read_file(submission, INTERVIEW_LIMIT)
+            payload = {'submission': decode(raw, 'external response'), 'submission_sha256': digest(raw),
+                       'received_at': datetime.now(timezone.utc).isoformat(),
+                       'submission_base64': base64.b64encode(raw).decode('ascii')}
+            kind = {'answer-owner':'external_owner_answer', 'correct-owner':'external_owner_correction',
+                    'admit-evidence':'external_evidence', 'admit-planning':'external_planning'}[command]
+        elif command == 'prepare-interview':
             payload = prepare_payload(work, events, request, graph, state); kind = 'interview_prepared'
         elif command == 'reserve-interview-launch':
             payload = decode(read_file(submission, INTERVIEW_LIMIT), 'launch reservation')
@@ -1092,7 +1119,7 @@ def interview_action(command, work, expected_tip, submission=None):
             kind = 'interview_launch_finished'
         else:
             raw = read_file(submission, INTERVIEW_LIMIT)
-            assessment = evaluate_submission(state['pending'], raw, graph, state['proposals'])
+            assessment = evaluate_submission(state['pending'], raw, routed_graph(graph, state), state['proposals'])
             payload = {'submission_base64': base64.b64encode(raw).decode('ascii'),
                        'submission_sha256': digest(raw), 'result': assessment}
             kind = 'interview_' + assessment['status']
@@ -1140,6 +1167,385 @@ def interview_action(command, work, expected_tip, submission=None):
         return replay(work, locked=True)
     finally:
         os.close(fd)
+
+
+# External phases are opt-in transitions in the existing immutable journal. They
+# do not dispatch skills, execute commands, or grant authority from model output.
+EXTERNAL_ROUTES = {'owner': ('owner', 'owner-question.json'),
+                   'research': ('direct-research', 'research-request.json'),
+                   'planning': ('direct-plan', 'planning-request.json')}
+
+
+def owner_answer_schema():
+    text = {'type':'string', 'minLength':1, 'maxLength':8192, 'pattern':r'\S'}
+    sha = {'type':'string', 'pattern':SHA256.pattern}
+    properties = {'schema_version':{'type':'integer', 'const':1},
+        'run_id':sha, 'action_sha256':sha, 'node_id':text, 'actor':{'const':'owner'},
+        'route':{'const':'owner'}, 'source_sha256':sha, 'quote':text,
+        'value':text, 'disposition':{'enum':['answered','deferred']},
+        'supersedes':{'anyOf':[{'type':'null'},sha]},
+        'source_record':{'anyOf':[{'type':'null'}, {
+            'type':'object','additionalProperties':False,
+            'required':['origin','base64'], 'properties':{
+                'origin':text, 'base64':{'type':'string','maxLength':1048576}}}]}}
+    return {'$schema':'https://json-schema.org/draft/2020-12/schema',
+            'type':'object', 'additionalProperties':False,
+            'required':list(properties), 'properties':properties}
+
+
+def routing_state(state):
+    return state['routing']
+
+
+def owner_source(response, work, request):
+    """Capture trusted operator input, not model authority or human authentication.
+
+    New owner words travel inside the hash-bound transaction. Replay never reads
+    their origin path. A caller with operator access remains the trust boundary,
+    just as for start-declared owner_records; an actor label is not a signature.
+    """
+    record = response['source_record']
+    if record is not None:
+        absolute(record['origin'])
+        raw = base64.b64decode(record['base64'], validate=True)
+        if len(raw) > request['execution_limits']['max_single_file_bytes']:
+            raise Refused('owner source exceeds the declared single-file limit; supply a bounded capture')
+        if digest(raw) != response['source_sha256']:
+            raise Refused('owner source bytes differ from source_sha256; preserve the exact captured owner record')
+        return raw
+    owner_hashes = {r['sha256'] for r in request['owner_records']}
+    if response['source_sha256'] not in owner_hashes:
+        raise Refused('owner source is not in owner_records; attach its exact bytes in source_record through the trusted owner channel')
+    sources = frozen_external_inputs(work, request)
+    return next(raw for raw in sources.values() if digest(raw) == response['source_sha256'])
+
+
+def routed_graph(graph, state):
+    if graph is None:
+        return None
+    result = decode(canonical(graph), 'graph copy')
+    routing = routing_state(state)
+    for row in routing['results']:
+        if row['route'] == 'direct-research':
+            result = decode(canonical(row['graph']), 'admitted evidence graph')
+    latest = {row['node_id']:row for row in routing['answers']}
+    resolved = set()
+    for node in result['graph']['nodes']:
+        if node['id'] in latest:
+            row = latest[node['id']]
+            node['record']['answer'] = {key:row[key] for key in
+                ('event_sha256','action_sha256','source_sha256','quote','value','disposition')}
+            if row['disposition'] == 'answered':
+                resolved.add(node['id'])
+    # A proposed wording never answers the question. Positive verification facts
+    # are consumed only through their finite, already checked family contract.
+    for fact in state['proposals']:
+        if fact['family'] == 'dependency-discovery':
+            if fact['verdict'] == 'dependency':
+                targets = {q['condition_id']:q['node_id'] for q in result['queue']}
+                edge = {'type':'requires','source':fact['subject_id'],
+                        'target':targets.get(fact['dependency_id'],fact['dependency_id'])}
+                if edge not in result['graph']['edges']:
+                    result['graph']['edges'].append(edge)
+            elif fact['verdict'] == 'none':
+                resolved.add(fact['node_id'])
+        if (fact['family'],fact['verdict']) in (
+                ('verification-adequacy','inadequate'),('evidence-sufficiency','insufficient')):
+            for item in result['queue']:
+                if item['node_id'] == fact['node_id']:
+                    item['blocking_class'] = 'research'
+                    item['recovery_condition'] = 'Return source-bound evidence addressing the retained unsatisfied criteria; the negative assessment remains in history.'
+        if (fact['family'],fact['verdict']) in (
+                ('verification-adequacy','adequate'),('evidence-sufficiency','satisfied')):
+            node = next(n for n in result['graph']['nodes'] if n['id'] == fact['node_id'])
+            if node['type'] == 'verification':
+                node['record']['status'] = 'verified'; resolved.add(node['id'])
+                if fact['family']=='evidence-sufficiency':
+                    for subject in result['graph']['nodes']:
+                        if subject['id'] in fact['subject_ids']:
+                            subject['record']['disposition']='satisfied'
+                            subject['record']['maturity']=node['record']['interview']['required_maturity']
+    for row in routing['results']:
+        if row['route']=='direct-research':
+            resolved.add(row['node_id'])
+        elif row['route']=='direct-plan':
+            for item in result['queue']:
+                if item['node_id']==row['node_id']:
+                    item['blocking_class']='verification'
+                    item['recovery_condition']='Validate the retained atom candidates through the atom candidate compiler; no readiness or atom release is granted.'
+    result['queue'] = [row for row in result['queue'] if row['node_id'] not in resolved]
+    # Planning has an explicit all-other-obligations prerequisite. Its static
+    # class priority must not deadlock an owner decision needed before planning.
+    priorities = [kind for kind in evidence_module().BLOCKING_CLASSES if kind != 'planning'] + ['planning']
+    result['queue'].sort(key=lambda q:(priorities.index(q['blocking_class']), q['dependency_layer'],
+                                      q['requirement_ordinal'],q['source_ordinal'],q['node_id']))
+    result['graph']['conditions'] = result['queue']
+    evidence_module().validate(result['graph'], evidence_module().graph_schema())
+    evidence_module().verify_edges(result['graph']['nodes'], result['graph']['edges'])
+    result['graph_sha256'] = digest(canonical(result['graph']))
+    result['next_action'] = result['queue'][0] if result['queue'] else None
+    result['status'] = 'needs_owner' if result['queue'] and result['queue'][0]['blocking_class']=='owner' else 'blocked'
+    result['readiness'] = 'not-assessed'
+    return result
+
+
+def frozen_external_inputs(work, request):
+    """Only declared start snapshots; never follow a response-supplied source path."""
+    objects = {}
+    for _, _, descriptor in descriptors(request):
+        raw = read_file(work/'run/inputs/objects'/descriptor['sha256'], request['execution_limits']['max_single_file_bytes'])
+        if digest(raw) != descriptor['sha256']:
+            raise Refused('external input snapshot hash differs from its start descriptor')
+        objects[descriptor['path']] = raw
+    # Graph members were independently admitted at start, not response authority.
+    first = decode(read_file(work/'run/ledger.jsonl',33554432).splitlines()[0], 'start')['payload']
+    for group in (first['upstream'], first['evidence_graph']):
+        if group:
+            for item in group['members']:
+                raw = read_file(work/'run/inputs/objects'/item['sha256'],request['execution_limits']['max_single_file_bytes'])
+                if digest(raw) != item['sha256']:
+                    raise Refused('external source snapshot differs from admitted digest')
+                objects[item['path']] = raw
+    return objects
+
+
+def external_action(work, events, request, graph, state):
+    routing = routing_state(state)
+    if state['pending'] is not None or routing['pending'] is not None:
+        raise Refused('a question is already pending; answer the current retained question before preparing another')
+    current = routed_graph(graph, state)
+    if current is None or not current['queue']:
+        raise Refused('no declared external gap remains; candidate compilation and readiness require their own gates')
+    head = current['queue'][0]
+    if head['blocking_class'] not in EXTERNAL_ROUTES:
+        raise Refused(f"queue head {head['condition_id']}: {head['blocking_class']} is not an external route; resolve this earlier obligation first")
+    route, artifact = EXTERNAL_ROUTES[head['blocking_class']]
+    if route == 'direct-plan' and any(q['blocking_class'] != 'planning' for q in current['queue']):
+        raise Refused('planning is premature: unresolved evidence, verification or owner decisions remain; settle its prerequisites first')
+    if route == 'direct-plan':
+        unsettled=[n['id'] for n in current['graph']['nodes'] if n['type']=='requirement' and n['record']['disposition']!='satisfied']
+        if unsettled:
+            raise Refused(f'planning lacks evidence-sufficiency proof for requirements {unsettled}; an empty blocker subset is not proof of settled requirements')
+    node = next(n for n in current['graph']['nodes'] if n['id']==head['node_id'])
+    requirements = sorted({e['source'] for e in current['graph']['edges']
+                           if e['target']==node['id'] and e['type'] in ('governed-by','verified-by')})
+    sources = frozen_external_inputs(work,request)
+    manifests = []
+    for field in ('evidence_manifests','telemetry_manifests','blocker_ledgers'):
+        manifests.extend(decode(sources[d['path']],field) for d in request[field])
+    for result in routing['results']:
+        if result['route'] == 'direct-research':
+            manifests.append(result['response']['manifest'])
+            for item in result['response']['objects']:
+                sources[item['origin']] = base64.b64decode(item['base64'],validate=True)
+    related_hashes=set()
+    for manifest in manifests:
+        selected=[c for c in manifest['conditions'] if c['condition_id']==head['condition_id']]
+        source_ids={c['source_id'] for c in selected}
+        related_hashes.update(r['sha256'] for r in manifest['source_files'] if r['id'] in source_ids)
+    spec = node['record'].get('interview')
+    evidence_ids = {ref['evidence_id'] for ref in spec['evidence_refs']} if spec else set()
+    for item in current['graph']['nodes']:
+        if item['type'] == 'evidence':
+            record = item['record']['evidence']
+            if record['evidence_id'] in evidence_ids or (route == 'direct-plan' and set(record['affected_requirement_ids']) & set(requirements)):
+                related_hashes.add(record['source_object_sha256'])
+    action = {'schema_version':1,'run_id':events[0]['sha256'], 'predecessor_sha256':events[-1]['sha256'],
+        'graph_sha256':current['graph_sha256'], 'node_id':node['id'], 'condition_id':head['condition_id'],
+        'route':route,'artifact':artifact, 'requirement_ids':requirements,
+        'question':head['recovery_condition'], 'recovery_condition':head['recovery_condition'],
+        'deferral_consequence':'This obligation remains unresolved; no readiness or implementation is authorized.',
+        'sources':[{'origin':path,'sha256':digest(raw)} for path,raw in sorted(sources.items()) if digest(raw) in related_hashes],
+        'authority':'owner-only' if route=='owner' else 'evidence-only; no owner authority',
+        'answer_type':'free-text','choices':[]}
+    action['criteria'] = spec['criteria'] if spec else []
+    action['assessments'] = [p for p in state['proposals'] if p['node_id'] == node['id']]
+    if route == 'owner':
+        spec = node['record'].get('interview')
+        if spec is not None:
+            action.update(answer_type=spec['answer_type'],choices=spec['choices'])
+        wordings = [p for p in state['proposals'] if p['node_id']==node['id'] and p['family']=='owner-question-formulation']
+        if wordings:
+            action['question']=wordings[-1]['question']
+        action['output_schema']=owner_answer_schema()
+    else:
+        action['output_schema']=external_response_schema(route)
+    action['action_sha256']=digest(canonical(action))
+    return action
+
+
+def fold_external(state, event, work, events, request, graph):
+    routing = routing_state(state)
+    kind=event['event'];payload=event['payload']
+    if kind == 'external_prepared':
+        if payload != external_action(work,events,request,graph,state):
+            raise Refused('external question differs from the queue head, sources or code-owned route')
+        routing['pending']=payload
+        return state
+    if type(payload) is not dict or set(payload) != {'submission','submission_sha256','submission_base64','received_at'}:
+        raise Refused('external response: require exact retained submission fields')
+    evidence_module().timestamp(payload['received_at'])
+    raw=base64.b64decode(payload['submission_base64'],validate=True)
+    if len(raw)>INTERVIEW_LIMIT or digest(raw)!=payload['submission_sha256'] or decode(raw,'response')!=payload['submission']:
+        raise Refused('external response bytes or digest differ; preserve the exact submitted artifact')
+    response=payload['submission'];action=routing['pending']
+    if kind in ('external_owner_answer','external_owner_correction'):
+        validate_shape(response,owner_answer_schema(),'owner answer')
+        correction=kind=='external_owner_correction'
+        if correction:
+            prior=[r for r in routing['answers'] if r['node_id']==response['node_id']]
+            if not prior or response['supersedes']!=prior[-1]['event_sha256']:
+                raise Refused('owner correction must supersede the current answer event for this exact decision')
+            action=prior[-1]['action']
+            if state['pending'] is not None or routing['pending'] is not None:
+                raise Refused('owner correction conflicts with a pending question; complete the current transaction first')
+        elif response['supersedes'] is not None:
+            raise Refused('initial owner answer cannot supersede history; use correct-owner with the latest event')
+        if action is None or action['route']!='owner':
+            raise Refused('owner answer has no prepared owner queue-head question')
+        for key in ('run_id','node_id','action_sha256','route'):
+            if response[key]!=action[key]:
+                raise Refused(f'owner answer {key} differs from the current decision; answer only its exact identity')
+        source=owner_source(response,work,request)
+        if response['quote'].encode() not in source or response['value'] not in response['quote']:
+            raise Refused('owner answer quote or value is absent from the declared owner source; preserve exact owner words')
+        if action['answer_type']=='enum-choice' and response['value'] not in [c['choice_id'] for c in action['choices']]:
+            raise Refused('owner answer is not one of the complete code-listed choices')
+        row={**response,'event_sha256':event['sha256'],'action':action}
+        if correction:
+            # Later facts were admitted against a predecessor that is no longer
+            # current. Their immutable journal remains; their active projections
+            # are conservatively invalidated rather than silently grandfathered.
+            cutoff=next(i for i,r in enumerate(routing['answers']) if r['event_sha256']==response['supersedes'])
+            routing['answers']=routing['answers'][:cutoff]
+            routing['results']=[]
+            state['proposals']=[]
+            state['attempts']={}
+        routing['answers'].append(row);routing['pending']=None
+        routed_graph(graph,state)
+        return state
+    if action is None:
+        raise Refused('external result has no prepared queue-head request')
+    expected_route={'external_evidence':'direct-research','external_planning':'direct-plan'}.get(kind)
+    if expected_route!=action['route']:
+        raise Refused('external result route differs from the pending direct phase; Research and Plan are never skills')
+    validate_shape(response,external_response_schema(expected_route, validation=True),'direct phase result')
+    for key in ('run_id','node_id','action_sha256','route'):
+        if response[key]!=action[key]:
+            raise Refused(f'direct phase result {key} differs from the retained queue-head request')
+    if expected_route=='direct-research':
+        checked=admit_research_graph(work,request,graph,state,action,response,payload['received_at'])
+        routing['results'].append({'route':expected_route,'node_id':action['node_id'],
+            'event_sha256':event['sha256'],'response':response,'graph':checked})
+    else:
+        nodes = routed_graph(graph,state)['graph']['nodes']
+        admitted={n['id'] for n in nodes if n['type']=='requirement'}
+        known = {
+            'verification_ids': {n['id'] for n in nodes if n['type']=='verification'},
+            'authority_decision_ids': {n['id'] for n in nodes if n['type']=='authority_decision'},
+            'evidence_ids': {n['record']['evidence']['evidence_id'] for n in nodes if n['type']=='evidence'}}
+        mapped=set()
+        identities=[]
+        for row in response['candidates']:
+            identities.append(row['atomic_step_id']);mapped.update(row['requirement_ids'])
+            if not set(row['requirement_ids'])<=admitted:
+                raise Refused('planning candidate references a foreign requirement; use only sealed requirement identities')
+            for field, ids in known.items():
+                if not set(row[field]) <= ids:
+                    raise Refused(f'planning candidate {row["atomic_step_id"]}: {field} contains unregistered identities; use only the admitted graph')
+        if len(set(identities))!=len(identities) or mapped!=admitted:
+            raise Refused('planning result must name distinct candidates covering the complete sealed requirement set')
+        routing['results'].append({'route':expected_route,'node_id':action['node_id'],
+            'event_sha256':event['sha256'],'response':response,'status':'awaiting-candidate-validation'})
+    routing['pending']=None
+    routed_graph(graph,state)
+    return state
+
+
+def external_response_schema(route, validation=False):
+    text={'type':'string','minLength':1,'maxLength':8192,'pattern':r'\S'}
+    sha={'type':'string','pattern':SHA256.pattern}
+    def obj(p):
+        return {'type':'object','additionalProperties':False,'required':list(p),'properties':p}
+    def arr(item,minimum=0):
+        return {'type':'array','minItems':minimum,'maxItems':256,'items':item}
+    p={'schema_version':{'type':'integer','const':1},'run_id':sha,'node_id':text,
+       'action_sha256':sha,'route':{'const':route},'actor':{'const':'direct-phase'}}
+    if route=='direct-research':
+        # The canonical adapter validates the nested manifest independently. Keep
+        # its oneOf/$defs contract intact instead of weakening it in this parser.
+        p['manifest']={}
+        p['objects']=arr(obj({'origin':text,'sha256':sha,
+            'base64':{'type':'string','maxLength':1048576}}),1)
+    else:
+        field = {'field':text,'shape':{'enum':['list','object','enum','integer','pinned-string','prose']},'shape_source':text}
+        surface = {'anyOf': [obj({'kind':{'const':'render'}}), obj({
+            'kind':{'const':'validation'},'deliverable':text,'fields':arr({'anyOf':[
+                obj(field),obj({**field,'introduced':{'type':'boolean','const':True}})]},1)})]}
+        case = obj({'case_id':text,'source_ref':text,'sha256':sha,
+                    'kind':{'enum':['success','failure']},'expected_outcome':text})
+        p['candidates']=arr(obj({'schema_version':{'type':'integer','const':1},
+            'atomic_step_id':text,'outcome':text,'practical_value':text,
+            'stopping_condition':text,'allowed_paths':arr(text,1),'captured_cases':arr(case,2),
+            'contract_surface':surface,
+            'requirement_ids':arr(text,1),'prerequisite_atom_ids':arr(text),
+            'verification_ids':arr(text,1),'authority_decision_ids':arr(text),'evidence_ids':arr(text,1)}),1)
+    result = obj(p)
+    if route == 'direct-research' and not validation:
+        # Publish the actual adapter contract. The small outer validator checks
+        # identity; admit_research_graph independently validates this full schema.
+        manifest = evidence_module().evidence_schema()
+        result['$defs'] = manifest.pop('$defs')
+        result['properties']['manifest'] = manifest
+    return result
+
+
+def admit_research_graph(work,request,graph,state,action,response,received_at):
+    adapter=evidence_module()
+    adapter.validate(response['manifest'],adapter.evidence_schema())
+    if response['manifest']['kind']!='evidence':
+        raise Refused('direct research must return evidence, not owner authority, telemetry or blocker lifecycle changes')
+    sources=frozen_external_inputs(work,request)
+    manifests=[decode(sources[r['path']],'original evidence') for field in
+               ('evidence_manifests','telemetry_manifests','blocker_ledgers') for r in request[field]]
+    responses=[r['response'] for r in state['routing']['results'] if r['route']=='direct-research']+[response]
+    for result in responses:
+        for item in result['objects']:
+            path=str(absolute(item['origin']))
+            raw=base64.b64decode(item['base64'],validate=True)
+            if len(raw)>request['execution_limits']['max_single_file_bytes'] or digest(raw)!=item['sha256']:
+                raise Refused('research source bytes exceed the limit or differ from their declared content hash')
+            if path in sources and sources[path]!=raw:
+                raise Refused('research source changes an admitted origin; supply a new immutable capture identity')
+            sources[path]=raw
+        declared={(r['path'],r['sha256']) for r in result['manifest']['source_files']}
+        if any((r['origin'],r['sha256']) not in declared for r in result['objects']):
+            raise Refused('research result contains an unused source object; supply only its manifest members')
+        manifests.append(result['manifest'])
+    if len(sources)>request['execution_limits']['max_input_files'] or sum(map(len,sources.values()))>request['execution_limits']['max_total_input_bytes']:
+        raise Refused('research admission exceeds frozen source count or byte limits')
+    def read(path,expected):
+        raw=sources.get(str(path))
+        if raw is None or digest(raw)!=expected:
+            raise Refused('research manifest references undeclared or changed bytes; include their exact immutable objects')
+        return raw
+    first=decode(read_file(work/'run/ledger.jsonl',33554432).splitlines()[0],'start')['payload']
+    handoff=decode(sources[request['requirements_handoff']['path']],'requirements handoff')
+    requirements={**first['upstream']['requirements_record'],'current_document_sha256':handoff['requirements_document']['sha256']}
+    parser=canonical_blocker_parser(request,read) if request['blocker_ledgers'] else None
+    checked=adapter.build_graph(manifests,requirements,read,received_at,parser)
+    # Returning evidence is not proof of meaning. Transfer the research obligation
+    # only to explicit source-bound sufficiency interviews for every affected
+    # requirement; their two-reader agreement remains outstanding.
+    covered=set()
+    new_ids={c['condition_id'] for c in response['manifest']['conditions']}
+    for node in checked['graph']['nodes']:
+        spec=node['record'].get('interview')
+        if spec and spec['family']=='evidence-sufficiency' and any(q['node_id']==node['id'] and q['condition_id'] in new_ids for q in checked['queue']):
+            covered.update(spec['subject_ids'])
+    if covered!=set(action['requirement_ids']):
+        raise Refused('research result lacks exact requirement coverage by source-bound sufficiency interviews; evidence arrival alone cannot clear its meaning gap')
+    return checked
 
 
 if __name__ == '__main__':

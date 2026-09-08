@@ -159,10 +159,16 @@ def definitions():
     anchor = closed(('piece_id','sha256','quote'),{'piece_id':text,'sha256':digest,'quote':text})
     requirement = closed(('requirement_id','ordinal','exact_text','source_anchors','maturity','disposition'),
         {'requirement_id':text,'ordinal':{'type':'integer','minimum':1},'exact_text':text,'source_anchors':array(anchor,1),
-         'maturity':{'enum':['unassessed','current-system','future-system']},'disposition':{'enum':['unassessed','blocked','mapped']}})
+         'maturity':{'enum':['unassessed','current-system','future-system']},'disposition':{'enum':['unassessed','blocked','satisfied','mapped']}})
     evidence_node = closed(('evidence','fitness'),{'evidence':evidence,'fitness':fitness})
+    # Imported conditions remain pending. Only controller-owned replay can project
+    # an answer, bound to its immutable external-action and authority-source record.
+    owner_answer = closed(('event_sha256', 'action_sha256', 'source_sha256', 'quote', 'value', 'disposition'), {
+        'event_sha256': digest, 'action_sha256': digest, 'source_sha256': digest,
+        'quote': text, 'value': text, 'disposition': {'enum': ['answered', 'deferred']}})
     authority = closed(('owner','question','answer_contract','answer'),{'owner':{'const':'owner'},'question':text,
-                        'answer_contract':{'const':'owner-only-pending'},'answer':{'type':'null'}})
+                        'answer_contract':{'const':'owner-only-pending'},
+                        'answer':{'anyOf':[{'type':'null'},owner_answer]}})
     contradiction = closed(('claim_ids','source_anchors','state','resolution_authority'),
         {'claim_ids':array(text,2),'source_anchors':array(text,1),'state':{'enum':['open','resolved']},
          'resolution_authority':{'enum':['owner','semantic']}})

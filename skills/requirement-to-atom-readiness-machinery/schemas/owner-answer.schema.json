@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "actor": {
+      "const": "owner"
+    },
+    "disposition": {
+      "enum": [
+        "answered",
+        "deferred"
+      ]
+    },
+    "node_id": {
+      "maxLength": 8192,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "quote": {
+      "maxLength": 8192,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "route": {
+      "const": "owner"
+    },
+    "run_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "source_record": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "base64": {
+              "maxLength": 1048576,
+              "type": "string"
+            },
+            "origin": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          "required": [
+            "origin",
+            "base64"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "source_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      ]
+    },
+    "value": {
+      "maxLength": 8192,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "action_sha256",
+    "node_id",
+    "actor",
+    "route",
+    "source_sha256",
+    "quote",
+    "value",
+    "disposition",
+    "supersedes",
+    "source_record"
+  ],
+  "type": "object"
+}
