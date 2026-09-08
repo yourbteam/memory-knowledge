@@ -267,7 +267,7 @@ def _identity_refusal(message):
     raise Refused()
 
 
-def _validate_run_identity(work, state):
+def _validate_run_identity(work, state, *, frozen_files=None):
     """Fail closed unless source bytes and the exact registered piece manifest still exist."""
     try:
         source = Path(state["source"])
@@ -277,19 +277,20 @@ def _validate_run_identity(work, state):
         _identity_refusal("state has no complete source and piece identity")
     if not source.is_absolute():
         _identity_refusal("stored source path is not absolute")
-    if not source.is_file():
+    if frozen_files is None and not source.is_file():
         _identity_refusal(f"registered source is missing: {source}")
-    actual_source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+    actual_source_hash = hashlib.sha256(source.read_bytes() if frozen_files is None else frozen_files[source]).hexdigest()
     if actual_source_hash != source_sha256:
         _identity_refusal(f"source hash mismatch: expected {source_sha256}, got {actual_source_hash}")
     ids = [piece.get("id") for piece in manifest]
     if any(not isinstance(piece_id, str) or not piece_id for piece_id in ids) or len(set(ids)) != len(ids):
         _identity_refusal("piece manifest has missing or duplicate identities")
     pieces_dir = Path(work) / "pieces"
-    if not pieces_dir.is_dir():
+    if frozen_files is None and not pieces_dir.is_dir():
         _identity_refusal("pieces directory is missing")
     expected_names = {f"{piece_id}.txt" for piece_id in ids}
-    actual_names = {entry.name for entry in pieces_dir.iterdir()}
+    actual_names = ({entry.name for entry in pieces_dir.iterdir()} if frozen_files is None else
+                    {entry.name for entry in frozen_files if entry.parent == pieces_dir})
     missing = sorted(expected_names - actual_names)
     extra = sorted(actual_names - expected_names)
     if missing:
@@ -298,9 +299,9 @@ def _validate_run_identity(work, state):
         _identity_refusal(f"unregistered piece file(s): {', '.join(extra)}")
     for piece in manifest:
         piece_path = pieces_dir / f"{piece['id']}.txt"
-        if piece_path.is_symlink() or not piece_path.is_file():
+        if frozen_files is None and (piece_path.is_symlink() or not piece_path.is_file()):
             _identity_refusal(f"piece is not a regular registered file: {piece['id']}")
-        payload = piece_path.read_bytes()
+        payload = piece_path.read_bytes() if frozen_files is None else frozen_files[piece_path]
         actual_hash = hashlib.sha256(payload).hexdigest()
         if actual_hash != piece.get("sha256"):
             _identity_refusal(
@@ -513,13 +514,14 @@ def _last_target(state):
     return rel.get("target") or rel.get("last")
 
 
-def _reader_coverage_error(state, target, work, include_obligations=False):
+def _reader_coverage_error(state, target, work, include_obligations=False, *, frozen_files=None):
     """Historic output remains replayable, but cannot certify a new complete extraction."""
     coverage = _load("reader_coverage")
     rows = state.get("relevance", {}).get("targets", {}).get(target, {}).get("pieces", {})
     for piece in state["pieces"]:
         piece_id = piece["id"]
-        text = (Path(work) / "pieces" / f"{piece_id}.txt").read_text()
+        path = Path(work) / "pieces" / f"{piece_id}.txt"
+        text = path.read_text() if frozen_files is None else frozen_files[path].decode("utf-8")
         row = rows.get(piece_id)
         if row is None and include_obligations:
             return f"{piece_id} has no relevance coverage"
@@ -1042,7 +1044,7 @@ def distill(work, reader_command):
     return 0
 
 
-def _owner_queue(state, target, *, read_only=False):
+def _owner_queue(state, target, *, read_only=False, frozen_files=None):
     """Every ruling only the owner can make, one stable id each, with its material and choices."""
     d = state.get("distilled", {}).get(target)
     if not d:
@@ -1058,7 +1060,7 @@ def _owner_queue(state, target, *, read_only=False):
         for pid in pieces:
             path = Path(state.get("_work", "")) / "pieces" / f"{pid}.txt"
             try:
-                text = path.read_text()
+                text = path.read_text() if frozen_files is None else frozen_files[path].decode("utf-8")
             except OSError:
                 continue
             lines = [l.strip() for l in text.split("\n") if l.strip()]
@@ -1973,7 +1975,7 @@ def _final_semantic_consolidate(items, state, target, work, reader_command, refl
     return untouched + [item for _, item in sorted(survivors)]
 
 
-def _document_material(work, reader_command=None, *, read_only=False, frozen_state=None):
+def _document_material(work, reader_command=None, *, read_only=False, frozen_state=None, frozen_files=None):
     """The finished requirements document, written by the machinery with every owner ruling
     applied. Refuses while any ruling is still pending — a document over an unanswered question
     would look complete and be one decision short of the truth."""
@@ -1983,7 +1985,7 @@ def _document_material(work, reader_command=None, *, read_only=False, frozen_sta
         if not read_only or reader_command:
             raise Refused("frozen material is permitted only for recorded-only rendering")
         state = copy.deepcopy(frozen_state)
-        _validate_run_identity(work, state)
+        _validate_run_identity(work, state, frozen_files=frozen_files)
         _validate_split_checkability_records(state)
     try:
         _rebuild(state).report()
@@ -1992,10 +1994,10 @@ def _document_material(work, reader_command=None, *, read_only=False, frozen_sta
         return 3
     state["_work"] = work
     target = _last_target(state)
-    error = _reader_coverage_error(state, target, work, include_obligations=True)
+    error = _reader_coverage_error(state, target, work, include_obligations=True, frozen_files=frozen_files)
     if error:
         return _refuse_reader_coverage(error)
-    queue = _owner_queue(state, target, read_only=read_only)
+    queue = _owner_queue(state, target, read_only=read_only, frozen_files=frozen_files)
     if queue is None:
         print(f"no distilled record in {work}. Run `cover.py distill` first.", file=sys.stderr)
         return 3
@@ -2240,8 +2242,10 @@ REQUIREMENTS_HANDOFF_FIELDS = (
     "schema_version", "machinery", "contract_version", "target", "source",
     "coverage_sha256", "terminal_feed_entry_sha256", "requirements_document",
     "requirements", "rejections", "owner_rulings", "unresolved_count",
-    "exporter_source_sha256", "handoff_sha256",
+    "exporter_source_sha256", "handoff_sha256", "evidence_files",
 )
+EVIDENCE_FILE_FIELDS = ("role", "identity", "path", "sha256", "size")
+EVIDENCE_ROLE_VALUES = ("coverage", "feed", "source", "document", "piece", "runtime")
 SOURCE_FIELDS = ("path", "sha256")
 REQUIREMENTS_DOCUMENT_FIELDS = ("path", "sha256")
 REQUIREMENT_FIELDS = ("requirement_id", "ordinal", "exact_text", "source_anchors")
@@ -2273,7 +2277,10 @@ def requirements_handoff_schema():
     result = closed(REQUIREMENTS_HANDOFF_FIELDS, {
         "schema_version": {"type": "integer", "const": 1},
         "machinery": {"enum": list(HANDOFF_MACHINERY_VALUES)},
-        "contract_version": {"type": "integer", "const": 1},
+        "contract_version": {"type": "integer", "const": 2},
+        "evidence_files": rows(closed(EVIDENCE_FILE_FIELDS, {
+            "role": {"enum": list(EVIDENCE_ROLE_VALUES)}, "identity": dict(text),
+            "path": dict(text), "sha256": dict(digest), "size": {"type": "integer", "minimum": 0}})),
         "target": dict(text),
         "source": closed(SOURCE_FIELDS, {"path": dict(text), "sha256": dict(digest)}),
         "coverage_sha256": dict(digest), "terminal_feed_entry_sha256": dict(digest),
@@ -2293,7 +2300,7 @@ def requirements_handoff_schema():
         "exporter_source_sha256": dict(digest), "handoff_sha256": dict(digest),
     })
     result.update({"$schema": "https://json-schema.org/draft/2020-12/schema",
-                   "title": "Requirements handoff v1",
+                   "title": "Requirements handoff v2",
                    "description": "Shape only, not completion proof. handoff_sha256 hashes canonical JSON "
                                   "with that top-level field omitted. Requirement IDs hash exact_text "
                                   "and canonically sorted source_anchors; source quotes use the "
@@ -2393,7 +2400,7 @@ def validate_requirements_handoff(handoff):
             raise Refused(f"{label}: require an ordered list")
     exact(handoff, REQUIREMENTS_HANDOFF_FIELDS, "handoff")
     for label, value, wanted in (("schema_version", handoff["schema_version"], 1),
-                                 ("contract_version", handoff["contract_version"], 1),
+                                 ("contract_version", handoff["contract_version"], 2),
                                  ("unresolved_count", handoff["unresolved_count"], 0)):
         if type(value) is not int or value != wanted:
             raise Refused(f"{label}: received {value!r}; require integer {wanted}")
@@ -2446,22 +2453,43 @@ def validate_requirements_handoff(handoff):
             if record["identity"] in identities:
                 raise Refused(f"{label}: duplicate identity {record['identity']!r}")
             identities.add(record["identity"])
+    rows(handoff["evidence_files"], "evidence_files")
+    seen = set()
+    for row in handoff["evidence_files"]:
+        exact(row, EVIDENCE_FILE_FIELDS, "evidence file")
+        if row["role"] not in EVIDENCE_ROLE_VALUES:
+            raise Refused("evidence file: unknown role; use a declared evidence role")
+        text(row["identity"], "evidence identity")
+        _handoff_absolute(row["path"])
+        digest(row["sha256"], "evidence digest")
+        if type(row["size"]) is not int or row["size"] < 0:
+            raise Refused("evidence file size: require a nonnegative integer")
+        identity = (row["role"], row["identity"])
+        if identity in seen:
+            raise Refused("evidence file: duplicate role and identity")
+        seen.add(identity)
+    if handoff["evidence_files"] != sorted(handoff["evidence_files"], key=lambda row: (row["role"], row["identity"])):
+        raise Refused("evidence files: require canonical role and identity order")
+    for role in ("coverage", "feed", "source", "document"):
+        if [r["identity"] for r in handoff["evidence_files"] if r["role"] == role] != [role]:
+            raise Refused(f"evidence files: require exactly one {role} record with the same identity")
     wanted = hashlib.sha256(_handoff_canonical({
         key: value for key, value in handoff.items() if key != "handoff_sha256"})).hexdigest()
     if handoff["handoff_sha256"] != wanted:
         raise Refused("handoff_sha256 differs from the canonical payload with its own field omitted")
 
 
-def build_requirements_handoff(work, document, expected_coverage_sha256):
+def build_requirements_handoff(work, document, expected_coverage_sha256, *, frozen_files=None, runtime_root=None):
     """Seal recorded material in memory only; never prepare, rebuild, or persist a run."""
     work, document = _handoff_absolute(str(work)), _handoff_absolute(str(document))
     if not isinstance(expected_coverage_sha256, str) or not HANDOFF_SHA256.fullmatch(expected_coverage_sha256):
         raise Refused("expected coverage digest must be exactly 64 lowercase hex characters")
     evidence = {}
+    runtime_root = HERE if runtime_root is None else _handoff_absolute(str(runtime_root))
     def read(path):
         path = _handoff_absolute(str(path))
         if path not in evidence:
-            evidence[path] = _handoff_regular(path)
+            evidence[path] = _handoff_regular(path) if frozen_files is None else frozen_files[path]
         return evidence[path]
     def digest(raw):
         return hashlib.sha256(raw).hexdigest()
@@ -2486,8 +2514,11 @@ def build_requirements_handoff(work, document, expected_coverage_sha256):
             if digest(raw) != row["sha256"] or len(raw.decode("utf-8")) != row["chars"]:
                 raise Refused(f"{name}: piece bytes differ from the registered hash or character count")
             pieces[name] = (raw.decode("utf-8"), digest(raw))
-        with _handoff_directory(work / "pieces") as fd:
-            piece_names = tuple(sorted(os.listdir(fd)))
+        if frozen_files is None:
+            with _handoff_directory(work / "pieces") as fd:
+                piece_names = tuple(sorted(os.listdir(fd)))
+        else:
+            piece_names = tuple(sorted(p.name for p in frozen_files if p.parent == work / "pieces"))
         evidence[work / "pieces"] = piece_names
         if piece_names != tuple(sorted(f"{name}.txt" for name in pieces)):
             raise Refused("pieces directory differs from the registered member set")
@@ -2506,12 +2537,15 @@ def build_requirements_handoff(work, document, expected_coverage_sha256):
         document_bytes = read(document)
         # Freeze every executable sibling consumed by this exporter and its shared renderer.
         runtime = []
-        with _handoff_directory(HERE) as fd:
-            evidence[HERE] = tuple(sorted(os.listdir(fd)))
-            runtime_names = [name for name in evidence[HERE] if name.endswith(".py")]
+        if frozen_files is None:
+            with _handoff_directory(runtime_root) as fd:
+                evidence[runtime_root] = tuple(sorted(os.listdir(fd)))
+        else:
+            evidence[runtime_root] = tuple(sorted(p.name for p in frozen_files if p.parent == runtime_root))
+        runtime_names = [name for name in evidence[runtime_root] if name.endswith(".py")]
         for name in runtime_names:
-            runtime.append({"path": name, "sha256": digest(read(HERE / name))})
-        material = _document_material(work, read_only=True, frozen_state=state)
+            runtime.append({"path": name, "sha256": digest(read(runtime_root / name))})
+        material = _document_material(work, read_only=True, frozen_state=state, frozen_files=frozen_files)
         if material == 3:
             raise Refused("run is incomplete or has unresolved owner decisions; complete it through the existing flow")
         payload, retained_count, rejected_count = _render_document_material(*material)
@@ -2557,17 +2591,32 @@ def build_requirements_handoff(work, document, expected_coverage_sha256):
             raise Refused("duplicate requirement identity; resolve duplicates before export")
         rulings = [{"identity": text(key, "ruling identity"), "choice": text(row["choice"], "ruling choice"),
                     "because": text(row["because"], "ruling reason")} for key, row in sorted(material[3].items())]
-        handoff = {"schema_version": 1, "machinery": "requirements-machinery", "contract_version": 1,
+        handoff = {"schema_version": 1, "machinery": "requirements-machinery", "contract_version": 2,
                    "target": text(target, "target"), "source": {"path": str(source), "sha256": digest(read(source))},
                    "coverage_sha256": digest(coverage), "terminal_feed_entry_sha256": digest(lines[-1]),
                    "requirements_document": {"path": str(document), "sha256": digest(document_bytes)},
                    "requirements": requirements, "rejections": rejections, "owner_rulings": rulings,
                    "unresolved_count": 0, "exporter_source_sha256": digest(_handoff_canonical(runtime))}
+        members = []
+        for role, identity, path in [("coverage", "coverage", work / STATE), ("feed", "feed", work / "feed.jsonl"),
+                                     ("source", "source", source), ("document", "document", document)]:
+            raw = read(path)
+            members.append({"role": role, "identity": identity, "path": str(path), "sha256": digest(raw), "size": len(raw)})
+        for name in pieces:
+            path = work / "pieces" / f"{name}.txt"
+            raw = read(path)
+            members.append({"role": "piece", "identity": name, "path": str(path), "sha256": digest(raw), "size": len(raw)})
+        for name in runtime_names:
+            path = runtime_root / name
+            raw = read(path)
+            members.append({"role": "runtime", "identity": name, "path": str(path), "sha256": digest(raw), "size": len(raw)})
+        handoff["evidence_files"] = sorted(members, key=lambda row: (row["role"], row["identity"]))
         handoff["handoff_sha256"] = digest(_handoff_canonical(handoff))
         if set(handoff) != set(REQUIREMENTS_HANDOFF_FIELDS):
             raise Refused("exported fields differ from the declared Requirements handoff contract")
         validate_requirements_handoff(handoff)
-        _handoff_verify(evidence)
+        if frozen_files is None:
+            _handoff_verify(evidence)
         return handoff, evidence
     except (OSError, KeyError, TypeError, ValueError, IndexError, AttributeError) as error:
         raise Refused(f"cannot export Requirements evidence: {error}") from error

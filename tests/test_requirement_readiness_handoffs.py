@@ -243,3 +243,24 @@ class RequirementsExporterBoundaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RequirementsManifestTests(unittest.TestCase):
+    def test_manifest_is_versioned_and_closed(self):
+        schema = json.loads((ROOT / "skills/requirement-to-atom-readiness-machinery/schemas/requirements-handoff.schema.json").read_text())
+        self.assertEqual(schema["properties"]["contract_version"]["const"], 2)
+        self.assertIn("evidence_files", schema["required"])
+        member = schema["properties"]["evidence_files"]["items"]
+        self.assertFalse(member["additionalProperties"])
+        self.assertEqual(set(member["required"]), {"role", "identity", "path", "sha256", "size"})
+        self.assertEqual(member["properties"]["role"]["enum"], ["coverage", "feed", "source", "document", "piece", "runtime"])
+
+    def test_frozen_export_does_not_read_origins(self):
+        from unittest.mock import patch
+        path = ROOT / "skills/requirements-machinery/scripts/cover.py"
+        spec = importlib.util.spec_from_file_location("frozen_exporter", path)
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        with patch.object(module, "_handoff_regular", side_effect=AssertionError("origin read")):
+            with self.assertRaisesRegex(module.Refused, "cannot export Requirements evidence"):
+                module.build_requirements_handoff("/missing", "/missing/document.md", "a" * 64,
+                                                  frozen_files={}, runtime_root="/runtime")

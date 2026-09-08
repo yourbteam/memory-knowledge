@@ -11,11 +11,53 @@
   "description": "Shape only, not completion proof. handoff_sha256 hashes canonical JSON with that top-level field omitted. Requirement IDs hash exact_text and canonically sorted source_anchors; source quotes use the existing Requirements reflow normalization.",
   "properties": {
     "contract_version": {
-      "const": 1,
+      "const": 2,
       "type": "integer"
     },
     "coverage_sha256": {
       "$ref": "#/$defs/sha256"
+    },
+    "evidence_files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "identity": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "coverage",
+              "feed",
+              "source",
+              "document",
+              "piece",
+              "runtime"
+            ]
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "size": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "role",
+          "identity",
+          "path",
+          "sha256",
+          "size"
+        ],
+        "type": "object"
+      },
+      "type": "array",
+      "uniqueItems": true
     },
     "exporter_source_sha256": {
       "$ref": "#/$defs/sha256"
@@ -197,8 +239,9 @@
     "owner_rulings",
     "unresolved_count",
     "exporter_source_sha256",
-    "handoff_sha256"
+    "handoff_sha256",
+    "evidence_files"
   ],
-  "title": "Requirements handoff v1",
+  "title": "Requirements handoff v2",
   "type": "object"
 }

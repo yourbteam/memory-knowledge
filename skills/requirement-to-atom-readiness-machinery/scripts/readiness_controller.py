@@ -85,7 +85,7 @@ import uuid
 from datetime import datetime, timezone
 
 EVENT_FIELDS = ('schema_version', 'sequence', 'event', 'previous', 'payload', 'sha256')
-START_FIELDS = ('request_sha256', 'runtime', 'controller_sha256', 'recorded_at')
+START_FIELDS = ('request_sha256', 'runtime', 'controller_sha256', 'recorded_at', 'upstream')
 INPUT_FIELDS = ('identity', 'role', 'origin', 'sha256', 'size', 'object_path', 'imported_at')
 GENESIS = '0' * 64
 
@@ -294,7 +294,8 @@ def projection(events, request):
             'ledger_tip': events[-1]['sha256'], 'event_count': len(events),
             'request_sha256': events[0]['payload']['request_sha256'],
             'runtime': events[0]['payload']['runtime'],
-            'inputs': [e['payload'] for e in events[1:]]}
+            'inputs': [e['payload'] for e in events[1:]],
+            'upstream': events[0]['payload']['upstream']}
 
 
 def start(request_path, work, expected_tip):
@@ -328,11 +329,12 @@ def start(request_path, work, expected_tip):
             if digest(raw) != item['sha256']:
                 raise Refused(f'{identity}: {path} digest mismatch; supply the exact frozen bytes and hash')
             captured.append((identity, role, item, raw))
+        upstream = collect_upstreams(request, captured, work, total)
         runtime = runtime_identity()
         now = datetime.now(timezone.utc).isoformat()
         request_bytes = canonical(request) + b'\n'
         records = [('run_started', {'request_sha256': digest(request_bytes), 'runtime': runtime,
-                    'controller_sha256': digest(Path(__file__).read_bytes()), 'recorded_at': now})]
+                    'controller_sha256': adapter_code_sha256(), 'recorded_at': now, 'upstream': upstream})]
         files = {'request.json': request_bytes}
         for identity, role, item, raw in captured:
             relative = 'inputs/objects/' + item['sha256']
@@ -411,6 +413,15 @@ def replay(work):
             raise Refused('stored request: noncanonical bytes; preserve the original snapshot')
         raw = read_file(base / 'ledger.jsonl', 33554432)
         events = [decode(line, f'ledger line {i+1}') for i, line in enumerate(raw.splitlines())]
+        if not events or type(events[0]) is not dict or type(events[0].get('payload')) is not dict:
+            raise Refused('ledger: missing the complete start event')
+        upstream = events[0]['payload'].get('upstream')
+        if type(upstream) is not dict or set(upstream) != {'members', 'description_record', 'requirements_record', 'question_source_sha256', 'runtime_sha256'} or type(upstream['members']) is not list:
+            raise Refused('start event: require the exact upstream import records and member list')
+        for member in upstream['members']:
+            if type(member) is not dict or set(member) != {'identity', 'role', 'path', 'sha256'} or member['role'] != 'upstream-evidence':
+                raise Refused('upstream member: require exact identity, role, path and hash fields')
+            items.append((member['identity'], member['role'], {'path': member['path'], 'sha256': member['sha256']}))
         if len(events) != len(items) + 1:
             raise Refused('ledger: missing or extra input events; restore the exact complete ledger')
         records = []
@@ -426,11 +437,12 @@ def replay(work):
         if events != expected_events or raw != b''.join(canonical(e) + b'\n' for e in expected_events):
             raise Refused('ledger: sequence, predecessor, hash, or canonical bytes differ; restore the original chain')
         first = events[0]['payload']
-        if first['request_sha256'] != digest(raw_request) or first['controller_sha256'] != digest(Path(__file__).read_bytes()):
+        if first['request_sha256'] != digest(raw_request) or first['controller_sha256'] != adapter_code_sha256():
             raise Refused('run identity: request or controller bytes differ; resume with the frozen version')
         if first['runtime'] != runtime_identity():
             raise Refused('runtime identity differs from start; resume with the recorded Python and Codex installation')
         expected_files = {'request.json', 'ledger.jsonl', 'state.json'}
+        frozen = {}
         for event, (identity, role, item) in zip(events[1:], items):
             value = event['payload']
             relative = 'inputs/objects/' + item['sha256']
@@ -440,6 +452,21 @@ def replay(work):
             if value != expected or digest(data) != item['sha256']:
                 raise Refused(f'{identity}: snapshot or admission record differs; restore the frozen object')
             expected_files.add(relative)
+            if item['path'] in frozen and frozen[item['path']] != data:
+                raise Refused('stored inputs bind one origin to conflicting bytes')
+            frozen[item['path']] = data
+        consumed = set()
+        def snapshot_read(path, expected):
+            path = str(absolute(str(path)))
+            if path not in frozen or digest(frozen[path]) != expected:
+                raise Refused(f'{path}: missing or changed frozen upstream member')
+            consumed.add(path)
+            return frozen[path]
+        checked = verify_upstreams(request, snapshot_read)
+        if checked != {key: value for key, value in upstream.items() if key != 'members'}:
+            raise Refused('upstream import projection differs from replayed evidence')
+        if any(row['path'] not in consumed for row in upstream['members']):
+            raise Refused('upstream import contains a foreign unused member')
         actual_files = set()
         expected_dirs = {'inputs', 'inputs/objects'}
         for path in base.rglob('*'):
@@ -479,9 +506,97 @@ def kernel_main():
         result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
         print(canonical(result).decode('utf-8'))
         return 0
-    except (Refused, OSError, subprocess.SubprocessError, RuntimeError) as error:
+    except (Refused, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError, RuntimeError) as error:
         print(f'refused: {error}', file=sys.stderr)
         return 2
+
+
+def upstream_modules():
+    """Load only installed local code, never executable bytes named by an input manifest."""
+    import importlib.util
+    root = Path(__file__).resolve().parents[2]
+    files = {'description-exporter': root / 'description-machinery/scripts/export_handoff.py',
+             'description-questions': root / 'description-machinery/from_intent.py',
+             'requirements-exporter': root / 'requirements-machinery/scripts/cover.py'}
+    runtime = {p.name: read_file(p, 33554432) for p in sorted(files['requirements-exporter'].parent.glob('*.py'))}
+    def load(name, path):
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        exec(compile(read_file(path, 33554432), str(path), 'exec'), module.__dict__)
+        return module
+    return (files, runtime, load('readiness_description_exporter', files['description-exporter']),
+            load('readiness_requirements_exporter', files['requirements-exporter']),
+            load('readiness_description_adapter', Path(__file__).parent / 'description_adapter.py'),
+            load('readiness_requirements_adapter', Path(__file__).parent / 'requirements_adapter.py'))
+
+
+def verify_upstreams(request, read):
+    try:
+        return _verify_upstreams(request, read)
+    except Exception as error:
+        raise Refused(f'upstream verification refused ({type(error).__name__}): {error}') from error
+
+
+def _verify_upstreams(request, read):
+    files, runtime, description_exporter, requirements_exporter, description_adapter, requirements_adapter = upstream_modules()
+    contracts = {row['role']: row for row in request['machinery_contracts']}
+    for role, local in [('description-exporter-source', files['description-exporter']),
+                        ('requirements-controller-source', files['requirements-exporter'])]:
+        declared = contracts[role]
+        original = read(Path(declared['path']), declared['sha256'])
+        installed = read_file(local, 33554432)
+        if original != installed:
+            raise Refused(f'{role}: request source differs from the installed trusted exporter; use its exact version')
+    description = decode(read(Path(request['description_handoff']['path']), request['description_handoff']['sha256']), 'Description handoff')
+    requirements = decode(read(Path(request['requirements_handoff']['path']), request['requirements_handoff']['sha256']), 'Requirements handoff')
+    if type(description) is not dict or type(requirements) is not dict:
+        raise Refused('upstream handoffs must be sealed JSON objects, not loose text or arrays')
+    if description.get('exporter_source_sha256') != contracts['description-exporter-source']['sha256']:
+        raise Refused('Description handoff exporter identity differs from the declared contract source')
+    question_bytes = read_file(files['description-questions'], 33554432)
+    question_hash = digest(question_bytes)
+    read(files['description-questions'], question_hash)
+    description_record = description_adapter.verify(description, read, description_exporter, question_bytes)
+    requirements_record = requirements_adapter.verify(requirements, read, requirements_exporter, runtime)
+    if requirements['source']['sha256'] != description['description']['sha256']:
+        raise Refused('Requirements source differs from the sealed Description output; use the matching upstream pair')
+    return {'description_record': description_record, 'requirements_record': requirements_record,
+            'question_source_sha256': question_hash,
+            'runtime_sha256': digest(canonical([{'path': name, 'sha256': digest(raw)} for name, raw in sorted(runtime.items())]))}
+
+
+def collect_upstreams(request, captured, work, total):
+    known = {str(item['path']): raw for _, _, item, raw in captured}
+    members = []
+    limits = request['execution_limits']
+    def read(path, expected):
+        nonlocal total
+        path = absolute(str(path))
+        if path not in (Path(p) for p in known):
+            if overlaps(work, path.parent):
+                raise Refused(f'{path}: upstream evidence overlaps work; choose disjoint source storage')
+            raw = read_file(path, limits['max_single_file_bytes'])
+            if digest(raw) != expected:
+                raise Refused(f'{path}: upstream member digest differs; restore its exact sealed bytes')
+            total += len(raw)
+            if len(captured) + 1 > limits['max_input_files'] or total > limits['max_total_input_bytes']:
+                raise Refused('upstream evidence exceeds the explicit file or total-byte limit; raise the authorized limit or reduce inputs')
+            identity = f'upstream-member-{len(members)+1:04d}'
+            item = {'path': str(path), 'sha256': expected}
+            members.append({'identity': identity, 'role': 'upstream-evidence', **item})
+            captured.append((identity, 'upstream-evidence', item, raw))
+            known[str(path)] = raw
+        raw = known[str(path)]
+        if digest(raw) != expected:
+            raise Refused(f'{path}: conflicting sealed identities for one upstream file')
+        return raw
+    records = verify_upstreams(request, read)
+    return {'members': members, **records}
+
+
+def adapter_code_sha256():
+    return digest(canonical([{'path': name, 'sha256': digest(read_file(Path(__file__).parent / name, 33554432))}
+                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py')]))
 
 if __name__ == '__main__':
     raise SystemExit(kernel_main())

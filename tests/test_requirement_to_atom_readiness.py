@@ -35,3 +35,29 @@ class ReadinessKernelTests(unittest.TestCase):
     def test_path_contract(self):
         for path in ['relative','/a/../b','/a//b','/a/']:
             with self.assertRaises(self.module.Refused):self.module.absolute(path)
+
+
+class ReadinessUpstreamTests(ReadinessKernelTests):
+    def test_adapter_sources_are_bound_to_controller_identity(self):
+        from unittest.mock import patch
+        m = self.module
+        expected = m.adapter_code_sha256()
+        original = m.read_file
+        def changed(path, limit):
+            raw = original(path, limit)
+            return raw + b" " if Path(path).name == "requirements_adapter.py" else raw
+        with patch.object(m, "read_file", side_effect=changed):
+            self.assertNotEqual(m.adapter_code_sha256(), expected)
+
+    def test_upstream_errors_are_explicit_refusals(self):
+        from unittest.mock import patch
+        m = self.module
+        with patch.object(m, "_verify_upstreams", side_effect=ValueError("missing sealed evidence")):
+            with self.assertRaisesRegex(m.Refused, "upstream verification refused.*missing sealed evidence"):
+                m.verify_upstreams({}, None)
+
+    def test_installed_runtime_is_fixed_local_code(self):
+        files, runtime, *_ = self.module.upstream_modules()
+        self.assertEqual(files["requirements-exporter"], ROOT / "skills/requirements-machinery/scripts/cover.py")
+        self.assertEqual(set(runtime), {p.name for p in files["requirements-exporter"].parent.glob("*.py")})
+        self.assertEqual(runtime["cover.py"], files["requirements-exporter"].read_bytes())

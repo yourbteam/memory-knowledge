@@ -368,3 +368,7 @@ uses sorted keys, compact separators and UTF-8 without ASCII escaping. Requireme
 `{exact_text, source_anchors}` with anchors sorted by their canonical JSON bytes. The handoff hash
 uses the same encoding with only its own top-level field omitted; the whole file has a separate hash.
 This command does not approve readiness, activate the new machinery, or change the existing run flow.
+
+### Version-two downstream evidence manifest
+
+New exports use contract_version 2 and bind evidence_files: exact role, identity, absolute import path, SHA-256 and byte size for coverage, full feed, source, document, every registered piece and every Python runtime sibling. Entries are sorted by role and identity and covered by the handoff digest. Older sealed files remain historical evidence; re-export the unchanged completed run before strict adapter admission. Snapshot-only verification uses the same renderer and handoff builder without rereading origins or invoking models. Existing non-export commands retain their behavior.
