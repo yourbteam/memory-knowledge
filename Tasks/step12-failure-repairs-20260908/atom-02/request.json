@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-audit-reference-recovery",
+  "outcome": "Continue a completed audit after a malformed evidence reference without regenerating its judgments or roadmap.",
+  "practical_value": "Both clients can finish the paid audit through one bounded reference-selection call.",
+  "stopping_condition": "Both captured malformed references are repaired through public targeted resume with unchanged judgments and calculations; invalid replacements and changed input hashes remain rejected.",
+  "allowed_paths": [
+    "src/up_harness/roadmap_audit_references.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/roadmap_recovery.py",
+    "src/up_harness/recovery.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "bteam",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-604b31295b96.json",
+      "sha256": "c7e4234c3e66cf5ccd3a096c77fcbb4f4418df04ea636c4ef217b8c9b458521e",
+      "kind": "failure",
+      "expected_outcome": "Repair only invalid audit reference selections using exact catalog entries; preserve audit judgments and roadmap; accepted audit requires no repair call."
+    },
+    {
+      "case_id": "vivacom",
+      "source_ref": "Tasks/vivacom-corporate-demo/state/up-run-1a359bee4264.json",
+      "sha256": "34e409e987b817099a18650a26959a7dfaa127157d4d78ece7163454c3062b82",
+      "kind": "failure",
+      "expected_outcome": "Repair only invalid audit reference selections using exact catalog entries; preserve audit judgments and roadmap; accepted audit requires no repair call."
+    },
+    {
+      "case_id": "accepted",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-df375f49a6e3.json",
+      "sha256": "06d417fdf26b2839cc5b514a82c1957b528d348884ebcf0419493769b447960c",
+      "kind": "success",
+      "expected_outcome": "Repair only invalid audit reference selections using exact catalog entries; preserve audit judgments and roadmap; accepted audit requires no repair call."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

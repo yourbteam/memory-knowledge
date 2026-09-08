@@ -1,0 +1,26 @@
+{
+  "approved_outcome": "Fix all observed failures and deliver both Step12 outputs",
+  "paths": [
+    "src/up_harness/roadmap_audit_references.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/roadmap_recovery.py",
+    "src/up_harness/recovery.py"
+  ],
+  "repositories": [
+    "/Users/kamenkamenov/united-partners",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02"
+  ],
+  "budget": "Three prototype attempts, then reassess observed remaining gap",
+  "excluded": [
+    "commits",
+    "push",
+    "full paid regeneration",
+    "unrelated upstream changes"
+  ],
+  "direction_check": {
+    "sound_approach": "Both complete audit responses exist. BTeam miscopied counted_event as countted_event; a fresh Vivacom audit miscopied it as counteded_event. Judgments and source omissions are otherwise retained in the response.",
+    "unsound_approach": "Repeating the entire audit spends minutes and can produce the same class of typo.",
+    "verdict": "Make failed reference selection a bounded target, with exact prompt/response hashes and one explicit model choice from existing evidence.",
+    "flip": "The saved audit cannot be proven to belong to the current draft or a correct reference cannot support the unchanged judgment."
+  }
+}

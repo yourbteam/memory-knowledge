@@ -1,0 +1,106 @@
+{
+  "obligations": [
+    {
+      "source_quote": "Assets produced, approved and published by phase, channel and audience track.",
+      "matches": [],
+      "reason": "No existing KPI counts assets that have all three delivered states: produced, approved and published, broken out by phase, channel and audience track. Tagging readiness and content delivery KPIs measure related setup or narrower asset subsets, not this required output count.",
+      "addition": {
+        "card_id": "c1",
+        "metric": "Assets produced, approved and published by phase, channel and audience track",
+        "scale": "count items",
+        "instrument": "Campaign asset production, approval and publication register"
+      }
+    },
+    {
+      "source_quote": "Message recall",
+      "matches": [
+        "c6-k1",
+        "c9-k3"
+      ],
+      "reason": "Both KPIs calculate recall among eligible respondents and require recall to be tied to So You Can, The Invisible Thread and named proof rather than generic telecom claims.",
+      "addition": null
+    },
+    {
+      "source_quote": "approved wording pull-through",
+      "matches": [
+        "c8-k1",
+        "c10-k1"
+      ],
+      "reason": "These KPIs measure actual use of approved wording or approved response lines in public or advocate-channel outputs. Internal rehearsal use is excluded because preparation is not the delivered outcome.",
+      "addition": null
+    },
+    {
+      "source_quote": "proof understanding",
+      "matches": [
+        "c4-k2"
+      ],
+      "reason": "This KPI measures whether respondents can explain the Vivacom corporate story and connect So You Can and The Invisible Thread to named proof, which is an understanding measure rather than proof preparation.",
+      "addition": null
+    },
+    {
+      "source_quote": "absence of do-not-say breaches",
+      "matches": [
+        "c2-k3",
+        "c4-k3",
+        "c5-k3",
+        "c8-k2",
+        "c10-k4"
+      ],
+      "reason": "These KPIs count do-not-say or unsupported-claim breaches in the relevant materials or public content; a zero count is the measured absence of breaches.",
+      "addition": null
+    },
+    {
+      "source_quote": "Movement in affinity",
+      "matches": [
+        "c7-k4"
+      ],
+      "reason": "This KPI calculates brand tracker affinity by wave and reports follow-up percent minus baseline percent, which directly measures movement in affinity.",
+      "addition": null
+    },
+    {
+      "source_quote": "trust",
+      "matches": [],
+      "reason": "No existing KPI calculates trust or movement in trust. Reputation scorecard completion is reporting completeness, not a trust result.",
+      "addition": {
+        "card_id": "c7",
+        "metric": "Movement in trust",
+        "scale": "percentage",
+        "instrument": "Kantar brand tracker"
+      }
+    },
+    {
+      "source_quote": "service sentiment",
+      "matches": [
+        "c3-k4"
+      ],
+      "reason": "This KPI calculates sentiment-coded service-update items and reports change against baseline, directly measuring service sentiment.",
+      "addition": null
+    },
+    {
+      "source_quote": "quality earned attention",
+      "matches": [
+        "c5-k2",
+        "c6-k2"
+      ],
+      "reason": "Both KPIs count earned coverage or unpaid third-party items that meet proof, message and claim-boundary quality conditions, so they measure quality earned attention.",
+      "addition": null
+    },
+    {
+      "source_quote": "owned proof-page visits",
+      "matches": [
+        "c6-k3"
+      ],
+      "reason": "This KPI separately counts proof-page visits to owned pages explaining The Invisible Thread through household, reach or service proof.",
+      "addition": null
+    },
+    {
+      "source_quote": "issue-theme reduction",
+      "matches": [
+        "c3-k3",
+        "c6-k4"
+      ],
+      "reason": "Both KPIs count priority friction or issue-theme records by baseline and follow-up wave and compare follow-up count with baseline, which measures reduction when the count falls.",
+      "addition": null
+    }
+  ]
+}

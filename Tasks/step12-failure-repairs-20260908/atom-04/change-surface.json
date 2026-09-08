@@ -1,0 +1,40 @@
+{
+  "atomic_step_id": "step12-known-finding-selection",
+  "baseline_sha256": "566d9a863438ced530288e2d31ea99e7665a5cdd9bebcdf6c53a2110e542a7a7",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "331d8af8d8619cd797699f92a0c8472fec3f3e53d7159c09eac994b518bdf4b2",
+      "before_mode": 420,
+      "before_sha256": "d76ea03e97a86780aa549079f4c4df2048569684fcb4381c23cac171a5a7c9e4",
+      "kind": "changed",
+      "path": "src/up_harness/recovery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "8a2847be1d18e4666113789fc1b90cd0b46b2fb4afbfc63abf5ffb4978368184",
+      "before_mode": 420,
+      "before_sha256": "bba762cc74181d8c81ab283f18f0d9aeb3820f718d2e10aa0d87527241fb25ae",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_audit_references.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "4fbb87a74f27eb92b611e0bb280427cbfcfec57a0cfcf85ab07818a3b90dbef3",
+      "before_mode": 420,
+      "before_sha256": "4cc87d246577c700946b851038785e397f5906c33b641336feaca5524a5c1b7e",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_findings.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "6432b9e544a5fdeabcb5f2043e2d0463f6d7cfeb3e46caf131e03ead6bed2748",
+      "before_mode": 420,
+      "before_sha256": "04b092e9a5d11831ada4fc7dea15823aaaa843de1669043f1d7b6bf1c19db210",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_recovery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

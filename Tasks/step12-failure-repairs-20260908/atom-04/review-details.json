@@ -1,0 +1,11 @@
+{
+  "evidence": [
+    "One live public recovery wrote only four selected existing calculations and seven selected omissions, then ran one full audit.",
+    "All38 unselected calculations and33 upstream phases are preserved.",
+    "Sixteen actual source-bound findings reach acceptance, including the two earlier omitted outcomes; altered legacy draft cannot import judgments.",
+    "Unknown omission identity is refused; accepted BTeam checkpoint remains unchanged."
+  ],
+  "conclusion": "Recovery capability is proven; the live audit correctly retained the remaining NPS population defect and newly detected Month4 engagement omission. This does not claim final Vivacom delivery.",
+  "unresolved_uncertainty": "Those two artifact corrections still need targeted live acceptance.",
+  "recommended_next_delta": "Promote this machinery win, canonical replay, then use the same targeted selection for the two remaining artifact findings."
+}

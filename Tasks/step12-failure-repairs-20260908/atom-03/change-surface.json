@@ -1,0 +1,16 @@
+{
+  "atomic_step_id": "step12-structured-measurement-coverage",
+  "baseline_sha256": "b3b39ef83519bc419d3a99fb0d5fbade0c66d87de44970f01a24ed65780beb53",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "b9642fc48d93efee94ae5a4647845ba8af3535c297b47d1de43e80adab27d763",
+      "before_mode": 420,
+      "before_sha256": "c2fb76c7267033f78cf5057513e5da96f2c44ed258696f2f7aa9d7bbba174dda",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_measurements.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

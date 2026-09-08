@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-full-generation-checkpoint",
+  "outcome": "A failed correction retains the audited roadmap and allows targeted continuation.",
+  "practical_value": "Continue the completed roadmap without buying full generation again.",
+  "stopping_condition": "Captured full generation persists five omissions before failed correction; saved targeted planning succeeds; existing accepted recovery remains unchanged.",
+  "allowed_paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "src/up_harness/engine/runner.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "vivacom",
+      "source_ref": "Tasks/vivacom-corporate-demo/state/up-run-556cc3f1e1e1.json",
+      "sha256": "053a2d48e5346b6dda3be0238dc1317d05db9137804f99e49fb8b1b00fedf41f",
+      "kind": "failure",
+      "expected_outcome": "Retain exact draft and grounded audit in a validated checkpoint; plan omissions after correction failure, and preserve existing accepted recovery."
+    },
+    {
+      "case_id": "bteam",
+      "source_ref": "Tasks/bteam-corporate-demo/state/up-run-df375f49a6e3.json",
+      "sha256": "06d417fdf26b2839cc5b514a82c1957b528d348884ebcf0419493769b447960c",
+      "kind": "success",
+      "expected_outcome": "Retain exact draft and grounded audit in a validated checkpoint; plan omissions after correction failure, and preserve existing accepted recovery."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

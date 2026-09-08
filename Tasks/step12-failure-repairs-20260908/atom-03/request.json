@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "atomic_step_id": "step12-structured-measurement-coverage",
+  "outcome": "Require every actual measurement outcome while excluding only verified structural fields in serialized measurement rows.",
+  "practical_value": "Vivacom source coverage can pass when all eleven real outcomes are accounted for, without treating Levels, level or measure as missing client KPIs.",
+  "stopping_condition": "Real structured clause passes complete outcome coverage and fails when any of its eleven outcome quotations is removed; plain measurement coverage stays strict.",
+  "allowed_paths": [
+    "src/up_harness/roadmap_measurements.py"
+  ],
+  "captured_cases": [
+    {
+      "case_id": "structured-levels",
+      "source_ref": "Tasks/vivacom-corporate-demo/state/up-run-556cc3f1e1e1.json",
+      "sha256": "053a2d48e5346b6dda3be0238dc1317d05db9137804f99e49fb8b1b00fedf41f",
+      "kind": "failure",
+      "expected_outcome": "Retain exact draft and grounded audit in a validated checkpoint; plan omissions after correction failure, and preserve existing accepted recovery."
+    },
+    {
+      "case_id": "plain-measure",
+      "source_ref": "Tasks/vivacom-corporate-demo/state/up-run-556cc3f1e1e1.json",
+      "sha256": "053a2d48e5346b6dda3be0238dc1317d05db9137804f99e49fb8b1b00fedf41f",
+      "kind": "success",
+      "expected_outcome": "Preserve complete word coverage for an actual plain measurement clause."
+    }
+  ],
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  }
+}

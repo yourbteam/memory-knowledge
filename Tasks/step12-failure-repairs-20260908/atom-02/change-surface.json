@@ -1,0 +1,40 @@
+{
+  "atomic_step_id": "step12-audit-reference-recovery",
+  "baseline_sha256": "2aa08807c91aa7fc5b50ed137eb95b1fd8162cc8d947833ed0cfd51fee7b0e8f",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "d76ea03e97a86780aa549079f4c4df2048569684fcb4381c23cac171a5a7c9e4",
+      "before_mode": 420,
+      "before_sha256": "8a093a0e90670ac353254477de2562fa309e09ee812cb9402d0e35e87dcd3bd3",
+      "kind": "changed",
+      "path": "src/up_harness/recovery.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "bba762cc74181d8c81ab283f18f0d9aeb3820f718d2e10aa0d87527241fb25ae",
+      "before_mode": null,
+      "before_sha256": null,
+      "kind": "added",
+      "path": "src/up_harness/roadmap_audit_references.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "c2fb76c7267033f78cf5057513e5da96f2c44ed258696f2f7aa9d7bbba174dda",
+      "before_mode": 420,
+      "before_sha256": "8a8d0144251aea8164f853d1cb3699102e86c91930f7a898dad1acf8c898e055",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_measurements.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "04b092e9a5d11831ada4fc7dea15823aaaa843de1669043f1d7b6bf1c19db210",
+      "before_mode": 420,
+      "before_sha256": "17e3376cca7d50635bfa7df03615d82e54761c2ceb562677b30ad4c10b997609",
+      "kind": "changed",
+      "path": "src/up_harness/roadmap_recovery.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

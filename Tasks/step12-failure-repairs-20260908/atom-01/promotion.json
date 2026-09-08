@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-full-generation-checkpoint",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "e9043129d7992f25e20a054024ee09de9be4ea181e0e246a6a68a9719291afe1",
+  "experiment_assembly_sha256": "d4b4981e8a4d95a3ab09572374694f36a07337ec599d9cc4b9af7e36e6ef6f8d",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/engine/runner.py",
+    "src/up_harness/tactical_roadmap.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-01/change-surface.json",
+    "sha256": "a5f07453c8f5453c6087c9c99d7408618cd14221d13c52d662f3d9f95672fef0"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-01/review.json",
+    "sha256": "2402b968fa036f7d0a786ad6c4c9c79e4321659ec738af6f3aaf70645268282a"
+  },
+  "evidence": [
+    {
+      "case_id": "vivacom",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-01/control/Tasks/vivacom-corporate-demo/state/up-run-556cc3f1e1e1.json",
+      "sha256": "053a2d48e5346b6dda3be0238dc1317d05db9137804f99e49fb8b1b00fedf41f"
+    },
+    {
+      "case_id": "bteam",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-01/control/Tasks/bteam-corporate-demo/state/up-run-df375f49a6e3.json",
+      "sha256": "06d417fdf26b2839cc5b514a82c1957b528d348884ebcf0419493769b447960c"
+    }
+  ]
+}

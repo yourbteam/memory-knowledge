@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-audit-reference-recovery",
+  "promotion_event_sha256": "8c6fabb2521a82eddaa71331f3cf67b29161019ca0e27c895d6bfe06b6975e82",
+  "cases": [
+    {
+      "case_id": "bteam",
+      "verdict": "satisfied",
+      "reason": "Canonical targeted recovery preserves the audit judgments, all calculations and33 upstream phases. BTeam exports; Vivacom retains substantive refusal. Exact selection bytes were independently live-tested in the prototype.",
+      "evidence": [
+        {
+          "case_id": "bteam",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/canonical-bteam.json",
+          "sha256": "d30e9cb8634f18bed1e4280f007e6674fce63ebb4ffcaa7dca76358108eefd02"
+        }
+      ]
+    },
+    {
+      "case_id": "vivacom",
+      "verdict": "satisfied",
+      "reason": "Canonical targeted recovery preserves the audit judgments, all calculations and33 upstream phases. BTeam exports; Vivacom retains substantive refusal. Exact selection bytes were independently live-tested in the prototype.",
+      "evidence": [
+        {
+          "case_id": "vivacom",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/canonical-vivacom.json",
+          "sha256": "ad821b3cc5d0813ee26cff0dfa95c38240dd838c03b70b640ad5b7f387800fc2"
+        }
+      ]
+    },
+    {
+      "case_id": "accepted",
+      "verdict": "satisfied",
+      "reason": "Canonical targeted recovery preserves the audit judgments, all calculations and33 upstream phases. BTeam exports; Vivacom retains substantive refusal. Exact selection bytes were independently live-tested in the prototype.",
+      "evidence": [
+        {
+          "case_id": "accepted",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/replay-candidate-accepted/result.json",
+          "sha256": "f8966383fb61dbcd64ab416f27142ccdd6f7203d5e2adc7464545c86ce44909b"
+        }
+      ]
+    }
+  ]
+}

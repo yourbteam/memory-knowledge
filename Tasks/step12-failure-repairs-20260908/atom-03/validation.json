@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-structured-measurement-coverage",
+  "promotion_event_sha256": "9d11d7f2f925d56c5337f2ff6d78735524f25da601f04303160d519677abee11",
+  "cases": [
+    {
+      "case_id": "structured-levels",
+      "verdict": "satisfied",
+      "reason": "Installed production reader accepts complete real source coverage and rejects each removed outcome; live candidate reader evidence is preserved.",
+      "evidence": [
+        {
+          "case_id": "structured-levels",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03/canonical-structured-levels/result.json",
+          "sha256": "9060a806a4dd62a5b9de96f92e3859df4038dcd5d20d0f1d113d285712b014bf"
+        }
+      ]
+    },
+    {
+      "case_id": "plain-measure",
+      "verdict": "satisfied",
+      "reason": "Installed production reader accepts complete real source coverage and rejects each removed outcome; live candidate reader evidence is preserved.",
+      "evidence": [
+        {
+          "case_id": "plain-measure",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03/canonical-plain-measure/result.json",
+          "sha256": "e985df73027cfd60869712277d7bd19ada57174f94d9565a4071d33ee4027615"
+        }
+      ]
+    }
+  ]
+}

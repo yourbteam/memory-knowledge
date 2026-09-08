@@ -1,0 +1,24 @@
+{
+  "atomic_step_id": "step12-full-generation-checkpoint",
+  "baseline_sha256": "158ad80ba795c3076c81960af8928ef870b76ab7d55873df7c34b0d239fe9ecd",
+  "changes": [
+    {
+      "after_mode": 420,
+      "after_sha256": "d53cb14ac97545635779f49532001129dbce9c54a47dd04da4ab4488fa9dce0f",
+      "before_mode": 420,
+      "before_sha256": "a1284e4610c22e4034bd099d9b9e0b0b1e2486de98213931e57113532c0564ec",
+      "kind": "changed",
+      "path": "src/up_harness/engine/runner.py"
+    },
+    {
+      "after_mode": 420,
+      "after_sha256": "6f721207b271f5b801804f2497c549bc7711f553535f508b57722783625fc8f8",
+      "before_mode": 420,
+      "before_sha256": "5a422d63a59fbd875033b4b8ae551c7c7e68b296b943b0cf6e2b1a822e09f2ab",
+      "kind": "changed",
+      "path": "src/up_harness/tactical_roadmap.py"
+    }
+  ],
+  "repository_root": "/Users/kamenkamenov/united-partners",
+  "schema_version": 1
+}

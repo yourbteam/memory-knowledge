@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-structured-measurement-coverage",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "27ca4b9e734af716dc6bc1fbf9de5681499cca2df0478d77d56ace064495a872",
+  "experiment_assembly_sha256": "81a8b8e018a243cbf3d42c5812b5a5f807d569f470ee9c7f02a4bf9a93db18e1",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/roadmap_measurements.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03/change-surface.json",
+    "sha256": "86e8587d62f113991493c728ba193c7930c3fc64ce24867831d8ebcadd3fa893"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03/review.json",
+    "sha256": "9ba7ee8b9547b7f4153f591cbfd86c6fc18dd5985dc7971d3d1ddf298486f40f"
+  },
+  "evidence": [
+    {
+      "case_id": "structured-levels",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03/control/Tasks/vivacom-corporate-demo/state/up-run-556cc3f1e1e1.json",
+      "sha256": "053a2d48e5346b6dda3be0238dc1317d05db9137804f99e49fb8b1b00fedf41f"
+    },
+    {
+      "case_id": "plain-measure",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03/control/Tasks/vivacom-corporate-demo/state/up-run-556cc3f1e1e1.json",
+      "sha256": "053a2d48e5346b6dda3be0238dc1317d05db9137804f99e49fb8b1b00fedf41f"
+    }
+  ]
+}

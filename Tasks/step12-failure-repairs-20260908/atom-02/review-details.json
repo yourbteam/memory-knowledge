@@ -1,0 +1,11 @@
+{
+  "evidence": [
+    "Two fresh real model selections took31.191 and30.61 seconds; BTeam passed export and Vivacom retained all substantive refusals.",
+    "Full comparison uses exact captured selection prompt hashes and replies.",
+    "Input hash mismatch and wrong-owner repair are rejected; valid references do not invoke repair.",
+    "Only references change. Source response hash and rebuilt full audit prompt bind reuse; normal audits retain existing validation."
+  ],
+  "conclusion": "Fixes the authoritative reference-selection boundary without guessing aliases or changing verdicts.",
+  "unresolved_uncertainty": "Semantic measurement corrections for Vivacom remain outside this atom and must pass full audit.",
+  "recommended_next_delta": "Canonical targeted recovery and export with captured real selection responses."
+}

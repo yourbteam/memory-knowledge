@@ -1,0 +1,57 @@
+{
+  "measure": "Accepted new Step12 deliverables",
+  "accepted": 2,
+  "total": 2,
+  "clients": [
+    {
+      "client": "bteam",
+      "run_id": "up-run-ec4001342515",
+      "accepted": true,
+      "measurements": 59,
+      "unresolved_findings": 0,
+      "omissions": 0,
+      "preserved_phases": 33,
+      "sources_preserved": true,
+      "exports": [
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-ec4001342515/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+          "sha256": "162fafbd7492999dd37604502400c81c5b57189a6a41bd9936cfe132f36cad2c"
+        },
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-ec4001342515/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+          "sha256": "fe5d3bb8ded1ecea68c184abc3d4cdb7fec26baeaf2020b3d24e2d62e107a20e"
+        }
+      ]
+    },
+    {
+      "client": "vivacom",
+      "run_id": "up-run-6aa250151385",
+      "accepted": true,
+      "measurements": 50,
+      "unresolved_findings": 0,
+      "omissions": 0,
+      "preserved_phases": 33,
+      "sources_preserved": true,
+      "exports": [
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/vivacom-corporate-demo/artifacts/up-run-d3242da46555/recoveries/up-run-6aa250151385/UP_VIV_CDS002_S12_ROADMAP_FINAL_v7.md",
+          "sha256": "0737914bf49b5fb22847d9c5cf351ab5ec892be26e700df97e12f55697b8dead"
+        },
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/vivacom-corporate-demo/artifacts/up-run-d3242da46555/recoveries/up-run-6aa250151385/UP_VIV_CDS002_S12_ROADMAP_FINAL_v7.docx",
+          "sha256": "d194710ca3ae1301b253b432ac19a8f2663c15ee8bab0b5b90cc71a7e3c4b1d9"
+        }
+      ]
+    }
+  ],
+  "promoted_atoms": [
+    "step12-full-generation-checkpoint",
+    "step12-audit-reference-recovery",
+    "step12-structured-measurement-coverage",
+    "step12-known-finding-selection"
+  ],
+  "limitations": [
+    "This records the harness acceptance and export checks, not a claim that model-generated deliverables can never contain an undiscovered defect.",
+    "Administrative closure of the earlier operational blocker ledger remains pending its separately recorded successor-selection defect."
+  ]
+}

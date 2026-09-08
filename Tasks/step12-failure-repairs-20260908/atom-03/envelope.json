@@ -1,0 +1,22 @@
+{
+  "approved_outcome": "Fix all observed failures and deliver both Step12 outputs",
+  "paths": [
+    "src/up_harness/roadmap_measurements.py"
+  ],
+  "repositories": [
+    "/Users/kamenkamenov/united-partners",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-03"
+  ],
+  "budget": "Three prototype attempts",
+  "excluded": [
+    "commits",
+    "push",
+    "upstream Step7 changes"
+  ],
+  "direction_check": {
+    "sound_approach": "Actual reader lists all eleven measure outcomes, but deterministic residual-word check mistakes serialized schema labels for omissions.",
+    "unsound_approach": "Globally ignoring words such as level or Output could hide a real source outcome.",
+    "verdict": "Parse only the exact known level/measure row structure and cover every measure value; leave all unrecognized and plain clauses strict.",
+    "flip": "Any actual outcome can disappear while the candidate accepts coverage."
+  }
+}

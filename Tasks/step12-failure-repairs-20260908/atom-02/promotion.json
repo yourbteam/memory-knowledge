@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "status": "promoted",
+  "atomic_step_id": "step12-audit-reference-recovery",
+  "controller": "prototype-driven-implementation",
+  "experiment_event_sha256": "dd22ec39a778439cbb086543a9f66ae767e02264569c6b4c83ac1c3051b993f1",
+  "experiment_assembly_sha256": "fdbb6692b75972a3456ff59b8e67c9ee66bf17591ed76060cff2155bf80a41a9",
+  "contract_surface": {
+    "kind": "validation",
+    "deliverable": "tactical_roadmap",
+    "fields": [
+      {
+        "field": "activation_cards.kpi",
+        "shape": "list",
+        "shape_source": "src/up_harness/tactical_roadmap.py::ACTIVATION_CARD_FIELDS"
+      }
+    ]
+  },
+  "changed_paths": [
+    "src/up_harness/recovery.py",
+    "src/up_harness/roadmap_audit_references.py",
+    "src/up_harness/roadmap_measurements.py",
+    "src/up_harness/roadmap_recovery.py"
+  ],
+  "change_surface": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/change-surface.json",
+    "sha256": "bf217b0152c16c6dc9537b75974b3e7372d0d39d8c374b1529b231f462624ed0"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/review.json",
+    "sha256": "1aeb919c56ee552d7ec947954645f3a9f1bc8c6cbb1b019f4ec3f422396ba317"
+  },
+  "evidence": [
+    {
+      "case_id": "bteam",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/control/Tasks/bteam-corporate-demo/state/up-run-604b31295b96.json",
+      "sha256": "c7e4234c3e66cf5ccd3a096c77fcbb4f4418df04ea636c4ef217b8c9b458521e"
+    },
+    {
+      "case_id": "vivacom",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/control/Tasks/vivacom-corporate-demo/state/up-run-1a359bee4264.json",
+      "sha256": "34e409e987b817099a18650a26959a7dfaa127157d4d78ece7163454c3062b82"
+    },
+    {
+      "case_id": "accepted",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-02/control/Tasks/bteam-corporate-demo/state/up-run-df375f49a6e3.json",
+      "sha256": "06d417fdf26b2839cc5b514a82c1957b528d348884ebcf0419493769b447960c"
+    }
+  ]
+}

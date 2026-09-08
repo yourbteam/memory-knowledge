@@ -1,0 +1,16 @@
+{
+  "targets": [
+    "c4-k2",
+    "c5-k2",
+    "c8-k3",
+    "c11-k4",
+    "omission:f-29c0215ede01ff6fd743",
+    "omission:f-37ffd66aa5a91fe5eb2c",
+    "omission:f-46bb8be02b686c373f89",
+    "omission:f-4dfa183d97986b51099f",
+    "omission:f-4f9c3251243069b0217f",
+    "omission:f-5e8ea2675d57f31d344e",
+    "omission:f-94bf0e93b822cb12532c"
+  ],
+  "selection_reason": "Seven distinct source-required outcomes. Duplicate prior/current audit observations of assets, NPS and brand tracking remain in history for explicit full-audit resolution, but require only one calculation per missing outcome."
+}

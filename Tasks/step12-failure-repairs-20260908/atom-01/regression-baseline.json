@@ -1,0 +1,22 @@
+{
+  "baseline_failures": [
+    "ERROR: test_completed_checkpoint_preserves_unselected_and_prefix (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_completed_checkpoint_preserves_unselected_and_prefix)",
+    "ERROR: test_failed_checkpoint_still_recovers (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_failed_checkpoint_still_recovers)",
+    "FAIL: test_earlier_unfinished_cannot_be_skipped (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_earlier_unfinished_cannot_be_skipped)",
+    "FAIL: test_tampered_plan_refused_before_model_calls (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_tampered_plan_refused_before_model_calls)",
+    "FAIL: test_accepted_edge_exports_only_current_roadmap (test_roadmap_recovery.RecoveryTests.test_accepted_edge_exports_only_current_roadmap)",
+    "FAIL: test_interruption_keeps_finished_target_and_only_pending_work (test_roadmap_recovery.RecoveryTests.test_interruption_keeps_finished_target_and_only_pending_work)",
+    "FAIL: test_targeted_call_and_durable_progress (test_roadmap_recovery.RecoveryTests.test_targeted_call_and_durable_progress)"
+  ],
+  "classification": "Pre-existing test failures; captured same-input full operator comparison passes the new boundary. No broad test fixture repairs are part of this deliverable.",
+  "candidate_failures": [
+    "ERROR: test_completed_checkpoint_preserves_unselected_and_prefix (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_completed_checkpoint_preserves_unselected_and_prefix)",
+    "ERROR: test_failed_checkpoint_still_recovers (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_failed_checkpoint_still_recovers)",
+    "FAIL: test_earlier_unfinished_cannot_be_skipped (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_earlier_unfinished_cannot_be_skipped)",
+    "FAIL: test_tampered_plan_refused_before_model_calls (test_completed_roadmap_recovery.CompletedRoadmapRecoveryTests.test_tampered_plan_refused_before_model_calls)",
+    "FAIL: test_accepted_edge_exports_only_current_roadmap (test_roadmap_recovery.RecoveryTests.test_accepted_edge_exports_only_current_roadmap)",
+    "FAIL: test_interruption_keeps_finished_target_and_only_pending_work (test_roadmap_recovery.RecoveryTests.test_interruption_keeps_finished_target_and_only_pending_work)",
+    "FAIL: test_targeted_call_and_durable_progress (test_roadmap_recovery.RecoveryTests.test_targeted_call_and_durable_progress)"
+  ],
+  "same_failure_set": true
+}

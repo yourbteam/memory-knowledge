@@ -1,0 +1,25 @@
+{
+  "outcome": "Fix the observed failures and deliver both Step12 outputs",
+  "repositories": [
+    "/Users/kamenkamenov/united-partners",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908"
+  ],
+  "paths": [
+    "src/up_harness/tactical_roadmap.py",
+    "src/up_harness/engine/runner.py",
+    "task-local evidence and copied fixtures"
+  ],
+  "budget": "Three prototype attempts for this atom, then reassess on evidence",
+  "excluded": [
+    "commits",
+    "push",
+    "unrelated Claude BigIdea and Step7 changes",
+    "full paid regeneration"
+  ],
+  "direction_check": {
+    "sound_approach": "Both full runs produced retained drafts; the Vivacom audit is grounded but discarded by exception assignment before correction fails. Targeted recovery already saves the same evidence correctly.",
+    "approach_failure": "If recovery requires source fabrication or full generation again, the resume approach fails its cost goal.",
+    "verdict": "Fix the missing full-generation checkpoint boundary and prove saved planning; retain proven recovery.",
+    "flip": "Identical captured generation cannot produce an input-bound checkpoint usable by the public recovery planner."
+  }
+}

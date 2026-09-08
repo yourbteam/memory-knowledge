@@ -1,0 +1,11 @@
+{
+  "evidence": [
+    "Exact15-call captured WorkflowRunner replay fails planning in control and succeeds in candidate.",
+    "The existing accepted BTeam checkpoint and audit plan remain unchanged.",
+    "Both audit rejection branches now persist resolved observations; failed acceptance remains blocked.",
+    "Checkpoint is saved before any fallible correction, binding sources and the draft at that point."
+  ],
+  "conclusion": "The two-file delta fixes the full-generation persistence boundary without rewriting model output or weakening acceptance.",
+  "unresolved_uncertainty": "Fresh paid audit and final deliverable acceptance remain pending.",
+  "recommended_next_delta": "Validate canonical files with the same saved operator cases, then resume only the needed audit."
+}

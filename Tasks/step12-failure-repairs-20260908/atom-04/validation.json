@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-known-finding-selection",
+  "promotion_event_sha256": "de9ee75ab0acc0cf81e9d8181587d3ccca8f439e7d57383bed1e51020e1f4672",
+  "cases": [
+    {
+      "case_id": "vivacom",
+      "verdict": "satisfied",
+      "reason": "Canonical targeted selection preserves all unselected data, carries real legacy findings, and retains the honest full acceptance verdict. BTeam accepted checkpoint is unchanged.",
+      "evidence": [
+        {
+          "case_id": "vivacom",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-04/canonical-vivacom.json",
+          "sha256": "a4f59ba38151ec8bf48dab50fdf170755026949313b811330d97e4f47e674580"
+        }
+      ]
+    },
+    {
+      "case_id": "accepted",
+      "verdict": "satisfied",
+      "reason": "Canonical targeted selection preserves all unselected data, carries real legacy findings, and retains the honest full acceptance verdict. BTeam accepted checkpoint is unchanged.",
+      "evidence": [
+        {
+          "case_id": "accepted",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-04/canonical-accepted.json",
+          "sha256": "6f086050af1d74c54d2f40f20a2a1ccc974866cd1c918c44b91aa9cc8df95970"
+        }
+      ]
+    }
+  ]
+}

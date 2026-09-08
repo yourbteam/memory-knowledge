@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "atomic_step_id": "step12-full-generation-checkpoint",
+  "promotion_event_sha256": "a2c861e1715fcaa4068d2bd23a8e94f7b4aaa729d9d910b548d2a268cc6ead9f",
+  "cases": [
+    {
+      "case_id": "vivacom",
+      "verdict": "satisfied",
+      "reason": "Installed canonical WorkflowRunner and state store preserve the captured input-bound audit and draft, allow public targeted planning, and preserve existing accepted recovery.",
+      "evidence": [
+        {
+          "case_id": "vivacom",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-01/canonical-vivacom/result.json",
+          "sha256": "339335e51cd1c130485ec3cecf9b737c1aaabdd376208a0b02fdb4ee2c6fcabe"
+        }
+      ]
+    },
+    {
+      "case_id": "bteam",
+      "verdict": "satisfied",
+      "reason": "Installed canonical WorkflowRunner and state store preserve the captured input-bound audit and draft, allow public targeted planning, and preserve existing accepted recovery.",
+      "evidence": [
+        {
+          "case_id": "bteam",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-01/canonical-bteam/result.json",
+          "sha256": "5efc4fa7ddb907df4d8eb4ae8567e54c3df22a8012d697bbefdd3b75bed4839b"
+        }
+      ]
+    }
+  ]
+}

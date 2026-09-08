@@ -1,0 +1,8 @@
+{
+  "blocker_id": "blk-79460505a7c16ff9bc2af9c9",
+  "status": "fixed-awaiting-verification",
+  "product_proof": "Both canonical operator-path cases passed.",
+  "administrative_blocker": "Public successor selection rejects abandoned predecessors although underlying successor validator accepts them.",
+  "classification": "Incidental operational-ledger defect; assigned to separate remediation, no impact on the corrected product execution.",
+  "source": "BROOT/scripts/work_memory.py::_successor_selection_request lines3825 versus _validate_successor_corrections lines3620"
+}

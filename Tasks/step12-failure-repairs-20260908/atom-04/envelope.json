@@ -1,0 +1,26 @@
+{
+  "approved_outcome": "Fix all observed failures and deliver both Step12 outputs",
+  "paths": [
+    "src/up_harness/roadmap_findings.py",
+    "src/up_harness/roadmap_audit_references.py",
+    "src/up_harness/roadmap_recovery.py",
+    "src/up_harness/recovery.py"
+  ],
+  "repositories": [
+    "/Users/kamenkamenov/united-partners",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/step12-failure-repairs-20260908/atom-04"
+  ],
+  "budget": "Three prototype attempts then evidence-based reassessment",
+  "excluded": [
+    "commits",
+    "push",
+    "full paid regeneration",
+    "unrelated upstream edits"
+  ],
+  "direction_check": {
+    "sound_approach": "Both paid audits are saved with exact response hashes. The older one adds trust and proof-page completion findings absent from the later audit. Targeted recovery preserves work but cannot currently select individual omissions together with failed calculations.",
+    "unsound_approach": "Ignoring the earlier findings or paying another full audit between every repair mode leaves known gaps or repeats expensive work.",
+    "verdict": "Admit only exact-input verified historical audit observations, expose individual omission targets, and combine selected writers before one acceptance pass.",
+    "flip": "Earlier findings cannot be bound to this unchanged draft/source or selected repair mutates unselected calculations."
+  }
+}

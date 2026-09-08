@@ -1,0 +1,59 @@
+[
+  {
+    "client": "bteam",
+    "run_id": "up-run-ec4001342515",
+    "source_run_id": "up-run-604b31295b96",
+    "phase_status": "completed",
+    "preserved_phases": 33,
+    "preserved_measurements": 59,
+    "judgments_preserved": true,
+    "calls": [
+      {
+        "role": "tactical_roadmap_audit_references",
+        "prompt_sha256": "089412a7fc1d0143cc5410b47470086055cd095c0c4d5073e79f3265d4df14fa",
+        "origin": "Fresh live prototype selection preserved verbatim"
+      }
+    ],
+    "artifacts": {
+      "run_id": "up-run-ec4001342515",
+      "source_run_id": "up-run-604b31295b96",
+      "plan_sha256": "e0ff482e7003e7d1db26cf42fca93b080df42f507e7018ef642d4807cf57bf9a",
+      "files": [
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-ec4001342515/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.md",
+          "sha256": "162fafbd7492999dd37604502400c81c5b57189a6a41bd9936cfe132f36cad2c"
+        },
+        {
+          "path": "/Users/kamenkamenov/united-partners/Tasks/bteam-corporate-demo/artifacts/up-run-11fa2a90c98b/recoveries/up-run-ec4001342515/UP_BTM_CDS002_S12_ROADMAP_FINAL_v7.docx",
+          "sha256": "fe5d3bb8ded1ecea68c184abc3d4cdb7fec26baeaf2020b3d24e2d62e107a20e"
+        }
+      ]
+    },
+    "omissions": 0,
+    "rejected": []
+  },
+  {
+    "client": "vivacom",
+    "run_id": "up-run-4f3b6a3ea317",
+    "source_run_id": "up-run-1a359bee4264",
+    "phase_status": "blocked",
+    "preserved_phases": 33,
+    "preserved_measurements": 42,
+    "judgments_preserved": true,
+    "calls": [
+      {
+        "role": "tactical_roadmap_audit_references",
+        "prompt_sha256": "11a32304e5f8ae1148719aaf89ea8bbd414084d240d697f0159962e79ce665e9",
+        "origin": "Fresh live prototype selection preserved verbatim"
+      }
+    ],
+    "artifacts": null,
+    "omissions": 5,
+    "rejected": [
+      "c4-k2",
+      "c5-k2",
+      "c8-k3",
+      "c11-k4"
+    ]
+  }
+]
