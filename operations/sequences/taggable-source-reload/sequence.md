@@ -89,11 +89,23 @@ tail log → scale S1. Secrets are never printed.
 - **`WARNING: <tbl> has no usable primary key in the staged data (pk=[RowId])`** → expected for
   `PasswordResets` / `ProductLocationTimeSlot` (surrogate `RowId` not staged); they blind-INSERT and are NOT
   idempotent (would duplicate). Not a failure; tracked follow-up = MERGE them on their business key.
+- **Script dies mid-monitor with `json.decoder.JSONDecodeError: Expecting value: line 1 column 1`** → a
+  transient empty Kudu history response met an unguarded `json.load` under `set -euo pipefail`
+  (2026-09-09, `blk-6d310140db00ab7c1ff2d797`). **The load is NOT affected** — it runs server-side and
+  continues to completion. What is lost is the script's own tail + scale-back, so the DB is left on S4.
+  Fixed in `reload-source.sh` by `poll_run()` (never fatal; the monitor retries on an empty id) plus an
+  EXIT trap that waits for a terminal WebJob status before restoring S1 — it must never scale mid-load,
+  which would sever the job's SQL connection. If running an older copy: read the real status from
+  `$SCM/api/triggeredwebjobs/db-import/history` before assuming the load failed, then restore S1 by hand.
 
 ## Verification (pass signal)
 
-- WebJob run **status = Success**, `CSV load complete (system_record_id=<srid>)`.
+- WebJob run **status = Success**, `CSV load complete (system_record_id=<srid>)` — read from the Kudu
+  history/`output_log.txt`, which survives a local script death; the console tail does not.
 - Natural-key proof: `OauthAccessTokens` count for the srid is **stable** (not doubled), no PK collision.
+  Strongest form: compare the DB count per srid against the **source CSV line count** — on 2026-09-09
+  `OauthAccessTokens`, `Users`, `PageViews` and `PersonProductImage` all matched their export exactly.
+  `OrderProduct`/`Orders` legitimately exceed the export (rows deleted in source are retained here).
 - Big tables (`OrderProduct`, `PersonProductImage`, `Users`, `PageViews`) grew **modestly, not doubled**.
 - Other sources untouched (e.g. reloading srid=1 leaves srid=2/3 counts unchanged).
 - DB tier back at **S1**.
