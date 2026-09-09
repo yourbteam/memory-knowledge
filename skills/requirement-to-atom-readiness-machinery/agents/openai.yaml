@@ -1,0 +1,4 @@
+interface:
+  display_name: "Requirement-to-Atom Readiness"
+  short_description: "Check evidence and decisions before atom building"
+  default_prompt: "Use $requirement-to-atom-readiness-machinery to assess whether these requirements are ready for implementation atoms."
