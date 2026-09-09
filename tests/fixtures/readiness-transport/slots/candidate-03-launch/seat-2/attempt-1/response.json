@@ -1,0 +1,29 @@
+{"attempt":1,"criteria":[{"criterion_id":"verify-readiness-03-requirements-handoff-exporter","evidence_ids":["candidate-3-1","original-cases-1","architecture-3","verification-declaration-03"],"reason":"The proposed verification binds the candidate to one success case for the actual completed Requirements run and one rejection case covering drift, mismatch, unresolved coverage/items, source drift, and stateful temporary rebuild refusal. The architecture specifies the same exporter behavior, including pure in-memory reconstruction, byte comparison to requirements.md, closed handoff fields, valid hashes, 7 requirements, 5 rejections, 14 rulings, unresolved_count 0, and refusal without source mutation. The verification declaration also requires independent inspection of retained raw inputs, outputs, rejections, and replay records rather than accepting producer conclusions. This is adequate for this candidate outcome only, not proof of execution or whole-system readiness.","verdict":"satisfied"}],"envelope_sha256":"026c0b06e5b9453659cf2a7cda2576c67fe9788bcfdd33f22176e22ecc7eec1e","evidence_ids":["candidate-3-1","original-cases-1","architecture-3","verification-declaration-03","validation-boundary","requirement-3","requirement-7","requirement-1","requirement-2","requirement-5","requirement-6","requirement-4","approved-map-1","architecture-6","architecture-1","architecture-2","architecture-4","architecture-5","current-successor-contract"],"family":"verification-adequacy","node_id":"condition-87f9e3125f7a50b02d0b3939","quotes":[{"evidence_id":"candidate-3-1"},{"evidence_id":"original-cases-1"},{"evidence_id":"architecture-3"},{"evidence_id":"verification-declaration-03"} 
+ 
+,{"evidence_id":"validation-boundary"},{"evidence_id":"requirement-3"} 
+ 
+,{"evidence_id":"requirement-7"} 
+ 
+,{"evidence_id":"requirement-1"} 
+ 
+,{"evidence_id":"requirement-2"} 
+ 
+,{"evidence_id":"requirement-5"} 
+ 
+,{"evidence_id":"requirement-6"} 
+ 
+,{"evidence_id":"requirement-4"} 
+ 
+,{"evidence_id":"approved-map-1"} 
+ 
+,{"evidence_id":"architecture-6"} 
+ 
+,{"evidence_id":"architecture-1"} 
+ 
+,{"evidence_id":"architecture-2"} 
+ 
+,{"evidence_id":"architecture-4"} 
+ 
+,{"evidence_id":"architecture-5"} 
+ 
+,{"evidence_id":"current-successor-contract"}],"reason":"The evidence supports an adequate verification plan for the candidate-specific outcome: the declared observable, success case, rejection case, contract surface, and independence rule cover the handoff exporter behavior and require independent raw-record inspection. This does not certify implementation completion, owner authority, launch readiness, or the full thirteen-atom system.","run_id":"b8946ccbc496526a04da9d2ced85f9e092b1bbe48ab4d7e69583fcd30447e41a","schema_version":1,"seat":"seat-2","verdict":"adequate"}

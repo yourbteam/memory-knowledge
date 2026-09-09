@@ -195,6 +195,14 @@ def evidence_schema():
         'source_files':array(ref('source')),'requirement_bindings':array(ref('binding')),
         'evidence':array(ref('evidence')),'conditions':array(ref('condition')),'edges':array(ref('edge'))})
     schema.update({'$schema':'https://json-schema.org/draft/2020-12/schema','title':'Readiness evidence manifest v1','$defs':definitions()})
+    # Input-only extension: do not widen the graph's historical wire contract.
+    text = {'type':'string','minLength':1,'pattern':r'\S'}
+    reference = closed(('source_id','pointer'), {
+        'source_id':text, 'pointer':{'type':'string','pattern':r'^(|/.*)$'}})
+    alternatives = schema['$defs']['condition']['oneOf']
+    alternatives.extend([closed(tuple(choice['required']) + ('verification',),
+        {**choice['properties'], 'verification':reference}) for choice in list(alternatives)])
+    schema['$defs']['verification_document'] = verification_document_schema()
     return schema
 
 
@@ -292,6 +300,73 @@ def timestamp(value):
     parsed=datetime.fromisoformat(value.replace('Z','+00:00'))
     if parsed.tzinfo is None or parsed.utcoffset().total_seconds()!=0:raise EvidenceRefused('capture time must explicitly use UTC')
     return parsed
+
+
+def verification_document_schema():
+    text = {'type':'string','minLength':1,'pattern':r'\S'}
+    record = closed(('observable','success_cases','rejection_cases','execution_route','independence_rule'), {
+        'observable':text, 'success_cases':array(text,1), 'rejection_cases':array(text,1),
+        'execution_route':text, 'independence_rule':{'enum':['independent','producer-only','unassessed']}})
+    case = closed(('case_id','kind','source_id','sha256'), {
+        'case_id':text,'kind':{'enum':['success','failure']},'source_id':text,
+        'sha256':{'type':'string','pattern':SHA_PATTERN}})
+    return closed(('record','requirement_ids','captured_cases'), {
+        'record':record,'requirement_ids':array(text,1),'captured_cases':array(case,2)})
+
+
+def verification_record(row, sources, requirement_ids, resolve):
+    """Admit declarations from frozen bytes, never a submitted completion status.
+
+    The referenced JSON object carries a graph record, exact requirement IDs, and
+    source-bound cases. Mechanical admission leaves it blocked; an independent
+    assessment remains a separate controller transition.
+    """
+    label = 'verification ' + row['condition_id']
+    ref = row['verification']
+    if row['resolution_class'] not in ('semantic-check', 'verification'):
+        raise EvidenceRefused(label + ': verification metadata requires a verification or semantic-check condition')
+    spec = row.get('interview')
+    if spec is not None and spec['family'] != 'verification-adequacy':
+        raise EvidenceRefused(label + ': verification metadata requires verification-adequacy, not ' + spec['family'])
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise EvidenceRefused(label + ': duplicate JSON key ' + key + '; preserve one exact value')
+            result[key] = value
+        return result
+    try:
+        document = json.loads(sources[ref['source_id']], object_pairs_hook=pairs)
+        # Require canonical RFC 6901 escapes and array indices at this boundary.
+        value = document
+        for token in ref['pointer'][1:].split('/') if ref['pointer'] else []:
+            if re.search(r'~(?![01])', token):
+                raise ValueError('invalid JSON pointer escape')
+            token = token.replace('~1','/').replace('~0','~')
+            if type(value) is list:
+                if not re.fullmatch(r'0|[1-9][0-9]*', token):
+                    raise ValueError('noncanonical array index')
+                value = value[int(token)]
+            else:
+                value = value[token]
+    except (KeyError, ValueError, IndexError, TypeError) as error:
+        raise EvidenceRefused(f'{label}: source {ref["source_id"]!r} pointer {ref["pointer"]!r} cannot resolve: {error}; supply a declared exact JSON source') from error
+    validate(value, verification_document_schema(), label=label)
+    if set(resolve(value['requirement_ids'])) != set(requirement_ids):
+        raise EvidenceRefused(label + ': source requirement_ids differ from the condition; bind exactly its affected requirements')
+    cases = value['captured_cases']
+    if len({case['case_id'] for case in cases}) != len(cases):
+        raise EvidenceRefused(label + ': repeated case_id; give every case one immutable identity')
+    for case in cases:
+        raw = sources.get(case['source_id'])
+        if raw is None or digest(raw) != case['sha256']:
+            raise EvidenceRefused(f'{label}: case {case["case_id"]!r} source {case["source_id"]!r} is absent or differs from its hash; admit its exact bytes')
+    result = value['record']
+    for field, kind in [('success_cases','success'),('rejection_cases','failure')]:
+        expected = {case['case_id'] for case in cases if case['kind'] == kind}
+        if set(result[field]) != expected:
+            raise EvidenceRefused(f'{label}: {field} {result[field]!r} differs from captured {kind} IDs {sorted(expected)!r}; map every case exactly once in its correct class')
+    return {**result, 'status':'blocked'}
 
 
 def fitness(record, sources, as_of):
@@ -399,6 +474,8 @@ def build_graph(manifests, upstream, read, as_of, parse_blockers=None):
         owner=row['resolution_class']=='owner-decision'
         record=({'owner':'owner','question':row['recovery_condition'],'answer_contract':'owner-only-pending','answer':None} if owner else
                 {'observable':row['source_quote'],'success_cases':[],'rejection_cases':[],'execution_route':row['recovery_condition'],'independence_rule':'unassessed','status':'blocked'})
+        if 'verification' in row:
+            record = verification_record(row, sources, requirement_ids, resolve)
         nodes.append({'id':node_id,'type':'authority_decision' if owner else 'verification','record':record})
         for rid in requirement_ids:edges.append({'type':'governed-by' if owner else 'verified-by','source':rid,'target':node_id})
         pending.append({'condition_id':identity,'node_id':node_id,'blocking_class':RESOLUTION_TO_CLASS[row['resolution_class']],

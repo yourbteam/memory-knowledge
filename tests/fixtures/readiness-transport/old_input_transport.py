@@ -49,16 +49,11 @@ INSTRUCTION = (
     'use the allowed cannot_assess verdict; do not invent facts.\n'
 )
 MAX_LOG_BYTES = 131072
-MAX_INPUT_BYTES = 262144
 PROGRESS_INTERVAL_SECONDS = 15
 AUDIT_FILES = ('prompt.txt', 'schema.json', 'command.json', 'stdout.jsonl', 'stderr.txt', 'response.json', 'assembled-response.json', 'request-metadata.jsonl', 'diagnostics.json')
 DIAGNOSTICS = {'destination': 'run-owned-loopback', 'protocol': 'otlp-json',
                'batch_interval_ms': 200, 'max_metadata_bytes': MAX_LOG_BYTES,
                'raw_prompts': False, 'raw_errors': False, 'account_data': False}
-
-
-def artifact_limit(name):
-    return MAX_INPUT_BYTES if name in ('prompt.txt', 'schema.json') else MAX_LOG_BYTES
 
 
 def diagnostics_module():
@@ -233,8 +228,8 @@ def plan_for(k, work, result, disabled_skills=None):
         e = item['envelope']
         prompt = INSTRUCTION.encode() + k.canonical(e) + b'\n'
         transport_schema = provider_schema(compact_schema(k, item['response_schema']))
-        if max(len(prompt), len(k.canonical(transport_schema) + b'\n')) > MAX_INPUT_BYTES:
-            raise k.Refused(f'launch {e["seat"]}: prompt or schema exceeds {MAX_INPUT_BYTES} input bytes; narrow the semantic obligation before approval')
+        if max(len(prompt), len(k.canonical(transport_schema) + b'\n')) > MAX_LOG_BYTES:
+            raise k.Refused(f'launch {e["seat"]}: prompt or schema exceeds {MAX_LOG_BYTES} bytes; narrow the semantic obligation before approval')
         seats.append({'seat': e['seat'], 'envelope_sha256': e['envelope_sha256'],
                       'prompt_base64': base64.b64encode(prompt).decode(),
                       'prompt_sha256': k.digest(prompt), 'response_schema': item['response_schema'],
@@ -325,8 +320,8 @@ def validate_finish(k, payload, state):
             raise k.Refused(f'launch completion {seat["seat"]}: retain only {AUDIT_FILES}')
         for name, encoded in seat['files'].items():
             raw = base64.b64decode(encoded, validate=True)
-            if len(raw) > artifact_limit(name):
-                raise k.Refused(f'launch completion {seat["seat"]}/{name}: exceeds {artifact_limit(name)} bytes; no admission permitted')
+            if len(raw) > MAX_LOG_BYTES:
+                raise k.Refused(f'launch completion {seat["seat"]}/{name}: exceeds {MAX_LOG_BYTES} bytes; no admission permitted')
             expected = {'prompt.txt': prepared['prompt_sha256'], 'schema.json': prepared['schema_sha256']}.get(name)
             if expected and k.digest(raw) != expected:
                 raise k.Refused(f'launch completion {seat["seat"]}/{name}: bytes differ from the authorized payload')
@@ -346,7 +341,7 @@ def validate_finish(k, payload, state):
             raise k.Refused('launch truncations must name only retained evidence files')
         for name, record in seat['truncations'].items():
             exact(k, record, ('size', 'sha256'), 'oversized launch artifact')
-            if type(record['size']) is not int or record['size'] <= artifact_limit(name) or type(record['sha256']) is not str or not k.SHA256.fullmatch(record['sha256']):
+            if type(record['size']) is not int or record['size'] <= MAX_LOG_BYTES or type(record['sha256']) is not str or not k.SHA256.fullmatch(record['sha256']):
                 raise k.Refused(f'launch truncation {name}: require original byte count above the cap and full SHA-256')
             if payload['error'] is None:
                 raise k.Refused('launch with truncated evidence cannot report success')
@@ -355,7 +350,6 @@ def validate_finish(k, payload, state):
 def capture_file(k, path):
     """Keep a bounded prefix plus full identity, including oversized failed output."""
     import hashlib
-    limit = artifact_limit(path.name)
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
     with os.fdopen(fd, 'rb') as stream:
         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
@@ -365,8 +359,8 @@ def capture_file(k, path):
             block = stream.read(65536)
             if not block: break
             sha.update(block); size += len(block)
-            prefix += block[:max(0, limit-len(prefix))]
-    return base64.b64encode(prefix).decode(), ({'size': size, 'sha256': sha.hexdigest()} if size > limit else None)
+            prefix += block[:max(0, MAX_LOG_BYTES-len(prefix))]
+    return base64.b64encode(prefix).decode(), ({'size': size, 'sha256': sha.hexdigest()} if size > MAX_LOG_BYTES else None)
 
 
 def argv_for(plan, seat, cwd, schema, response):
@@ -580,7 +574,7 @@ def validate_attempt_history(k, seat, prepared, plan, error):
             raise k.Refused('attempt contains foreign evidence files')
         for name, encoded in attempt['files'].items():
             raw=base64.b64decode(encoded,validate=True)
-            if len(raw)>artifact_limit(name):
+            if len(raw)>MAX_LOG_BYTES:
                 raise k.Refused('attempt evidence exceeds its byte bound')
             expected={'prompt.txt':prepared['prompt_sha256'],'schema.json':prepared['schema_sha256']}.get(name)
             if expected and k.digest(raw)!=expected:
@@ -591,7 +585,7 @@ def validate_attempt_history(k, seat, prepared, plan, error):
             raise k.Refused('attempt truncations must name retained files')
         for name, record in attempt['truncations'].items():
             exact(k,record,('size','sha256'),'attempt truncation')
-            if type(record['size']) is not int or record['size']<=artifact_limit(name) or type(record['sha256']) is not str or not k.SHA256.fullmatch(record['sha256']):
+            if type(record['size']) is not int or record['size']<=MAX_LOG_BYTES or type(record['sha256']) is not str or not k.SHA256.fullmatch(record['sha256']):
                 raise k.Refused('attempt truncation requires full original byte count and hash')
         if attempt['truncations'] and (error is None or attempt['outcome']!='failed' or index<len(attempts)):
             raise k.Refused('truncated attempt evidence cannot qualify for recovery or success')

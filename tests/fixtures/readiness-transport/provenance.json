@@ -1,0 +1,90 @@
+{
+  "scope": "Exact captured fixtures, not fresh judgments.",
+  "files": [
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/corrected-validation-setup-04/verification-launch/seat-1/stdout.jsonl",
+      "fixture": "timeout-stdout.jsonl",
+      "sha256": "79eb42ff4afda47beb7ac1b94c97b3963ae27a35eeddb3b0cb62d010550260ac"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/transport-observability/candidate-02-instrumented-control/request-metadata.jsonl",
+      "fixture": "request-metadata.jsonl",
+      "sha256": "b2b5ba8ea561d6aa05990afa1346f13b5b1076c9d06e0e0a8e4f7b4d2e118fcb"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/reference-slots-candidate/skills/requirement-to-atom-readiness-machinery/scripts/model_interview.py",
+      "fixture": "old_input_transport.py",
+      "sha256": "1d6f4c959133a86bbf130e9cbb9bda69daab85d1784ead34776fd6b4817af2de"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/observed-launcher-candidate/skills/requirement-to-atom-readiness-machinery/scripts/model_interview.py",
+      "fixture": "old_slots_transport.py",
+      "sha256": "bc78a5702b99b1595e8cf79370bf22beb55c4bbd54e16c21501a8f00a7c8c701"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/reference-slots-continuation-01/captured-replay-run/run/interviews/00000263/event.json",
+      "fixture": "input-limit-pending.json",
+      "sha256": "752ce54cf533f7d7c5e10cab73ce7a8ae75bef13901b4f01f719de21656450bf"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-03-launch/plan.json",
+      "fixture": "slots/candidate-03-launch/plan.json",
+      "sha256": "4b9c0425d2b1094ac6f718b955baf2b62348ce3056d2e61c4e848beb7f32468a"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-03-launch/seat-1/attempt-1/response.json",
+      "fixture": "slots/candidate-03-launch/seat-1/attempt-1/response.json",
+      "sha256": "968c817191c964013fb1aa866197e245b9a13ee9a8a408acf2ac39fe0a542770"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-03-launch/seat-1/attempt-1/assembled-response.json",
+      "fixture": "slots/candidate-03-launch/seat-1/attempt-1/assembled-response.json",
+      "sha256": "a02a8001817b8fe14473922dd5a72a149d3d9f582a2fa3b5146dbf594af57257"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-03-launch/seat-2/attempt-1/response.json",
+      "fixture": "slots/candidate-03-launch/seat-2/attempt-1/response.json",
+      "sha256": "e17b032ca8e6c3d5af84c83b1c4da66ad468ce05557d56c3356667fa485c7d5e"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-03-launch/seat-2/attempt-1/assembled-response.json",
+      "fixture": "slots/candidate-03-launch/seat-2/attempt-1/assembled-response.json",
+      "sha256": "fd084745a1d72aae93c20c9625e10df142e62974ae4dfb783ae416f6484c1080"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-04-launch/plan.json",
+      "fixture": "slots/candidate-04-launch/plan.json",
+      "sha256": "78b95757eac272fe16636d818baea5a517dafa71dc9cb098f213b26d771959c6"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-04-launch/seat-1/attempt-1/response.json",
+      "fixture": "slots/candidate-04-launch/seat-1/attempt-1/response.json",
+      "sha256": "9b3e6a8c9826345ba2c6f0ff53bd146fc5e0478d36db76bce350e94ec4b58f20"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-04-launch/seat-1/attempt-1/assembled-response.json",
+      "fixture": "slots/candidate-04-launch/seat-1/attempt-1/assembled-response.json",
+      "sha256": "9c6e09ea87b591417ddeecc031c9a4fd4d5a76cf528eaef121e0812796cd4f15"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-04-launch/seat-2/attempt-1/response.json",
+      "fixture": "slots/candidate-04-launch/seat-2/attempt-1/response.json",
+      "sha256": "6bb2e5aa43e0ef5451754bd99cbb2835e180b5c47a47f53f22ac60053ea28159"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-04-launch/seat-2/attempt-1/assembled-response.json",
+      "fixture": "slots/candidate-04-launch/seat-2/attempt-1/assembled-response.json",
+      "sha256": "163090253e8a32b65b6db212e8fbe026c8e8e8034173fbfbe35f99e8b26569f0"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-05-launch/plan.json",
+      "fixture": "slots/candidate-05-launch/plan.json",
+      "sha256": "4e6f484714add284ea11ca0d100434b3559206cbc097868b7b8c96f43d92f8de"
+    },
+    {
+      "source": "/private/tmp/atom10-build-28xajZ/compiler/map-interview-04/adapter-cases/observed-pending-continuation-01/candidate-05-launch/seat-1/attempt-1/response.json",
+      "fixture": "slots/candidate-05-launch/seat-1/attempt-1/response.json",
+      "sha256": "85d02665880d7e29272b97ebd6e12a03e611ca0e643d9cb777c354bb64f01fc5"
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "actor": {
+      "const": "direct-phase"
+    },
+    "candidates": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_paths": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "type": "array"
+          },
+          "atomic_step_id": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "authority_decision_ids": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 0,
+            "type": "array"
+          },
+          "captured_cases": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "case_id": {
+                  "maxLength": 8192,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "expected_outcome": {
+                  "maxLength": 8192,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "success",
+                    "failure"
+                  ]
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_ref": {
+                  "maxLength": 8192,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "case_id",
+                "source_ref",
+                "sha256",
+                "kind",
+                "expected_outcome"
+              ],
+              "type": "object"
+            },
+            "maxItems": 256,
+            "minItems": 2,
+            "type": "array"
+          },
+          "contract_surface": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "render"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "deliverable": {
+                    "maxLength": 8192,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "fields": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "field": {
+                              "maxLength": 8192,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "shape": {
+                              "enum": [
+                                "list",
+                                "object",
+                                "enum",
+                                "integer",
+                                "pinned-string",
+                                "prose"
+                              ]
+                            },
+                            "shape_source": {
+                              "maxLength": 8192,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "field",
+                            "shape",
+                            "shape_source"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "field": {
+                              "maxLength": 8192,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "introduced": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "shape": {
+                              "enum": [
+                                "list",
+                                "object",
+                                "enum",
+                                "integer",
+                                "pinned-string",
+                                "prose"
+                              ]
+                            },
+                            "shape_source": {
+                              "maxLength": 8192,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "field",
+                            "shape",
+                            "shape_source",
+                            "introduced"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 256,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "validation"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "deliverable",
+                  "fields"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "evidence_ids": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "type": "array"
+          },
+          "outcome": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "practical_value": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "prerequisite_atom_ids": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 0,
+            "type": "array"
+          },
+          "requirement_ids": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "type": "integer"
+          },
+          "stopping_condition": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "verification_ids": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "atomic_step_id",
+          "outcome",
+          "practical_value",
+          "stopping_condition",
+          "allowed_paths",
+          "captured_cases",
+          "contract_surface",
+          "requirement_ids",
+          "prerequisite_atom_ids",
+          "verification_ids",
+          "authority_decision_ids",
+          "evidence_ids"
+        ],
+        "type": "object"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "type": "array"
+    },
+    "node_id": {
+      "maxLength": 8192,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "route": {
+      "const": "direct-plan"
+    },
+    "run_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "node_id",
+    "action_sha256",
+    "route",
+    "actor",
+    "candidates"
+  ],
+  "type": "object"
+}

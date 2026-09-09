@@ -1,0 +1,15 @@
+{"attempt": 0, "duration_ms": 226, "endpoint_class": "other", "error_present": false, "event": "codex.api_request", "http.response.status_code": 200, "received_elapsed_ms": 35509, "success": true}
+{"error_present": false, "event": "codex.conversation_starts", "received_elapsed_ms": 35509}
+{"attempt": 0, "duration_ms": 250, "endpoint_class": "other", "error_present": false, "event": "codex.api_request", "http.response.status_code": 200, "received_elapsed_ms": 35509, "success": true}
+{"duration_ms": 323, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 35509, "startup.phase": "thread_start_create_thread", "startup.status": "ready"}
+{"duration_ms": 2, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 35509, "startup.phase": "startup_prewarm_create_turn_context"}
+{"duration_ms": 0, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 35509, "startup.phase": "startup_prewarm_build_tools"}
+{"duration_ms": 0, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 35509, "startup.phase": "startup_prewarm_build_prompt"}
+{"duration_ms": 329, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 35510, "startup.phase": "thread_start_total", "startup.status": "ready"}
+{"duration_ms": 1, "error_present": false, "event": "codex.websocket_request", "received_elapsed_ms": 36138}
+{"error_present": false, "event": "codex.sse_event", "event.kind": "response.completed", "received_elapsed_ms": 36970}
+{"duration_ms": 1403, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 36970, "startup.phase": "startup_prewarm_websocket_warmup"}
+{"duration_ms": 1407, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 36971, "startup.phase": "startup_prewarm_total", "startup.status": "ready"}
+{"duration_ms": 1399, "error_present": false, "event": "codex.startup_phase", "received_elapsed_ms": 36971, "startup.phase": "startup_prewarm_resolve", "startup.status": "ready"}
+{"duration_ms": 2, "error_present": false, "event": "codex.websocket_request", "received_elapsed_ms": 37594}
+{"error_present": false, "event": "codex.sse_event", "event.kind": "response.completed", "received_elapsed_ms": 62599}

@@ -1,2 +1,4 @@
 # Frozen real inputs of machinery atoms are committed byte-exact; their whitespace is evidence, not style.
 Tasks/critique-machinery/*/frozen-real/** -whitespace
+# Preserve this captured provider response byte-for-byte, including trailing spaces.
+tests/fixtures/readiness-transport/slots/candidate-03-launch/seat-2/attempt-1/response.json -whitespace

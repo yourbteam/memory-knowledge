@@ -555,7 +555,8 @@ def kernel_main():
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
     commands.add_parser('response-schema', allow_abbrev=False)
     for name in ('prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview',
-                 'prepare-external', 'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
+                 'prepare-external', 'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
+                 'prepare-candidates', 'compile-candidates'):
         command = commands.add_parser(name, allow_abbrev=False)
         command.add_argument('work')
         command.add_argument('--expected-tip', required=True)
@@ -578,7 +579,8 @@ def kernel_main():
         if args.command in ('prepare-launch', 'launch-interview'):
             result = launcher_module().dispatch(kernel_api(), args)
         elif args.command in ('prepare-interview', 'admit-interview', 'prepare-external',
-                              'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
+                              'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
+                              'prepare-candidates', 'compile-candidates'):
             result = interview_action(args.command, args.work, args.expected_tip, getattr(args, 'submission', None))
         else:
             result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
@@ -674,7 +676,7 @@ def collect_upstreams(request, captured, work, total):
 
 def adapter_code_sha256():
     return digest(canonical([{'path': name, 'sha256': digest(read_file(Path(__file__).parent / name, 33554432))}
-                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py', 'model_interview.py')]))
+                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py', 'model_interview.py', 'request_diagnostics.py')]))
 
 
 def launcher_module():
@@ -864,6 +866,8 @@ def model_response_schema():
 
 
 def prepare_payload(work, events, request, graph, state):
+    if state.get('candidate_set') is not None:
+        return prepare_candidate_interview(work, events, request, graph, state)
     graph = routed_graph(graph, state)
     if state['routing']['pending'] is not None:
         raise Refused('an external question is pending; finish that question before preparing an interview')
@@ -899,6 +903,10 @@ def prepare_payload(work, events, request, graph, state):
                 'dependency_ids': [i for i in spec['dependency_ids'] if i not in previous_dependencies],
                 'choices': spec['choices'], 'answer_type': spec['answer_type'], 'candidate': spec['candidate'],
                 'allowed_verdicts': list(FAMILY_VERDICTS[family]), 'forbidden_judgments': list(FORBIDDEN_JUDGMENTS)}
+    return seat_payload(work, events, request, semantic, node_id, family, attempt, attempt_key)
+
+
+def seat_payload(work, events, request, semantic, node_id, family, attempt, attempt_key):
     seats = ('seat-1',) if family == 'owner-question-formulation' else ('seat-1', 'seat-2')
     run_id = events[0]['sha256']; prefix = f'interviews/{len(events):08d}'
     envelopes = []
@@ -915,9 +923,20 @@ def prepare_payload(work, events, request, graph, state):
         schema = family_response_schema(family)
         for key in ('run_id', 'node_id', 'family', 'attempt', 'seat', 'envelope_sha256'):
             schema['properties'][key]['const'] = envelope[key]
-        schema['properties']['evidence_ids']['items']['enum'] = [r['evidence_id'] for r in spec['evidence_refs']]
+        schema['properties']['evidence_ids']['items']['enum'] = [r['evidence_id'] for r in semantic['evidence']]
+        count = len(semantic['evidence'])
+        schema['properties']['evidence_ids'].update(minItems=count,maxItems=count)
+        quote_shape = schema['properties']['quotes']['items']
+        quoted = []
+        for evidence in semantic['evidence']:
+            exact_quote = decode(canonical(quote_shape),'quote shape')
+            exact_quote['properties']['evidence_id']['const'] = evidence['evidence_id']
+            exact_quote['properties']['quote']['const'] = evidence['excerpt']
+            quoted.append(exact_quote)
+        schema['properties']['quotes'].update(minItems=count,maxItems=count,
+            items={'anyOf':quoted},description='Copy each complete schema-pinned evidence excerpt exactly once; selected subquotes do not satisfy this contract.')
         if 'criteria' in schema['properties']:
-            schema['properties']['criteria']['items']['properties']['criterion_id']['enum'] = [c['criterion_id'] for c in spec['criteria']]
+            schema['properties']['criteria']['items']['properties']['criterion_id']['enum'] = [c['criterion_id'] for c in semantic['criteria']]
         envelopes.append({'envelope': envelope, 'response_schema': schema})
     return {'node_id': node_id, 'family': family, 'attempt': attempt, 'attempt_key': attempt_key, 'envelopes': envelopes}
 
@@ -957,7 +976,11 @@ def evaluate_submission(pending, raw, graph, proposals=()):
                 satisfied = all(c['verdict'] == 'satisfied' for c in criteria)
                 if (verdict in ('adequate', 'satisfied')) != satisfied:
                     raise Refused(f"{row['seat']}: verdict {verdict} contradicts its criterion outcomes; positive verdict requires all criteria satisfied")
-                key['criteria'] = [{k: c[k] for k in ('criterion_id', 'verdict', 'evidence_ids')} for c in criteria]
+                # Independent readers may support the same conclusion with
+                # different admitted citations. Compare conclusions, not their
+                # citation choices or citation ordering. Validation above still
+                # requires each reader's nonempty, registered evidence set.
+                key['criteria'] = [{k: c[k] for k in ('criterion_id', 'verdict')} for c in criteria]
             if family == 'dependency-discovery':
                 selected = row['dependency_id']
                 if verdict == 'dependency':
@@ -973,6 +996,9 @@ def evaluate_submission(pending, raw, graph, proposals=()):
                 key.update(dependency_id=selected, relation=row['relation'], subject_id=spec['subjects'][0]['id'])
             if family == 'atom-cohesion' and set(row['requirement_ids']) != {n['id'] for n in spec['subjects']}:
                 raise Refused(f"{row['seat']}: atom requirement_ids differ; return the complete code-listed set")
+            if family == 'atom-cohesion' and 'candidate_sha256' in spec:
+                key['candidate_sha256'] = spec['candidate_sha256']
+                key['candidate_set_sha256'] = spec['candidate_set_sha256']
             if family == 'owner-question-formulation':
                 if row['answer_type'] != spec['answer_type'] or row['choices'] != spec['choices']:
                     raise Refused('owner formulation changes the answer contract; preserve its exact type and complete ordered choices')
@@ -982,10 +1008,17 @@ def evaluate_submission(pending, raw, graph, proposals=()):
             comparable.append(key)
         if any(row != comparable[0] for row in comparable[1:]):
             raise Refused('blind seats disagree on verdict or structured criterion/dependency facts; no fact admitted, retain both responses')
+        attribution = {}
+        if 'criteria' in rows[0]:
+            attribution['criterion_evidence_by_seat'] = [
+                {'seat': row['seat'], 'criteria': [
+                    {'criterion_id': c['criterion_id'], 'evidence_ids': list(c['evidence_ids'])}
+                    for c in row['criteria']]}
+                for row in rows]
         return {'status': 'admitted', 'fact': {'node_id': pending['node_id'], 'family': pending['family'],
                 'attempt': pending['attempt'], 'fact_type': PROPOSED_FACTS[pending['family']][rows[0]['verdict']],
                 'evidence_ids': evidence_ids, 'subject_ids': [n['id'] for n in spec['subjects']],
-                'authority': 'proposed-only', **comparable[0]}, 'rejection': None}
+                'authority': 'proposed-only', **comparable[0], **attribution}, 'rejection': None}
     except (ValueError, KeyError, TypeError) as error:
         return {'status': 'rejected', 'fact': None, 'rejection': str(error)}
 
@@ -993,6 +1026,12 @@ def evaluate_submission(pending, raw, graph, proposals=()):
 def fold_interview(state, event, work, events, request, graph):
     state = decode(canonical(state), 'interview state')
     kind = event['event']; payload = event['payload']
+    if kind in ('candidates_prepared', 'candidates_compiled'):
+        expected = candidate_payload(work, request, graph, state, compile_output=kind=='candidates_compiled')
+        if payload != expected:
+            raise Refused('candidate transaction differs from its exact Plan result, graph, sources or cohesion facts; restore immutable history')
+        state['candidate_set' if kind=='candidates_prepared' else 'compilation'] = payload
+        return state
     if kind.startswith('external_'):
         return fold_external(state, event, work, events, request, graph)
     if kind == 'interview_prepared':
@@ -1033,6 +1072,10 @@ def fold_interview(state, event, work, events, request, graph):
 
 def transition_files(event):
     files = {'event.json': canonical(event) + b'\n'}
+    if event['event'] == 'candidates_compiled':
+        for index, row in enumerate(event['payload']['requests'], 1):
+            files[f'atom-{index:04d}-request.json'] = canonical(row['request']) + b'\n'
+        files['atom-sequence.json'] = canonical(event['payload']) + b'\n'
     if event['event'] == 'external_prepared':
         action = event['payload']
         files[action['artifact']] = canonical(action) + b'\n'
@@ -1098,7 +1141,10 @@ def interview_action(command, work, expected_tip, submission=None):
         state, _, _ = replay_interviews(work, events, request, graph)
         if len(events) - len(result['inputs']) - 1 >= 1024:
             raise Refused('interview transition budget exhausted; obtain an explicit bounded continuation')
-        if command == 'prepare-external':
+        if command in ('prepare-candidates','compile-candidates'):
+            payload = candidate_payload(work, request, graph, state, compile_output=command=='compile-candidates')
+            kind = 'candidates_prepared' if command=='prepare-candidates' else 'candidates_compiled'
+        elif command == 'prepare-external':
             payload = external_action(work, events, request, graph, state); kind = 'external_prepared'
         elif command in ('answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
             raw = read_file(submission, INTERVIEW_LIMIT)
@@ -1273,6 +1319,27 @@ def routed_graph(graph, state):
                 if item['node_id']==row['node_id']:
                     item['blocking_class']='verification'
                     item['recovery_condition']='Validate the retained atom candidates through the atom candidate compiler; no readiness or atom release is granted.'
+    candidates = state.get('candidate_set')
+    if candidates is not None:
+        set_hash = digest(canonical(candidates))
+        if any(f['family']=='atom-cohesion' and f.get('candidate_set_sha256')==set_hash
+               and f['verdict']=='must_split' for f in state['proposals']):
+            for item in result['queue']:
+                if item['node_id']==candidates['plan_node_id']:
+                    item['blocking_class']='planning'
+                    item['recovery_condition']='Revise the candidate set to address its retained must_split judgment; obtain fresh cohesion judgments for the revised set.'
+        identities = {row['atomic_step_id']:'atom-'+digest(canonical(row)) for row in candidates['candidates']}
+        for row in candidates['candidates']:
+            identity = identities[row['atomic_step_id']]
+            result['graph']['nodes'].append({'id':identity,'type':'atom_candidate','record':{
+                'outcome':row['outcome'],'boundaries':row['allowed_paths'],
+                'prerequisites':[identities[i] for i in row['prerequisite_atom_ids']],
+                'requirement_ids':row['requirement_ids'],'case_ids':[c['case_id'] for c in row['captured_cases']]}})
+            result['graph']['edges'].extend({'type':'maps-to-atom','source':rid,'target':identity} for rid in row['requirement_ids'])
+            result['graph']['edges'].extend({'type':'verified-by','source':identity,'target':vid} for vid in row['verification_ids'])
+            result['graph']['edges'].extend({'type':'precedes','source':identities[i],'target':identity} for i in row['prerequisite_atom_ids'])
+        if state.get('compilation') is not None:
+            resolved.add(candidates['plan_node_id'])
     result['queue'] = [row for row in result['queue'] if row['node_id'] not in resolved]
     # Planning has an explicit all-other-obligations prerequisite. Its static
     # class priority must not deadlock an owner decision needed before planning.
@@ -1421,6 +1488,8 @@ def fold_external(state, event, work, events, request, graph):
             routing['results']=[]
             state['proposals']=[]
             state['attempts']={}
+            state.pop('candidate_set',None)
+            state.pop('compilation',None)
         routing['answers'].append(row);routing['pending']=None
         routed_graph(graph,state)
         return state
@@ -1457,6 +1526,8 @@ def fold_external(state, event, work, events, request, graph):
             raise Refused('planning result must name distinct candidates covering the complete sealed requirement set')
         routing['results'].append({'route':expected_route,'node_id':action['node_id'],
             'event_sha256':event['sha256'],'response':response,'status':'awaiting-candidate-validation'})
+        state.pop('candidate_set',None)
+        state.pop('compilation',None)
     routing['pending']=None
     routed_graph(graph,state)
     return state
@@ -1546,6 +1617,173 @@ def admit_research_graph(work,request,graph,state,action,response,received_at):
     if covered!=set(action['requirement_ids']):
         raise Refused('research result lacks exact requirement coverage by source-bound sufficiency interviews; evidence arrival alone cannot clear its meaning gap')
     return checked
+
+
+def atom_validator(request, sources):
+    """Use checked-in downstream code only, never execute a supplied contract."""
+    import runpy
+    path = Path(__file__).resolve().parents[2] / 'atom-building-machinery/scripts/atom_controller.py'
+    declared = next(r for r in request['machinery_contracts'] if r['role']=='atom-controller-source')
+    raw = read_file(path,33554432)
+    if sources.get(declared['path']) != raw or digest(raw)!=declared['sha256']:
+        raise Refused('Atom Controller source differs from its frozen contract; admit the current canonical contract before candidate validation')
+    module = runpy.run_path(str(path))
+    return module
+
+
+def checked_candidates(work, request, graph, state):
+    if state['pending'] is not None or state['routing']['pending'] is not None:
+        raise Refused('a question is pending; finish its exact transaction before candidate validation')
+    # Candidate projections never become authority for their own revalidation.
+    upstream_state = {k:v for k,v in state.items() if k not in ('candidate_set','compilation')}
+    resolved = routed_graph(graph,upstream_state)
+    plans = [r for r in state['routing']['results'] if r['route']=='direct-plan']
+    if not plans or resolved is None:
+        raise Refused('no retained direct Plan result exists; obtain candidates through the current planning request')
+    plan = plans[-1]
+    if len(resolved['queue']) != 1 or resolved['queue'][0]['node_id'] != plan['node_id']:
+        raise Refused('candidate compilation has unresolved non-Plan obligations, including linked blockers; resolve the global queue first')
+    nodes = {n['id']:n for n in resolved['graph']['nodes']}
+    requirements = {i for i,n in nodes.items() if n['type']=='requirement'}
+    if any(nodes[i]['record']['disposition']!='satisfied' for i in requirements):
+        raise Refused('candidate compilation requires every sealed requirement assessed at its declared maturity')
+    sources = frozen_external_inputs(work,request)
+    for result in state['routing']['results']:
+        if result['route']=='direct-research':
+            sources.update({r['origin']:base64.b64decode(r['base64'],validate=True) for r in result['response']['objects']})
+    validator = atom_validator(request,sources)
+    fields = validator['REQUEST_FIELDS']
+    candidates = plan['response']['candidates']
+    by_id = {r['atomic_step_id']:r for r in candidates}
+    if len(by_id)!=len(candidates) or set().union(*(set(r['requirement_ids']) for r in candidates))!=requirements:
+        raise Refused('candidate identities repeat or requirement coverage differs; map every sealed requirement in a distinct candidate set')
+    mapped=set()
+    for row in candidates:
+        name=row['atomic_step_id']
+        for dependency in row['prerequisite_atom_ids']:
+            if dependency not in by_id or dependency==name:
+                raise Refused(f'candidate {name}: prerequisite {dependency!r} is absent or self-referential; include its distinct candidate')
+        paths = row['allowed_paths']; surface = row['contract_surface']
+        targets=[]
+        for root in request['runtime_boundary']['target_repositories']:
+            repository=Path(root)
+            if all(any((repository/p)==Path(b) or Path(b) in (repository/p).parents
+                       for b in request['runtime_boundary']['product_edit_boundaries']) for p in paths):
+                targets.append(repository)
+        if len(targets)!=1:
+            raise Refused(f'candidate {name}: allowed_paths do not identify exactly one declared product edit boundary; resolve its repository and paths')
+        repository=targets[0]
+        if surface['kind']=='validation':
+            for field in surface['fields']:
+                source=repository/field['shape_source'].split('::')[0]
+                if str(source) not in sources:
+                    raise Refused(f'candidate {name}: shape source {str(source)!r} is not frozen evidence; admit its exact bytes before validation')
+                if read_file(source,33554432)!=sources[str(source)]:
+                    raise Refused(f'candidate {name}: declared shape source changed; recapture and reassess before compiling')
+        downstream={key:row[key] for key in fields}
+        try:
+            validator['_validate_request'](downstream,require_contract_surface=True,repository_root=repository)
+        except (ValueError, validator['AtomError']) as error:
+            raise Refused(f'candidate {name}: downstream request refused: {error}') from error
+        for case in row['captured_cases']:
+            origin=str(repository/case['source_ref'])
+            if origin not in sources or digest(sources[origin])!=case['sha256']:
+                raise Refused(f'candidate {name}: case {case["case_id"]!r} has no exact frozen source at {origin!r}; admit the captured bytes')
+        verifications=[nodes[i]['record'] for i in row['verification_ids']]
+        for identity,record in zip(row['verification_ids'],verifications):
+            facts=[f for f in state['proposals'] if f['node_id']==identity and f['family']=='verification-adequacy' and f['verdict']=='adequate']
+            if record['status']!='verified' or record['independence_rule']!='independent' or not facts:
+                raise Refused(f'candidate {name}: verification {identity!r} lacks independent, adequate assessment; producer status alone cannot qualify it')
+        for rid in row['requirement_ids']:
+            linked={e['target'] for e in resolved['graph']['edges'] if e['source']==rid and e['type']=='verified-by'}
+            if not linked.intersection(row['verification_ids']):
+                raise Refused(f'candidate {name}: requirement {rid!r} has no linked candidate verification; supply its acceptance coverage')
+            mapped.add(rid)
+        for case in row['captured_cases']:
+            field='success_cases' if case['kind']=='success' else 'rejection_cases'
+            if not any(case['case_id'] in v[field] for v in verifications):
+                raise Refused(f'candidate {name}: case {case["case_id"]!r} is absent from independently assessed {field}; supply the exact mapping')
+        for eid in row['evidence_ids']:
+            record=next((n['record'] for n in nodes.values() if n['type']=='evidence' and n['record']['evidence']['evidence_id']==eid),None)
+            if record is None or not record['fitness']['fit'] or not set(row['requirement_ids']).intersection(record['evidence']['affected_requirement_ids']):
+                raise Refused(f'candidate {name}: evidence {eid!r} is unfit or unrelated; admit fit requirement-bound evidence')
+        for aid in row['authority_decision_ids']:
+            answer=nodes[aid]['record']['answer']
+            if answer is None or answer['disposition']!='answered':
+                raise Refused(f'candidate {name}: owner decision {aid!r} is unresolved; obtain its exact owner answer')
+    ordered=[]
+    remaining=set(by_id)
+    while remaining:
+        ready=sorted(i for i in remaining if set(by_id[i]['prerequisite_atom_ids'])<=set(ordered))
+        if not ready:
+            raise Refused(f'candidate dependency cycle among {sorted(remaining)!r}; remove the cycle before compilation')
+        ordered.extend(ready);remaining.difference_update(ready)
+    return {'plan_event_sha256':plan['event_sha256'],'plan_node_id':plan['node_id'],
+            'graph_sha256':resolved['graph_sha256'],'order':ordered,
+            'candidates':[by_id[i] for i in ordered]}, resolved, sources, fields
+
+
+def candidate_payload(work, request, graph, state, *, compile_output=False):
+    checked, _, _, fields=checked_candidates(work,request,graph,state)
+    if not compile_output:
+        if state.get('candidate_set') is not None:
+            raise Refused('candidate set already prepared; answer its exact cohesion interviews before compiling')
+        return checked
+    if state.get('candidate_set')!=checked or state.get('compilation') is not None:
+        raise Refused('candidate set is absent, changed or already compiled; prepare its exact current Plan result once')
+    requests=[]
+    set_hash=digest(canonical(checked))
+    for row in checked['candidates']:
+        candidate_hash=digest(canonical(row))
+        facts=[f for f in state['proposals'] if f['family']=='atom-cohesion' and f.get('candidate_sha256')==candidate_hash and f.get('candidate_set_sha256')==set_hash]
+        if len(facts)!=1 or facts[0]['verdict']!='cohesive':
+            raise Refused(f'candidate {row["atomic_step_id"]}: no matching two-seat cohesive fact for these exact bytes; complete its blind interview')
+        downstream={key:row[key] for key in fields}
+        requests.append({'atomic_step_id':row['atomic_step_id'],'candidate_sha256':candidate_hash,
+                         'request':downstream,'request_sha256':digest(canonical(downstream)+b'\n')})
+    return {'schema_version':1,'plan_event_sha256':checked['plan_event_sha256'],
+            'requests':requests,'sequence_sha256':digest(canonical(requests)),
+            'authority':'compiled-only; no readiness, approval, release or execution'}
+
+
+def prepare_candidate_interview(work,events,request,graph,state):
+    checked,resolved,sources,_=checked_candidates(work,request,graph,state)
+    if checked!=state['candidate_set'] or state.get('compilation') is not None:
+        raise Refused('candidate interview set changed or is already compiled; inspect its exact Plan result')
+    set_hash=digest(canonical(checked))
+    for row in checked['candidates']:
+        candidate_hash=digest(canonical(row))
+        facts=[f for f in state['proposals'] if f['family']=='atom-cohesion' and f.get('candidate_sha256')==candidate_hash and f.get('candidate_set_sha256')==set_hash]
+        if facts:
+            if facts[0]['verdict']!='cohesive':
+                raise Refused(f'candidate {row["atomic_step_id"]}: retained verdict requires splitting; obtain a revised Plan, not another identical interview')
+            continue
+        node_id='atom-'+candidate_hash;attempt_key=node_id+':'+set_hash
+        attempt=state['attempts'].get(attempt_key,0)+1
+        if attempt>request['execution_limits']['max_model_attempts_per_seat']:
+            raise Refused(f'candidate {row["atomic_step_id"]}: cohesion attempt budget exhausted; retain the unresolved gap')
+        nodes=resolved['graph']['nodes'];evidence=[]
+        for eid in row['evidence_ids']:
+            record=next(n['record'] for n in nodes if n['type']=='evidence' and n['record']['evidence']['evidence_id']==eid)
+            source=record['evidence']
+            matches=[raw for raw in sources.values() if digest(raw)==source['source_object_sha256']]
+            if not matches:
+                raise Refused(f'candidate {row["atomic_step_id"]}: evidence {eid!r} has no frozen bytes matching its source hash')
+            try:
+                excerpt=matches[0].decode('utf-8')
+            except UnicodeDecodeError as error:
+                raise Refused(f'candidate {row["atomic_step_id"]}: evidence {eid!r} needs a source-bound text projection before interview') from error
+            if not excerpt.strip() or len(excerpt)>8192:
+                raise Refused(f'candidate {row["atomic_step_id"]}: evidence {eid!r} must provide a bounded nonempty text projection of at most 8192 characters before interview')
+            evidence.append({**source,'excerpt':excerpt,'fitness':record['fitness']})
+        semantic={'family':'atom-cohesion','question':INTERVIEW_QUESTIONS['atom-cohesion'],
+            'required_maturity':'not-applicable','subjects':[n for n in nodes if n['id'] in row['requirement_ids']],
+            'evidence':evidence,'criteria':[],'dependency_ids':row['prerequisite_atom_ids'],
+            'choices':[],'answer_type':'not-applicable','candidate':row,'candidate_sha256':candidate_hash,
+            'candidate_set_sha256':set_hash,'candidate_set':checked,
+            'allowed_verdicts':list(FAMILY_VERDICTS['atom-cohesion']),'forbidden_judgments':list(FORBIDDEN_JUDGMENTS)}
+        return seat_payload(work,events,request,semantic,node_id,'atom-cohesion',attempt,attempt_key)
+    raise Refused('all candidate cohesion facts are present; compile the exact prepared set instead of repeating interviews')
 
 
 if __name__ == '__main__':

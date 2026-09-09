@@ -32,7 +32,9 @@ provider errors and tool events remain failures, not ignored warning aliases.
 `launch-interview WORK LAUNCH_DIRECTORY AUTHORIZATION_JSON --expected-tip SHA256` requires a
 trusted owner authorization with exactly `schema_version: 1`,
 `decision: "authorize-exact-payload"`, nonempty `owner`, exact `plan_sha256`, `provider`, `model`,
-`reasoning_effort`, `max_calls` equal to the complete seat count, and future UTC `expires_at_utc`.
+`reasoning_effort`, `max_calls` equal to twice the complete seat count, and future UTC `expires_at_utc`.
+The hash-bound plan declares `timeout_retries_per_seat: 1`: the budget includes one initial
+process and at most one conditional timeout retry for each seat (four processes for two seats).
 This receipt is supplied through the trusted operator channel; the launcher validates its scope,
 not human presence or a cryptographic owner signature. Interview response text cannot authorize
 a launch. Never manufacture this receipt from a model response or infer it from build approval.
@@ -60,16 +62,28 @@ without requiring today's skill installation to remain identical. No installed s
 configuration, HOME or CODEX_HOME value is changed. CLI permission/environment instructions
 remain; "isolated" does not mean that the provider's base instructions disappear.
 
-There is one reader process per seat per prepared attempt, with no launcher retries. The built-in
+There is one initial reader process per seat. Only the launcher's typed deadline expiry permits
+one automatic retry for that same seat, with byte-identical prompt/schema and a fresh empty
+process directory. Authority expiry, runtime identity and isolation checks run before the retry.
+Completed seats are not called again. Provider errors, invalid output, missing completion,
+disagreement, and authority failures never trigger this recovery. Both attempts and the selected
+final result are retained and validated on replay; a second timeout stops the launch without a
+semantic fact. This bounded recovery policy was owner-approved on 2026-09-09.
+
+The built-in
 OpenAI provider retains its bounded network retry behavior within each process's five-minute
 deadline; the seat count is not a count of HTTP requests. Built-in provider retry fields must not
 be overridden through `model_providers.openai`: the supported CLI rejects those overrides before
-launch. This retry boundary was explicitly approved on 2026-09-08.
-Failure consumes that attempt and retains an
+launch. Those provider-internal bounds are unchanged from 2026-09-08.
+Exhausted recovery or a non-timeout failure consumes the prepared attempt and retains an
 engine rejection. A second preparation is allowed only within the original declared engine
 attempt budget and requires a fresh exact-payload approval. Interrupted reservations are not
 automatically retried; their state remains visible for explicit recovery. Success of transport
 does not imply semantic agreement: admission still applies the existing paired-response rules.
+
+The launcher fixes `RUST_LOG=warn` rather than inheriting debug/trace, retains warnings privately,
+and emits byte-count/elapsed-time progress every fifteen seconds. Timeout telemetry records
+cause as unconfirmed; bounded recovery does not claim to diagnose or prevent provider stalls.
 
 The launcher retains command, authorized prompt/schema, provider stdout/stderr and response bytes
 inside immutable interview transactions before admitting responses. Local structured telemetry
@@ -111,8 +125,16 @@ is not certified by punctuation checks and it cannot execute instructions or gra
 All families require two matching blind seats except owner-question formulation, which uses one.
 Code validates exact seat/run/node/attempt/envelope identities, closed schemas, the complete
 evidence-ID set, exact source quotes and family-specific coverage. Agreement includes structured
-criterion/dependency results, not merely the headline verdict. Different free-text reasons do
-not imply disagreement. Dependency discovery prepares the same subject again until `none`,
+criterion identities and outcomes/dependency results, not merely the headline verdict.
+Different valid criterion citation selections or ordering do not imply disagreement.
+Each seat must still cite nonempty registered evidence for every criterion, cover the
+complete presented evidence set overall, and supply the exact source quotes. Accepted
+criterion conclusions carry separate `criterion_evidence_by_seat` attribution; no union
+or first-reader citation list is presented as jointly agreed support. Exact original
+responses remain in the submission record. Different free-text reasons do not imply
+disagreement. This applies equally to sufficiency and verification adequacy. Existing
+runs retain their source-bound runtime and are not reinterpreted by this correction.
+Dependency discovery prepares the same subject again until `none`,
 removing proposed IDs; each question has the declared bounded retry budget. Other shared nodes
 produce one fact exactly once, even when linked to several requirements.
 

@@ -1,4 +1,53 @@
 import json,subprocess,sys,unittest
+
+class CompilerContextRegressionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        ReadinessKernelTests.setUpClass.__func__(cls)
+    # Mechanical projections of the real approved Atom10 request and captured
+    # graph. These mutations are not independent semantic judgments or evidence
+    # that the whole machinery has a settled candidate plan.
+    approved_request = json.loads("{\"schema_version\":1,\"atomic_step_id\":\"readiness-10-atom-candidate-compiler\",\"outcome\":\"Implement atom-candidate admission, requirement and verification coverage, dependency ordering, two-seat cohesion gating, and byte-stable compilation to the current Atom Building request schema.\",\"practical_value\":\"A settled feature can become small independently testable implementation atoms without hiding missing scope, prerequisites, cases, or a second behavior.\",\"stopping_condition\":\"Stop when a complete candidate set compiles in deterministic topological order to exact eight-field Atom Building requests and every incomplete, cyclic, incohesive, unverified, or blocker-linked candidate is refused.\",\"allowed_paths\":[\"skills/requirement-to-atom-readiness-machinery/references/atom-handoff-contract.md\",\"skills/requirement-to-atom-readiness-machinery/schemas/atom-candidates.schema.json\",\"skills/requirement-to-atom-readiness-machinery/scripts/readiness_controller.py\",\"tests/test_requirement_to_atom_readiness.py\"],\"captured_cases\":[{\"case_id\":\"a10-success-current-abm-schema\",\"source_ref\":\"Tasks/requirement-to-atom-readiness-machinery/implementation-atom-cases.md\",\"sha256\":\"434c6d1945ee1f5d1362246d5020b402e09e0ee39985a2f226f55358175d9934\",\"kind\":\"success\",\"expected_outcome\":\"Complete cohesive candidates compile byte-stably in dependency order to requests with exactly the current Atom Building fields.\"},{\"case_id\":\"a10-failure-incomplete-or-incohesive\",\"source_ref\":\"Tasks/requirement-to-atom-readiness-machinery/implementation-atom-cases.md\",\"sha256\":\"434c6d1945ee1f5d1362246d5020b402e09e0ee39985a2f226f55358175d9934\",\"kind\":\"failure\",\"expected_outcome\":\"Incomplete, cyclic, incohesive, unverified, or blocker-linked candidates cannot compile or reach readiness.\"}],\"contract_surface\":{\"kind\":\"validation\",\"deliverable\":\"atom_controller\",\"fields\":[{\"field\":\"allowed_paths\",\"shape\":\"list\",\"shape_source\":\"skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS\"},{\"field\":\"captured_cases\",\"shape\":\"list\",\"shape_source\":\"skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS\"},{\"field\":\"contract_surface\",\"shape\":\"object\",\"shape_source\":\"skills/atom-building-machinery/scripts/atom_controller.py::REQUEST_FIELDS\"}]}}")
+
+    def candidate_context(self):
+        import copy
+        graph = copy.deepcopy(EvidenceGraphRuntimeTests.captured_graph)
+        wrapped = {'graph':graph, 'graph_sha256':self.module.digest(self.module.canonical(graph)),
+                   'queue':graph['conditions'], 'next_action':graph['conditions'][0],
+                   'status':'blocked','readiness':'not-assessed'}
+        requirements = [n['id'] for n in graph['nodes'] if n['type']=='requirement']
+        row = {**copy.deepcopy(self.approved_request), 'requirement_ids':requirements,
+               'prerequisite_atom_ids':[], 'verification_ids':[],
+               'authority_decision_ids':[], 'evidence_ids':[]}
+        checked = {'plan_event_sha256':'a'*64, 'plan_node_id':graph['conditions'][0]['node_id'],
+                   'graph_sha256':wrapped['graph_sha256'],
+                   'order':[row['atomic_step_id']], 'candidates':[row]}
+        return wrapped, checked, row
+
+    def test_old_set_judgment_cannot_compile_unchanged_candidate(self):
+        from unittest.mock import patch
+        k=self.module; graph,checked,row=self.candidate_context()
+        state=k.initial_interview_state();state['candidate_set']=checked
+        state['proposals']=[{'family':'atom-cohesion','verdict':'cohesive',
+            'candidate_sha256':k.digest(k.canonical(row)), 'candidate_set_sha256':'0'*64}]
+        with patch.object(k,'checked_candidates',return_value=(checked,graph,{},set(self.approved_request))):
+            with self.assertRaisesRegex(k.Refused,'no matching two-seat'):
+                k.candidate_payload(None,None,graph,state,compile_output=True)
+
+    def test_current_split_judgment_routes_back_to_planning(self):
+        k=self.module;graph,checked,row=self.candidate_context()
+        state=k.initial_interview_state();state['candidate_set']=checked
+        state['proposals']=[{'family':'atom-cohesion','verdict':'must_split',
+            'candidate_sha256':k.digest(k.canonical(row)),
+            'candidate_set_sha256':k.digest(k.canonical(checked))}]
+        result=k.routed_graph(graph,state)
+        item=next(q for q in result['queue'] if q['node_id']==checked['plan_node_id'])
+        self.assertEqual(item['blocking_class'],'planning')
+        state['proposals'][0]['candidate_set_sha256']='0'*64
+        result=k.routed_graph(graph,state)
+        item=next(q for q in result['queue'] if q['node_id']==checked['plan_node_id'])
+        self.assertNotEqual(item['blocking_class'],'planning')
+
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 class ReadinessSchemaTests(unittest.TestCase):
@@ -2106,6 +2155,41 @@ class InterviewEngineTests(ReadinessKernelTests):
         self.assertEqual(result['fact']['authority'], 'proposed-only')
         self.assertNotIn('readiness', result['fact'])
 
+    def test_prepared_schema_pins_complete_evidence_quotes(self):
+        import copy
+        import jsonschema
+        m=self.module
+        old=self.captured_pending['envelopes'][0]['envelope']
+        events=[{'sha256':old['run_id'],'payload':{'runtime':{'codex':old['launcher']}}},
+                {'sha256':old['predecessor_sha256']}]
+        request={'model_runtime':old['model_runtime'],
+                 'execution_limits':{'model_timeout_ms':old['timeout_ms']}}
+        pending=m.seat_payload(Path('/captured-quote-test'),events,request,
+            old['semantic_payload'],old['node_id'],old['family'],1,'captured-quote-test')
+        rows=copy.deepcopy(self.captured_responses)
+        for row,seat in zip(rows,pending['envelopes']):
+            # Transport-only rebind of the captured inadequate judgments.
+            # No new semantic verdict is invented by this schema test.
+            for key in ('run_id','node_id','family','attempt','seat','envelope_sha256'):
+                row[key]=seat['envelope'][key]
+            schema=seat['response_schema']
+            jsonschema.Draft202012Validator.check_schema(schema)
+            m.validate_shape(row,schema)
+            jsonschema.validate(row,m.launcher_module().provider_schema(schema))
+            shortened=copy.deepcopy(row)
+            shortened['quotes'][0]['quote']=row['quotes'][0]['quote'][:20]
+            # Previously legal schema output was refused only after paying for
+            # the model call. It is now explicitly excluded at generation time.
+            m.validate_shape(shortened,m.family_response_schema(old['family']))
+            with self.assertRaises(m.Refused):m.validate_shape(shortened,schema)
+            with self.assertRaises(jsonschema.ValidationError):
+                jsonschema.validate(shortened,m.launcher_module().provider_schema(schema))
+            duplicate=copy.deepcopy(row);duplicate['quotes'].append(duplicate['quotes'][0])
+            with self.assertRaises(m.Refused):m.validate_shape(duplicate,schema)
+        result=m.evaluate_submission(pending,m.canonical(rows),None)
+        self.assertEqual(result['status'],'admitted')
+        self.assertEqual(result['fact']['verdict'],'inadequate')
+
     def test_captured_pair_rejection_mutations(self):
         import copy
         for name in ('missing', 'duplicate', 'foreign', 'unsupported', 'disagreeing', 'criterion', 'authority', 'cannot-assess'):
@@ -2314,7 +2398,7 @@ class CodexLaunchTests(unittest.TestCase):
         self.plan = self.m.plan_for(self.k, Path('/private/tmp/captured-readiness-work'), {'interview_state': self.state, 'ledger_tip': 'a'*64})
         self.auth = {'schema_version': 1, 'decision': 'authorize-exact-payload', 'owner': 'unit-test-only',
                      'plan_sha256': self.plan['plan_sha256'], **self.plan['model_runtime'],
-                     'max_calls': 2, 'expires_at_utc': '2099-01-01T00:00:00+00:00'}
+                     'max_calls': 4, 'expires_at_utc': '2099-01-01T00:00:00+00:00'}
 
     def test_exact_authority_and_retry_reservation(self):
         import copy
@@ -2452,7 +2536,7 @@ class CodexLaunchTests(unittest.TestCase):
             directory = Path(temp) / 'seat-1'; directory.mkdir()
             started = time.monotonic()
             with patch.object(self.k, 'runtime_identity', return_value={'codex': plan['launcher']}), patch.object(self.m, 'argv_for', return_value=[sys.executable, '-c', 'import time; time.sleep(30)']):
-                with self.assertRaisesRegex(self.k.Refused, 'exceeded 100 ms'):
+                with self.assertRaisesRegex(self.m.SeatTimeout, 'exceeded 100 ms'):
                     self.m.call_seat(self.k, plan, plan['seats'][0], directory, self.auth)
             self.assertLess(time.monotonic() - started, 3)
 
