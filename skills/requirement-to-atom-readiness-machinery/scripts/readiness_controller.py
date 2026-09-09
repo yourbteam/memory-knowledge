@@ -522,6 +522,15 @@ def replay(work, *, locked=False):
             result.update({key:effective[key] for key in ('status','readiness','graph_sha256','next_action')})
             result['queue_count'] = len(effective['queue'])
         result['external_action'] = interview_state['routing']['pending']
+        package = interview_state.get('package')
+        if package is not None and events[-1]['event'] == 'package_compiled':
+            result['readiness'] = package['readiness']
+            result['status'] = package['readiness']
+            result['package_manifest_sha256'] = package['manifest_sha256']
+        elif interview_state.get('package_pending') is not None:
+            result['status'] = 'blocked'
+            result['readiness'] = 'blocked'
+            result['internal_state'] = 'preparing-package'
         result['ledger_tip'] = events[-1]['sha256']
         result['event_count'] = len(events)
         expected_files.update(interview_files)
@@ -554,7 +563,7 @@ def kernel_main():
     for name in ('status', 'verify-replay', 'advance'):
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
     commands.add_parser('response-schema', allow_abbrev=False)
-    for name in ('prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview',
+    for name in ('compile-package', 'prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview',
                  'prepare-external', 'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
                  'prepare-candidates', 'compile-candidates'):
         command = commands.add_parser(name, allow_abbrev=False)
@@ -578,7 +587,7 @@ def kernel_main():
             return 0
         if args.command in ('prepare-launch', 'launch-interview'):
             result = launcher_module().dispatch(kernel_api(), args)
-        elif args.command in ('prepare-interview', 'admit-interview', 'prepare-external',
+        elif args.command in ('compile-package', 'prepare-interview', 'admit-interview', 'prepare-external',
                               'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
                               'prepare-candidates', 'compile-candidates'):
             result = interview_action(args.command, args.work, args.expected_tip, getattr(args, 'submission', None))
@@ -676,7 +685,7 @@ def collect_upstreams(request, captured, work, total):
 
 def adapter_code_sha256():
     return digest(canonical([{'path': name, 'sha256': digest(read_file(Path(__file__).parent / name, 33554432))}
-                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py', 'model_interview.py', 'request_diagnostics.py')]))
+                             for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py', 'model_interview.py', 'request_diagnostics.py', 'package_renderer.py')]))
 
 
 def launcher_module():
@@ -697,6 +706,15 @@ def evidence_module():
     import importlib.util
     path = Path(__file__).parent / 'evidence_adapter.py'
     spec = importlib.util.spec_from_file_location('readiness_evidence_adapter', path)
+    module = importlib.util.module_from_spec(spec)
+    exec(compile(read_file(path, 33554432), str(path), 'exec'), module.__dict__)
+    return module
+
+
+def package_module():
+    import importlib.util
+    path = Path(__file__).parent / 'package_renderer.py'
+    spec = importlib.util.spec_from_file_location('readiness_package_renderer', path)
     module = importlib.util.module_from_spec(spec)
     exec(compile(read_file(path, 33554432), str(path), 'exec'), module.__dict__)
     return module
@@ -1026,6 +1044,32 @@ def evaluate_submission(pending, raw, graph, proposals=()):
 def fold_interview(state, event, work, events, request, graph):
     state = decode(canonical(state), 'interview state')
     kind = event['event']; payload = event['payload']
+    if kind == 'package_prepared':
+        expected = package_module().preparation(kernel_api(), graph, state)
+        if payload != expected or state.get('package_pending') is not None:
+            raise Refused('package preparation differs or a preparation remains unfinished; retain blocked state')
+        state['package_pending'] = event['sha256']
+        return state
+    if kind in ('package_compiled', 'package_failed'):
+        if not state.get('package_pending') or events[-1]['event'] != 'package_prepared':
+            raise Refused('package completion requires its immediately preceding closed preparation')
+        if kind == 'package_failed':
+            if (type(payload) is not dict or set(payload) != {'prepared_sha256','error_kind','error_sha256'} or
+                    payload['prepared_sha256'] != events[-1]['sha256'] or
+                    payload['error_kind'] not in ('OSError','PermissionError','FileNotFoundError','FileExistsError','Refused','ValueError','KeyError','TypeError') or
+                    not SHA256.fullmatch(payload['error_sha256'])):
+                raise Refused('package failure receipt has invalid identity or error hash')
+        else:
+            module = package_module()
+            members, manifest = module.render(kernel_api(), events, request, graph, state)
+            identity = digest(members['manifest.json'])
+            expected = {'prepared_sha256': events[-1]['sha256'], 'manifest_sha256': identity, 'readiness': manifest['readiness']}
+            if payload != expected:
+                raise Refused('package binding differs from reconstructed manifest; never trust a producer readiness flag')
+            module.verify(kernel_api(), work / 'run/package' / identity, members)
+            state['package'] = payload
+        state['package_pending'] = None
+        return state
     if kind in ('candidates_prepared', 'candidates_compiled'):
         expected = candidate_payload(work, request, graph, state, compile_output=kind=='candidates_compiled')
         if payload != expected:
@@ -1095,7 +1139,7 @@ def replay_interviews(work, events, request, graph):
     state = events[0]['payload']['interview_state']
     if canonical(state) != canonical(initial_interview_state()):
         raise Refused('initial interview_state differs from the empty version-one state')
-    expected_files = set(); expected_dirs = {'interviews'}
+    expected_files = set(); expected_dirs = {'interviews', 'package'}
     root = work / 'run/interviews'
     if root.is_symlink():
         raise Refused('interviews directory is linked; restore the run-owned regular directory')
@@ -1114,7 +1158,16 @@ def replay_interviews(work, events, request, graph):
             expected = chain([(e['event'], e['payload']) for e in events] + [(event['event'], event['payload'])])[-1]
             if raw != canonical(expected) + b'\n':
                 raise Refused('interview ledger predecessor, sequence or hash differs; restore its chain')
+            prior_state = state
             state = fold_interview(state, event, work, events, request, graph)
+            if event['event'] == 'package_compiled':
+                generation = 'package/' + event['payload']['manifest_sha256']
+                members, _ = package_module().render(kernel_api(), events, request, graph,
+                    # The predecessor package is the one preparation recorded, not this newly folded result.
+                    prior_state)
+                for member in members:
+                    expected_files.add(generation + '/' + member)
+                    expected_dirs.update(str(p) for p in Path(generation + '/' + member).parents if str(p) != '.')
             for file, data in transition_files(event).items():
                 if read_file(path / file, 4194304) != data:
                     raise Refused(f'{path.name}/{file}: bytes differ from the replayed interview')
@@ -1139,6 +1192,12 @@ def interview_action(command, work, expected_tip, submission=None):
         graph = events[0]['payload']['evidence_graph']
         graph = graph['result'] if graph is not None else None
         state, _, _ = replay_interviews(work, events, request, graph)
+        if command == 'compile-package':
+            if state.get('package_pending') is not None:
+                raise Refused('an interrupted package preparation is still pending; preserve it for explicit recovery')
+            return package_module().compile_package(kernel_api(), work, events, request, graph, state)
+        if state.get('package_pending') is not None:
+            raise Refused('package preparation is pending; do not mutate its closed prefix')
         if len(events) - len(result['inputs']) - 1 >= 1024:
             raise Refused('interview transition budget exhausted; obtain an explicit bounded continuation')
         if command in ('prepare-candidates','compile-candidates'):
