@@ -315,17 +315,39 @@ def projection(events, request):
     return result
 
 
-def start(request_path, work, expected_tip):
-    require_tip(expected_tip, GENESIS)
+def preflight(request, work):
+    """Validate and capture all inputs without creating state or invoking a runtime."""
     work = absolute(str(work))
-    raw_request = read_file(request_path, 16777216)
-    request = decode(raw_request, 'request')
     validate_request(request)
     boundaries(request, work)
     items = descriptors(request)
     limits = request['execution_limits']
     if len(items) > limits['max_input_files']:
         raise Refused(f'inputs: {len(items)} files exceed max_input_files {limits["max_input_files"]}')
+    captured = []
+    total = 0
+    for identity, role, item in items:
+        path = absolute(item['path'])
+        if overlaps(work, path.parent):
+            raise Refused(f'{path}: source directory overlaps work; use a separate input location')
+        raw = read_file(path, limits['max_single_file_bytes'])
+        total += len(raw)
+        if total > limits['max_total_input_bytes']:
+            raise Refused(f'inputs: {total} bytes exceed max_total_input_bytes {limits["max_total_input_bytes"]}')
+        if digest(raw) != item['sha256']:
+            raise Refused(f'{identity}: {path} digest mismatch; supply the exact frozen bytes and hash')
+        captured.append((identity, role, item, raw))
+    upstream = collect_upstreams(request, captured, work, total)
+    now = datetime.now(timezone.utc).isoformat()
+    graph = collect_graph(request, captured, work, upstream, now)
+    return {'captured': captured, 'upstream': upstream, 'graph': graph, 'as_of': now}
+
+
+def start(request_path, work, expected_tip):
+    require_tip(expected_tip, GENESIS)
+    work = absolute(str(work))
+    raw_request = read_file(request_path, 16777216)
+    request = decode(raw_request, 'request')
     work_fd = directory(work)
     stage = '.staging-' + uuid.uuid4().hex
     created = False
@@ -333,23 +355,13 @@ def start(request_path, work, expected_tip):
         fcntl.flock(work_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if os.listdir(work_fd):
             raise Refused(f'{work}: start requires an existing empty work directory')
-        captured = []
-        total = 0
-        for identity, role, item in items:
-            path = absolute(item['path'])
-            if overlaps(work, path.parent):
-                raise Refused(f'{path}: source directory overlaps work; use a separate input location')
-            raw = read_file(path, limits['max_single_file_bytes'])
-            total += len(raw)
-            if total > limits['max_total_input_bytes']:
-                raise Refused(f'inputs: {total} bytes exceed max_total_input_bytes {limits["max_total_input_bytes"]}')
-            if digest(raw) != item['sha256']:
-                raise Refused(f'{identity}: {path} digest mismatch; supply the exact frozen bytes and hash')
-            captured.append((identity, role, item, raw))
-        upstream = collect_upstreams(request, captured, work, total)
+        admission = preflight(request, work)
+        captured = admission['captured']
+        upstream = admission['upstream']
+        graph = admission['graph']
+        now = admission['as_of']
+        limits = request['execution_limits']
         runtime = runtime_identity()
-        now = datetime.now(timezone.utc).isoformat()
-        graph = collect_graph(request, captured, work, upstream, now)
         request_bytes = canonical(request) + b'\n'
         records = [('run_started', {'request_sha256': digest(request_bytes), 'runtime': runtime,
                     'controller_sha256': adapter_code_sha256(), 'recorded_at': now, 'upstream': upstream, 'evidence_graph': graph,
@@ -569,6 +581,15 @@ def kernel_main():
     for name in ('status', 'verify-replay', 'advance'):
         commands.add_parser(name, allow_abbrev=False).add_argument('work')
     commands.add_parser('response-schema', allow_abbrev=False)
+    for name in ('invocation-open', 'invocation-status', 'invocation-answer',
+                 'invocation-prepare', 'invocation-start'):
+        command = commands.add_parser(name, allow_abbrev=False)
+        command.add_argument('session')
+        if name == 'invocation-answer':
+            command.add_argument('question')
+            command.add_argument('answer_json')
+        if name in ('invocation-answer', 'invocation-prepare', 'invocation-start'):
+            command.add_argument('--expected-tip', required=True)
     for name in ('compile-package', 'prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview',
                  'prepare-external', 'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
                  'prepare-candidates', 'compile-candidates', 'approve-atoms', 'admit-atom-completion', 'export-next-atom'):
@@ -591,7 +612,9 @@ def kernel_main():
         if args.command == 'response-schema':
             print(json.dumps(model_response_schema(), sort_keys=True, indent=2))
             return 0
-        if args.command in ('prepare-launch', 'launch-interview'):
+        if args.command.startswith('invocation-'):
+            result = invocation_module().dispatch(sys.modules.get(__name__) or kernel_api(), args)
+        elif args.command in ('prepare-launch', 'launch-interview'):
             result = launcher_module().dispatch(kernel_api(), args)
         elif args.command in ('compile-package', 'prepare-interview', 'admit-interview', 'prepare-external',
                               'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
@@ -692,6 +715,15 @@ def collect_upstreams(request, captured, work, total):
 def adapter_code_sha256():
     return digest(canonical([{'path': name, 'sha256': digest(read_file(Path(__file__).parent / name, 33554432))}
                              for name in ('readiness_controller.py', 'description_adapter.py', 'requirements_adapter.py', 'evidence_adapter.py', 'model_interview.py', 'request_diagnostics.py', 'package_renderer.py')]))
+
+
+def invocation_module():
+    import importlib.util
+    path = Path(__file__).parent / 'invocation.py'
+    spec = importlib.util.spec_from_file_location('readiness_invocation', path)
+    module = importlib.util.module_from_spec(spec)
+    exec(compile(read_file(path, 33554432), str(path), 'exec'), module.__dict__)
+    return module
 
 
 def launcher_module():

@@ -1,7 +1,36 @@
 # Readiness request contract
 
-Atom 4 provides only schema, start, status and verify-replay. All other commands below describe later atoms and are unavailable.
-`python3 scripts/readiness_controller.py schema` prints the contract without reading input.
+`python3 scripts/readiness_controller.py schema` prints the current request contract without reading input.
+Use `--help` for the current CLI; atom-numbered sections and the original command inventory below
+are historical milestones, not the current command/exit-status contract.
+
+## Code-owned invocation preparation
+
+New invocations begin with `invocation-open SESSION`. The new session's existing parent must be an
+absolute, unlinked directory outside repository and Tasks ancestry. Session state is separate from
+the authorized readiness runtime root and is never written into product repositories.
+
+`invocation-status SESSION` returns one current question, its exact JSON answer schema and a state
+tip. Submit only that answer with `invocation-answer SESSION QUESTION ANSWER_JSON --expected-tip TIP`.
+The file contains the JSON value itself. Code rejects unknown/skipped questions and stale tips
+before mutation. File questions accept absolute paths, not caller-computed descriptors. Code
+records the supplied value, computes its descriptor, and derives the fixed machinery contracts from
+the canonical installation. Model/provider/effort and execution limits remain explicit answers;
+neither their selection nor an invocation answer authorizes model calls or business decisions.
+
+The final runtime-root answer must name an existing external directory disjoint from the session,
+target repositories, and every direct and transitive source directory. Code runs startup's exact
+schema, boundary, upstream-handoff and evidence-graph checks before accepting that answer. Failure
+leaves the runtime-root question unanswered and creates no readiness run.
+
+`invocation-prepare SESSION --expected-tip TIP` freezes the generated request, complete input-member
+hashes and a fresh code-selected child path. `invocation-start SESSION --expected-tip TIP` rechecks
+those bytes, reserves that single launch durably, creates the empty destination and calls ordinary
+start. A second launch is refused, including after interruption or failure: inspect session status
+and its recorded work path rather than blindly retrying. Changes to accepted input or invocation
+code require a new interview. Preparation does not call a model or identify its executable; ordinary
+start retains its local runtime-identity check. CLI success is exit 0, refusal is exit 2; a blocked
+readiness result is a valid startup result, not permission to implement.
 
 ## Runtime root and write boundary
 

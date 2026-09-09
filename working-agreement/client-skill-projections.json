@@ -227,12 +227,12 @@
       ]
     },
     "requirement-to-atom-readiness-machinery": {
-      "canonical_tree_sha256": "c39f04b50212630bf08c7c28704dbbfffad6ad8eb7e453330d8bb17a96e447ad",
+      "canonical_tree_sha256": "e06fffd626113071e31856dbf2861086b707cb0957900496cffb2f4323377c21",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "c39f04b50212630bf08c7c28704dbbfffad6ad8eb7e453330d8bb17a96e447ad",
+      "projected_tree_sha256": "e06fffd626113071e31856dbf2861086b707cb0957900496cffb2f4323377c21",
       "scenario_groups": [
         "CAP-PDI"
       ],

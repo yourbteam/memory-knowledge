@@ -26,8 +26,31 @@ Read `references/request-contract.md` for input and write boundaries, then use t
 Earlier atom-specific sections in references describe historical milestones, not current CLI availability.
 Read `references/evidence-contract.md` and `references/graph-contract.md` when preparing evidence.
 Use the additive Description and Requirements exporters; do not substitute loose documents for sealed handoffs.
-Create an empty work directory outside all product repositories, within the owner-authorized runtime root.
-Start with `start REQUEST WORK --expected-tip` followed by the all-zero SHA-256.
+For a new assessment, use the code-owned invocation interview below. Do not hand-author the
+request, contract role list, file hashes, or work path. The low-level `start REQUEST WORK
+--expected-tip` interface remains available for existing integrations and captured-case verification.
+
+## Prepare an invocation through code
+
+Run `invocation-open SESSION`, where SESSION is a new absolute directory outside repositories,
+Tasks, input source directories, and the intended runtime root. Its parent must already exist.
+Code returns exactly one `next_question`, its answer schema, and a `ledger_tip`. The invoking model
+answers that question from declared evidence using `invocation-answer SESSION QUESTION ANSWER_JSON
+--expected-tip TIP`. ANSWER_JSON is a file containing only the answer value, not a request envelope.
+Use `invocation-status SESSION` to resume; never guess the next question or reuse a stale tip.
+
+Code asks for the feature, repository boundaries, sealed handoffs, evidence and authority records,
+explicit model configuration and execution limits, then the authorized runtime root. It derives
+the installed contract identities and hashes all supplied files itself. The runtime-root answer is
+accepted only after the same complete direct, upstream and graph validation used by start. An
+invalid answer leaves the same question available and creates no readiness run.
+
+When all answers are recorded, run `invocation-prepare SESSION --expected-tip TIP`. Code returns
+the frozen request, a generated disjoint run path, and the exact `invocation-start` command. Start
+rechecks the input bytes and invokes the unchanged readiness startup. After launch, inspect status;
+never retry a reserved, completed or failed launch as a new run. A changed input or installed code
+requires a fresh interview. These commands make no semantic model calls and grant no business,
+consent, implementation, or model-call authority.
 
 Read `status WORK`, `advance WORK`, or `verify-replay WORK` before deciding what to do next.
 Every mutation requires the exact returned ledger tip. Do not skip the queue head.
