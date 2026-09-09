@@ -12,6 +12,7 @@ producer-foundry
 prototype-driven-implementation
 remote-mcp-operator
 remote-mcp-user-admin
+requirement-to-atom-readiness-machinery
 requirements-machinery
 sequence-runner
 shell-canary-foundry

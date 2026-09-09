@@ -2105,4 +2105,6 @@ def handoff_action(command, work, events, request, graph, state, submission):
 
 
 if __name__ == '__main__':
+    from installation_runtime import dispatch
+    dispatch(__file__)
     raise SystemExit(kernel_main())

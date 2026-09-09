@@ -8,6 +8,17 @@ description: Determine whether source-linked requirements have enough evidence a
 Code owns identity, source admission, queue order, state, replay, readiness, and release.
 Models answer bounded questions; they never approve a sequence or start implementation.
 
+## Managed client installation
+
+Both client installations expose these same instructions and public entrypoints. At launch,
+the installed entrypoint verifies the installer's source record and the complete skill bytes,
+then runs the canonical entrypoint with the same arguments. Repository-owned validators,
+tests, and sealed-history source locations remain canonical; no dependency is copied or inferred.
+Missing provenance or changed source bytes refuse before a work directory or model call is created.
+Install and refresh both copies with the repository's managed installer, selecting this skill only.
+This is a shared operator surface, not a second model backend: both currently use the existing
+explicitly approved OpenAI Codex CLI interview contract. Installation grants no model-call approval.
+
 ## Start from declared evidence
 
 Read `references/request-contract.md` for input and write boundaries, then use the current

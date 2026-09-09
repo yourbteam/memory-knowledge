@@ -226,6 +226,21 @@
         "claude"
       ]
     },
+    "requirement-to-atom-readiness-machinery": {
+      "canonical_tree_sha256": "c39f04b50212630bf08c7c28704dbbfffad6ad8eb7e453330d8bb17a96e447ad",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "c39f04b50212630bf08c7c28704dbbfffad6ad8eb7e453330d8bb17a96e447ad",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "requirements-machinery": {
       "canonical_tree_sha256": "ae8b8251cce474cfa0de14be0e07c8e4c67e9ed4cf1f25bad97728911fadaf62",
       "disposition": "GENERATED_CLIENT_PROJECTION",

@@ -313,4 +313,6 @@ def main():
 
 
 if __name__ == '__main__':
+    from installation_runtime import dispatch
+    dispatch(__file__)
     raise SystemExit(main())
