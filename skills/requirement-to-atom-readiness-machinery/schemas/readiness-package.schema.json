@@ -4,7 +4,9 @@
   "properties": {
     "approval_state": {
       "enum": [
-        "not-approved"
+        "not-approved",
+        "approved",
+        "rejected"
       ]
     },
     "atom_sequence_sha256": {

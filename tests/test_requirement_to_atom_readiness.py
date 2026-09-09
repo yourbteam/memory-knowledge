@@ -93,7 +93,7 @@ class ReadinessKernelTests(unittest.TestCase):
         import re
         for path in ('manifest.json','../file','a/../b','..','a/..','/absolute','a//b'):
             self.assertIsNone(re.fullmatch(member['properties']['path']['pattern'],path))
-        self.assertEqual(schema['properties']['approval_state']['enum'],['not-approved'])
+        self.assertEqual(schema['properties']['approval_state']['enum'],['not-approved','approved','rejected'])
 
     def test_package_missing_graph_never_grants_readiness(self):
         m=self.module.package_module()
@@ -2612,3 +2612,48 @@ class PackageCapturedStateTests(ReadinessKernelTests):
         capture=self.captured();capture['state']['compilation']=None
         effective,verdict=self.module.package_module().verdict(self.module,capture['graph'],capture['state'])
         self.assertNotEqual(verdict['readiness'],'ready')
+
+    def test_approval_is_separate_and_exact_sequence_bound(self):
+        k=self.module;m=k.package_module();state=self.captured()['state']
+        sequence=state['compilation']['sequence_sha256']
+        self.assertEqual(m.approval(k,state,sequence),'not-approved')
+        # Controlled owner decisions on the exact captured sequence, not new domain facts.
+        for decision in ('approved','rejected'):
+            state['atom_approval']={'atom_sequence_sha256':sequence,'decision':decision}
+            self.assertEqual(m.approval(k,state,sequence),decision)
+            with self.assertRaisesRegex(k.Refused,'approval sequence differs'):
+                m.approval(k,state,'0'*64)
+        state['atom_approval']['decision']='ready'
+        with self.assertRaisesRegex(k.Refused,'approved or rejected'):
+            m.approval(k,state,sequence)
+
+    def test_next_release_cannot_skip_a_captured_request(self):
+        k=self.module;state=self.captured()['state']
+        # Package bindings are mechanical inputs; this unit does not certify readiness.
+        package={'manifest_sha256':'a'*64}
+        state['package']=package
+        events=[{'event':'package_compiled','sha256':'b'*64}]
+        first=k.next_export(state,events)
+        self.assertEqual(first['ordinal'],1)
+        self.assertEqual(first['request_sha256'],state['compilation']['requests'][0]['request_sha256'])
+        state['atom_exports']=[first]
+        with self.assertRaisesRegex(k.Refused,'no admitted current completion'):
+            k.next_export(state,events)
+        state['atom_completion']={'ordinal':2}
+        with self.assertRaisesRegex(k.Refused,'no admitted current completion'):
+            k.next_export(state,events)
+
+    def test_failed_package_never_retains_release_authority(self):
+        k=self.module;state=self.captured()['state']
+        state.update(atom_approval={'decision':'approved'},package={'manifest_sha256':'a'*64},package_failed=True)
+        self.assertEqual(k.current_approval(Path('/unused'),state),'not-approved')
+
+    def test_foreign_handoff_files_are_refused(self):
+        import tempfile
+        k=self.module
+        with tempfile.TemporaryDirectory() as folder:
+            work=Path(folder)
+            k.verify_handoffs(work,{})
+            (work/'handoff').mkdir()
+            with self.assertRaisesRegex(k.Refused,'without a release receipt'):
+                k.verify_handoffs(work,{})

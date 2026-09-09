@@ -425,7 +425,7 @@ def replay(work, *, locked=False):
     try:
         if not locked:
             fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
-        if os.listdir(fd) != ['run']:
+        if set(os.listdir(fd)) not in ({'run'}, {'run', 'handoff'}):
             raise Refused(f'{work}: expected exactly the published run directory; incomplete or extra state is forbidden')
         base = work / 'run'
         raw_request = read_file(base / 'request.json', 16777216)
@@ -522,15 +522,21 @@ def replay(work, *, locked=False):
             result.update({key:effective[key] for key in ('status','readiness','graph_sha256','next_action')})
             result['queue_count'] = len(effective['queue'])
         result['external_action'] = interview_state['routing']['pending']
+        verify_handoffs(work, interview_state)
         package = interview_state.get('package')
-        if package is not None and events[-1]['event'] == 'package_compiled':
+        if package is not None and events[-1]['event'] in ('package_compiled', 'atom_completion_admitted', 'atom_handoff_exported'):
             result['readiness'] = package['readiness']
             result['status'] = package['readiness']
             result['package_manifest_sha256'] = package['manifest_sha256']
+        if interview_state.get('atom_approval') is not None:
+            result['approval_state'] = current_approval(work, interview_state)
+            result['exported_atoms'] = len(interview_state.get('atom_exports', []))
         elif interview_state.get('package_pending') is not None:
             result['status'] = 'blocked'
             result['readiness'] = 'blocked'
             result['internal_state'] = 'preparing-package'
+        if events[-1]['event'] in ('atom_sequence_approved', 'atom_sequence_rejected'):
+            result.update(status='blocked', readiness='blocked', internal_state='preparing-approved-package')
         result['ledger_tip'] = events[-1]['sha256']
         result['event_count'] = len(events)
         expected_files.update(interview_files)
@@ -565,7 +571,7 @@ def kernel_main():
     commands.add_parser('response-schema', allow_abbrev=False)
     for name in ('compile-package', 'prepare-interview', 'admit-interview', 'prepare-launch', 'launch-interview',
                  'prepare-external', 'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
-                 'prepare-candidates', 'compile-candidates'):
+                 'prepare-candidates', 'compile-candidates', 'approve-atoms', 'admit-atom-completion', 'export-next-atom'):
         command = commands.add_parser(name, allow_abbrev=False)
         command.add_argument('work')
         command.add_argument('--expected-tip', required=True)
@@ -575,7 +581,7 @@ def kernel_main():
             command.add_argument('launch_directory')
         if name == 'launch-interview':
             command.add_argument('authorization')
-        if name in ('answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning'):
+        if name in ('answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning', 'approve-atoms', 'admit-atom-completion'):
             command.add_argument('submission')
     args = parser.parse_args()
     try:
@@ -589,7 +595,7 @@ def kernel_main():
             result = launcher_module().dispatch(kernel_api(), args)
         elif args.command in ('compile-package', 'prepare-interview', 'admit-interview', 'prepare-external',
                               'answer-owner', 'correct-owner', 'admit-evidence', 'admit-planning',
-                              'prepare-candidates', 'compile-candidates'):
+                              'prepare-candidates', 'compile-candidates', 'approve-atoms', 'admit-atom-completion', 'export-next-atom'):
             result = interview_action(args.command, args.work, args.expected_tip, getattr(args, 'submission', None))
         else:
             result = start(args.request, args.work, args.expected_tip) if args.command == 'start' else replay(args.work)
@@ -1044,6 +1050,8 @@ def evaluate_submission(pending, raw, graph, proposals=()):
 def fold_interview(state, event, work, events, request, graph):
     state = decode(canonical(state), 'interview state')
     kind = event['event']; payload = event['payload']
+    if kind in HANDOFF_EVENTS:
+        return fold_handoff(state, event, work, events, request)
     if kind == 'package_prepared':
         expected = package_module().preparation(kernel_api(), graph, state)
         if payload != expected or state.get('package_pending') is not None:
@@ -1059,6 +1067,7 @@ def fold_interview(state, event, work, events, request, graph):
                     payload['error_kind'] not in ('OSError','PermissionError','FileNotFoundError','FileExistsError','Refused','ValueError','KeyError','TypeError') or
                     not SHA256.fullmatch(payload['error_sha256'])):
                 raise Refused('package failure receipt has invalid identity or error hash')
+            state['package_failed'] = True
         else:
             module = package_module()
             members, manifest = module.render(kernel_api(), events, request, graph, state)
@@ -1068,6 +1077,7 @@ def fold_interview(state, event, work, events, request, graph):
                 raise Refused('package binding differs from reconstructed manifest; never trust a producer readiness flag')
             module.verify(kernel_api(), work / 'run/package' / identity, members)
             state['package'] = payload
+            state.pop('package_failed', None)
         state['package_pending'] = None
         return state
     if kind in ('candidates_prepared', 'candidates_compiled'):
@@ -1198,6 +1208,10 @@ def interview_action(command, work, expected_tip, submission=None):
             return package_module().compile_package(kernel_api(), work, events, request, graph, state)
         if state.get('package_pending') is not None:
             raise Refused('package preparation is pending; do not mutate its closed prefix')
+        if command in ('approve-atoms', 'admit-atom-completion', 'export-next-atom'):
+            return handoff_action(command, work, events, request, graph, state, submission)
+        if state.get('atom_approval') is not None:
+            raise Refused('this sequence has an owner decision; start a new run for changed inputs or candidates')
         if len(events) - len(result['inputs']) - 1 >= 1024:
             raise Refused('interview transition budget exhausted; obtain an explicit bounded continuation')
         if command in ('prepare-candidates','compile-candidates'):
@@ -1690,6 +1704,18 @@ def atom_validator(request, sources):
     return module
 
 
+def candidate_repository(request, row):
+    targets = []
+    for root in request['runtime_boundary']['target_repositories']:
+        repository = Path(root)
+        if all(any((repository/p) == Path(b) or Path(b) in (repository/p).parents
+                   for b in request['runtime_boundary']['product_edit_boundaries']) for p in row['allowed_paths']):
+            targets.append(repository)
+    if len(targets) != 1:
+        raise Refused(f'candidate {row["atomic_step_id"]}: allowed_paths do not identify exactly one declared product edit boundary; resolve its repository and paths')
+    return targets[0]
+
+
 def checked_candidates(work, request, graph, state):
     if state['pending'] is not None or state['routing']['pending'] is not None:
         raise Refused('a question is pending; finish its exact transaction before candidate validation')
@@ -1723,15 +1749,7 @@ def checked_candidates(work, request, graph, state):
             if dependency not in by_id or dependency==name:
                 raise Refused(f'candidate {name}: prerequisite {dependency!r} is absent or self-referential; include its distinct candidate')
         paths = row['allowed_paths']; surface = row['contract_surface']
-        targets=[]
-        for root in request['runtime_boundary']['target_repositories']:
-            repository=Path(root)
-            if all(any((repository/p)==Path(b) or Path(b) in (repository/p).parents
-                       for b in request['runtime_boundary']['product_edit_boundaries']) for p in paths):
-                targets.append(repository)
-        if len(targets)!=1:
-            raise Refused(f'candidate {name}: allowed_paths do not identify exactly one declared product edit boundary; resolve its repository and paths')
-        repository=targets[0]
+        repository=candidate_repository(request,row)
         if surface['kind']=='validation':
             for field in surface['fields']:
                 source=repository/field['shape_source'].split('::')[0]
@@ -1843,6 +1861,247 @@ def prepare_candidate_interview(work,events,request,graph,state):
             'allowed_verdicts':list(FAMILY_VERDICTS['atom-cohesion']),'forbidden_judgments':list(FORBIDDEN_JUDGMENTS)}
         return seat_payload(work,events,request,semantic,node_id,'atom-cohesion',attempt,attempt_key)
     raise Refused('all candidate cohesion facts are present; compile the exact prepared set instead of repeating interviews')
+
+
+# Atom 12: owner input and release are separate from readiness and execution.
+HANDOFF_EVENTS = ('atom_sequence_approved', 'atom_sequence_rejected',
+                  'atom_completion_admitted', 'atom_handoff_exported')
+APPROVAL_FIELDS = ('schema_version', 'atom_sequence_sha256', 'decision', 'owner_record')
+COMPLETION_FIELDS = ('schema_version', 'atomic_step_id', 'authorized', 'proof_event_sha256',
+                     'blocker_closeout_sha256', 'linked_blocker_occurrences',
+                     'supersession_chain', 'supersession_chain_closed')
+
+
+def exact_fields(value, fields, label):
+    if type(value) is not dict or set(value) != set(fields):
+        raise Refused(f'{label}: expected exactly {list(fields)!r}; received {list(value) if type(value) is dict else type(value).__name__!r}')
+
+
+def current_approval(work, state):
+    approval = state.get('atom_approval')
+    package = state.get('package')
+    if approval is None or package is None or state.get('package_pending') is not None or state.get('package_failed'):
+        return 'not-approved'
+    manifest = decode(read_file(work / 'run/package' / package['manifest_sha256'] / 'manifest.json', 33554432), 'approved manifest')
+    if (manifest['atom_sequence_sha256'] != approval['atom_sequence_sha256'] or
+            manifest['approval_state'] != approval['decision']):
+        return 'not-approved'
+    return approval['decision']
+
+
+def validate_approval(payload, state, events):
+    exact_fields(payload, (*APPROVAL_FIELDS, 'owner_bytes_base64', 'package_manifest_sha256', 'package_event_sha256'), 'approval transaction')
+    if payload['schema_version'] != 1 or type(payload['schema_version']) is not int or payload['decision'] not in ('approved', 'rejected'):
+        raise Refused('approval requires schema_version 1 and decision approved or rejected')
+    package = state.get('package')
+    if (not package or package['readiness'] != 'ready' or events[-1]['event'] != 'package_compiled' or
+            payload['package_event_sha256'] != events[-1]['sha256'] or
+            payload['package_manifest_sha256'] != package['manifest_sha256']):
+        raise Refused('approval requires the current ready package and its exact compilation event')
+    if state.get('atom_exports'):
+        raise Refused('atoms were already released; changed approval requires a new run')
+    if payload['atom_sequence_sha256'] != state['compilation']['sequence_sha256']:
+        raise Refused('owner approval names a stale sequence; obtain approval for the exact current sequence')
+    exact_fields(payload['owner_record'], ('path', 'sha256'), 'owner record')
+    absolute(payload['owner_record']['path'])
+    raw = base64.b64decode(payload['owner_bytes_base64'], validate=True)
+    if digest(raw) != payload['owner_record']['sha256']:
+        raise Refused('owner record bytes differ from their declared hash')
+    decision = decode(raw, 'trusted owner decision')
+    exact_fields(decision, ('schema_version', 'atom_sequence_sha256', 'decision'), 'trusted owner decision')
+    if decision != {key:payload[key] for key in decision}:
+        raise Refused('owner record does not approve or reject this exact sequence; never infer approval from unrelated words')
+
+
+def validate_completion(payload, state, request):
+    exact_fields(payload, ('ordinal', 'atom_run', 'controller_sha256', 'request_base64', 'ledger_base64', 'stdout', 'stderr', 'exit', 'result'), 'completion transaction')
+    exports = state.get('atom_exports', [])
+    if not exports or payload['ordinal'] != len(exports) or type(payload['ordinal']) is not int:
+        raise Refused('completion must identify the most recently released atom, not a skipped or unexported atom')
+    absolute(payload['atom_run'])
+    row = state['compilation']['requests'][payload['ordinal'] - 1]
+    raw_request = base64.b64decode(payload['request_base64'], validate=True)
+    if decode(raw_request, 'completed atom request') != row['request']:
+        raise Refused('completed build request differs from the released request; a matching atom name is insufficient')
+    ledger = base64.b64decode(payload['ledger_base64'], validate=True)
+    previous = None
+    records = []
+    for index, raw in enumerate(ledger.splitlines(keepends=True), 1):
+        record = decode(raw, 'completed atom ledger')
+        exact_fields(record, ('event', 'payload', 'previous_event_sha256', 'sequence'), 'completed atom ledger event')
+        if (record['sequence'] != index or record['previous_event_sha256'] != previous or
+                raw != canonical(record) + b'\n'):
+            raise Refused('completed atom ledger has a changed event, order or predecessor')
+        previous = digest(raw); records.append(record)
+    result = payload['result']
+    if not records or records[0]['payload'].get('repository_root') != str(candidate_repository(request, row['request'])):
+        raise Refused('completed build repository differs from the approved candidate target; complete this request in its intended repository')
+    exact_fields(result, COMPLETION_FIELDS, 'authorize-next response')
+    if (not records or records[0]['event'] != 'atom-started' or
+            records[0]['payload']['request_sha256'] != digest(raw_request) or
+            records[0]['payload']['atomic_step_id'] != row['atomic_step_id'] or
+            type(result['schema_version']) is not int or result['schema_version'] != 1 or result['authorized'] is not True or
+            result['atomic_step_id'] != row['atomic_step_id'] or result['proof_event_sha256'] != previous or
+            payload['exit'] != 0 or decode(payload['stdout'].encode(), 'authorize-next stdout') != result):
+        raise Refused('completion proof does not bind the released request and current ledger tip to a successful authorization')
+    if (not isinstance(result['blocker_closeout_sha256'], str) or not SHA256.fullmatch(result['blocker_closeout_sha256']) or
+            type(result['linked_blocker_occurrences']) is not int or result['linked_blocker_occurrences'] < 0 or
+            type(result['supersession_chain']) is not list or not result['supersession_chain'] or
+            result['supersession_chain'][-1] != payload['atom_run'] or
+            result['supersession_chain_closed'] not in (None, True)):
+        raise Refused('completion closeout or supersession chain is malformed or not closed')
+
+
+def completion_now(work, request, state, atom_run):
+    run = absolute(str(atom_run))
+    roots = [absolute(request['runtime_boundary']['authorized_root'])] + [absolute(p) for p in request['runtime_boundary']['target_repositories']]
+    if not any(run.is_relative_to(root) for root in roots):
+        raise Refused('completed atom run is outside the declared work or target repositories')
+    fd = directory(run); os.close(fd)
+    path = Path(__file__).resolve().parents[2] / 'atom-building-machinery/scripts/atom_controller.py'
+    declared = next(row for row in request['machinery_contracts'] if row['role'] == 'atom-controller-source')
+    controller = read_file(path, 33554432)
+    if digest(controller) != declared['sha256']:
+        raise Refused('installed Atom Controller differs from its admitted source; do not execute supplied code')
+    ledger_path = run / 'ledger.jsonl'; request_path = run / 'inputs/atom-request.json'
+    ledger = read_file(ledger_path, 33554432); atom_request = read_file(request_path, 4194304)
+    # Never let authorize-next close a supersession chain as a side effect here.
+    records = [decode(line, 'atom ledger') for line in ledger.splitlines()]
+    if records and 'supersession_sha256' in records[0]['payload'] and records[-1]['event'] != 'supersession-chain-closed':
+        raise Refused('supersession chain is not closed; finish authorization in Atom Building Machinery before admission')
+    completed = subprocess.run([sys.executable, str(path), 'authorize-next', str(run)],
+        capture_output=True, text=True, timeout=request['execution_limits']['model_timeout_ms'] / 1000)
+    if completed.returncode != 0:
+        raise Refused('previous atom is not authorized: ' + completed.stderr[-4096:])
+    if (read_file(ledger_path, 33554432) != ledger or read_file(request_path, 4194304) != atom_request or
+            read_file(path, 33554432) != controller):
+        raise Refused('atom run or controller changed during authorization; admit a stable completed run')
+    payload = {'ordinal':len(state.get('atom_exports', [])), 'atom_run':str(run),
+        'controller_sha256':digest(controller), 'request_base64':base64.b64encode(atom_request).decode(),
+        'ledger_base64':base64.b64encode(ledger).decode(), 'stdout':completed.stdout,
+        'stderr':completed.stderr, 'exit':completed.returncode, 'result':decode(completed.stdout.encode(), 'authorize-next response')}
+    validate_completion(payload, state, request)
+    return payload
+
+
+def next_export(state, events):
+    exports = state.get('atom_exports', []); ordinal = len(exports) + 1
+    rows = state['compilation']['requests']
+    if ordinal > len(rows):
+        raise Refused('all approved atoms were released; there is no successor')
+    completion = state.get('atom_completion')
+    if ordinal > 1 and (completion is None or completion['ordinal'] != ordinal - 1):
+        raise Refused('previous atom has no admitted current completion; admit its authorize-next proof first')
+    package_event = next(e for e in reversed(events) if e['event'] == 'package_compiled')
+    return {'ordinal':ordinal, 'atomic_step_id':rows[ordinal-1]['atomic_step_id'],
+        'request_sha256':rows[ordinal-1]['request_sha256'],
+        'atom_sequence_sha256':state['compilation']['sequence_sha256'],
+        'package_manifest_sha256':state['package']['manifest_sha256'],
+        'package_event_sha256':package_event['sha256'],
+        'prior_completion_sha256':digest(canonical(completion)) if ordinal > 1 else None}
+
+
+def fold_handoff(state, event, work, events, request):
+    payload = event['payload']; kind = event['event']
+    if kind in ('atom_sequence_approved', 'atom_sequence_rejected'):
+        validate_approval(payload, state, events)
+        if kind != 'atom_sequence_' + payload['decision']:
+            raise Refused('approval event and owner decision differ')
+        state['atom_approval'] = payload
+    elif kind == 'atom_completion_admitted':
+        if current_approval(work, state) != 'approved':
+            raise Refused('completion admission requires a verified approved package')
+        validate_completion(payload, state, request)
+        declared = next(r for r in request['machinery_contracts'] if r['role'] == 'atom-controller-source')
+        if payload['controller_sha256'] != declared['sha256']:
+            raise Refused('completion source differs from the admitted Atom Controller')
+        state['atom_completion'] = payload
+    else:
+        if current_approval(work, state) != 'approved' or payload != next_export(state, events):
+            raise Refused('handoff differs from the next approved atom and its exact package or completion proof')
+        state.setdefault('atom_exports', []).append(payload)
+    return state
+
+
+def handoff_files(state, row):
+    request = state['compilation']['requests'][row['ordinal'] - 1]['request']
+    return {'atom-request.json':canonical(request) + b'\n', 'handoff-receipt.json':canonical(row) + b'\n'}
+
+
+def verify_handoffs(work, state):
+    root = work / 'handoff'; exports = state.get('atom_exports', [])
+    if not exports:
+        if root.exists() or root.is_symlink():
+            raise Refused('handoff exists without a release receipt; preserve the interrupted publication for inspection')
+        return
+    expected = {}
+    for row in exports:
+        name = f'{row["ordinal"]:04d}-{row["atomic_step_id"]}'
+        for file, raw in handoff_files(state, row).items():
+            expected[name + '/' + file] = raw
+    fd = directory(root); os.close(fd)
+    dirs = {str(Path(name).parent) for name in expected}
+    actual = set()
+    for path in root.rglob('*'):
+        rel = path.relative_to(root).as_posix()
+        if path.is_symlink() or (path.is_dir() and rel not in dirs):
+            raise Refused('handoff contains a linked or unexpected member: ' + rel)
+        if path.is_file():
+            actual.add(rel)
+            if rel not in expected or read_file(path, 4194304) != expected[rel]:
+                raise Refused('handoff bytes differ from their admitted release: ' + rel)
+    if actual != set(expected):
+        raise Refused('handoff is missing a released request or receipt')
+
+
+def handoff_action(command, work, events, request, graph, state, submission):
+    module = package_module(); k = kernel_api()
+    if command == 'approve-atoms':
+        value = decode(read_file(submission, INTERVIEW_LIMIT), 'owner approval')
+        exact_fields(value, APPROVAL_FIELDS, 'owner approval')
+        exact_fields(value['owner_record'], ('path', 'sha256'), 'owner record')
+        raw = read_file(absolute(value['owner_record']['path']), request['execution_limits']['max_single_file_bytes'])
+        payload = {**value, 'owner_bytes_base64':base64.b64encode(raw).decode(),
+            'package_manifest_sha256':state.get('package', {}).get('manifest_sha256'),
+            'package_event_sha256':events[-1]['sha256']}
+        validate_approval(payload, state, events)
+        module.append_event(k, work, events, 'atom_sequence_' + value['decision'], payload)
+        state['atom_approval'] = payload
+        return module.compile_package(k, work, events, request, graph, state)
+    if current_approval(work, state) != 'approved':
+        raise Refused('release requires ready plus exact owner approval in a verified package')
+    if command == 'admit-atom-completion':
+        value = decode(read_file(submission, 4096), 'completed run')
+        exact_fields(value, ('atom_run',), 'completed run')
+        payload = completion_now(work, request, state, value['atom_run'])
+        module.append_event(k, work, events, 'atom_completion_admitted', payload)
+        return replay(work, locked=True)
+    row = next_export(state, events)
+    if row['ordinal'] > 1:
+        fresh = completion_now(work, request, state, state['atom_completion']['atom_run'])
+        if fresh != state['atom_completion']:
+            raise Refused('previous completion proof or blocker closeout changed; re-admit its current authorization before release')
+    root = work / 'handoff'
+    root.mkdir(exist_ok=True, mode=0o700)
+    root_fd = directory(root); stage = root / ('.pending-' + uuid.uuid4().hex)
+    try:
+        stage.mkdir(mode=0o700)
+        for name, raw in handoff_files(state, row).items():
+            with (stage / name).open('xb') as stream:
+                stream.write(raw); stream.flush(); os.fchmod(stream.fileno(), 0o444); os.fsync(stream.fileno())
+        stage_fd = directory(stage); os.fsync(stage_fd); os.close(stage_fd)
+        target = root / f'{row["ordinal"]:04d}-{row["atomic_step_id"]}'
+        if target.exists():
+            raise Refused('handoff target already exists; immutable releases cannot be replaced')
+        os.rename(stage, target); os.fsync(root_fd)
+        module.append_event(k, work, events, 'atom_handoff_exported', row)
+    finally:
+        os.close(root_fd)
+    result = replay(work, locked=True)
+    controller = Path(__file__).resolve().parents[2] / 'atom-building-machinery/scripts/atom_controller.py'
+    result['export'] = {**row, 'request_path':str(target / 'atom-request.json'),
+        'start_command_template':[sys.executable, str(controller), 'start', str(target / 'atom-request.json'), '<new-atom-run>']}
+    return result
 
 
 if __name__ == '__main__':

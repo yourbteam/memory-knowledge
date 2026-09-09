@@ -14,7 +14,7 @@ MEMBER_FIELDS = ('path', 'size', 'sha256', 'schema_version')
 VERDICT_FIELDS = ('schema_version', 'readiness', 'requirements', 'next_action')
 REQUIREMENT_FIELDS = ('requirement_id', 'disposition', 'maturity', 'reason')
 READINESS_VALUES = ('blocked', 'needs_owner', 'ready')
-APPROVAL_VALUES = ('not-approved',)
+APPROVAL_VALUES = ('not-approved', 'approved', 'rejected')
 
 
 def package_schema():
@@ -71,6 +71,17 @@ def preparation(k, graph, state):
             'predecessor_manifest_sha256': prior['manifest_sha256'] if prior else None}
 
 
+def approval(k, state, sequence_hash):
+    record = state.get('atom_approval')
+    if record is None:
+        return 'not-approved'
+    if record['atom_sequence_sha256'] != sequence_hash:
+        raise k.Refused('approval sequence differs from the compiled sequence; obtain approval for the current bytes')
+    if record['decision'] not in ('approved', 'rejected'):
+        raise k.Refused('approval decision must be approved or rejected')
+    return record['decision']
+
+
 def render(k, events, request, graph, state):
     """Pure reconstruction from the verified closed prefix ending at package_prepared."""
     if not events or events[-1]['event'] != 'package_prepared':
@@ -104,7 +115,10 @@ def render(k, events, request, graph, state):
             if k.digest(raw) != row['request_sha256']:
                 raise k.Refused('package atom request differs from its compiled hash')
             members[f'atoms/{i:04d}-{identity}/atom-request.json'] = raw
-    report = ['# Readiness', '', 'Verdict: ' + answer['readiness'], '', 'Approval: not approved', '']
+    approval_state = approval(k, state, sequence_hash)
+    if state.get('atom_approval') is not None:
+        members['approval.json'] = document(state['atom_approval'])
+    report = ['# Readiness', '', 'Verdict: ' + answer['readiness'], '', 'Approval: ' + approval_state.replace('-', ' '), '']
     report.extend(f"- {r['requirement_id']}: {r['disposition']} ({r['maturity']}). {r['reason']}" for r in answer['requirements'])
     if answer['next_action'] is not None:
         report += ['', 'Next action:', k.canonical(answer['next_action']).decode()]
@@ -117,7 +131,7 @@ def render(k, events, request, graph, state):
         'input_sha256': events[0]['payload']['request_sha256'], 'controller_sha256': events[0]['payload']['controller_sha256'],
         'ledger_prefix_tip': events[-1]['sha256'],
         'predecessor_manifest_sha256': events[-1]['payload']['predecessor_manifest_sha256'],
-        'readiness': answer['readiness'], 'approval_state': 'not-approved', 'atom_sequence_sha256': sequence_hash,
+        'readiness': answer['readiness'], 'approval_state': approval_state, 'atom_sequence_sha256': sequence_hash,
         'members': [{'path': p, 'size': len(raw), 'sha256': k.digest(raw), 'schema_version': 1} for p, raw in sorted(members.items())]}
     k.validate_shape(manifest, package_schema(), 'package manifest')
     members['manifest.json'] = document(manifest)
@@ -145,7 +159,7 @@ def verify(k, root, expected):
         raise k.Refused('package membership differs from replay; missing or extra files are forbidden')
     manifest = k.decode(k.read_file(root / 'manifest.json', 33554432), 'package manifest')
     k.validate_shape(manifest, package_schema(), 'package manifest')
-    if manifest['schema_version'] != 1 or manifest['approval_state'] != 'not-approved' or manifest['readiness'] not in READINESS_VALUES:
+    if manifest['schema_version'] != 1 or manifest['approval_state'] not in APPROVAL_VALUES or manifest['readiness'] not in READINESS_VALUES:
         raise k.Refused('package version, approval or readiness is unsupported')
     if [r['path'] for r in manifest['members']] != sorted(set(expected) - {'manifest.json'}):
         raise k.Refused('package manifest must list every other member once, never itself')
@@ -187,6 +201,8 @@ def finalize(k, base, members):
 
 def append_event(k, work, events, kind, payload):
     event = k.chain([(e['event'], e['payload']) for e in events] + [(kind, payload)])[-1]
+    if len(k.canonical(event)) + 1 > 4194304:
+        raise k.Refused('transaction exceeds the 4 MiB replay limit; supply a bounded source before publication')
     base = work / 'run'; root = base / 'interviews'
     root.mkdir(exist_ok=True, mode=0o700)
     root_fd = k.directory(root)

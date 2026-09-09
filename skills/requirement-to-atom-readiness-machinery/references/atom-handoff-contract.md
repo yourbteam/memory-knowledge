@@ -60,3 +60,40 @@ scores. Its positive and negative calibrations must pass before comparison. Fina
 confirmation repeats the same public commands against promoted canonical code.
 Controlled mutations exercise rejection mechanics; they are never presented as new
 semantic judgments or evidence that a real feature is satisfied.
+
+## Approval and sequential release
+
+`approve-atoms WORK SUBMISSION --expected-tip TIP` accepts exactly schema_version 1,
+atom_sequence_sha256, decision (`approved` or `rejected`), and owner_record (absolute
+path plus SHA-256). The referenced owner file must contain exactly schema_version,
+atom_sequence_sha256 and decision, matching the submission. This is the trusted
+operator-input boundary, not human authentication: models must not author or submit
+owner decisions. Tests use explicitly labeled controlled operator inputs only.
+
+Approval requires the current ready package and exact sequence. The transaction
+captures the owner bytes; replay never rereads their origin. It then builds a new
+immutable package containing approval.json. An interrupted or failed generation
+does not grant release authority. Existing unapproved generations remain unchanged.
+Changed evidence or candidates require a new run; released sequences cannot be
+reapproved. A rejected sequence can receive a new exact owner decision before release.
+
+`export-next-atom WORK --expected-tip TIP` chooses the next ordinal internally,
+publishes only that request and its hash-bound receipt under WORK/handoff, and returns
+a start-command argument template without executing it. It never accepts an ordinal
+from the caller. Every handoff is verified against the journal on replay. An
+interrupted handoff publication remains visibly refused rather than being reused.
+
+Before the next release, `admit-atom-completion WORK SUBMISSION --expected-tip TIP`
+requires exactly `{"atom_run":"/absolute/completed/run"}`. The run must be inside
+the declared working root or a declared target repository. The installed, source-bound
+Atom Controller alone runs `authorize-next`. Open supersession chains are refused
+before invoking that command, because closing such a chain belongs to Atom Building.
+The released request must match the complete preserved build request, not just its
+atom name; serialization differences between the two controllers are accounted for
+by verifying both the released canonical hash and the downstream original-byte hash.
+The response, source hash, request and ledger bytes are captured. Replay validates
+those snapshots without rerunning an old external decision. Immediately before
+successor export, the same live authorization must return the identical proof and
+blocker-closeout identity. Incomplete builds, open blockers, changed proof, stale
+approval and skipped atoms cannot release a successor. Completion does not start,
+modify or certify an implementation; it consumes the existing builder's result.
