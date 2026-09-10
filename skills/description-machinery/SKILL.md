@@ -38,7 +38,12 @@ python3 from_intent.py --intent <file> --context <path> --owner-answers <file> \
 ```
 
 The owner-answer file is an authorized source, not an instruction to improvise. Code first checks
-each quotation exactly against its authorized source. Identical citations advance directly.
+each quotation exactly against its authorized source. New intent runs use contract three and
+publish a code-owned `source-passages.json`: nonempty source blocks separated by blank lines.
+Readers must select a complete catalog passage, including restrictions and approval labels,
+not a trimmed excerpt. If no single passage answers a question completely, report the missing
+answer; do not concatenate invented quotations. This protects passage integrity, not exhaustive
+coverage of all obligations across a document. Identical citations advance directly.
 Different valid citations trigger a code-owned agreement interview, one question at a time, with
 two blind readers. Each returns a source-and-question-bound `agreement_verdict`: `equivalent`,
 `different`, or `cannot-assess`, plus its reason. Only two `equivalent` judgments advance. A span
@@ -50,7 +55,7 @@ Code binds the entire accepted reader set, including identical-citation answers.
 interview packet and completed decision, refuses changed bindings or rewritten
 decision evidence, and writes every distinct accepted source quotation into `description.md`.
 It carries no reader paraphrase into that description. Missing answers and semantic disagreement
-still go to the owner. Version-one intent state is not silently reinterpreted: start fresh after
+still go to the owner. Earlier intent state is not silently reinterpreted: start fresh after
 this contract change and preserve previous runs.
 
 ## Front door 2 — what builders left alone
@@ -81,8 +86,7 @@ is `noticed-description.md`; `noticed-report.json` is the same observations in b
 
 ## Opt-in sealed handoff
 
-The additive exporter seals the intent-and-context front door only. Existing front doors,
-defaults and reader calls are unchanged. Invoke from the repository root:
+The additive exporter seals the intent-and-context front door only. Invoke from the repository root:
 
 ```text
 python3 skills/description-machinery/scripts/export_handoff.py --run /absolute/completed-run \
@@ -108,7 +112,13 @@ the downstream consumer has imported them; the exporter does not copy or relocat
 The handoff's seal hashes canonical JSON excluding its own seal field. The command also
 returns a separate full-file digest. These establish byte integrity, not an independent
 historical signature or a new semantic judgment of the source quotations. `--schema`
-continues to print the unchanged handoff format without exporting a run.
+prints the versioned handoff schema without exporting a run. Completed legacy contract-one runs
+retain wire version one. Contract-two and contract-three runs use wire version two, pinning the
+trusted producer source and every consumed reader binding, passage catalog and semantic-agreement
+record. Export and readiness import use the same pure completion verifier, including reconstruction
+of the exact description. Import replays from captured evidence without invoking models or writing
+the source run. Old contract-two runs remain exportable without retrospectively imposing the new
+whole-passage rule. Missing, changed or conflicting evidence still refuses admission.
 
 ## State and changed inputs
 

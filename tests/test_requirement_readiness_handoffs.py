@@ -17,7 +17,7 @@ class DescriptionHandoffSchemaTests(unittest.TestCase):
         except ImportError:
             self.skipTest("Run schema validation with the project .venv Python")
         schema = json.loads(SCHEMA.read_text())
-        digest = schema["properties"]["handoff_sha256"]
+        digest = schema["oneOf"][0]["properties"]["handoff_sha256"]
         if "$ref" in digest:
             digest = schema["$defs"]["sha256"]
         validator = Draft202012Validator(digest)
@@ -43,11 +43,12 @@ class DescriptionHandoffSchemaTests(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         first = module.handoff_schema()
-        first["required"].clear()
-        first["properties"]["description"]["required"].clear()
+        first["oneOf"][0]["required"].clear()
+        first["oneOf"][0]["properties"]["description"]["required"].clear()
         second = module.handoff_schema()
-        self.assertEqual(second["required"], list(module.HANDOFF_FIELDS))
-        self.assertEqual(second["properties"]["description"]["required"], ["path", "sha256"])
+        self.assertEqual(second["oneOf"][0]["required"], list(module.HANDOFF_FIELDS))
+        self.assertEqual(second["oneOf"][1]["required"], list(module.BOUND_HANDOFF_FIELDS))
+        self.assertEqual(second["oneOf"][0]["properties"]["description"]["required"], ["path", "sha256"])
 
 class DescriptionExporterBoundaryTests(unittest.TestCase):
     def setUp(self):

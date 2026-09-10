@@ -410,7 +410,7 @@ def test_from_intent_interviews_differing_valid_citations_before_owner_handback(
     context = tmp_path / "context.md"
     work = tmp_path / "work"
     intent.write_text("INTENT", encoding="utf-8")
-    context.write_text("FIRST EXACT ANSWER\nSECOND EXACT ANSWER", encoding="utf-8")
+    context.write_text("FIRST EXACT ANSWER\n\nSECOND EXACT ANSWER", encoding="utf-8")
     from_intent.drive(intent, work, [context])
     for pass_number, quote in ((1, "FIRST EXACT ANSWER"), (2, "SECOND EXACT ANSWER")):
         for question in from_intent.QUESTIONS:
@@ -443,9 +443,9 @@ def test_from_intent_interviews_differing_valid_citations_before_owner_handback(
 def _span_fixture(tmp_path):
     intent, source, work = tmp_path / "intent.md", tmp_path / "owner.md", tmp_path / "work"
     intent.write_text("Intent")
-    source.write_text("Approved answer: Internal choices are delegated; business values remain reserved.")
+    source.write_text("Approved answer: Internal choices are delegated; business values remain reserved.\n\nInternal choices are delegated; business values remain reserved.")
     from_intent.drive(intent, work, [], source)
-    _fill_look(work, quote=source.read_text(), quoted_from=source)
+    _fill_look(work, quote=source.read_text().split("\n\n")[0], quoted_from=source)
     row_path = work / "look-2/q8.json"
     row = json.loads(row_path.read_text())
     row["quote"] = "Internal choices are delegated; business values remain reserved."

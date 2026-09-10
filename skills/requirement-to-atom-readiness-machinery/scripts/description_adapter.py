@@ -8,8 +8,13 @@ def verify(handoff, read, exporter, question_source):
     run = Path(handoff['run_identity'])
     state = exporter.json_value(read(run / 'input-state.json', handoff['input_state_sha256']), 'input-state')
     exporter.exact(state, ('contract', 'intent', 'context', 'owner_answers', 'questions_sha256'), 'input-state')
-    if type(state['contract']) is not int or state['contract'] != 1 or type(state['context']) is not list:
-        raise ValueError('Description input-state: require contract 1 and an ordered context list')
+    if type(state['contract']) is not int or state['contract'] not in (1, 2, 3) or type(state['context']) is not list:
+        raise ValueError('Description input-state: require supported contract and an ordered context list')
+    if handoff['contract_version'] != (1 if state['contract'] == 1 else 2):
+        raise ValueError('Description handoff version does not bind its input contract')
+    producer, producer_bytes = exporter.trusted_producer(question_source)
+    if handoff['contract_version'] == 2 and handoff['producer_source_sha256'] != exporter.digest(producer_bytes):
+        raise ValueError('Description producer identity differs from sealed evidence')
     questions_doc = exporter.json_value(read(run / 'questions.json', handoff['questions_sha256']), 'questions')
     exporter.exact(questions_doc, ('questions',), 'questions')
     questions = questions_doc['questions']
@@ -56,18 +61,24 @@ def verify(handoff, read, exporter, question_source):
         if exporter.digest(exporter.canonical(row)) != item['answer_sha256']:
             raise ValueError('Description reader answer digest differs from its sealed record')
         records[(item['seat'], item['question_id'])] = row
-    lines = ['# Description', '', f"About: {state['intent']['path']}", '']
-    for q in questions:
-        left, right = (records[(seat, q['id'])] for seat in exporter.READER_SEATS)
-        if (left['quote'], left['quoted_from']) != (right['quote'], right['quoted_from']):
-            raise ValueError('Description blind reader quotes disagree')
-        lines.extend([f"## {q['id']} — {q['asks']}", '', left['quote'], '',
-                      f"_Source: `{left['quoted_from']}`_", ''])
+    extras = handoff.get('evidence_records', [])
+    by_path = {row['path']:row['sha256'] for row in extras}
+    consumed = []
+    def read_extra(name):
+        path = str(run / name)
+        if path not in by_path:
+            raise ValueError(f'Description completion evidence missing: {name}')
+        consumed.append(path)
+        return exporter.json_value(read(Path(path), by_path[path]), name)
+    ordered = [{qid:records[(seat,qid)] for qid in exporter.QUESTION_IDS} for seat in exporter.READER_SEATS]
+    expected = producer.verify_complete(state, questions, context, source_text, ordered, read_extra)
+    if consumed != [row['path'] for row in extras]:
+        raise ValueError('Description completion evidence: missing, extra or reordered members')
     description = handoff['description']
     if description['path'] != str(run / 'description.md'):
         raise ValueError('Description output path differs from its sealed run')
     raw = read(Path(description['path']), description['sha256'])
-    if raw != '\n'.join(lines).encode('utf-8'):
+    if raw != expected:
         raise ValueError('Description bytes differ from the complete agreed reader assembly')
     expected_sheet = ("# What only you can answer\n\n" + f"About: {state['intent']['path']}\n\n" +
                       "Everything was answered by what you gave. Nothing to ask.\n").encode('utf-8')

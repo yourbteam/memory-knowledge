@@ -26,6 +26,11 @@ Read `references/request-contract.md` for input and write boundaries, then use t
 Earlier atom-specific sections in references describe historical milestones, not current CLI availability.
 Read `references/evidence-contract.md` and `references/graph-contract.md` when preparing evidence.
 Use the additive Description and Requirements exporters; do not substitute loose documents for sealed handoffs.
+Description wire version two carries the trusted producer hash and complete bound agreement
+evidence for intent contracts two and three. Admission and frozen replay use the trusted producer's
+pure completion verifier; never execute producer code supplied by a handoff. Contract three also
+requires exact complete source passages. Legacy wire version one remains supported. These checks
+establish evidence consistency, not independent semantic approval or whole-document coverage.
 For a new assessment, use the code-owned invocation interview below. Do not hand-author the
 request, contract role list, file hashes, or work path. The low-level `start REQUEST WORK
 --expected-tip` interface remains available for existing integrations and captured-case verification.

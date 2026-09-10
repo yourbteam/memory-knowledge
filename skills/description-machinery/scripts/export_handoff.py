@@ -2,6 +2,8 @@
 
 import argparse
 import ast
+import copy
+import types
 from contextlib import contextmanager
 import hashlib
 import json
@@ -20,6 +22,7 @@ HANDOFF_FIELDS = (
     "description", "source_objects", "terminal_state", "exporter_source_sha256",
     "handoff_sha256",
 )
+BOUND_HANDOFF_FIELDS = HANDOFF_FIELDS + ('producer_source_sha256', 'evidence_records')
 READER_RECORD_FIELDS = ("question_id", "seat", "path", "sha256", "answer_sha256")
 DESCRIPTION_FIELDS = ("path", "sha256")
 SOURCE_OBJECT_FIELDS = ("origin", "sha256")
@@ -75,7 +78,30 @@ def handoff_schema():
         "the complete file has a separate digest."
     )
     result["$defs"] = {"sha256": {"type": "string", "pattern": SHA256.pattern, "maxLength": 64}}
-    return result
+    modern = copy.deepcopy(result)
+    modern['properties']['contract_version'] = {'type':'integer','const':2}
+    modern['properties']['producer_source_sha256'] = dict(digest)
+    modern['properties']['evidence_records'] = {'type':'array','minItems':1,'maxItems':42,
+        'uniqueItems':True,'items':closed(DESCRIPTION_FIELDS, {'path':dict(path),'sha256':dict(digest)})}
+    modern['required'] = list(BOUND_HANDOFF_FIELDS)
+    for branch in (result, modern):
+        branch.pop('$defs', None)
+        branch.pop('$schema', None)
+    return {'$schema':'https://json-schema.org/draft/2020-12/schema',
+            '$defs':{'sha256':{'type':'string','pattern':SHA256.pattern,'maxLength':64}},
+            'oneOf':[result,modern]}
+
+
+def trusted_producer(expected=None):
+    """Execute only this installation's producer, never a caller-supplied module."""
+    path = Path(__file__).absolute().parents[1] / 'from_intent.py'
+    raw = read_regular(path)
+    if expected is not None and raw != expected:
+        raise ExportError('Description producer differs from the installed trusted source')
+    module = types.ModuleType('description_completion_contract')
+    module.__file__ = str(path)
+    exec(compile(raw, str(path), 'exec'), module.__dict__)
+    return module, raw
 
 
 class ExportError(ValueError):
@@ -212,8 +238,8 @@ def validate_run(run, source_manifest=None):
     evidence = Evidence()
     state = exact(evidence.json(run / "input-state.json"),
                   ("contract", "intent", "context", "owner_answers", "questions_sha256"), "input-state")
-    if type(state["contract"]) is not int or state["contract"] != 1:
-        raise ExportError("input-state.contract: require integer 1")
+    if type(state["contract"]) is not int or state["contract"] not in (1, 2, 3):
+        raise ExportError("input-state.contract: require supported integer 1, 2 or 3")
     if type(state["context"]) is not list:
         raise ExportError("input-state.context: require an ordered source list")
     sources = [source_binding(state["intent"], "intent")]
@@ -299,46 +325,63 @@ def validate_run(run, source_manifest=None):
             records[(seat, qid)] = row
             reader_records.append({"question_id": qid, "seat": seat, "path": str(path),
                                    "sha256": digest(evidence.read(path)), "answer_sha256": digest(canonical(row))})
-    lines = ["# Description", "", f"About: {state['intent']['path']}", ""]
-    for question in questions:
-        left = records[(READER_SEATS[0], question["id"])]
-        right = records[(READER_SEATS[1], question["id"])]
-        if (left["quote"], left["quoted_from"]) != (right["quote"], right["quoted_from"]):
-            raise ExportError(f"{question['id']}: reader source quotations disagree")
-        lines.extend([f"## {question['id']} — {question['asks']}", "", left["quote"], "",
-                      f"_Source: `{left['quoted_from']}`_", ""])
+    producer_module, producer_bytes = trusted_producer(evidence.read(producer))
+    extra = []
+    def read_extra(name):
+        path = run / name
+        raw = evidence.read(path)
+        extra.append({'path':str(path),'sha256':digest(raw)})
+        return json_value(raw, name)
+    ordered = [{qid:records[(seat,qid)] for qid in QUESTION_IDS} for seat in READER_SEATS]
+    expected_description = producer_module.verify_complete(state, questions, context, source_text, ordered, read_extra)
     description_path = run / "description.md"
     description_bytes = evidence.read(description_path)
-    if description_bytes != "\n".join(lines).encode("utf-8"):
+    if description_bytes != expected_description:
         raise ExportError("description.md: bytes differ from the complete agreed-reader assembly")
     expected_sheet = ("# What only you can answer\n\n"
                       f"About: {state['intent']['path']}\n\n"
                       "Everything was answered by what you gave. Nothing to ask.\n")
     if evidence.read(run / "to-ask.md") != expected_sheet.encode("utf-8"):
         raise ExportError("to-ask.md: run still has unresolved owner questions or changed completion evidence")
-    handoff = {"schema_version": 1, "machinery": "description-machinery", "contract_version": 1,
+    handoff = {"schema_version": 1, "machinery": "description-machinery", "contract_version": 1 if state['contract'] == 1 else 2,
                "run_identity": str(run), "input_state_sha256": digest(evidence.read(run / "input-state.json")),
                "questions_sha256": digest(evidence.read(run / "questions.json")),
                "context_sha256": digest(evidence.read(run / "context.json")), "reader_records": reader_records,
                "description": {"path": str(description_path), "sha256": digest(description_bytes)},
                "source_objects": source_objects, "terminal_state": "complete",
                "exporter_source_sha256": digest(evidence.read(Path(__file__).absolute()))}
+    if handoff['contract_version'] == 2:
+        handoff.update(producer_source_sha256=digest(producer_bytes), evidence_records=extra)
     handoff["handoff_sha256"] = digest(canonical(handoff))
     return handoff, evidence
 
 
 def validate_handoff(handoff):
     """Check the assembled wire contract and its non-self-referential digest."""
-    exact(handoff, HANDOFF_FIELDS, "handoff")
+    version = handoff.get('contract_version') if isinstance(handoff, dict) else None
+    exact(handoff, BOUND_HANDOFF_FIELDS if version == 2 else HANDOFF_FIELDS, "handoff")
     if type(handoff["schema_version"]) is not int or handoff["schema_version"] != 1:
         raise ExportError("handoff.schema_version: require integer 1")
-    if type(handoff["contract_version"]) is not int or handoff["contract_version"] != 1:
-        raise ExportError("handoff.contract_version: require integer 1")
+    if type(handoff["contract_version"]) is not int or handoff["contract_version"] not in (1, 2):
+        raise ExportError("handoff.contract_version: require integer 1 or 2")
     if handoff["machinery"] not in MACHINERY_VALUES or handoff["terminal_state"] not in TERMINAL_STATES:
         raise ExportError("handoff: unsupported machinery or terminal state")
     absolute(handoff["run_identity"])
     hashes = [handoff["input_state_sha256"], handoff["questions_sha256"], handoff["context_sha256"],
               handoff["exporter_source_sha256"], handoff["handoff_sha256"]]
+    if version == 2:
+        hashes.append(handoff['producer_source_sha256'])
+        extra = handoff['evidence_records']
+        if type(extra) is not list or not 1 <= len(extra) <= 42:
+            raise ExportError('handoff.evidence_records: require bounded completion evidence')
+        for row in extra:
+            exact(row, DESCRIPTION_FIELDS, 'completion evidence')
+            path = absolute(row['path'])
+            if not path.is_relative_to(Path(handoff['run_identity'])):
+                raise ExportError('completion evidence: path is outside its sealed run')
+            hashes.append(row['sha256'])
+        if len({row['path'] for row in extra}) != len(extra):
+            raise ExportError('completion evidence: duplicate paths')
     exact(handoff["description"], DESCRIPTION_FIELDS, "handoff.description")
     absolute(handoff["description"]["path"])
     hashes.append(handoff["description"]["sha256"])

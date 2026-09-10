@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -92,6 +93,12 @@ def _packet(intent: Path, context: Path, questions: Path, out: Path) -> dict[str
     return {
         "stage": "look",
         "instruction": LOOK.format(questions=questions, intent=intent, context=context, out=out)
+        + f" Read the code-owned complete passages in {out.parent / 'source-passages.json'}. "
+        "For each yes answer, quote one COMPLETE passage from that catalog, without trimming any "
+        "sentence, restriction, exception or approval label. Select the passage that fully answers "
+        "the question; do not quote a shorter excerpt. If no single passage fully answers it, answer no "
+        "and explain the missing coverage rather than inventing a combined quote. Prefer the intent's "
+        "direct answer where it is complete; use the owner's answer for the question it settles. "
         + BLIND + HOW_TO_READ.format(scratch=scratch),
         "waiting_for": str(out),
         "scratch": str(scratch),
@@ -144,7 +151,7 @@ def _input_state(
         return {"path": str(resolved), "sha256": hashlib.sha256(resolved.read_bytes()).hexdigest()}
 
     return {
-        "contract": 2,
+        "contract": 3,
         "intent": source(intent),
         "context": [source(path) for path in context],
         "owner_answers": source(owner_answers) if owner_answers else None,
@@ -184,13 +191,108 @@ def _bind_input_state(work: Path, current: dict[str, object]) -> dict[str, objec
     return None
 
 
-def _agreement(work, question, citations, current_state, sources):
-    """Code binds one question; blind models judge meaning, never business authority."""
-    packet = {
+def _agreement_packet(question, citations, current_state, sources):
+    return {
         'question': question, 'citations': citations, 'input_state': current_state,
         'sources': {str(path): text for path, text in sources.items()},
         'verdicts': AGREEMENT_VERDICTS,
     }
+
+
+def source_passages(sources):
+    """Preserve entire blank-line-delimited source blocks, never model-sized excerpts."""
+    return [{'quoted_from': str(path), 'quote': block.strip()}
+            for path, text in sources.items() for block in re.split(r'\n\s*\n', text)
+            if block.strip()]
+
+
+def _render_description(intent, answers):
+    lines = ['# Description', '', f'About: {intent}', '']
+    for question, citations in answers:
+        lines.extend([f"## {question['id']} — {question['asks']}", ''])
+        seen = set()
+        for citation in citations:
+            key = (citation['quoted_from'], citation['quote'])
+            if key not in seen:
+                lines.extend([citation['quote'], '', f"_Source: `{citation['quoted_from']}`_", ''])
+                seen.add(key)
+    return '\n'.join(lines).encode('utf-8')
+
+
+def verify_complete(state, questions, context, sources, records, read_json):
+    """Pure completion contract shared by live assembly, export and frozen import/replay.
+
+    read_json takes a run-relative identity. Callers own filesystem safety and hash checks.
+    No model call, state mutation, source reread or implicit repair occurs here.
+    """
+    version = state.get('contract')
+    if type(version) is not int or version not in (1, 2, 3):
+        raise ValueError('input-state.contract: require supported integer 1, 2 or 3')
+    if questions != QUESTIONS or state['questions_sha256'] != _digest(QUESTIONS):
+        raise ValueError('questions: fixed question identity or digest changed')
+    expected_context = {'context': [r['path'] for r in state['context']],
+                        'owner_answers': state['owner_answers']['path'] if state['owner_answers'] else None}
+    if context != expected_context:
+        raise ValueError('context: source identity or order changed')
+    source_rows = [state['intent'], *state['context']]
+    if state['owner_answers']:
+        source_rows.append(state['owner_answers'])
+    if len({r['path'] for r in source_rows}) != len(source_rows):
+        raise ValueError('sources: repeated identity')
+    if list(map(str, sources)) != [r['path'] for r in source_rows]:
+        raise ValueError('sources: identity or order changed')
+    for row, text in zip(source_rows, sources.values()):
+        if hashlib.sha256(text.encode()).hexdigest() != row['sha256']:
+            raise ValueError('sources: bytes differ from the bound source')
+    ids = {q['id'] for q in QUESTIONS}
+    if len(records) != PASSES or any(set(seat) != ids for seat in records):
+        raise ValueError('readers: require exactly two complete question sets')
+    if version >= 2 and read_json('look-state.json') != records:
+        raise ValueError('reader evidence changed')
+    passages = source_passages(sources)
+    if version >= 3 and read_json('source-passages.json') != passages:
+        raise ValueError('source passages differ from the complete bound sources')
+    answers = []
+    for question in QUESTIONS:
+        citations = []
+        for seat in records:
+            row = seat[question['id']]
+            if (type(row) is not dict or set(row) != {'id','answered','answer','quoted_from','quote'}
+                    or row['id'] != question['id'] or row['answered'] != 'yes'
+                    or not isinstance(row['answer'], str)):
+                raise ValueError(f"{question['id']}: require a complete canonical yes answer")
+            citation = {key: row[key] for key in ('quote', 'quoted_from')}
+            if (not isinstance(row['quote'], str) or not row['quote'].strip()
+                    or row['quoted_from'] not in sources or row['quote'] not in sources[row['quoted_from']]):
+                raise ValueError(f"{question['id']}: invalid source quotation")
+            if version >= 3 and citation not in passages:
+                raise ValueError(f"{question['id']}: select a complete source passage; a trimmed excerpt is not complete evidence")
+            citations.append(citation)
+        if citations[0] != citations[1]:
+            if version == 1:
+                raise ValueError(f"{question['id']}: legacy exact reader quotations disagree")
+            directory = 'agreement-' + question['id']
+            packet = _agreement_packet(question, citations, state, sources)
+            if read_json(directory + '/question.json') != packet:
+                raise ValueError(f"{question['id']}: agreement packet changed")
+            binding, votes = _digest(packet), []
+            for seat in (1, 2):
+                vote = read_json(f'{directory}/seat-{seat}/answer.json')
+                if (type(vote) is not dict or set(vote) != {'question_id','binding','agreement_verdict','reason'}
+                        or vote['question_id'] != question['id'] or vote['binding'] != binding
+                        or vote['agreement_verdict'] != 'equivalent'
+                        or not isinstance(vote['reason'], str) or not vote['reason'].strip()):
+                    raise ValueError(f"{question['id']}: two bound equivalent judgments are required")
+                votes.append(vote)
+            if read_json(directory + '/decision.json') != {'status':'agreed','binding':binding,'votes':votes}:
+                raise ValueError(f"{question['id']}: agreement decision evidence changed")
+        answers.append((question, citations))
+    return _render_description(state['intent']['path'], answers)
+
+
+def _agreement(work, question, citations, current_state, sources):
+    """Code binds one question; blind models judge meaning, never business authority."""
+    packet = _agreement_packet(question, citations, current_state, sources)
     binding = _digest(packet)
     directory = work / ('agreement-' + question['id'])
     directory.mkdir(exist_ok=True)
@@ -271,6 +373,20 @@ def drive(
     state_result = _bind_input_state(work, current_state)
     if state_result:
         return state_result
+    paths = [intent.resolve(), *(p.resolve() for p in context)]
+    if owner_answers:
+        paths.append(owner_answers.resolve())
+    sources = {str(path): path.read_text(encoding='utf-8') for path in paths}
+    catalog = work / 'source-passages.json'
+    passages = source_passages(sources)
+    if catalog.exists():
+        try:
+            if json.loads(catalog.read_text()) != passages:
+                return {'status':'blocked','stopped':'source passage evidence changed'}
+        except (OSError, ValueError):
+            return {'status':'blocked','stopped':'invalid source passage evidence'}
+    else:
+        catalog.write_text(json.dumps(passages, indent=2), encoding='utf-8')
     questions_path = work / "questions.json"
     if not questions_path.exists():
         questions_path.write_text(json.dumps({"questions": QUESTIONS}, indent=2), encoding="utf-8")
@@ -333,6 +449,13 @@ def drive(
             "why": "a claimed answer did not quote its named intent or context source exactly",
             "invalid_records": invalid,
         }
+    incomplete = [{'pass': n, 'question_id': q['id']} for n, seat in enumerate(passes, 1)
+                  for q in QUESTIONS if seat[q['id']].get('answered') == 'yes'
+                  and {key: seat[q['id']].get(key) for key in ('quoted_from','quote')} not in passages]
+    if incomplete:
+        return {'status':'blocked','stopped':'incomplete source passage',
+                'why':'Select a complete passage from source-passages.json without trimming restrictions.',
+                'invalid_records':incomplete}
     # Bind the whole accepted read set, including the fast identical-citation path.
     # A later citation edit must not evade an earlier agreement by becoming identical.
     reader_state = work / 'look-state.json'
@@ -415,17 +538,13 @@ def drive(
     }
     if not to_ask:
         description = work / "description.md"
-        lines = ["# Description", "", f"About: {intent}", ""]
-        for row in answered:
-            lines.extend([f"## {row['id']} — {row['asks']}", ""])
-            # Keep the full grounded evidence, not a model paraphrase or truncated intersection.
-            kept = []
-            for citation in row['answers']:
-                if citation not in kept:
-                    kept.append(citation)
-            for citation in kept:
-                lines.extend([str(citation['quote']), '', f"_Source: `{citation['quoted_from']}`_", ''])
-        description.write_text("\n".join(lines), encoding="utf-8")
+        try:
+            raw = verify_complete(current_state, QUESTIONS,
+                json.loads(context_path.read_text()), {str(p): text for p, text in sources.items()},
+                pass_records, lambda name: json.loads((work / name).read_text()))
+        except (OSError, ValueError, TypeError, KeyError) as error:
+            return {'status':'blocked','stopped':'completion evidence invalid','why':str(error)}
+        description.write_bytes(raw)
         result["description"] = str(description)
     return result
 
