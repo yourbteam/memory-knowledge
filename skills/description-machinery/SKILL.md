@@ -37,10 +37,21 @@ python3 from_intent.py --intent <file> --context <path> --owner-answers <file> \
     --work <new-fresh-dir> --reader-command '<command>'
 ```
 
-The owner-answer file is an authorized source, not an instruction to improvise. A question enters
-the final `description.md` only when both readers cite the same exact passage from the same
-authorized file. Code writes the fixed question heading, exact quotation, and source path. It
-carries no reader paraphrase into the description.
+The owner-answer file is an authorized source, not an instruction to improvise. Code first checks
+each quotation exactly against its authorized source. Identical citations advance directly.
+Different valid citations trigger a code-owned agreement interview, one question at a time, with
+two blind readers. Each returns a source-and-question-bound `agreement_verdict`: `equivalent`,
+`different`, or `cannot-assess`, plus its reason. Only two `equivalent` judgments advance. A span
+or approval-label difference alone is not a business disagreement; differences in authority,
+polarity, scope or restrictions must not be waved through. Owner answers remain limited to the
+question and scope they actually settle.
+
+Code binds the entire accepted reader set, including identical-citation answers. It retains the
+interview packet and completed decision, refuses changed bindings or rewritten
+decision evidence, and writes every distinct accepted source quotation into `description.md`.
+It carries no reader paraphrase into that description. Missing answers and semantic disagreement
+still go to the owner. Version-one intent state is not silently reinterpreted: start fresh after
+this contract change and preserve previous runs.
 
 ## Front door 2 — what builders left alone
 

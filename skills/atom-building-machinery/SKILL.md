@@ -32,6 +32,13 @@ request contains exactly:
   carries the leaf. A misspelled field without `introduced` is still refused at `start` with the
   available keys.
 
+An introduced enum field may also declare `introduced_enum`, an ordered, nonempty list of unique
+nonempty string values. This is only for `introduced: true` with `shape: "enum"` when its named
+constant does not yet exist in an existing deliverable module. Code freezes these values in the
+request. Promotion requires both the field and that exact enum constant to exist; changed values
+fail closed on resume and promotion. This does not permit missing modules, prose waivers, or
+unresolved ordinary fields.
+
 Validation targets are resolved against the named deliverable module's checked-in constants at
 `start`. A prose target is an exception and cannot carry a waiver written into the request by the
 model or atom author. Start the controller-owned interview instead:

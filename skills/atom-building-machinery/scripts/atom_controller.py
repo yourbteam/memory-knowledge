@@ -50,7 +50,7 @@ CONTRACT_SURFACE_VALIDATION_FIELDS = {"kind", "deliverable", "fields"}
 CONTRACT_FIELD_FIELDS = {"field", "shape", "shape_source"}
 #: Atom 16 (2026-09-05): a field the atom itself introduces. Its parent must resolve at start,
 #: its leaf must not exist yet, and the leaf must resolve at record-promotion.
-CONTRACT_FIELD_OPTIONAL_FIELDS = {"introduced"}
+CONTRACT_FIELD_OPTIONAL_FIELDS = {"introduced", "introduced_enum"}
 PROSE_WAIVER_FIELDS = {"operator", "words", "date", "presence_proof"}
 LEGACY_PROSE_WAIVER_FIELDS = {"by", "words", "date"}
 OPERATOR_FIELDS = {
@@ -485,6 +485,21 @@ def _resolve_contract_field(
             f"{label}.deliverable is {deliverable!r} but shape_source names module {source_path.stem!r}",
         )
     collections, compiled_forms = _module_contract(source_path, stage)
+    introduced_enum = item.get("introduced_enum")
+    if introduced_enum is not None:
+        if not introduced or shape != "enum":
+            raise AtomError(stage, f"field {field!r}: introduced_enum requires introduced=true and shape=enum")
+        if (type(introduced_enum) is not list or not introduced_enum
+                or any(type(value) is not str or not value.strip() for value in introduced_enum)
+                or len(set(introduced_enum)) != len(introduced_enum)):
+            raise AtomError(stage, f"field {field!r}: introduced_enum must contain unique nonempty strings")
+        if constant in collections or constant in compiled_forms:
+            if stage == "start":
+                raise AtomError(stage, f"field {field!r}: introduced enum constant {constant!r} already exists")
+            if collections.get(constant) != introduced_enum:
+                raise AtomError(stage, f"field {field!r}: enum constant {constant!r} differs from its frozen declaration")
+        elif require_introduced_resolved:
+            raise AtomError(stage, f"field {field!r}: introduced enum constant {constant!r} must exist before promotion")
     segments = _field_segments(field, f"{label}.field", stage)
     section_keys = collections.get("SECTION_KEYS")
     if section_keys is None:
@@ -538,6 +553,9 @@ def _resolve_contract_field(
                 stage,
                 f"introduced field {field!r} already resolves at {segments[1]!r}; declare it without 'introduced'",
             )
+    if introduced_enum is not None and constant not in collections and constant not in compiled_forms:
+        # Request-owned enum values are only a pending shape, never canonical schema evidence.
+        collections[constant] = introduced_enum
     if constant not in collections and constant not in compiled_forms:
         available = sorted(set(collections) | compiled_forms)
         raise AtomError(
@@ -561,6 +579,8 @@ def _resolve_contract_field(
     resolved: dict[str, Any] = {"field": field, "shape": shape, "shape_source": f"{source_path_text}::{constant}"}
     if introduced:
         resolved["introduced"] = True
+    if introduced_enum is not None:
+        resolved["introduced_enum"] = list(introduced_enum)
     return resolved
 
 
@@ -609,6 +629,8 @@ def _validate_contract_surface(
                     "field this atom introduces, or omit it",
                 )
             minimally_valid["introduced"] = True
+        if "introduced_enum" in item:
+            minimally_valid["introduced_enum"] = item["introduced_enum"]
         if repository_root is None:
             if minimally_valid["shape"] not in CONTRACT_SHAPES:
                 raise AtomError(

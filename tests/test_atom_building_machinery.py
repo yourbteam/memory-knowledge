@@ -1381,6 +1381,48 @@ def test_introduced_field_starts_and_must_resolve_before_promotion(
     assert resolved["contract_surface"]["fields"][0]["introduced"] is True
 
 
+def test_new_enum_is_frozen_until_its_field_and_constant_land(tmp_path, controller_module):
+    schema = tmp_path / "description.py"
+    schema.write_text("# A deliverable without a structured schema yet.\n")
+    field = {"field": "agreement_verdict", "shape": "enum",
+             "shape_source": "description.py::AGREEMENT_VERDICTS", "introduced": True,
+             "introduced_enum": ["equivalent", "different", "cannot-assess"]}
+
+    def resolve(stage, promote=False):
+        return controller_module._resolve_contract_field(
+            field, "description", tmp_path, "agreement", stage,
+            require_introduced_resolved=promote)
+
+    assert resolve("start")["introduced_enum"] == field["introduced_enum"]
+    with pytest.raises(controller_module.AtomError, match="must exist before promotion"):
+        resolve("record-promotion", True)
+    schema.write_text("AGREEMENT_VERDICTS = ['equivalent', 'different', 'cannot-assess']\n")
+    with pytest.raises(controller_module.AtomError, match="still does not resolve"):
+        resolve("record-promotion", True)
+    schema.write_text("AGREEMENT_FIELDS = ['agreement_verdict']\n"
+                      "AGREEMENT_VERDICTS = ['equivalent', 'different', 'cannot-assess']\n")
+    assert resolve("record-promotion", True)["introduced_enum"] == field["introduced_enum"]
+    assert resolve("load")["introduced_enum"] == field["introduced_enum"]
+    with pytest.raises(controller_module.AtomError, match="already exists"):
+        resolve("start")
+    schema.write_text("AGREEMENT_FIELDS = ['agreement_verdict']\n"
+                      "AGREEMENT_VERDICTS = ['equivalent', 'different']\n")
+    with pytest.raises(controller_module.AtomError, match="frozen declaration"):
+        resolve("load")
+    with pytest.raises(controller_module.AtomError, match="frozen declaration"):
+        resolve("record-promotion", True)
+
+
+@pytest.mark.parametrize("values", [[], [""], ["same", "same"], [1], "same", [{}]])
+def test_new_enum_rejects_malformed_values(tmp_path, controller_module, values):
+    (tmp_path / "description.py").write_text("# No schema yet\n")
+    field = {"field": "agreement_verdict", "shape": "enum",
+             "shape_source": "description.py::VERDICTS", "introduced": True,
+             "introduced_enum": values}
+    with pytest.raises(controller_module.AtomError, match="unique nonempty strings"):
+        controller_module._resolve_contract_field(field, "description", tmp_path, "agreement", "start")
+
+
 def test_a_run_with_an_introduced_field_loads_once_the_module_carries_it(
     tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
 ) -> None:

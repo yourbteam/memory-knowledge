@@ -395,7 +395,17 @@ def test_from_intent_accepts_owner_answers_as_an_authorized_source(tmp_path: Pat
     assert str(owner_answers.resolve()) in description
 
 
-def test_from_intent_hands_differing_valid_citations_to_the_owner(tmp_path: Path) -> None:
+def _agreement_stub(work, question, verdict="equivalent", binding=None):
+    """Explicit unit stub; live semantic proof is separate from gate regression tests."""
+    packet = json.loads((work / f"agreement-{question}/question.json").read_text())
+    for seat in (1, 2):
+        _write_json(work / f"agreement-{question}/seat-{seat}/answer.json", {
+            "question_id": question, "binding": binding or from_intent._digest(packet),
+            "agreement_verdict": verdict, "reason": "Unit-test stub, not a semantic judgment.",
+        })
+
+
+def test_from_intent_interviews_differing_valid_citations_before_owner_handback(tmp_path: Path) -> None:
     intent = tmp_path / "intent.md"
     context = tmp_path / "context.md"
     work = tmp_path / "work"
@@ -417,12 +427,74 @@ def test_from_intent_hands_differing_valid_citations_to_the_owner(tmp_path: Path
 
     result = from_intent.drive(intent, work, [context])
 
+    assert result["status"] == "waiting_for_readers"
+    for question in from_intent.QUESTIONS:
+        assert result["question_id"] == question["id"]
+        _agreement_stub(work, question["id"], "different")
+        result = from_intent.drive(intent, work, [context])
     assert result["status"] == "needs_owner"
-    assert result["to_ask"][0]["why"] == "the readers cited different answers"
+    assert result["to_ask"][0]["why"] == "the grounded answers have unresolved semantic disagreement"
     sheet = Path(result["sheet"]).read_text(encoding="utf-8")
     assert "FIRST EXACT ANSWER" in sheet
     assert "SECOND EXACT ANSWER" in sheet
     assert "description" not in result
+
+
+def _span_fixture(tmp_path):
+    intent, source, work = tmp_path / "intent.md", tmp_path / "owner.md", tmp_path / "work"
+    intent.write_text("Intent")
+    source.write_text("Approved answer: Internal choices are delegated; business values remain reserved.")
+    from_intent.drive(intent, work, [], source)
+    _fill_look(work, quote=source.read_text(), quoted_from=source)
+    row_path = work / "look-2/q8.json"
+    row = json.loads(row_path.read_text())
+    row["quote"] = "Internal choices are delegated; business values remain reserved."
+    _write_json(row_path, row)
+    return intent, work, [], source
+
+
+def test_agreement_preserves_quotes_and_freezes_completed_decision(tmp_path):
+    args = _span_fixture(tmp_path)
+    result = from_intent.drive(*args)
+    assert result["question_id"] == "q8"
+    _agreement_stub(args[1], "q8")
+    result = from_intent.drive(*args)
+    assert result["status"] == "complete"
+    assert "Approved answer:" in Path(result["description"]).read_text()
+    assert from_intent.drive(*args)["status"] == "complete"
+    _agreement_stub(args[1], "q8", "different")
+    assert from_intent.drive(*args)["stopped"] == "agreement evidence changed"
+
+
+@pytest.mark.parametrize("verdict", ["different", "cannot-assess"])
+def test_agreement_does_not_bypass_negative_or_uncertain_votes(tmp_path, verdict):
+    args = _span_fixture(tmp_path)
+    from_intent.drive(*args)
+    _agreement_stub(args[1], "q8", verdict)
+    result = from_intent.drive(*args)
+    assert result["status"] == "needs_owner"
+    assert "description" not in result
+
+
+def test_agreement_refuses_stale_binding_and_legacy_state(tmp_path):
+    args = _span_fixture(tmp_path)
+    from_intent.drive(*args)
+    _agreement_stub(args[1], "q8", binding="0" * 64)
+    assert from_intent.drive(*args)["stopped"] == "invalid agreement response"
+    path = args[1] / "input-state.json"
+    state = json.loads(path.read_text())
+    state["contract"] = 1
+    _write_json(path, state)
+    assert from_intent.drive(*args)["stopped"] == "input changed"
+
+
+def test_reader_rewrite_cannot_evade_agreement_via_identical_citations(tmp_path):
+    args = _span_fixture(tmp_path)
+    from_intent.drive(*args)
+    _agreement_stub(args[1], "q8")
+    assert from_intent.drive(*args)["status"] == "complete"
+    (args[1] / "look-1/q8.json").write_bytes((args[1] / "look-2/q8.json").read_bytes())
+    assert from_intent.drive(*args)["stopped"] == "reader evidence changed"
 
 
 def test_from_intent_keeps_wrong_question_identities_outstanding(tmp_path: Path) -> None:
