@@ -109,3 +109,27 @@ tail log → scale S1. Secrets are never printed.
 - Big tables (`OrderProduct`, `PersonProductImage`, `Users`, `PageViews`) grew **modestly, not doubled**.
 - Other sources untouched (e.g. reloading srid=1 leaves srid=2/3 counts unchanged).
 - DB tier back at **S1**.
+
+## Closing the run (order matters)
+
+The ledger accepts these ONLY in this order, and every step is refused once the run is terminal:
+
+1. `work_memory.py verify --run-id <run> --outcome passed --quality <same-path|proxy> --evidence "..."`
+   (add `--blocker-id` / `--correction-id` when the run exercised a corrected boundary). **Keep the
+   returned `event_id`.** Use `same-path` only when THIS run drove the real corrected route; a
+   reproduction is `proxy`.
+2. `blocker_catalog.py transition --run-id <run> --blocker-id <blk> --to-status verified
+   --verification-event-id <event_id from step 1>` — without that id it refuses
+   `verification-event-id-required`, so step 1 can never be skipped or reordered after it.
+3. `work_memory.py run-close --run-id <run> --result passed`.
+
+**Close `failed`, not `passed`, on a run whose correction a later run must verify.** A successor is
+bound with `select --verification-successor-of <run> --verifies-correction-id <id>`, and
+`work_memory.py:3827` accepts a predecessor only when its `run_closed` carries `result=failed`.
+
+**Fingerprint — `event-after-terminal`.** Recording verification after `run-close` (2026-09-16: the
+reload that proved `blk-6d310140db00ab7c1ff2d797` same-path had its transition and verify run in the
+wrong order, then the run was closed anyway). The evidence cannot be attached afterwards and the
+blocker stays `fixed-awaiting-verification`; the run itself is unaffected. There is no repair once
+the run is closed `passed` — it is neither amendable nor a valid successor predecessor — so the
+next run of this sequence carries the verification instead.
