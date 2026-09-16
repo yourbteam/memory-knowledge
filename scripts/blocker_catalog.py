@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import stat
 import re
 import sys
 import uuid
@@ -124,13 +126,28 @@ def _atom_binding(atom_run: str | None) -> dict[str, Any]:
     return {field: identity[field] for field in ATOM_BINDING_FIELDS}
 
 
-def atom_closeout(atom_run: Path) -> dict[str, Any]:
+def atom_closeout(atom_run: Path, *, ledger_root: Path | None = None) -> dict[str, Any]:
     identity = atom_identity(atom_run)
     repository_root = identity["repository_root"]
     if not isinstance(repository_root, str) or not Path(repository_root).is_absolute():
         raise work_memory.WorkMemoryError("atom-repository-root-unavailable", 3)
-    work_memory.configure_root(Path(repository_root))
-    events, ledger_sha256 = work_memory.load_ledger()
+    # Product identity does not choose the owner of development blocker state.
+    # CLI callers retain their configured root; managed controllers supply theirs.
+    if ledger_root is not None:
+        work_memory.configure_root(ledger_root)
+    ledger = work_memory.LEDGER
+    try:
+        # Bind the read to one regular file without following a replaced symlink.
+        with os.fdopen(os.open(ledger, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), "rb") as stream:
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                raise OSError("selected ledger is not a regular file")
+            data = stream.read()
+    except OSError as error:
+        raise work_memory.WorkMemoryError(
+            f"atom-blocker-ledger-unavailable:{ledger}; require an existing regular non-linked ledger at the selected owner: {error}", 3,
+        ) from error
+    events = work_memory.parse_ledger_bytes(data)
+    ledger_sha256 = work_memory.sha256_bytes(data)
     linked: dict[tuple[str, str], dict[str, Any]] = {}
     current: dict[str, str] = {}
     for index, event in enumerate(events, start=1):

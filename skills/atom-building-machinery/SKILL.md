@@ -13,6 +13,19 @@ machinery takes lifecycle ownership from PDI.
 
 ## Start one atom
 
+The builder accepts one already approved atom. It does not generate competing next atoms,
+rank them, assess priority, or require a selection skill to exist. The owner or a separate selector
+supplies the chosen work; owner authorization remains required. A future `atom-selection-machinery`
+can supply the same handoff, but is not a runtime dependency of this skill.
+
+Use the build-only handoff in [references/build-handoff.md](references/build-handoff.md).
+Prepare its receipt with `scripts/build_admission.py`, then pass `--build-packet` and
+`--build-receipt` to controller start. This binds the supplied authorization, exact request,
+fixed goal and evidence; it makes no comparative judgment and calls no model.
+Report the returned BUILD ADMISSION result as approval binding, never as proof of priority.
+Existing value packets and receipt field names remain legacy compatibility inputs for preserved
+runs; they are not prerequisites of a new build-only handoff.
+
 Read `$experiment-machinery` and `$prototype-driven-implementation` completely before acting.
 Freeze and obtain approval for the atom's PDI autonomy envelope before creating its run. The atom
 request contains exactly:
@@ -38,6 +51,8 @@ constant does not yet exist in an existing deliverable module. Code freezes thes
 request. Promotion requires both the field and that exact enum constant to exist; changed values
 fail closed on resume and promotion. This does not permit missing modules, prose waivers, or
 unresolved ordinary fields.
+
+For non-rendering executable behavior, including PHP services, use `{"kind": "behavior", "source_paths": ["app/Service.php"], "case_ids": ["success-case", "failure-case"]}`. Name regular source files within allowed_paths and every captured case exactly once in the same order. New source files may be absent at start but must exist at promotion. Each named source must occur as a changed, hash-verified assembly file. This contract does not parse source as Python and does not replace semantic proof: exact approved-request admission, complete captured-case experiments, exact promotion review, and real-path validation remain required. Use the existing validation contract when the atom validates declared Python payload fields; do not relabel such work to avoid its field or prose rules.
 
 Validation targets are resolved against the named deliverable module's checked-in constants at
 `start`. A prose target is an exception and cannot carry a waiver written into the request by the
@@ -81,7 +96,7 @@ receipt. Normal operation requires no terminal input or setup command.
 Only a completed interview can admit the exception:
 
 ```bash
-python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory> \
+python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory> --build-packet <packet.json> --build-receipt <receipt.json> \
   --prose-waiver-interview <completed-interview-directory>
 ```
 
@@ -104,19 +119,23 @@ The managed installer writes one client-root provenance record binding the canon
 repository to the exact blocker-catalog and work-memory module hashes. An installed controller uses
 only that record for blocker closeout outside the canonical repository. Missing, linked, incomplete,
 or changed support refuses and requires refreshing both projections through the managed installer;
-support modules are never copied into individual skill projections.
+support modules are never copied into individual skill projections. The verified support repository
+also owns the blocker ledger; the atom's product repository root never replaces that owner.
+Direct catalog calls retain their configured `--root` (or module default). Closure requires an
+existing regular non-linked ledger at the selected owner and refuses unavailable state rather
+than treating it as an empty blocker list. Historical closeout snapshots remain unchanged.
 
 Start the append-only run:
 
 ```bash
-python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory>
+python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory> --build-packet <packet.json> --build-receipt <receipt.json>
 ```
 
 When new evidence requires a fresh immutable controller run for the same unfinished atom, declare
 the relationship instead of silently taking a new surface baseline:
 
 ```bash
-python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory> \
+python3 scripts/atom_controller.py start <atom-request.json> <new-run-directory> --build-packet <packet.json> --build-receipt <receipt.json> \
   --supersedes <previous-run-directory>
 ```
 
@@ -259,7 +278,7 @@ Inspect the derived state at any time:
 python3 scripts/atom_controller.py status <atom-run>
 ```
 
-Before selecting or defining another atom, require:
+Before accepting a different atom for building, require:
 
 ```bash
 python3 scripts/atom_controller.py authorize-next <atom-run>
@@ -271,3 +290,136 @@ after validation. For a supersession chain it appends one hash-bound closure eve
 run; repeated authorization is idempotent. Commit,
 push, deployment, credentials, destructive work, wider paths, or a changed requirement always
 need their own explicit approval; this machinery never grants them.
+
+
+## Execute a prepared admitted atom
+
+Use `scripts/atom_driver.py <prepared-request.json> <run-directory>` to coordinate
+one prepared atom through the existing experiment, exact promotion review, promotion,
+actual-source validation and contribution check. The request uses version one, an absolute
+repository root, hash-bound atom request/build packet/build receipt/experiment request (the version-one driver
+retains the wire field names `value_packet` and `value_receipt` for compatibility),
+prepared files and source trees, plus review and validation adapter commands. Each adapter
+command contains `{python}`, `{adapter}`, `{input}`, `{output}` exactly once.
+
+Preparation, candidate authorship and source-review judgments remain supplied inputs.
+A product contribution check judges completed work through validation. Its own future
+verdict and downstream driver completion must not be prerequisites in that product proof.
+Verify driver completion afterward from its actual result and genuine contribution receipt.
+
+The driver returns complete only after a supported independent contribution and progress
+verdict. Exit 3 reports an exact frozen review payload requiring disclosure approval;
+authorization for that payload permits resuming with `--approved-transfer-sha256 <digest>`.
+That argument records caller-supplied authorization and does not replace host permission.
+Exit 2 preserves the refusal and evidence; inspect the failed boundary before repairing.
+Rerunning the same immutable prepared request resumes completed stages without repeating
+promotion. Changed inputs or driver bytes refuse; prepare a fresh reviewed attempt.
+
+
+## Fresh bounded source review
+
+Use `scripts/source_review.py` as the prepared driver's review adapter. Before
+launch, place `source-review-context.json` beside the prospective promotion surface
+and register its exact path/hash in driver `prepared_files`. Bind both reviewer
+modules there as well. The context binds the exact surface hash, outcome, ordered
+source-quoted obligations, and exact before/after plus necessary dependency and raw
+execution sources. Use obligations applicable to this changed unit. Keep execution
+evidence from its matching run and declare the approved operator boundary; a local
+change does not establish an unrelated whole-workflow claim.
+
+The reviewer checks all supplied obligations and changed files, cites actual code,
+and records additional concrete blocking regressions. Missing evidence produces
+withholding, never a manufactured passing judgment. Its receipt uses the existing
+driver promotion contract. Keep context preparation and requirement completeness
+separate from the transferred source-review judgment.
+
+`source_review.py <surface> <output> --prepare-only` writes the exact prompt without
+sending it. Obtain required host disclosure approval before invoking the adapter
+without that option. Both outputs are write-once; use a new output for an authorized
+new trial. Installed operation uses the existing Codex tool-free model boundary.
+
+
+## Generate a bounded candidate
+
+Use `scripts/candidate_builder.py <creation-request.json> <new-output> --prepare-only`
+to inspect the exact source-and-requirements disclosure before a model call. After the
+required host approval, run without that flag into another new output. The existing
+Codex model boundary produces unique anchor/replacement edits; code validates the
+complete delta before materializing an isolated candidate. A blocked or malformed
+answer remains evidence and never becomes a candidate. Do not edit generated code.
+
+The creation request declares version one, outcome, constraints, exact allowed file
+paths, absolute baseline, complete ordered file hashes, visible source units and
+context. Requirements, dependencies and case selection remain prepared inputs.
+
+For execution-adapter generation, use creation-request version two with the same fields
+plus `execution_runtime`, containing absolute existing `php`, `phpunit`, and `bootstrap`
+file paths. The normal builder automatically collects installed tool help, the existing
+candidate/assembly/experiment launcher functions, and their directly called same-module
+helper definitions. Do not paste those definitions into the request context. Preparation
+and the post-generation recheck bind the collected source and runtime identities; version
+one retains its original behavior. Runtime selection, business requirements and case
+selection remain supplied inputs. Helper collection is one level deep, as tested; it does
+not claim a complete recursive dependency inventory.
+
+The existing driver also accepts a version-two generated request with exactly
+`schema_version`, `template`, `generation`, `probe_id`, `approach_id`, and
+`review_context`. The three references bind regular files by absolute path and SHA-256:
+- `template`: the ordinary version-one driver request, using the baseline as the
+  selected approach's placeholder candidate; no completed implementation is needed.
+- `generation`: the builder's preserved `result.json`.
+- `review_context`: the existing source-review context shape with prepared requirement,
+  dependency and execution sources only; omit before/after sources.
+
+The driver verifies preserved generation lineage and candidate bytes, replaces exactly
+one declared approach with the generated source, and derives fresh experiment hashes
+and source-review context. Its existing experiment, review, promotion and validation
+stages then apply unchanged. The generated source is not a passing verdict. Review
+disclosure approval remains required; prepare the exact forecast with the existing
+review adapter before allowing its live invocation. Resume reuses the frozen generated
+request and refuses changed candidate bytes. This transfers candidate authorship only;
+preparing requirements, tests, context and the template is still manual.
+
+
+### Recheck a completed driver closeout
+
+If a corrected evidence boundary requires a fresh independent contribution check, preserve the
+original run and use the installed driver with its original normalized `request.json`, a new
+output directory, and `--recheck-closeout-from <original-driver-run>`. This path verifies the
+completed controller, unchanged promoted product, prepared inputs and generated lineage, then
+creates a separate closeout packet. It never repeats experiment, promotion or product validation.
+The original run and its receipts remain unchanged; resume verifies their full recorded snapshot.
+The packet includes the actual builder prompt, answer, invocation and exact before/after source.
+Obtain explicit review-transfer authorization for the new packet and resume the same command
+with `--approved-transfer-sha256 <new-packet-digest>`. A current blocker still withholds closeout;
+complete its required correction verification before invoking this recheck.
+
+## Required goal-sequence continuity
+
+Controller `start` and driver starts now require one registered goal sequence. Initialize it once
+through `scripts/atom_sequence.py initialize --goal <fixed-goal-context.json>`. For explicit adoption
+of existing work, add `--existing-run <atom-run>`. Reinitialization of the same goal is refused.
+The canonical blocker-support repository owns the registry for all installed clients.
+
+The active atom may resume or use its existing same-atom supersession path. A different atom cannot
+start until the active run has completed validation and its independent contribution is verified.
+The driver records that completion automatically. For an independently reviewed correction, use
+`atom_sequence.py record-completion --run <active-run> --completion <completion.json>`.
+`authorize-next` now checks both validation and the registered contribution. This is build completion, not permission to choose a successor. Historical validation
+status remains readable; it is not itself successor permission.
+
+The matching host guard is `scripts/sequence_hook.py --policy <host-policy.json>`, registered for
+PreToolUse/apply_patch. It requires host admission to equal the registered active atom and rejects
+edits to sequence authority. Install and trust this guard before claiming host-enforced continuity.
+The existing scope gate and shell containment guard remain required. Initial registry adoption and
+host policy selection are operator boundaries, not permissions granted to arbitrary atom edits.
+
+## Selection is outside this skill
+
+Return the verified outcome and remaining evidence to the caller. Do not choose the next atom.
+`authorize-next` retains its historical command name; it checks that this build is complete and
+that sequence continuity permits another approved build. It does not rank or authorize its content.
+
+The driver uses builder-owned contribution verification for build-only packets. It judges the
+promised outcome and progress claim, not whether the atom was the best choice. Existing runs keep
+legacy receipt and closeout handling. Do not rewrite historical records during migration.

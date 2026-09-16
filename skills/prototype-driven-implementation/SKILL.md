@@ -67,6 +67,8 @@ let blocker recording widen the approved envelope.
 
 ## Use the atomic capability protocol when required
 
+For an implementation atom, accept the owner-approved bounded assignment and start it through `atom-building-machinery` using its build-only handoff. PDI builds and verifies that assignment; it does not require a comparative selector or rank successor atoms. Bind the exact approved request and current goal/state evidence, report actual admission or refusal, and preserve the approved outcome while adapting the implementation. A changed assignment requires matching authorization. Return completion evidence to the caller for any subsequent selection.
+
 When an approved implementation is one atom built through Development-Probe experiments, invoke
 `$atom-building-machinery` as PDI's bounded protocol. PDI retains the approved envelope, adaptive
 prototype loop, promotion decision, and completion responsibility throughout. Read the protocol's

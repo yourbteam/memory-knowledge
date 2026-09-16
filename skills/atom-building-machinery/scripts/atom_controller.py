@@ -9,6 +9,7 @@ import base64
 import binascii
 import hashlib
 import importlib
+import importlib.util
 import json
 import os
 import re
@@ -46,6 +47,7 @@ REQUEST_FIELDS = {
 }
 REQUEST_OPTIONAL_FIELDS = {"prose_waiver"}
 CONTRACT_SURFACE_RENDER_FIELDS = {"kind"}
+CONTRACT_SURFACE_BEHAVIOR_FIELDS = {"kind", "source_paths", "case_ids"}
 CONTRACT_SURFACE_VALIDATION_FIELDS = {"kind", "deliverable", "fields"}
 CONTRACT_FIELD_FIELDS = {"field", "shape", "shape_source"}
 #: Atom 16 (2026-09-05): a field the atom itself introduces. Its parent must resolve at start,
@@ -602,8 +604,18 @@ def _validate_contract_surface(
         if waiver_value is not None:
             raise AtomError(stage, "prose_waiver is present for a render atom; remove it")
         return dict(surface), None
+    if kind == "behavior":
+        surface = _exact(value, "contract_surface", CONTRACT_SURFACE_BEHAVIOR_FIELDS, stage)
+        if waiver_value is not None:
+            raise AtomError(stage, "behavior contract has prose_waiver; remove it")
+        paths = [_relative_path(path, "behavior source path", stage)
+                 for path in _strings(surface["source_paths"], "behavior source_paths", stage)]
+        case_ids = _strings(surface["case_ids"], "behavior case_ids", stage)
+        if len(set(paths)) != len(paths) or len(set(case_ids)) != len(case_ids):
+            raise AtomError(stage, "behavior source_paths or case_ids repeat entries; name each exactly once")
+        return {"kind": "behavior", "source_paths": paths, "case_ids": case_ids}, None
     if kind != "validation":
-        raise AtomError(stage, "contract_surface.kind must be 'render' or 'validation'")
+        raise AtomError(stage, "contract_surface.kind must be 'render', 'validation', or 'behavior'")
     surface = _exact(value, "contract_surface", CONTRACT_SURFACE_VALIDATION_FIELDS, stage)
     deliverable = _nonempty(surface["deliverable"], "contract_surface.deliverable", stage)
     raw_fields = surface["fields"]
@@ -782,7 +794,10 @@ def _validate_snapshot_files(value: object, label: str, stage: str) -> list[dict
 
 def _baseline(run: Path, request: dict[str, Any]) -> tuple[dict[str, Any], str] | None:
     records, _ = _read_ledger(run)
-    root = records[0]["payload"]
+    root = dict(records[0]["payload"])
+    admission_sha256 = root.pop("value_admission_sha256", None)
+    if admission_sha256 is not None:
+        _unchanged(run / "inputs" / "value-admission.json", admission_sha256, "recorded value admission")
     legacy_fields = {"atomic_step_id", "request_sha256"}
     current_fields = legacy_fields | {"baseline_sha256", "repository_root"}
     superseded_fields = current_fields | {"supersession_sha256"}
@@ -895,7 +910,7 @@ def _validate_request(
     if require_contract_surface and not has_surface:
         raise AtomError(
             stage,
-            "atom request has no contract_surface; declare exactly {'kind': 'render'} or a validation "
+            "atom request has no contract_surface; declare a behavior source/case contract, {'kind': 'render'}, or a validation "
             "deliverable with its ordered target fields, shapes, and shape sources",
         )
     if has_surface:
@@ -949,6 +964,20 @@ def _validate_request(
             allow_legacy_prose_waiver=allow_legacy_prose_waiver,
             require_introduced_resolved=require_introduced_resolved,
         )
+        if surface["kind"] == "behavior":
+            if surface["case_ids"] != case_ids:
+                raise AtomError(stage, f"behavior case_ids are {surface['case_ids']!r}; require every captured case in order {case_ids!r}")
+            for path in surface["source_paths"]:
+                if not any(path == boundary or Path(path).is_relative_to(Path(boundary)) for boundary in normalized_paths):
+                    raise AtomError(stage, f"behavior source {path!r} is outside allowed_paths; declare an approved source inside {normalized_paths!r}")
+                if repository_root is not None:
+                    target = repository_root / path
+                    if target.is_symlink() or any(parent.is_symlink() for parent in target.parents if parent != repository_root and parent.is_relative_to(repository_root)):
+                        raise AtomError(stage, f"behavior source {path!r} is linked; require a repository-owned file")
+                    if target.exists() and not target.is_file():
+                        raise AtomError(stage, f"behavior source {path!r} is not a regular file; name a source file")
+                    if require_introduced_resolved and not target.is_file():
+                        raise AtomError(stage, f"promoted behavior source {path!r} is missing; materialize the declared file before promotion")
         normalized["contract_surface"] = surface
         if waiver is not None:
             normalized["prose_waiver"] = waiver
@@ -1063,7 +1092,7 @@ def _canonical_blocker_closeout(run: Path, stage: str) -> dict[str, Any]:
     blocker_catalog = importlib.import_module("scripts.blocker_catalog")
     work_memory = importlib.import_module("scripts.work_memory")
     try:
-        return blocker_catalog.atom_closeout(run)
+        return blocker_catalog.atom_closeout(run, ledger_root=module_root)
     except work_memory.WorkMemoryError as error:
         raise AtomError(stage, f"canonical blocker closeout failed: {error.code}") from None
 
@@ -1854,7 +1883,10 @@ def _request(run: Path) -> dict[str, Any]:
     raw = _load(run / "inputs" / "atom-request.json", "stored atom request", "load-run")
     value = _validate_request(raw, stage="load-run", allow_legacy_prose_waiver=True)
     records, _ = _read_ledger(run)
-    root = records[0]["payload"]
+    root = dict(records[0]["payload"])
+    admission_sha256 = root.pop("value_admission_sha256", None)
+    if admission_sha256 is not None:
+        _unchanged(run / "inputs" / "value-admission.json", admission_sha256, "recorded value admission")
     legacy_fields = {"atomic_step_id", "request_sha256"}
     current_fields = legacy_fields | {"baseline_sha256", "repository_root"}
     superseded_fields = current_fields | {"supersession_sha256"}
@@ -2141,7 +2173,10 @@ def _state(run: Path) -> dict[str, Any]:
             supersession_chain_closed = True
         else:
             raise AtomError("load-run", f"unknown ledger event {record['event']!r}; restore a controller-written event")
+    admission = (_load(run / "inputs" / "value-admission.json", "value admission", "load-run")
+                 if "value_admission_sha256" in records[0]["payload"] else None)
     return {
+        "value_gate": admission["report"] if admission else {"status": "LEGACY_NOT_ASSESSED", "text": "VALUE GATE: NOT ASSESSED — historical run"},
         "schema_version": CONTRACT,
         "atomic_step_id": request["atomic_step_id"],
         "stage": stage,
@@ -2164,6 +2199,24 @@ def start(
     run: Path,
     supersedes: Path | None = None,
     prose_waiver_interview_path: Path | None = None,
+    value_packet: Path | None = None,
+    value_receipt: Path | None = None,
+) -> dict[str, Any]:
+    import atom_sequence
+    try:
+        return atom_sequence.start(request_path, run, supersedes,
+                                   prose_waiver_interview_path, value_packet, value_receipt)
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        raise AtomError('sequence-start', str(error)) from None
+
+
+def _start_unsequenced(
+    request_path: Path,
+    run: Path,
+    supersedes: Path | None = None,
+    prose_waiver_interview_path: Path | None = None,
+    value_packet: Path | None = None,
+    value_receipt: Path | None = None,
 ) -> dict[str, Any]:
     request_path = request_path.absolute()
     run = run.absolute()
@@ -2192,6 +2245,16 @@ def start(
             repository_root=repository_root,
             stage="start",
         )
+    spec = importlib.util.spec_from_file_location("atom_value_admission", Path(__file__).with_name("value_admission.py"))
+    if spec is None or spec.loader is None:
+        raise AtomError("value-admission", "Cannot load the required value admission helper; refresh the managed skill.")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    admit = module.admit
+    try:
+        admission = admit(raw_request, value_packet, value_receipt, repository_root)
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        raise AtomError("value-admission", str(error)) from None
     _require_disjoint_run(run, repository_root, request["allowed_paths"])
     supersession = None
     if supersedes is None:
@@ -2262,6 +2325,7 @@ def start(
         supersession_sha256 = _write_new(
             run / "inputs" / "supersession.json", _document(supersession)
         )
+    admission_sha256 = _write_new(run / "inputs" / "value-admission.json", _document(admission))
     first = {
         "sequence": 1,
         "event": "atom-started",
@@ -2271,6 +2335,7 @@ def start(
             "request_sha256": request_sha256,
             "baseline_sha256": baseline_sha256,
             "repository_root": str(repository_root),
+            "value_admission_sha256": admission_sha256,
         },
     }
     if supersession_sha256 is not None:
@@ -2357,6 +2422,22 @@ def _contract_scan(assembly: Path, request: dict[str, Any], stage: str) -> dict[
     operations = manifest.get("operations")
     if type(operations) is not list:
         raise AtomError(stage, "verified assembly receipt has no operations list")
+    surface = request["contract_surface"]
+    if surface["kind"] == "behavior":
+        files = []
+        for relative in surface["source_paths"]:
+            matching = [op for op in operations if type(op) is dict and op.get("path") == relative]
+            if len(matching) != 1:
+                raise AtomError(stage, f"behavior source {relative!r} has {len(matching)} assembly changes; require one changed source file")
+            op = matching[0]
+            path = assembly / "source" / relative
+            expected = _sha(op.get("sha256"), f"behavior source {relative!r} sha256", stage)
+            if path.is_symlink() or not path.is_file() or _digest(path.read_bytes()) != expected:
+                raise AtomError(stage, f"behavior source {relative!r} is missing, linked or changed; restore the verified assembly file")
+            files.append({"path": relative, "sha256": expected})
+        return {"method": "source-hash-and-captured-case-binding", "kind": "behavior",
+                "source_files": files, "case_ids": surface["case_ids"],
+                "limit": "Source binding is structural; behavior satisfaction comes from required captured-case execution and assessment."}
     modules = []
     for index, operation in enumerate(operations):
         if type(operation) is not dict:
@@ -2731,6 +2812,14 @@ def record_validation(run: Path, receipt_path: Path) -> dict[str, Any]:
 
 
 def authorize_next(run: Path) -> dict[str, Any]:
+    import atom_sequence
+    try:
+        return atom_sequence.authorize_next(run)
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        raise AtomError('sequence-advance', str(error)) from None
+
+
+def _authorize_validation(run: Path) -> dict[str, Any]:
     run = run.absolute()
     state = _state(run)
     if state["stage"] != "complete":
@@ -2773,6 +2862,8 @@ def main() -> int:
     start_parser = commands.add_parser("start")
     start_parser.add_argument("request", type=Path)
     start_parser.add_argument("run", type=Path)
+    start_parser.add_argument("--build-packet", "--value-packet", dest="value_packet", type=Path)
+    start_parser.add_argument("--build-receipt", "--value-receipt", dest="value_receipt", type=Path)
     start_parser.add_argument("--supersedes", type=Path)
     start_parser.add_argument("--prose-waiver-interview", type=Path)
     waiver_parser = commands.add_parser("prose-waiver-interview")
@@ -2802,6 +2893,8 @@ def main() -> int:
                 args.run,
                 args.supersedes,
                 args.prose_waiver_interview,
+                args.value_packet,
+                args.value_receipt,
             )
         elif args.command == "prose-waiver-interview":
             result = prose_waiver_interview(args.request, args.interview)
@@ -2819,6 +2912,8 @@ def main() -> int:
             result = authorize_next(args.run)
     except (AtomError, OSError) as error:
         stage = error.stage if isinstance(error, AtomError) else "runtime"
+        if args.command == "start":
+            print(f"VALUE GATE: WITHHELD | {error}", file=sys.stderr)
         print(f"Atom Building Machinery refused at {stage}: {error}", file=sys.stderr)
         return 2
     print(json.dumps(result, sort_keys=True))
