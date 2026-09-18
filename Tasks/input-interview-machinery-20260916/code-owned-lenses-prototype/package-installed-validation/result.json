@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "recorded_calls_replayed": 51,
+  "new_model_calls": 0,
+  "all_prompts_and_schemas_match": true,
+  "handoff_matches_live_acceptance": true,
+  "normalization": "Generated request UUID, replay label, relocated revision evidence path; snapshot digest verified against actual packet separately.",
+  "checks": [
+    "packaged-only runtime imports",
+    "same sessions and ordered lenses",
+    "actual follow-up and affected-answer revision",
+    "automatic recheck and export",
+    "exact user question",
+    "wrong request rejected before calls",
+    "explicit stop preserves unresolved",
+    "repeat next/reply uses no model calls",
+    "public CLI complete action"
+  ],
+  "skill": "/Users/kamenkamenov/.codex/skills/input-interview-machinery"
+}

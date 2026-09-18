@@ -1,0 +1,10 @@
+{
+  "id": "atom-selection-input",
+  "questions": [
+    {
+      "id": "q19",
+      "text": "What specific choice do you want resolved now toward this goal, and what should fall outside that choice?",
+      "consumer_use": "Answer the original question text at its stated boundary and evidence level. Do not replace a request for facts, a policy decision, or an explanation of behavior with the different task of reporting whether the archive is sufficient. If the original question itself asks only for evidence sufficiency, answer that question."
+    }
+  ]
+}

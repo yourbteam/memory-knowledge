@@ -1,0 +1,30 @@
+{
+  "execution": "passed",
+  "semantic_review": "passed",
+  "calls": 52,
+  "session": "01a0b4ba-9428-7ad1-ae46-362241dd818f",
+  "handoff": "/Users/kamenkamenov/memory-knowledge/Tasks/input-interview-machinery-20260916/code-owned-lenses-prototype/acceptance-operator-control/interview/handoff.json",
+  "code_unchanged": true,
+  "verdict": "acceptance_passed",
+  "elapsed_seconds": 802.97,
+  "evidence": {
+    "same_session_calls": 52,
+    "exact_source_quotes": 19,
+    "exact_operator_feedback": true,
+    "original_questions_preserved": true,
+    "affected_answer_selected_by_model": "working_proposal",
+    "only_affected_answer_revised": true,
+    "unaffected_execution_answer_verbatim": true,
+    "owner_answer_preserved_after_feedback": true,
+    "final_answers_copied_verbatim": true,
+    "input_and_product_code_hashes_unchanged": true
+  },
+  "semantic_assessment": {
+    "before": "The working proposal described a proposed three-round default as not owner approved.",
+    "after": "It now says caps/rounds are rejected for reusable clarification and owner drift feedback returns to the interviewed model.",
+    "dependency": "The model explicitly cited the later owner reply as the reason the prior ready proposal answer became stale.",
+    "preservation": "Owner decision retained its reviewed answer; model/reasoning/eight-lens answer stayed byte-equivalent as a JSON value.",
+    "scope": "Owner policy is kept separate from proof of implemented code behavior."
+  },
+  "qualification": "One fresh three-question chronological replay using actual archived proposal, actual owner request and actual later correction. Saved owner feedback was supplied automatically rather than asking the owner to repeat it. This exercised the continuous interview/feedback/dependency-revision/handoff path before packaging."
+}

@@ -1,0 +1,28 @@
+{
+  "approved_outcome": "Package and install the validated slim input-interview-machinery skill",
+  "scope": [
+    "skills/input-interview-machinery",
+    "skills/managed-skills.txt",
+    "working-agreement/client-skill-projections.json",
+    "packaging validation artifacts",
+    "~/.codex/skills/input-interview-machinery"
+  ],
+  "stopping_condition": "Installed self-contained entry point reproduces captured acceptance handoff and control paths",
+  "budget": "one packaging prototype; no new model calls",
+  "excluded": [
+    "commits",
+    "Taggable changes",
+    "methodology changes",
+    "other skill installation"
+  ],
+  "prototype_0": "run.py depended on a historical sibling interview.py; all six other runtime modules and lens prompts were local",
+  "hypothesis": "Bundle the same runtime and add one dispatcher; replay yields identical model-facing content and final answers",
+  "validation": "package-validation-2/result.json",
+  "retained_surface_review": "Six runtime modules and all JSON assets unchanged. run.py only removes historical sys.path injection. interview.py keeps exact called schema/prompt functions and drops unused historical reviewer. Dispatcher delegates to existing controllers; advances closure and stop export. No semantic gate or round cap added.",
+  "package_sha256": "3cdf52e53ebcdd7dfa62b6989f86ac68f67aeac5bdb1a1f5815394d66ee8a384",
+  "verdict": "promote",
+  "installed_path": "/Users/kamenkamenov/.codex/skills/input-interview-machinery",
+  "installed_validation": "package-installed-validation/result.json",
+  "installed_hash_matches": true,
+  "new_model_calls": 0
+}

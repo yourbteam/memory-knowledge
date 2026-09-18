@@ -20,3 +20,4 @@ shell-canary-runner
 system-alignment-assessment-machinery
 verifier-foundry
 working-agreement
+input-interview-machinery
