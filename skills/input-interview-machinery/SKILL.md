@@ -23,11 +23,10 @@ python3 <skill-dir>/scripts/input_interview.py start --questions QUESTIONS.json 
 
 Optional `--settings SETTINGS.json` freezes model settings for this run. Alternatively,
 `--caller-session ID` resumes an explicit **idle Codex CLI session** with the task context;
-`--contexts` then supplies optional additional evidence. Never attach to the active desktop
-turn or run concurrent calls on that session. Without a session, supply contexts for every
-question; each question receives its own persistent model session.
+`--contexts` must still supply complete source context for every question: later calls run in
+fresh sessions. Never attach to the active desktop turn or run concurrent calls on that session.
 
-Python asks each question, runs all eight lenses sequentially in its session, and preserves
+Python asks each question, runs all eight lenses sequentially in separate fresh GPT sessions, and preserves
 every answer version. The interviewed model owns readiness. There is no separate assessor
 trying to judge completeness without the task context. Do not replace sequential lenses
 with a single combined call, reinterpret readiness in caller code, or invent missing evidence.
@@ -45,15 +44,17 @@ Read the final JSON action after any progress events. The calling assistant is t
   immediately. Do not ask for another “proceed.” Drift feedback goes to the same interviewed
   model; it is not an instruction to stop unless the user explicitly ends the interview.
 - `complete`: give the calling skill the returned `handoff` file. Python has checked
-  cross-question effects in the original sessions and copied final answers verbatim.
+  cross-question effects in fresh sessions with the full saved interview context and copied final answers verbatim.
 - `stopped`: deliver the partial handoff with unresolved questions visible.
 - Failed/running state or an exception: inspect saved evidence and report the actual problem.
-  Do not repeat model calls blindly, edit answers manually, or present partial execution as complete.
+  Use `resume` after inspecting the failure. It retries only unfinished steps, preserving attempts
+  and completed results. Do not edit answers manually or present partial execution as complete.
 
 ```sh
 python3 <skill-dir>/scripts/input_interview.py user --run RUN --request-id ID
 python3 <skill-dir>/scripts/input_interview.py reply --run RUN --request-id ID --reply REPLY.json
 python3 <skill-dir>/scripts/input_interview.py next --run RUN
+python3 <skill-dir>/scripts/input_interview.py resume --run RUN
 python3 <skill-dir>/scripts/input_interview.py stop --run RUN --request-id ID --reply STOP.json
 ```
 
@@ -63,3 +64,13 @@ cap**: the operator controls the dialogue. These scripts are not an unattended d
 the calling assistant must surface questions and deliver replies. Keep the user informed during
 long calls. Model readiness means usable for the stated purpose within disclosed limits, not
 a guarantee of perfect completeness.
+
+## Durable recovery
+
+Each call saves its exact input, attempt status, answer and session. A completed step is reused
+only for the same input. Failed attempts remain separate. `resume` continues initial questions,
+lenses, replies or final review; `next` reports a failure without retrying it. One execution lock
+prevents concurrent writers. A fresh session gets the original question, latest accumulated answer,
+source evidence and relevant owner feedback. Final checks get the complete saved interview.
+No model history is required for lenses, follow-ups or final checks. A single supplied packet must
+still fit the provider context window; recovery never silently truncates evidence.

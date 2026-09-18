@@ -47,24 +47,30 @@ def ask(questions_path, contexts_path, output, transport_factory=None, caller_se
         review.validate(contexts[q['id']], review.eng.array(review.eng.obj({
             'id': review.eng.TEXT, 'text': review.eng.TEXT})), 'context')
     output = Path(output).resolve()
-    output.mkdir(parents=True, exist_ok=False)
+    if caller_session and any(not contexts[qid] for qid in ids):
+        raise ValueError('Fresh lens sessions require explicit source context for every question')
+    output.mkdir(parents=True, exist_ok=True)
+    for name, value in [('questions.json', questionnaire), ('contexts.json', contexts), ('model-settings.json', chosen_settings)]:
+        if (output/name).exists() and review.read(output/name) != value:
+            raise ValueError('Cannot resume with changed ' + name)
     review.save(output / 'questions.json', questionnaire)
     review.save(output / 'model-settings.json', chosen_settings)
     review.save(output / 'contexts.json', contexts)
     review.save(output / 'session-binding.json', {
         'requested_session': caller_session,
         'context_mode': 'existing_session' if caller_session else 'supplied_context_per_question'})
-    answers = []
-    review.save(output / 'answers.json', answers)
+    answers = review.read(output/'answers.json') if (output/'answers.json').exists() else []
+    if [a['question'] for a in answers] != questions[:len(answers)]:
+        raise ValueError('Saved question prefix differs')
     current_id = None
     factory = transport_factory or configure.factory_for(output)
     try:
-        for question in questions:
+        for question in questions[len(answers):]:
             current_id = question['id']
             folder = output / current_id
-            folder.mkdir()
+            folder.mkdir(exist_ok=True)
             initial_folder = folder / 'initial'
-            initial_folder.mkdir()
+            initial_folder.mkdir(exist_ok=True)
             transport = factory(initial_folder)
             state = review.eng.new_run(question, contexts[current_id])
             prompt = (session_prompt(question, contexts[current_id]) if caller_session
@@ -72,7 +78,12 @@ def ask(questions_path, contexts_path, output, transport_factory=None, caller_se
             schema = review.eng.submission_schema()
             (initial_folder / 'prompt.txt').write_text(prompt)
             review.save(initial_folder / 'schema.json', schema)
-            initial, session = transport.call('00-direct', prompt, schema, caller_session)
+            import checkpoint
+            if (initial_folder/'answer.json').exists() and (initial_folder/'result.json').exists():
+                initial = review.read(initial_folder/'answer.json')
+                session = review.read(initial_folder/'result.json')['session']
+            else:
+                initial, session = checkpoint.call(initial_folder, '00-direct', prompt, schema, factory, caller_session)
             review.validate(initial, schema)
             if caller_session and session != caller_session:
                 raise ValueError('Initial answer returned a different caller session')

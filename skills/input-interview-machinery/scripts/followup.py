@@ -105,7 +105,7 @@ def user_question(root, request_id):
         return action(state)
 
 
-def submit(root, request_id, reply, transport_factory=None):
+def submit(root, request_id, reply, transport_factory=None, recovering=False):
     root = Path(root).resolve()
     review.validate(reply, review.eng.obj({'origin': {'type': 'string', 'enum': ['user', 'source']},
         'text': review.eng.TEXT, 'sources': review.eng.array(review.eng.obj({
@@ -122,18 +122,20 @@ def submit(root, request_id, reply, transport_factory=None):
         request = state['pending']
         if not request or request['id'] != request_id:
             raise ValueError('Reply belongs to a different or completed request')
-        if state['status'] not in ('needs_input', 'waiting_user'):
-            raise ValueError('This request is running or failed; no automatic retry')
+        if state['status'] not in ('needs_input', 'waiting_user') and not recovering:
+            raise ValueError('This request is running or failed; use explicit resume')
         item = next(a for a in state['answers'] if a['question']['id'] == request['question_id'])
         folder = root / 'followups' / request_id
-        folder.mkdir(parents=True, exist_ok=False)
+        folder.mkdir(parents=True, exist_ok=True)
+        if (folder/'reply.json').exists() and review.read(folder/'reply.json') != reply:
+            raise ValueError('Cannot replace the saved reply during recovery')
         review.save(folder / 'request.json', request)
         review.save(folder / 'reply.json', reply)
         state['status'] = 'running'
         save(path(root), state)
         try:
             initial_folder = folder / 'initial'
-            initial_folder.mkdir()
+            initial_folder.mkdir(exist_ok=True)
             effective_question = dict(item.get('effective_question', item['question']))
             if reply['origin'] == 'user':
                 effective_question['consumer_use'] += (
@@ -142,8 +144,10 @@ def submit(root, request_id, reply, transport_factory=None):
                     'Do not insist on an answer to a question the operator has rejected. Exact feedback: '
                     + reply['text'])
             packet = {'original_question': item['question'], 'effective_question': effective_question, 'previous_complete_answer': item['final_answer'],
-                      'missing_information_request': request['question'], 'new_information': reply}
-            prompt = ('Continue the same interview with its existing task context. You requested missing '
+                      'missing_information_request': request['question'], 'new_information': reply,
+                      'source_context': review.read(root/'contexts.json')[request['question_id']],
+                      'feedback_history': [h for h in state['history'] if h['request']['question_id']==request['question_id']]}
+            prompt = ('Continue the interview using the full supplied context. The previous answer requested missing '
                 'information; the exact reply and any additional sources are below. A user reply can be an '
                 'answer, correction, objection to drift, or redirection. Address its meaning first, including '
                 'whether the original question remains justified. Follow the effective question: owner corrections '
@@ -160,16 +164,15 @@ def submit(root, request_id, reply, transport_factory=None):
             review.save(initial_folder / 'schema.json', schema)
             factory = transport_factory or configure.factory_for(root)
             transport = factory(initial_folder)
-            answer, session = transport.call('00-followup', prompt, schema, request['session'])
-            if session != request['session']:
-                raise ValueError('Follow-up answer returned a different caller session')
+            import checkpoint
+            answer, session = checkpoint.call(initial_folder, '00-followup', prompt, schema, factory)
             review.validate(answer, schema)
             choice = answer['self_assessment']
             if bool(choice['question'].strip()) != (choice['choice'] == 'needs_input'):
                 raise ValueError('Follow-up readiness and question disagree')
             review.save(initial_folder / 'answer.json', answer)
             review.save(folder / 'review-input.json', {'question': effective_question,
-                'private_context': reply['sources'], 'starting_answer': answer})
+                'private_context': [{'id':'interview-context-and-feedback','text':json.dumps(packet,ensure_ascii=False)}], 'starting_answer': answer})
             result = review.run(folder / 'review-input.json', folder / 'review',
                 initial_session=session, transport_factory=factory)
             final = review.read(folder / 'review/final-answer.json')
@@ -185,6 +188,7 @@ def submit(root, request_id, reply, transport_factory=None):
             return action(state)
         except Exception as exc:
             state['status'] = 'failed'
+            state['failed_phase'] = 'followup'
             state['error'] = str(exc)
             save(path(root), state)
             raise

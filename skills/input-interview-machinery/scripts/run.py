@@ -25,7 +25,10 @@ def read(path):
 
 
 def save(path, value):
-    Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+    path = Path(path)
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+    temporary.replace(path)
 
 
 def validate(value, schema, where='response'):
@@ -59,10 +62,9 @@ def response_schema():
 def build_prompt(data, current, lens, session):
     packet = {'original_question': data['question'],
               'latest_complete_answer': current, 'lens': lens}
-    if session is None:
-        packet['private_context'] = data['private_context']
+    packet['private_context'] = data['private_context']
     return (COMMON + 'Apply ONLY the single lens in this turn. '
-            + ('Continue with the original source context supplied in this same session. ' if session else '')
+            + 'Use the complete supplied source context; no earlier session history is available. '
             + 'Return lens_assessment and complete_answer.\n'
             + json.dumps(packet, ensure_ascii=False))
 
@@ -122,7 +124,10 @@ def run(input_path, output, replay_from=None, transport_factory=None, initial_se
     for lens in lenses:
         validate(lens, eng.obj({'id': eng.TEXT, 'name': eng.TEXT, 'instruction': eng.TEXT}), 'lens')
     output = Path(output).resolve()
-    output.mkdir(parents=True, exist_ok=False)  # Never overwrite or silently restart.
+    output.mkdir(parents=True, exist_ok=True)
+    for name, value in [('input.json', data), ('lenses.json', lenses)]:
+        if (output / name).exists() and read(output / name) != value:
+            raise ValueError('Cannot resume with changed ' + name)
     if transport_factory is None and replay_from is None:
         import configure
         chosen = configure.new_settings(model_settings_path)
@@ -130,10 +135,10 @@ def run(input_path, output, replay_from=None, transport_factory=None, initial_se
         transport_factory = configure.factory_for(output)
     save(output / 'input.json', data)
     save(output / 'lenses.json', lenses)
-    versions = []
-    save(output / 'versions.json', versions)
-    session = initial_session
-    current = data['starting_answer']
+    versions = read(output / 'versions.json') if (output / 'versions.json').exists() else []
+    session = versions[-1]['session'] if versions else initial_session
+    stats = {'calls': 0}
+    current = versions[-1]['answer'] if versions else data['starting_answer']
     mode = 'not_started'
     stage = None
     try:
@@ -141,16 +146,20 @@ def run(input_path, output, replay_from=None, transport_factory=None, initial_se
                      RecordedReplay(replay_from, output) if replay_from else CodexTransport(output))
         mode = transport.mode
         for index, lens in enumerate(lenses, 1):
+            if index <= len(versions):
+                if versions[index-1]['lens'] != lens:
+                    raise ValueError('Saved lens order differs')
+                continue
             stage = f'{index:02}-{lens["id"]}'
             folder = output / 'probe' / stage
-            folder.mkdir(parents=True)
-            prompt = build_prompt(data, current, lens, session)
+            folder.mkdir(parents=True, exist_ok=True)
+            prompt = build_prompt(data, current, lens, None)
             schema = response_schema()
             (folder / 'prompt.txt').write_text(prompt)
             save(folder / 'schema.json', schema)
-            response, returned_session = transport.call(stage, prompt, schema, session)
-            if not returned_session or (session is not None and session != returned_session):
-                raise ValueError('Model response came from a different interview session')
+            import checkpoint
+            response, returned_session = checkpoint.call(folder, stage, prompt, schema,
+                transport_factory or (lambda _: transport), stats=stats)
             validate(response, schema)
             save(folder / 'answer.json', response)
             revised = response['complete_answer']
@@ -169,7 +178,7 @@ def run(input_path, output, replay_from=None, transport_factory=None, initial_se
             current = revised  # Never use readiness or assessment to select/skip a lens.
         save(output / 'final-answer.json', current)
         result = {'completed': True, 'execution_mode': mode, 'lens_calls': len(versions),
-                  'new_model_calls': 0 if mode == 'recorded_replay' else len(versions),
+                  'new_model_calls': 0 if mode == 'recorded_replay' else stats['calls'],
                   'session': session, 'final_readiness': current['self_assessment']['choice'],
                   'meaning': 'All fixed lens passes completed; this is not a claim of semantic completeness.'}
         save(output / 'result.json', result)

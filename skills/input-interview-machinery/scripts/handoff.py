@@ -6,6 +6,7 @@ from pathlib import Path
 import followup
 import run as review
 import configure
+import copy
 
 
 def digest(value):
@@ -56,8 +57,8 @@ def assemble(root, state, checked=None):
 
 
 def check_one(folder, item, contents, factory):
-    folder.mkdir(parents=True, exist_ok=False)
-    prompt = ('Continue as the model interviewed for the target question in this same task session. '
+    folder.mkdir(parents=True, exist_ok=True)
+    prompt = ('Use the supplied complete interview context to continue work on the target question. '
         'Check whether YOUR latest saved answer remains usable after considering the other questions, '
         'their answers and all later operator feedback below. This is a dependency check, not a new '
         'context-blind assessor. Source IDs are scoped to their question. Owner corrections override '
@@ -69,9 +70,8 @@ def check_one(folder, item, contents, factory):
     schema = review.eng.obj({'decision': {'type':'string','enum':['keep','revise']}, 'reason':review.eng.TEXT})
     (folder / 'prompt.txt').write_text(prompt)
     review.save(folder / 'schema.json', schema)
-    response, session = factory(folder).call('cross-question', prompt, schema, item['session'])
-    if session != item['session']:
-        raise ValueError('Cross-question check returned a different interview session')
+    import checkpoint
+    response, session = checkpoint.call(folder, 'cross-question', prompt, schema, factory)
     review.validate(response, schema)
     if not response['reason'].strip():
         raise ValueError('Cross-question judgment requires a reason')
@@ -97,6 +97,7 @@ def close(root, transport_factory=None):
         folder.mkdir(parents=True, exist_ok=True)
         review.save(folder / 'input.json', contents)
         checks = []
+        before = copy.deepcopy(state)
         try:
             for item in state['answers']:
                 target = folder / item['question']['id'] / 'check'
@@ -109,26 +110,26 @@ def close(root, transport_factory=None):
                 if verdict['decision'] == 'keep': continue
                 qid = item['question']['id']
                 revision = folder / qid / 'revision'
-                revision.mkdir(exist_ok=False)
-                prompt = ('Continue the same interview. Revise your answer to the target question using '
+                revision.mkdir(exist_ok=True)
+                prompt = ('Use the supplied context to revise the answer to the target question using '
                     'the concrete cross-question finding and complete interview evidence below. Preserve '
                     'valid evidence and limits; respect owner corrections. Return a complete answer, '
                     'not a critique. If needed information remains missing, ask for it using needs_input. '
                     'Do not invent facts or broaden the task. No tools.\n' + json.dumps({
                     'question':item.get('effective_question', item['question']), 'finding':verdict,
                     'interview':contents}, ensure_ascii=False))
-                initial = revision / 'initial';initial.mkdir()
+                initial = revision / 'initial';initial.mkdir(exist_ok=True)
                 (initial / 'prompt.txt').write_text(prompt)
                 schema = review.eng.submission_schema();review.save(initial / 'schema.json',schema)
-                answer, session = factory(initial).call('revise',prompt,schema,item['session'])
-                if session != item['session']: raise ValueError('Revision returned different session')
+                import checkpoint
+                answer, session = checkpoint.call(initial, 'revise', prompt, schema, factory)
                 review.validate(answer,schema)
                 choice=answer['self_assessment']
                 if bool(choice['question'].strip()) != (choice['choice']=='needs_input'):
                     raise ValueError('Revision readiness and follow-up question disagree')
                 review.save(initial/'answer.json',answer)
                 data={'question':item.get('effective_question',item['question']),
-                      'private_context':[], 'starting_answer':answer}
+                      'private_context':[{'id':'complete-interview', 'text':json.dumps(contents,ensure_ascii=False)}], 'starting_answer':answer}
                 review.save(revision/'input.json',data)
                 review.run(revision/'input.json',revision/'review',transport_factory=factory,initial_session=session)
                 final=review.read(revision/'review/final-answer.json')
@@ -146,7 +147,9 @@ def close(root, transport_factory=None):
             followup.save(followup.path(root),state)
             return assemble(root,state,fingerprint)
         except Exception as exc:
-            state['status']='failed';state['error']=str(exc)
+            # Do not commit only part of a revision batch. Its completed calls remain reusable.
+            state = before
+            state['status']='failed';state['error']=str(exc);state['failed_phase']='closure'
             followup.save(followup.path(root),state)
             review.save(folder/'failure.json',{'error':str(exc)})
             raise
