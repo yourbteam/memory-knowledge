@@ -1,0 +1,25 @@
+{
+  "result": "end_to_end_run_passed_with_citation_limitation",
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "calls": 3,
+  "retries": 0,
+  "elapsed_model_seconds": 171.0875826238189,
+  "usage": {
+    "input_tokens": 652511,
+    "output_tokens": 4850,
+    "cached_input_tokens": 0
+  },
+  "schema_validation": "passed",
+  "resume": "completed run reused all three calls, identical handoff",
+  "semantic_review": {
+    "method": "Read both complete lens outputs and the complete final JSON against the frozen prior acceptance checks and historical evidence.",
+    "actual_contribution": "pass: forSelfie composition, paid/unpaid/duplicates, nine cases",
+    "test_boundaries": "pass: controlled SQLite/provider, no verified identity or production claim",
+    "goal_distinction": "pass: bounded atom completion, overall not_established, no inference that unproven components are absent",
+    "chronology": "pass: historical build and later branch inspection remain separate",
+    "interview_updates": "pass: proposals only, no next atom chosen"
+  },
+  "citation_limitation": "Final goal_completion evidence cites preservation.scope at the goal-context root; preservation lives under goal. Supporting goal.outcome and other completion evidence are present. Lens citations also mix source-file paths with packet /data wrappers. References are human-readable citations, not validated machine-resolvable pointers.",
+  "scope": "Packaged historical assessment entry point validated. Connected live product cycle was not fabricated; unfinished cycle rejection was tested previously. Skill not installed or committed."
+}

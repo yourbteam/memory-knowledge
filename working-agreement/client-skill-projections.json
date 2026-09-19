@@ -15,6 +15,21 @@
         "claude"
       ]
     },
+    "atom-assessment-machinery": {
+      "canonical_tree_sha256": "497685a67398ebd569cf2dc760e503b1cdbe7b72b87f32e70e9c911b1d5929c9",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "497685a67398ebd569cf2dc760e503b1cdbe7b72b87f32e70e9c911b1d5929c9",
+      "scenario_groups": [
+        "CAP-OPERATIONS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "atom-building-machinery": {
       "canonical_tree_sha256": "f5b3a88c4d3e17ff9b8a35d69dd3b67de69bba546e295b9f13bd11d4b03a814e",
       "disposition": "GENERATED_CLIENT_PROJECTION",

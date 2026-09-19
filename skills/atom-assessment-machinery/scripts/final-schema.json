@@ -1,0 +1,106 @@
+{
+  "type": "object",
+  "properties": {
+    "achieved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "statement",
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "remaining": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "statement",
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "goal_completion": {
+      "type": "object",
+      "properties": {
+        "judgment": {
+          "type": "string",
+          "enum": [
+            "established",
+            "not_established",
+            "cannot_assess"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "judgment",
+        "reason",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "interview_updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "statement",
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "achieved",
+    "remaining",
+    "goal_completion",
+    "interview_updates"
+  ],
+  "additionalProperties": false
+}

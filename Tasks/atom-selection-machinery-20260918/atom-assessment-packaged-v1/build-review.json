@@ -1,0 +1,13 @@
+{
+  "incomplete_cycle_cli_rejected_before_run_creation": true,
+  "skill_validation": "passed",
+  "live_validation": "completed; see live-validation.json",
+  "retained_surface_review": {
+    "scope": "new standalone skill and packaged validation artifacts only",
+    "changes": "bundled existing context collector and Codex transport; frozen prompts, configurable model, structured final call and file handoff",
+    "source_dependency": "Python standard library and Codex CLI; no dependency on prototype or installed selector paths",
+    "automatic_retries": false,
+    "context_preservation": "lossless duplicate-reference encoding with round-trip check",
+    "pending": "none for historical run; citation limitation recorded"
+  }
+}

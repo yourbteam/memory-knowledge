@@ -1,0 +1,12 @@
+{
+  "current-cycle-context.json": true,
+  "mixed-records-context.json": true,
+  "stale-reference-context.json": true,
+  "real_assembly_mixed-records-probe-cycle.json": true,
+  "real_assembly_stale-reference-probe-cycle.json": true,
+  "unfinished_cycle_refused": true,
+  "historical_sources_verified": true,
+  "transport_smaller": true,
+  "real_final_answer_accepted": true,
+  "old_prose_not_exported_as_final": true
+}
