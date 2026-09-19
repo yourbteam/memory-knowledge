@@ -24,3 +24,5 @@ Resume with `resume --run DIRECTORY`. Completed calls are reused only with uncha
 Inspect `state.json`, stage `events.jsonl`, and `handoff.json`. The handoff preserves both lens outputs and four final sections: achieved, remaining, goal_completion, interview_updates. Completion choices are established, not_established or cannot_assess. Structural validity is not a guarantee of judgment quality: assess whether findings preserve the evidence and its limits.
 
 The handoff is a proposed update for the incremental interview. Do not mutate current answers, mark the goal complete, advance a cycle, or select another atom merely because this run completed. Preserve a completed atom separately from overall goal completion. Saved prompts, sources, model settings and results are the audit trail.
+
+Final assessment evidence fields contain code-supplied IDs. The handoff’s resolved_evidence maps each selected ID to exact frozen-context pointers, character offsets and text, preserving duplicate locations. Python checks retrieval; the model remains responsible for whether the passage supports the claim.

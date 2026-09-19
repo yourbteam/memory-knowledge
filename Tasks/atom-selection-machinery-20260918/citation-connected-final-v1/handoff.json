@@ -1,0 +1,1016 @@
+{
+  "schema_version": 1,
+  "kind": "atom_assessment",
+  "mode": "historical_contribution_probe",
+  "cycle_id": null,
+  "context": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/citation-connected-final-v1/context.json",
+    "sha256": "1391549dba738677d50027225cab49bd7943037a6537cc6f705b0e70577d474d"
+  },
+  "model_settings": {
+    "model": "gpt-6-astra",
+    "reasoning": "medium",
+    "cli": "/Applications/ChatGPT.app/Contents/Resources/codex",
+    "timeout_seconds": 300
+  },
+  "lenses": {
+    "changed": {
+      "analysis": "The atom demonstrably added one internal service entrypoint, RecognitionPurchaseEvidence::forSelfie, connecting the existing selfie query to the existing purchase-evidence resolver. This is bounded product progress toward the Taggable discount goal; it does not demonstrate automatic checkout discount delivery.\n\nCitation keys identify actual records included in the packet: S = /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/state.json; R = /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/closeout-correction/installed-recheck-v2/actual-result.txt; H = /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/builder-handoff-v1/handoff.json.\n\nBefore: forMatches and forReference already existed, and separately composing the helper with forMatches already produced the expected results in all nine cases. The missing capability was the single selfie entrypoint: nine baseline executions reported available=false and requests=[]. The bounded app/routes search found no service caller. These observations establish an orchestration gap, not an absence of recognition or payment-evidence capabilities. [S: observed; H: /data/assessment_input/progress_result/evidence, embedded prototype0-cases.json and existing-boundary-results.json, all nine cases.]\n\nAfter: the added method takes the supplied key and configured helper, assigns SearchRecognitionRegistration::COLLECTION_ID, calls $amazon->searchFacesByImage($s3Key, $collectionId), and returns static::forMatches($collectionId, $matches). Comparing the included before/after source shows the existing resolver methods preserved. The recorded promotion changed only taggable-server/app/Services/RecognitionPurchaseEvidence.php; candidate, promotion and validation identify source hash 6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897. Thus the new contribution is caller-accessible composition of existing behavior. [R: /generated_candidate/sources, roles before and after; /controller_state/current_promotion/changed_paths; /driver_events, file-promoted; /validation.]\n\nThe nine preserved actual-source executions demonstrate the following through the new entrypoint:\n- empty-matches returns []; one-paid-match returns history 11 → order 101 → payment 501 classified recorded-success, with reason square-recorded-success.\n- unpaid-before-paid retains history 22 with not-established evidence before history 11 with recorded-success evidence. duplicate-reference-preserved retains both occurrences.\n- provider-failure, provider-no-face, provider-no-collection and invalid-later-reference produce invalid-match-list refusals; missing-history produces unknown-history. The harness maps InvalidArgumentException and ModelNotFoundException to those labels, so these are recorded exception outcomes rather than new service return formats.\n- Every case records available=true, one SearchFacesByImage POST using purchase-search-history and controlled-selfie, MaxFaces=100 and FaceMatchThreshold=80, read_only=true and dependency hashes matching the baseline.\n[R: /validation, each named case’s embedded stdout; H: /data/assessment_input/progress_result/evidence, embedded baseline/test.php, exception handlers and snapshot function, and prototype0-cases.json, dependency_sha256.]\n\nThe proof boundary is controlled SQLite fixtures with intercepted provider HTTP and a helper configured by the harness. It establishes request construction and composition with existing evidence resolution, including preserved failures. It does not establish live face recognition, same-person identity, gateway settlement, prerequisite-tour qualification, discount-code selection/application, checkout integration, production deployment, or preservation of the entire checkout flow through runtime regression tests. Those outcomes are missing from this atom’s evidence. [H: embedded baseline/test.php, SQLite :memory: setup, Mockery Guzzle interception and configured helper; S: limits; R: after-source forSelfie; H: /data/atom_request/stopping_condition.]\n\nAgainst the fixed product goal, this closes the internal connection needed to obtain candidate purchase histories from a selfie. It leaves the goal’s identity, eligibility and before-payment discount application conditions unproved by this atom. The assessment goal is taggable-auto-discount-delivery; the historical build goal remains reliable-autonomous-atom-machinery as provenance. No new autonomy transfer is demonstrated: selection and preparation remained manual, and the original contribution command exited 2 despite successful product validation. The corrected completion supports the bounded product outcome while retaining that closeout limitation. [/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json: /goal/outcome; S: manual; R: /driver_events, contribution command-finished and stopped; H: /data/completion/review and /data/completion/goal_context.]\n\nThe later interview belongs to the separate 2026-09-18 task context and is not the historical baseline. It reports absence of expected artifacts in the inspected branch at head d5ddaa23ed61d3f62c1006584c18e612bacfdb64, with no remote, deployment, database or runtime inspection. It neither negates the preserved historical result nor establishes its current availability or the cause of subsequent absence. An exact inspection timestamp is not supplied here. [/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/current-answers-v1/current-answers.json: /questions/4/final_answer, answer and limits; /snapshot/context_policy.]"
+    },
+    "remaining": {
+      "analysis": "The fixed delivery goal remains incomplete after this atom: the remaining gap is turning candidate purchase evidence into a qualified, automatically discounted checkout before payment. The older build goal, reliable-autonomous-atom-machinery, remains provenance rather than an additional delivery condition here. [records.fixed_goal: /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json, /goal/outcome and /preservation; records.completed_build: /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/builder-handoff-v1/handoff.json, /data/assessment_input/goal.]\n\nKnown unfinished work at the historical closeout:\n\n1. Same-person and prerequisite-tour qualification remain unresolved at the connection to checkout. The pre-build record explicitly identifies “unresolved same-person and location eligibility decisions”; the completed addition returns evidence “without deciding identity or eligibility.” Therefore a returned similarity score and recorded-success payment do not themselves establish that this checkout belongs to the same person with a paid purchase at a configured prerequisite tour. The required rule is already settled: use the existing face-recognition flow, and any one configured prerequisite tour suffices. What remains is its integration and demonstration, not choosing another identity mechanism or restricting configuration to one relationship row. [records.historical_pre_build_state: /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/state.json, /priority; completed after-source: /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/builder-live-01/candidate/taggable-server/app/Services/RecognitionPurchaseEvidence.php, forSelfie docblock and body; fixed_goal source above, /goal/completion_conditions/3 through /5.]\n\n2. Checkout wiring, applicable existing 50% code lookup in that flow, and automatic application before payment remain unfinished by this atom. The assignment expressly excludes “eligibility, checkout wiring or provider configuration changes,” and closeout describes an internal capability “without checkout integration or identity decisions.” This establishes an integration gap; it does not establish that every underlying eligibility or selector component still needed to be invented. [records.historical_assignment: /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/atom-request.json, /stopping_condition; completed closeout: /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/closeout-correction/installed-recheck-v2/contribution/completion.json, /review/progress_reason; fixed_goal source above, /goal/completion_conditions/0 through /2.]\n\nMissing evidence, rather than established implementation defects:\n\n3. The packet does not demonstrate the complete paid-prerequisite-purchase → same-person recognition → eligible current tour → existing 50% code → discounted order before payment sequence. The one-paid-match execution returns history 11, order 101 and payment 501 classified recorded-success; it contains no current-tour qualification or discounted checkout. The test harness uses in-memory SQLite and intercepted provider HTTP. Consequently live recognition, actual prerequisite/discount configuration, operational registration of searchable histories, and deployment/runtime delivery remain unproven. This is not evidence that those systems fail, nor a requirement to add gateway-settlement verification. [completed validation: /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/one-paid-match.json, /stdout result and request; harness: memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/baseline/test.php, SQLite ':memory:', Mockery Guzzle interception and direct forSelfie call; registration boundary: memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/baseline/taggable-server/app/Services/SearchRecognitionRegistration.php, registerForHistoryId.]\n\n4. Preservation of the remaining checkout/search/payment behavior after integration is unproven. The recorded read_only=true and unchanged dependency hashes establish preservation within these service fixtures; they do not exercise the checkout or payment flow with automatic discount application. No regression is established. [one-paid-match validation path above, /stdout/read_only and /stdout/dependency_sha256; harness path above, snapshot closure and direct service invocation; fixed_goal source above, /goal/completion_conditions/2.]\n\nLater background adds a separate availability uncertainty. The frozen 2026-09-18 task context reports expected historical services/migration absent, selector_method_present=false and zero named references on feature/kiosk-square-return-recovery at d5ddaa23ed61d3f62c1006584c18e612bacfdb64. It also reports bounded historical prerequisite, eligibility and selector successes. Thus the relationship between those historical artifacts and the inspected branch remains unresolved; absence there does not prove deletion, absence everywhere, or absence of an equivalent implementation. This later context must not be projected backward onto the atom’s closeout. Its exact inspection timestamp is not supplied, and its scope excludes remote fetch, deployment inspection, database queries and runtime tests. [records.later_interview_background: /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/current-answers-v1/current-answers.json, /questions/1/final_answer, /questions/4/final_answer and /questions/5/final_answer; /snapshot/context_policy says the initial copy “does not refresh historical development evidence.”]"
+    }
+  },
+  "assessment": {
+    "achieved": [
+      {
+        "statement": "The historical selfie-purchase-lookup atom completed a bounded product contribution: RecognitionPurchaseEvidence::forSelfie connects the caller’s selfie key and configured recognition helper to the existing full purchase-evidence resolver. Previously the entrypoint was absent; the underlying helper and resolver already worked when composed separately.",
+        "evidence": [
+          "E0064",
+          "E0345",
+          "E0473",
+          "E0706"
+        ]
+      },
+      {
+        "statement": "Preserved actual-source executions show empty results, a paid match, unpaid-before-paid ordering, and duplicate references retained. Requests use purchase-search-history, the supplied controlled-selfie key, MaxFaces=100 and FaceMatchThreshold=80. These cases report unchanged database snapshots and dependency hashes.",
+        "evidence": [
+          "E0348",
+          "E0350",
+          "E0352",
+          "E0354"
+        ]
+      },
+      {
+        "statement": "The three provider-failure cases and invalid-later-reference preserve invalid-match-list refusals; missing-history preserves the missing-model exception, recorded as unknown-history by the harness. These labels are harness representations of exceptions, not new service return formats.",
+        "evidence": [
+          "E0279",
+          "E0356",
+          "E0358",
+          "E0360",
+          "E0362",
+          "E0364"
+        ]
+      },
+      {
+        "statement": "The corrected closeout supports machine-authored, reviewed, promoted and validated product code within the admitted scope. It retains the original contribution-command failure and manual preparation as limitations; it establishes neither additional autonomy transfer nor universal machinery reliability.",
+        "evidence": [
+          "E0337",
+          "E0703",
+          "E0706"
+        ]
+      }
+    ],
+    "remaining": [
+      {
+        "statement": "Same-person establishment through the existing face-recognition flow and qualification of a paid purchase at any one configured prerequisite tour remain unproved in the checkout connection. Returning candidate matches and recorded payment evidence does not itself establish identity or eligibility. The business rule is already settled; a new identity mechanism or single-row restriction is not required.",
+        "evidence": [
+          "E0033",
+          "E0039",
+          "E0045",
+          "E0345",
+          "E0703"
+        ]
+      },
+      {
+        "statement": "The atom does not establish eligible-current-tour checkout wiring, applicable existing 50% code lookup, or automatic application to the order before payment. Later background reports bounded prerequisite, eligibility and selector successes, so this gap should not be described as proof that every component needs to be invented.",
+        "evidence": [
+          "E0012",
+          "E0074",
+          "E0703",
+          "E0790",
+          "E1013",
+          "E1015"
+        ]
+      },
+      {
+        "statement": "Validation used controlled in-memory SQLite fixtures, intercepted provider HTTP and a directly invoked service. Operational registration of searchable histories, live recognition, target prerequisite and discount configuration, and end-to-end delivery are not established. The payment classification concerns application records, not gateway settlement; this limitation does not add a settlement-verification requirement.",
+        "evidence": [
+          "E0275",
+          "E0277",
+          "E0278",
+          "E0279",
+          "E0301",
+          "E0317",
+          "E0350"
+        ]
+      },
+      {
+        "statement": "Preservation of the remaining checkout/search/payment behavior after discount integration is unproved. Read-only service fixtures and unchanged dependency hashes support the bounded service result, but do not demonstrate checkout regression coverage or establish that a regression occurred.",
+        "evidence": [
+          "E0027",
+          "E0277",
+          "E0279",
+          "E0350"
+        ]
+      },
+      {
+        "statement": "The later frozen interview reports expected artifacts and named references absent from its inspected branch at head d5ddaa23ed61d3f62c1006584c18e612bacfdb64. The relationship to historical promoted artifacts remains unresolved. This is neither today’s checkout evidence nor proof of deletion, absence from all branches, or absence of an equivalent implementation. Its inspection excluded remote, deployment, database and runtime checks.",
+        "evidence": [
+          "E1038",
+          "E1040",
+          "E1050",
+          "E1097",
+          "E1080",
+          "E1363",
+          "E1652"
+        ]
+      },
+      {
+        "statement": "No exact timestamp for the later checkout inspection or fresh evidence of today’s checkout and deployed behavior is supplied.",
+        "evidence": []
+      }
+    ],
+    "goal_completion": {
+      "judgment": "not_established",
+      "reason": "Both lenses’ bounded-contribution conclusions are supported by the original records: the historical atom completed the internal selfie-to-purchase-evidence connection, but the fixed delivery goal requires the complete qualified checkout sequence and automatic 50% discount application before payment while preserving other behavior. The supplied controlled service proofs do not establish that sequence. Later historical component reports and limited branch inspection do not close the gap. The older machinery goal remains provenance, not an additional completion condition for this product assessment.",
+      "evidence": [
+        "E0012",
+        "E0058",
+        "E0138",
+        "E0345",
+        "E0350",
+        "E0703",
+        "E0706",
+        "E0782",
+        "E1020",
+        "E1652"
+      ]
+    },
+    "interview_updates": [
+      {
+        "statement": "Proposed update to contribution and current-position answers: record selfie-purchase-lookup as a completed historical internal-service contribution, with nine controlled cases and preserved exception behavior. Do not label it the latest overall completion, current installation, checkout delivery, or an autonomy gain.",
+        "evidence": [
+          "E0703",
+          "E0706",
+          "E0839",
+          "E0843",
+          "E1624"
+        ]
+      },
+      {
+        "statement": "Proposed update to remaining conditions: retain the fixed sequence—eligible current tour, same person established through existing face recognition, paid purchase at any one configured prerequisite tour, applicable existing 50% code applied before payment—and record overall delivery as not established.",
+        "evidence": [
+          "E0012",
+          "E0033",
+          "E0039",
+          "E0045",
+          "E0703"
+        ]
+      },
+      {
+        "statement": "Proposed missing-information entry: identify the intended delivery branch and version, and evidence connecting historical promoted artifacts to that target. Preserve the later inspection’s branch/head and scope separately; the packet does not resolve the artifact-to-checkout transition.",
+        "evidence": [
+          "E1038",
+          "E1040",
+          "E1080",
+          "E1586",
+          "E1625"
+        ]
+      },
+      {
+        "statement": "Proposed completion-evidence entry: request version-bound evidence of the complete checkout sequence, including searchable prior purchase provenance, recognition and prerequisite qualification, applicable code selection, discounted order before payment, and preservation of surrounding behavior. Record environment and mocked boundaries explicitly. This is a proposed evidence need, not an applied interview change or selection of the next atom.",
+        "evidence": [
+          "E0012",
+          "E0027",
+          "E0275",
+          "E0277",
+          "E0279",
+          "E0987",
+          "E1020"
+        ]
+      }
+    ]
+  },
+  "resolved_evidence": {
+    "E0012": {
+      "id": "E0012",
+      "pointer": "/records/fixed_goal/data/goal/outcome",
+      "start": 0,
+      "end": 440,
+      "text": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0027": {
+      "id": "E0027",
+      "pointer": "/records/fixed_goal/data/goal/completion_conditions/2/text",
+      "start": 0,
+      "end": 169,
+      "text": "This new addition only needs to locate a 50% discount code and apply it automatically to the order in the check out. The rest will not be changed and stays as it is now.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/0/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 169
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/3/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 169
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/final_answer/basis/18/quote",
+          "start": 0,
+          "end": 169
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/24/quote",
+          "start": 0,
+          "end": 169
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/basis/18/quote",
+          "start": 0,
+          "end": 169
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/6/final_answer/basis/7/quote",
+          "start": 0,
+          "end": 169
+        }
+      ]
+    },
+    "E0033": {
+      "id": "E0033",
+      "pointer": "/records/fixed_goal/data/goal/completion_conditions/3/text",
+      "start": 0,
+      "end": 245,
+      "text": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/0/final_answer/basis/7/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/3/final_answer/basis/7/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/25/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/6/final_answer/basis/8/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/8/final_answer/basis/18/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/8/revisions/0/previous_answer/basis/13/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/8/revisions/0/final_answer/basis/18/quote",
+          "start": 0,
+          "end": 245
+        }
+      ]
+    },
+    "E0039": {
+      "id": "E0039",
+      "pointer": "/records/fixed_goal/data/goal/completion_conditions/4/text",
+      "start": 0,
+      "end": 87,
+      "text": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/0/final_answer/basis/8/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/3/final_answer/basis/9/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/26/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/6/final_answer/basis/9/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/8/final_answer/basis/20/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/8/revisions/0/previous_answer/basis/15/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/8/revisions/0/final_answer/basis/20/quote",
+          "start": 0,
+          "end": 87
+        }
+      ]
+    },
+    "E0045": {
+      "id": "E0045",
+      "pointer": "/records/fixed_goal/data/goal/completion_conditions/5/text",
+      "start": 0,
+      "end": 181,
+      "text": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/0/final_answer/basis/9/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/3/final_answer/basis/8/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/final_answer/basis/19/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/7/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/basis/19/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/6/final_answer/basis/10/quote",
+          "start": 0,
+          "end": 181
+        }
+      ]
+    },
+    "E0058": {
+      "id": "E0058",
+      "pointer": "/records/fixed_goal/data/goal/preservation/scope",
+      "start": 0,
+      "end": 93,
+      "text": "Delivery goal only. The historical machinery-development goal remains separate and unchanged.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0064": {
+      "id": "E0064",
+      "pointer": "/records/historical_pre_build_state/data/observed",
+      "start": 0,
+      "end": 355,
+      "text": "Current RecognitionPurchaseEvidence exposes forMatches and forReference, but no forSelfie entrypoint. A bounded app/routes search found no caller of RecognitionPurchaseEvidence. Nine current-baseline operator tests report available=false and no recognition request. Existing helper plus forMatches produces the recorded expected results in all nine cases.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0074": {
+      "id": "E0074",
+      "pointer": "/records/historical_assignment/data/stopping_condition",
+      "start": 0,
+      "end": 1332,
+      "text": "One added forSelfie entrypoint in existing RecognitionPurchaseEvidence; preserve all existing methods. No identity/confidence policy, eligibility, checkout wiring or provider configuration changes. Fresh generation is performed by installed machinery; no supervising-assistant product edits. Stop after two generation attempts or 45 active minutes after admission, excluding model/approval waits, without auto-selecting another atom. A fresh installed builder receives only the current baseline, prepared requirements and dependency context, never a supplied implementation of the new entrypoint. Its untouched output must pass all nine frozen cases through the installed experiment/review/promotion/actual-source validation path. Request evidence must show the exact selfie key, fixed registered-search collection and unchanged helper defaults; output must equal the established producer/resolver results, including unpaid and duplicate matches. Provider sentinels and invalid references must refuse; missing history must preserve its exception. No writes or dependency changes. If generation or review fails, preserve it and do not let the supervising assistant patch the product candidate. Independent closeout judges product outcome; first-use machinery performance is separately reported without claiming universal reliability.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/atom_request/stopping_condition",
+          "start": 0,
+          "end": 1332
+        }
+      ]
+    },
+    "E0138": {
+      "id": "E0138",
+      "pointer": "/records/completed_build/data/assessment_input/goal/outcome",
+      "start": 0,
+      "end": 227,
+      "text": "Build general machinery that drives bounded task execution accurately and consistently, enforcing the approved methodology and verifying results; use the Taggable cross-location discount as the real task the machinery delivers.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/goal_context/goal/outcome",
+          "start": 0,
+          "end": 227
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/0/final_answer/basis/0/quote",
+          "start": 0,
+          "end": 227
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/6/final_answer/basis/4/quote",
+          "start": 0,
+          "end": 227
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/7/final_answer/basis/0/quote",
+          "start": 0,
+          "end": 227
+        }
+      ]
+    },
+    "E0275": {
+      "id": "E0275",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/7/text",
+      "start": 0,
+      "end": 979,
+      "text": "<?php\nerror_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);\nrequire '/Users/kamenkamenov/taggable-server/vendor/autoload.php';\n$app=$argv[3] ?? __DIR__.'/taggable-server/app';\n$dependencies=['Order.php', 'UserSelfieHistory.php', 'Payments.php', 'Services/MatchedSearchOrders.php', 'Services/RecordedPaymentEvidence.php', 'Services/SearchPaymentEvidence.php', 'Services/SearchRecognitionRegistration.php', 'Helpers/AmazonFaceRecognitionService.php'];\n$hashes=[];\nforeach($dependencies as $path){require $app.'/'.$path;$hashes[$path]=hash_file('sha256',$app.'/'.$path);}\n$service=$app.'/Services/RecognitionPurchaseEvidence.php';\n$input=json_decode(file_get_contents($argv[1]),true);\n$case=array_values(array_filter($input['cases'],function($c)use($argv){return $c['id']===$argv[2];}))[0];\n$capsule=new Illuminate\\Database\\Capsule\\Manager();\n$capsule->addConnection(['driver'=>'sqlite','database'=>':memory:','prefix'=>'']);$capsule->setAsGlobal();$capsule->bootEloquent();\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/7/text",
+          "start": 0,
+          "end": 979
+        }
+      ]
+    },
+    "E0277": {
+      "id": "E0277",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/7/text",
+      "start": 1983,
+      "end": 3126,
+      "text": "foreach($case['orders'] as $row)$capsule->table('order')->insert($row);\nforeach($case['payments'] as $row){$row['status_id']=$statuses[$row['status']];unset($row['status']);$capsule->table('payment')->insert($row);}\n$snapshot=function()use($capsule){return json_encode([\n $capsule->table('user_selfie_history')->orderBy('id')->get(),$capsule->table('order')->orderBy('order_id')->get(),\n $capsule->table('status')->orderBy('status_id')->get(),$capsule->table('payment')->orderBy('payment_id')->get()]);};\nclass Log {public static function debug($s){} public static function error($s){}}\n$requests=[];\n$client=Mockery::mock('overload:GuzzleHttp\\Client');\n$client->shouldReceive('request')->andReturnUsing(function($method,$path,$options)use(&$requests,$case){\n $requests[]=['method'=>$method,'action'=>$options['headers']['X-Amz-Target'],'body'=>json_decode($options['body'],true)];\n if(in_array($case['id'],['provider-failure','provider-no-face','provider-no-collection'])){\n  $messages=['provider-failure'=>'Controlled transport failure','provider-no-face'=>'InvalidParameterException','provider-no-collection'=>'ResourceNotFoundException'];\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/7/text",
+          "start": 1983,
+          "end": 3126
+        }
+      ]
+    },
+    "E0278": {
+      "id": "E0278",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/7/text",
+      "start": 3126,
+      "end": 4106,
+      "text": "  throw new GuzzleHttp\\Exception\\RequestException($messages[$case['id']],new GuzzleHttp\\Psr7\\Request($method,'https://example.invalid'));\n }\n return new GuzzleHttp\\Psr7\\Response(200,[],json_encode(['FaceMatches'=>array_map(function($m){return ['Face'=>['FaceId'=>$m['faceId'],'ExternalImageId'=>$m['externalImageId']],'Similarity'=>$m['similarity']];},$case['matches'])]));\n});\n$cls='App\\Helpers\\AmazonFaceRecognitionService';\n$cls::$AmazonFaceRecognitionURL='https://example.invalid';$cls::$AmazonFaceRecognitionAccessKey='TEST-ONLY';$cls::$AmazonFaceRecognitionSecretKey='TEST-ONLY';\n$cls::$AmazonFaceRecognitionRegion='controlled-region';$cls::$AmazonFaceRecognitionServiceName='rekognition';$cls::$AmazonFaceRecognitionBucketName='controlled-bucket';\n$helper=(new ReflectionClass($cls))->newInstanceWithoutConstructor();\n$before=$snapshot();require $service;\n$available=method_exists(App\\Services\\RecognitionPurchaseEvidence::class,'forSelfie');\n$result=null;\nif($available){\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/7/text",
+          "start": 3126,
+          "end": 4106
+        }
+      ]
+    },
+    "E0279": {
+      "id": "E0279",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/7/text",
+      "start": 4106,
+      "end": 4636,
+      "text": " try{$result=App\\Services\\RecognitionPurchaseEvidence::forSelfie('controlled-selfie',$helper);}\n catch(InvalidArgumentException $e){$result=['rejection'=>'invalid-match-list'];}\n catch(Illuminate\\Database\\Eloquent\\ModelNotFoundException $e){$result=['rejection'=>'unknown-history'];}\n}\nMockery::close();\necho json_encode(['case_id'=>$case['id'],'available'=>$available,'result'=>$result,'requests'=>$requests,'read_only'=>$before===$snapshot(),'dependency_sha256'=>$hashes,'source_sha256'=>hash_file('sha256',$service)]).PHP_EOL;\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/7/text",
+          "start": 4106,
+          "end": 4636
+        }
+      ]
+    },
+    "E0301": {
+      "id": "E0301",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/12/text",
+      "start": 0,
+      "end": 285,
+      "text": "<?php\n\nnamespace App\\Services;\n\nuse App\\Payments;\nuse InvalidArgumentException;\n\nclass RecordedPaymentEvidence\n{\n    /**\n     * Inspect application records, not gateway settlement or discount eligibility.\n     * The caller must establish the order's search/person/location provenance.\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/12/text",
+          "start": 0,
+          "end": 285
+        }
+      ]
+    },
+    "E0317": {
+      "id": "E0317",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/14/text",
+      "start": 277,
+      "end": 903,
+      "text": "\n    /**\n     * Register an explicitly supplied search using its own recognition reference.\n     * The caller configures the helper. This does not establish a person match,\n     * payment, location eligibility, or a durable local indexed flag.\n     */\n    public static function registerForHistoryId($historyId, AmazonFaceRecognitionService $amazon)\n    {\n        if ((!is_int($historyId) && !is_string($historyId)) ||\n            filter_var($historyId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {\n            throw new InvalidArgumentException('A positive search-history ID is required.');\n        }\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/14/text",
+          "start": 277,
+          "end": 903
+        }
+      ]
+    },
+    "E0337": {
+      "id": "E0337",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 8159,
+      "end": 14531,
+      "text": "    \"value_gate\": {\n      \"receipt_sha256\": \"c6925eaa37a43ed8825a35d88c7cc5d2ef22ac455d6ca8917a3ca7b56de5702d\",\n      \"status\": \"PASS\",\n      \"text\": \"VALUE GATE: PASS | outcome: Given a selfie key and an already configured recognition helper, query the registered-search collection and return every matched search with its complete recorded purchase evidence through one service entrypoint. | goal: reliable-autonomous-atom-machinery | progress: product | Value and progress questions independently supported.\"\n    }\n  },\n  \"driver_events\": \"{\\\"event\\\": \\\"atom-started\\\", \\\"time\\\": 1789373735.1179452}\\n{\\\"event\\\": \\\"state-read\\\", \\\"stage\\\": \\\"experiment\\\", \\\"time\\\": 1789373735.2194052}\\n{\\\"command\\\": [\\\"/opt/homebrew/opt/python@3.14/bin/python3.14\\\", \\\"/Users/kamenkamenov/.codex/skills/experiment-machinery/scripts/development_probe_run.py\\\", \\\"run\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/generated-experiment.json\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/experiment\\\"], \\\"event\\\": \\\"command-started\\\", \\\"name\\\": \\\"experiment\\\", \\\"time\\\": 1789373735.219646}\\n{\\\"event\\\": \\\"command-finished\\\", \\\"exit_code\\\": 0, \\\"name\\\": \\\"experiment\\\", \\\"time\\\": 1789373738.574589}\\n{\\\"event\\\": \\\"experiment-recorded\\\", \\\"time\\\": 1789373738.669173}\\n{\\\"event\\\": \\\"state-read\\\", \\\"stage\\\": \\\"promotion\\\", \\\"time\\\": 1789373738.8175948}\\n{\\\"command\\\": [\\\"/opt/homebrew/opt/python@3.14/bin/python3.14\\\", \\\"/Users/kamenkamenov/.codex/skills/atom-building-machinery/scripts/source_review.py\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/promotion-surface.json\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/review.json\\\"], \\\"event\\\": \\\"command-started\\\", \\\"name\\\": \\\"review\\\", \\\"time\\\": 1789373738.862946}\\n{\\\"event\\\": \\\"command-finished\\\", \\\"exit_code\\\": 0, \\\"name\\\": \\\"review\\\", \\\"time\\\": 1789373853.916747}\\n{\\\"event\\\": \\\"file-promoted\\\", \\\"path\\\": \\\"taggable-server/app/Services/RecognitionPurchaseEvidence.php\\\", \\\"sha256\\\": \\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\", \\\"time\\\": 1789373854.047452}\\n{\\\"event\\\": \\\"promotion-recorded\\\", \\\"time\\\": 1789373854.1340852}\\n{\\\"event\\\": \\\"state-read\\\", \\\"stage\\\": \\\"validation\\\", \\\"time\\\": 1789373854.277205}\\n{\\\"command\\\": [\\\"/opt/homebrew/opt/python@3.14/bin/python3.14\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/validation-adapter.py\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/atom\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.json\\\"], \\\"event\\\": \\\"command-started\\\", \\\"name\\\": \\\"validation\\\", \\\"time\\\": 1789373854.2774029}\\n{\\\"event\\\": \\\"command-finished\\\", \\\"exit_code\\\": 0, \\\"name\\\": \\\"validation\\\", \\\"time\\\": 1789373854.8394291}\\n{\\\"event\\\": \\\"validation-recorded\\\", \\\"time\\\": 1789373855.9908311}\\n{\\\"event\\\": \\\"state-read\\\", \\\"stage\\\": \\\"complete\\\", \\\"time\\\": 1789373856.1396842}\\n{\\\"authorization\\\": {\\\"path\\\": \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/authorizations/72470c552b621cb654a2072e7ba81366b9356402ed04332ae515b883988af4d8.json\\\", \\\"sha256\\\": \\\"72470c552b621cb654a2072e7ba81366b9356402ed04332ae515b883988af4d8\\\"}, \\\"event\\\": \\\"authorization-checked\\\", \\\"time\\\": 1789373857.2216792}\\n{\\\"event\\\": \\\"approval-needed\\\", \\\"payload\\\": {\\\"path\\\": \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/contribution-input.json\\\", \\\"sha256\\\": \\\"dedb0fbd5b7bbbab46d645b62d5f972a0429d4f7b9ddd770919949a978e93e2c\\\"}, \\\"time\\\": 1789373857.2681}\\n{\\\"event\\\": \\\"state-read\\\", \\\"stage\\\": \\\"complete\\\", \\\"time\\\": 1789373925.324385}\\n{\\\"authorization\\\": {\\\"path\\\": \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/authorizations/72470c552b621cb654a2072e7ba81366b9356402ed04332ae515b883988af4d8.json\\\", \\\"sha256\\\": \\\"72470c552b621cb654a2072e7ba81366b9356402ed04332ae515b883988af4d8\\\"}, \\\"event\\\": \\\"authorization-checked\\\", \\\"time\\\": 1789373926.421062}\\n{\\\"command\\\": [\\\"/opt/homebrew/opt/python@3.14/bin/python3.14\\\", \\\"/Users/kamenkamenov/.codex/skills/atom-selection-gate/gate.py\\\", \\\"complete\\\", \\\"--case\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/value-packet.json\\\", \\\"--receipt\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/value-review/receipt.json\\\", \\\"--result\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/actual-result.txt\\\", \\\"--progress-result\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/progress-result.json\\\", \\\"--output\\\", \\\"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/contribution\\\", \\\"--source-root\\\", \\\"/Users/kamenkamenov\\\"], \\\"event\\\": \\\"command-started\\\", \\\"name\\\": \\\"contribution\\\", \\\"time\\\": 1789373926.468253}\\n{\\\"event\\\": \\\"command-finished\\\", \\\"exit_code\\\": 2, \\\"name\\\": \\\"contribution\\\", \\\"time\\\": 1789373942.654314}\\n{\\\"event\\\": \\\"stopped\\\", \\\"reason\\\": \\\"contribution failed with exit 2; inspect /Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/commands/contribution\\\", \\\"time\\\": 1789373942.654505}\\n\",\n  \"generated_candidate\": {\n    \"builder_records\": {\n      \"events.jsonl\": {\n        \"reference\": {\n          \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/builder-live-01/events.jsonl\",\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 8159,
+          "end": 14531
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 8159,
+          "end": 14531
+        }
+      ]
+    },
+    "E0345": {
+      "id": "E0345",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 170300,
+      "end": 173814,
+      "text": "      },\n      {\n        \"reference\": {\n          \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/builder-live-01/candidate/taggable-server/app/Services/RecognitionPurchaseEvidence.php\",\n          \"sha256\": \"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\"\n        },\n        \"role\": \"after\",\n        \"source_path\": \"taggable-server/app/Services/RecognitionPurchaseEvidence.php\",\n        \"text\": \"<?php\\n\\nnamespace App\\\\Services;\\n\\nuse InvalidArgumentException;\\n\\nclass RecognitionPurchaseEvidence\\n{\\n    /**\\n     * Query registered searches using the caller's configured helper.\\n     * Return complete match evidence without deciding identity or eligibility.\\n     */\\n    public static function forSelfie($s3Key, \\\\App\\\\Helpers\\\\AmazonFaceRecognitionService $amazon)\\n    {\\n        $collectionId = SearchRecognitionRegistration::COLLECTION_ID;\\n        $matches = $amazon->searchFacesByImage($s3Key, $collectionId);\\n\\n        return static::forMatches($collectionId, $matches);\\n    }\\n\\n    /**\\n     * Preserve every returned match alongside its complete reference evidence.\\n     * A successful empty list is distinct from provider failure sentinels.\\n     * This does not decide whether a match establishes identity or eligibility.\\n     */\\n    public static function forMatches($collectionId, $matches)\\n    {\\n        if ($collectionId !== SearchRecognitionRegistration::COLLECTION_ID || !is_array($matches)) {\\n            throw new InvalidArgumentException('The search collection and a successful match list are required.');\\n        }\\n\\n        $results = [];\\n        $index = 0;\\n        foreach ($matches as $key => $match) {\\n            if ($key !== $index || !is_array($match) || !array_key_exists('externalImageId', $match)) {\\n                throw new InvalidArgumentException('Each match must be an ordered list entry containing externalImageId.');\\n            }\\n            $results[] = [\\n                'match' => $match,\\n                'reference_evidence' => static::forReference($collectionId, $match['externalImageId']),\\n            ];\\n            $index++;\\n        }\\n\\n        return $results;\\n    }\\n\\n    /**\\n     * Resolve one reference in the caller's search collection context.\\n     * This does not authenticate the reference or establish a person match,\\n     * confidence, location eligibility, or entitlement to a discount.\\n     */\\n    public static function forReference($collectionId, $externalImageId)\\n    {\\n        $prefix = SearchRecognitionRegistration::EXTERNAL_ID_PREFIX;\\n        if ($collectionId !== SearchRecognitionRegistration::COLLECTION_ID ||\\n            !is_string($externalImageId) ||\\n            !preg_match('/\\\\\\\\A' . preg_quote($prefix, '/') . '([1-9][0-9]*)\\\\\\\\z/', $externalImageId, $matches)) {\\n            throw new InvalidArgumentException('A canonical search recognition reference is required.');\\n        }\\n\\n        $historyId = filter_var($matches[1], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);\\n        if ($historyId === false) {\\n            throw new InvalidArgumentException('The search recognition ID is outside the supported integer range.');\\n        }\\n\\n        return [\\n            'collection_id' => $collectionId,\\n            'external_image_id' => $externalImageId,\\n            'purchase_evidence' => SearchPaymentEvidence::forHistoryId($historyId),\\n        ];\\n    }\\n}\\n\"\n      }\n    ]\n  },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 170300,
+          "end": 173814
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 170300,
+          "end": 173814
+        }
+      ]
+    },
+    "E0348": {
+      "id": "E0348",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 175125,
+      "end": 177115,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"empty-matches\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/empty-matches.json\",\n            \"sha256\": \"174fd66b1357be04d0986245a33b2f4149f6c18017de4990ca128f4a56c5ac98\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"empty-matches\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":[],\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 175125,
+          "end": 177115
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 175125,
+          "end": 177115
+        }
+      ]
+    },
+    "E0350": {
+      "id": "E0350",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 177715,
+      "end": 180302,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"one-paid-match\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/one-paid-match.json\",\n            \"sha256\": \"0a54bbadde459301f22e6ed4e09c9f28638d5950df7816edc336e73380240289\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"one-paid-match\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":[{\\\\\\\"match\\\\\\\":{\\\\\\\"faceId\\\\\\\":\\\\\\\"controlled-face\\\\\\\",\\\\\\\"externalImageId\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"similarity\\\\\\\":95},\\\\\\\"reference_evidence\\\\\\\":{\\\\\\\"collection_id\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"external_image_id\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"purchase_evidence\\\\\\\":{\\\\\\\"search_history_id\\\\\\\":11,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"orders\\\\\\\":[{\\\\\\\"order_id\\\\\\\":101,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"records\\\\\\\":[{\\\\\\\"payment_id\\\\\\\":501,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"reason\\\\\\\":\\\\\\\"square-recorded-success\\\\\\\"}]}]}}}],\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 177715,
+          "end": 180302
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 177715,
+          "end": 180302
+        }
+      ]
+    },
+    "E0352": {
+      "id": "E0352",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 180914,
+      "end": 183901,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"unpaid-before-paid\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/unpaid-before-paid.json\",\n            \"sha256\": \"bd69f6ca566220e4375ba910a0e4b5d6ae2f8aeaeae0f43608b3269d43236ba6\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"unpaid-before-paid\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":[{\\\\\\\"match\\\\\\\":{\\\\\\\"faceId\\\\\\\":\\\\\\\"controlled-face-2\\\\\\\",\\\\\\\"externalImageId\\\\\\\":\\\\\\\"search-history-22\\\\\\\",\\\\\\\"similarity\\\\\\\":94},\\\\\\\"reference_evidence\\\\\\\":{\\\\\\\"collection_id\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"external_image_id\\\\\\\":\\\\\\\"search-history-22\\\\\\\",\\\\\\\"purchase_evidence\\\\\\\":{\\\\\\\"search_history_id\\\\\\\":22,\\\\\\\"classification\\\\\\\":\\\\\\\"not-established\\\\\\\",\\\\\\\"orders\\\\\\\":[]}}},{\\\\\\\"match\\\\\\\":{\\\\\\\"faceId\\\\\\\":\\\\\\\"controlled-face\\\\\\\",\\\\\\\"externalImageId\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"similarity\\\\\\\":95},\\\\\\\"reference_evidence\\\\\\\":{\\\\\\\"collection_id\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"external_image_id\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"purchase_evidence\\\\\\\":{\\\\\\\"search_history_id\\\\\\\":11,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"orders\\\\\\\":[{\\\\\\\"order_id\\\\\\\":101,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"records\\\\\\\":[{\\\\\\\"payment_id\\\\\\\":501,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"reason\\\\\\\":\\\\\\\"square-recorded-success\\\\\\\"}]}]}}}],\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 180914,
+          "end": 183901
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 180914,
+          "end": 183901
+        }
+      ]
+    },
+    "E0354": {
+      "id": "E0354",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 184546,
+      "end": 187773,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"duplicate-reference-preserved\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/duplicate-reference-preserved.json\",\n            \"sha256\": \"e4208bde49460eb33d055f7967e055a7e2de831cb58008c7dc18cd911e3d5085\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"duplicate-reference-preserved\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":[{\\\\\\\"match\\\\\\\":{\\\\\\\"faceId\\\\\\\":\\\\\\\"controlled-face\\\\\\\",\\\\\\\"externalImageId\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"similarity\\\\\\\":95},\\\\\\\"reference_evidence\\\\\\\":{\\\\\\\"collection_id\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"external_image_id\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"purchase_evidence\\\\\\\":{\\\\\\\"search_history_id\\\\\\\":11,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"orders\\\\\\\":[{\\\\\\\"order_id\\\\\\\":101,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"records\\\\\\\":[{\\\\\\\"payment_id\\\\\\\":501,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"reason\\\\\\\":\\\\\\\"square-recorded-success\\\\\\\"}]}]}}},{\\\\\\\"match\\\\\\\":{\\\\\\\"faceId\\\\\\\":\\\\\\\"controlled-face\\\\\\\",\\\\\\\"externalImageId\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"similarity\\\\\\\":95},\\\\\\\"reference_evidence\\\\\\\":{\\\\\\\"collection_id\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"external_image_id\\\\\\\":\\\\\\\"search-history-11\\\\\\\",\\\\\\\"purchase_evidence\\\\\\\":{\\\\\\\"search_history_id\\\\\\\":11,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"orders\\\\\\\":[{\\\\\\\"order_id\\\\\\\":101,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"records\\\\\\\":[{\\\\\\\"payment_id\\\\\\\":501,\\\\\\\"classification\\\\\\\":\\\\\\\"recorded-success\\\\\\\",\\\\\\\"reason\\\\\\\":\\\\\\\"square-recorded-success\\\\\\\"}]}]}}}],\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 184546,
+          "end": 187773
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 184546,
+          "end": 187773
+        }
+      ]
+    },
+    "E0356": {
+      "id": "E0356",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 188379,
+      "end": 190422,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"provider-failure\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/provider-failure.json\",\n            \"sha256\": \"5c93d96532880a71baad5487141ec784f29c6e1121a100f207d13d2f29f0fe2f\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"provider-failure\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":{\\\\\\\"rejection\\\\\\\":\\\\\\\"invalid-match-list\\\\\\\"},\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 188379,
+          "end": 190422
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 188379,
+          "end": 190422
+        }
+      ]
+    },
+    "E0358": {
+      "id": "E0358",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 191028,
+      "end": 193071,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"provider-no-face\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/provider-no-face.json\",\n            \"sha256\": \"6ab8618e618d2952ddb7a02868af4c8e33032829c635c47b45447a73edcc4da1\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"provider-no-face\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":{\\\\\\\"rejection\\\\\\\":\\\\\\\"invalid-match-list\\\\\\\"},\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 191028,
+          "end": 193071
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 191028,
+          "end": 193071
+        }
+      ]
+    },
+    "E0360": {
+      "id": "E0360",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 193695,
+      "end": 195756,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"provider-no-collection\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/provider-no-collection.json\",\n            \"sha256\": \"0b5cda715d6f0bcc784653d5fca2bf0ba4c99a407b7da6ad79e792d8d653145a\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"provider-no-collection\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":{\\\\\\\"rejection\\\\\\\":\\\\\\\"invalid-match-list\\\\\\\"},\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 193695,
+          "end": 195756
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 193695,
+          "end": 195756
+        }
+      ]
+    },
+    "E0362": {
+      "id": "E0362",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 196383,
+      "end": 198447,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"invalid-later-reference\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/invalid-later-reference.json\",\n            \"sha256\": \"012802d9c1b01e9a8004bb228682c4daef1bd031ef2d610bffd37de68631a1e1\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"invalid-later-reference\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":{\\\\\\\"rejection\\\\\\\":\\\\\\\"invalid-match-list\\\\\\\"},\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    },\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 196383,
+          "end": 198447
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 196383,
+          "end": 198447
+        }
+      ]
+    },
+    "E0364": {
+      "id": "E0364",
+      "pointer": "/records/completed_build/data/assessment_input/progress_result/evidence/15/text",
+      "start": 199050,
+      "end": 201086,
+      "text": "      },\n      \"evidence\": [\n        {\n          \"reference\": {\n            \"case_id\": \"missing-history\",\n            \"path\": \"/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/product-driver-run/validation.evidence/missing-history.json\",\n            \"sha256\": \"ef0a58dfd473809f7eb670093ef4ae5c70c23952958c6632bb3747845944ebda\"\n          },\n          \"text\": \"{\\n  \\\"exit_code\\\": 0,\\n  \\\"stdout\\\": \\\"{\\\\\\\"case_id\\\\\\\":\\\\\\\"missing-history\\\\\\\",\\\\\\\"available\\\\\\\":true,\\\\\\\"result\\\\\\\":{\\\\\\\"rejection\\\\\\\":\\\\\\\"unknown-history\\\\\\\"},\\\\\\\"requests\\\\\\\":[{\\\\\\\"method\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"action\\\\\\\":\\\\\\\"RekognitionService.SearchFacesByImage\\\\\\\",\\\\\\\"body\\\\\\\":{\\\\\\\"CollectionId\\\\\\\":\\\\\\\"purchase-search-history\\\\\\\",\\\\\\\"Image\\\\\\\":{\\\\\\\"S3Object\\\\\\\":{\\\\\\\"Bucket\\\\\\\":\\\\\\\"controlled-bucket\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"controlled-selfie\\\\\\\"}},\\\\\\\"MaxFaces\\\\\\\":100,\\\\\\\"FaceMatchThreshold\\\\\\\":80}}],\\\\\\\"read_only\\\\\\\":true,\\\\\\\"dependency_sha256\\\\\\\":{\\\\\\\"Order.php\\\\\\\":\\\\\\\"1a585e7399c5f54b2ad0c2a2d0f2354f132d071954d55187e0a82c8d89fc8e4a\\\\\\\",\\\\\\\"UserSelfieHistory.php\\\\\\\":\\\\\\\"71349c5a6b52e02108f6ab105b84917ccc388e2acc57005b591fce019f7b922b\\\\\\\",\\\\\\\"Payments.php\\\\\\\":\\\\\\\"33aeeaaa0b062315d2e45acce700b6ac7572f1e2ccf53521412dac60dd17b868\\\\\\\",\\\\\\\"Services\\\\\\\\/MatchedSearchOrders.php\\\\\\\":\\\\\\\"f5d79ed9825202d8010a28df6c20a5084bfda2f42f15f352d9b9b1f005122817\\\\\\\",\\\\\\\"Services\\\\\\\\/RecordedPaymentEvidence.php\\\\\\\":\\\\\\\"ee496abb2a5d70cec820194dfef86a2665ca7c1edc24ffd39a2fad10c1bdb006\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchPaymentEvidence.php\\\\\\\":\\\\\\\"ea8f7cb94e5f5a3e6214a4a113836cc8a65d79254db975f18c0ec3aa66e353b0\\\\\\\",\\\\\\\"Services\\\\\\\\/SearchRecognitionRegistration.php\\\\\\\":\\\\\\\"7cd9e7c00ee72e920c058aef71dc00f326be9adc8a5e6e72e5631af294c83be5\\\\\\\",\\\\\\\"Helpers\\\\\\\\/AmazonFaceRecognitionService.php\\\\\\\":\\\\\\\"f2613f456ddc506941305c16aa3655dfe4fcee5268cbbf2a03dc24311dcd2825\\\\\\\"},\\\\\\\"source_sha256\\\\\\\":\\\\\\\"6786783dda72a89fb5872b1181572f4aa26068f991bf452e28736ccb40549897\\\\\\\"}\\\\n\\\",\\n  \\\"stderr\\\": \\\"\\\"\\n}\\n\"\n        }\n      ]\n    }\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/completed_build/data/assessment_input/result",
+          "start": 199050,
+          "end": 201086
+        },
+        {
+          "pointer": "/records/completed_build/data/completion/progress_result/evidence/15/text",
+          "start": 199050,
+          "end": 201086
+        }
+      ]
+    },
+    "E0473": {
+      "id": "E0473",
+      "pointer": "/records/completed_build/data/completion/achieved",
+      "start": 0,
+      "end": 4,
+      "text": "true",
+      "encoding": "json",
+      "other_locations": []
+    },
+    "E0703": {
+      "id": "E0703",
+      "pointer": "/records/completed_build/data/completion/review/progress_reason",
+      "start": 0,
+      "end": 542,
+      "text": "The admitted kind is product. Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions. Selection, requirements, tests, context and templates remained manual, and closeout required intervention. No additional autonomy transfer is claimed.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0706": {
+      "id": "E0706",
+      "pointer": "/records/completed_build/data/completion/review/reason",
+      "start": 0,
+      "end": 687,
+      "text": "The fresh builder prompt contains baseline code and prepared context, without the new implementation. Its recorded edit matches the candidate subsequently reviewed, promoted and validated under the same source hash. The addition delegates the exact supplied key and fixed collection to the unchanged helper, then returns the full existing resolver result. All nine captured executions show the required request defaults, paid/unpaid and duplicate preservation, refusals, missing-history exception, unchanged dependencies and database. The recorded contribution-command failure remains a closeout limitation; this supports the bounded product outcome, not universal machinery reliability.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0782": {
+      "id": "E0782",
+      "pointer": "/records/later_interview_background/data/questions/1/final_answer/answer",
+      "start": 0,
+      "end": 2827,
+      "text": "Already demonstrated: several bounded historical product atoms were proved, but only within their recorded boundaries. A directed tour-prerequisite structure passed five frozen isolated-SQLite cases. Prior-tour purchase eligibility passed seven installed cases with 324 assertions against controlled owner-derived SQLite fixtures. Search-payment evidence and recognition-purchase evidence passed controlled internal-service proofs with promoted-path repetition, not production payment verification, live identity behavior, or checkout behavior. A usable 50% selector was historically reviewed as supported for deterministic selection or none, preservation of attributes and existing members, payment-usage guard execution, unchanged state, and promoted-path repetition; that does not establish current checkout installation or end-to-end checkout application.\n\nFor machinery, the input interview machinery is demonstrated for this intake purpose by a live chronological replay and by an installed-entry-point proof. The build-only atom builder is demonstrated as a build capability by its captured-assignment validation and installed-controller validation; the same record says installation succeeded. It accepts approved bounded atoms without comparative selection and does not generate or rank successor atoms.\n\nCurrent checkout position: in the inspected current Taggable branch, the expected historical product services and migration are absent, the automatic selector method is absent, and current-app references to the named historical services and selector are zero. Therefore the current checkout does not demonstrate an installed end-to-end discount capability, even though historical records show bounded product atoms once passed elsewhere or in earlier states.\n\nUnfinished: the current branch still needs the product pieces present and wired together through the real flow: prerequisite structure, eligibility service, payment and recognition evidence services, selector integration, automatic discount application in checkout before payment, tests through the real checkout path, and promotion or deployment evidence. For the larger fixed goal, autonomous atom selection remains separate from build execution; product progress and machinery reliability must remain separate claims.\n\nStill uncertain: why the historical product files are absent from the current checkout; whether they exist on an uninspected remote branch or other state; whether live MySQL migration, production data, payment records, and face-recognition identity behavior satisfy the intended flow; and whether the automatic 50% code has ever been applied in a real checkout. These unknowns prevent claiming product completion, but they do not prevent this handoff from establishing the current distance to the goal within the disclosed records.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0790": {
+      "id": "E0790",
+      "pointer": "/records/later_interview_background/data/questions/1/final_answer/basis/3/quote",
+      "start": 0,
+      "end": 132,
+      "text": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/final_answer/basis/1/quote",
+          "start": 0,
+          "end": 132
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/1/quote",
+          "start": 0,
+          "end": 132
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/basis/1/quote",
+          "start": 0,
+          "end": 132
+        }
+      ]
+    },
+    "E0839": {
+      "id": "E0839",
+      "pointer": "/records/later_interview_background/data/questions/2/final_answer/basis/1/quote",
+      "start": 0,
+      "end": 155,
+      "text": "The most recent completed implementation and validation before this selection intake was packaging and installed verification of input-interview-machinery.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/2/followups/0/final_answer/basis/1/quote",
+          "start": 0,
+          "end": 155
+        }
+      ]
+    },
+    "E0843": {
+      "id": "E0843",
+      "pointer": "/records/later_interview_background/data/questions/2/final_answer/basis/3/quote",
+      "start": 0,
+      "end": 150,
+      "text": "Prior-tour-purchase eligibility is the latest product atom among the supplied historical product records, not the latest overall machinery completion.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/2/followups/0/final_answer/basis/3/quote",
+          "start": 0,
+          "end": 150
+        }
+      ]
+    },
+    "E0987": {
+      "id": "E0987",
+      "pointer": "/records/later_interview_background/data/questions/3/final_answer/answer",
+      "start": 3204,
+      "end": 4702,
+      "text": "Partly built or absent from current checkout: the expected service files and migration are absent from the inspected branch; no current selector method is present; no app references to the named services were found.\nAssumed dependencies: the existing face-recognition flow supplies successful server-side matches; prior purchases can be resolved through search/order/payment evidence in the target integration; configured prerequisite rows exist in a database table; eligible 50% discount codes already exist for the checkout tour/location; checkout has an existing place where an automatic discount can be applied before payment. These are permitted working assumptions for handoff, but the inspected evidence does not prove live wiring, live database content, or production checkout behavior.\n\nAffected consumers are the checkout flow before payment, the face-recognition/search flow that supplies matches, payment/order evidence resolution, discount-code validation/usage guarding, the owner reviewing the handoff, atom-selection machinery if later authorized, and building machinery only after any later selection/freeze path supplies it usable inputs. Selection and building remain decoupled. The practical next-use lens is: use this answer as a diagnosis and map of reusable evidence; reuse historical services/tests as candidate source material and requirements evidence; treat the current branch as needing installation/wiring verification before claiming the Taggable feature exists there.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1013": {
+      "id": "E1013",
+      "pointer": "/records/later_interview_background/data/questions/3/final_answer/basis/12/quote",
+      "start": 0,
+      "end": 88,
+      "text": "\"installed_cases_passed\": 7,\n  \"installed_cases_total\": 7,\n  \"installed_assertions\": 324",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1015": {
+      "id": "E1015",
+      "pointer": "/records/later_interview_background/data/questions/3/final_answer/basis/13/quote",
+      "start": 0,
+      "end": 168,
+      "text": "All 19 cases / 25 input executions passed again. Five cases selected a code; all five passed real verification as the same record and the extracted payment usage guard.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 168
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/9/quote",
+          "start": 0,
+          "end": 168
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 168
+        }
+      ]
+    },
+    "E1020": {
+      "id": "E1020",
+      "pointer": "/records/later_interview_background/data/questions/3/final_answer/limits/2",
+      "start": 0,
+      "end": 166,
+      "text": "Historical proofs establish bounded controlled behavior, not live MySQL migration, production payment verification, checkout wiring, or deployed discount application.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1038": {
+      "id": "E1038",
+      "pointer": "/records/later_interview_background/data/questions/4/final_answer/basis/0/quote",
+      "start": 0,
+      "end": 48,
+      "text": "\"branch\": \"feature/kiosk-square-return-recovery\"",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/final_answer/basis/9/quote",
+          "start": 0,
+          "end": 48
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/18/quote",
+          "start": 0,
+          "end": 48
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/basis/9/quote",
+          "start": 0,
+          "end": 48
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/9/final_answer/basis/0/quote",
+          "start": 0,
+          "end": 48
+        }
+      ]
+    },
+    "E1040": {
+      "id": "E1040",
+      "pointer": "/records/later_interview_background/data/questions/4/final_answer/basis/1/quote",
+      "start": 0,
+      "end": 50,
+      "text": "\"head\": \"d5ddaa23ed61d3f62c1006584c18e612bacfdb64\"",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/final_answer/basis/10/quote",
+          "start": 0,
+          "end": 50
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/previous_answer/basis/19/quote",
+          "start": 0,
+          "end": 50
+        },
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/basis/10/quote",
+          "start": 0,
+          "end": 50
+        }
+      ]
+    },
+    "E1050": {
+      "id": "E1050",
+      "pointer": "/records/later_interview_background/data/questions/4/final_answer/basis/6/quote",
+      "start": 0,
+      "end": 71,
+      "text": "\"path\": \"app/Services/RecognitionPurchaseEvidence.php\", \"exists\": false",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1080": {
+      "id": "E1080",
+      "pointer": "/records/later_interview_background/data/questions/4/final_answer/limits/3",
+      "start": 0,
+      "end": 126,
+      "text": "The supplied context does not establish the transition between historical atom states and the inspected current checkout/head.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1097": {
+      "id": "E1097",
+      "pointer": "/records/later_interview_background/data/questions/5/final_answer/answer",
+      "start": 2347,
+      "end": 4894,
+      "text": "- The recorded inspection applies to `/Users/kamenkamenov/taggable-server` on branch `feature/kiosk-square-return-recovery` at head `d5ddaa23ed61d3f62c1006584c18e612bacfdb64`, with no tracked worktree diff reported.\n- That inspection reports expected historical service/migration paths as not present, `selector_method_present` as false, and zero current app references for the named historical service/method terms it checked. Therefore the supported current-state conclusion is limited: the historical product atoms are not evidenced as currently present under those expected names in this inspected branch checkout. This is not proof of deletion, not proof about remotes/deployments/database state, and not proof that no equivalent implementation exists under different names.\n\nProduct approaches settled by owner clarification, not optional new alternatives:\n\n- The intended product change is narrow: locate and automatically apply an existing 50% discount code at Location B checkout before payment, after a paid purchase at a configured prerequisite Location A/tour. Existing checkout behavior otherwise stays unchanged.\n- Same-person establishment is handled through the existing face-recognition flow by owner clarification. The supplied context does not require or authorize a second identity mechanism.\n- The prerequisite model is a new database structure: first check whether the current checkout tour is eligible, then identify prerequisite tours with a prior paid purchase. Historical interpretation says any one configured prerequisite tour suffices; this is not limited to one relationship row.\n\nMachinery/process approaches already built, proposed, rejected, or deferred:\n\n- Input-interview machinery live acceptance and installed verification: this approach has reported validation for the recorded intake/handoff path. The live acceptance report says it replayed the real clarification-control design change, handled saved owner correction through the normal feedback path, revised only the affected answer, and exported every original question once. The later installed proof record says packaging and installed verification passed by replaying 51 recorded calls with 0 new model calls, matching prompts/schemas and handoff, rejecting the wrong request before calls, and exposing the public CLI complete action. This is relevant completed machinery evidence for the accepted replayed path; it is not Taggable product implementation, not a fresh end-to-end model run, and not proof that every future intake/handoff will succeed.\n",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/later_interview_background/data/questions/5/revisions/0/final_answer/answer",
+          "start": 2347,
+          "end": 4894
+        }
+      ]
+    },
+    "E1363": {
+      "id": "E1363",
+      "pointer": "/records/later_interview_background/data/questions/6/final_answer/basis/14/quote",
+      "start": 0,
+      "end": 221,
+      "text": "Read-only current checkout and local reachable Git history inspection, no remote fetch, deployment inspection, database query or runtime test. Absence does not establish deletion cause or absence from every remote branch.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1586": {
+      "id": "E1586",
+      "pointer": "/records/later_interview_background/data/questions/9/final_answer/answer",
+      "start": 0,
+      "end": 2461,
+      "text": "Decision-relevant uncertainties:\n\n1. Current checkout state vs historical atom records shows an unresolved mismatch, not a proven deletion or same-branch contradiction. Historical records report bounded completions or supported reviews for atom work, while the inspected current checkout marks the expected historical service/migration paths as absent and has no selector references. This affects whether the next action should be a recovery/reconciliation atom, a checkout-integration atom, or continued selection from the historical atom sequence. It can be checked first through bounded observation of local branches, worktrees, and reachable Git history. Remote branch state would require fetch/remote inspection and is absent from supplied context.\n\n2. The intended product branch for later implementation is not confirmed beyond the read-only inspection target. This affects whether absence in `feature/kiosk-square-return-recovery` means the work is missing from the real target branch or only absent from this inspected branch. Existing records identify the inspected branch; an owner/repo-target answer or broader bounded repository observation would resolve it.\n\n3. Checkout wiring status is not supplied as implemented. Historical records support prerequisite structure, prior-purchase eligibility, selector behavior, recognition purchase evidence, and search/payment evidence in bounded tests/reviews, but the supplied records do not prove live checkout application of the discount. This affects whether the next product atom should be checkout integration/application of the selected 50% code. It can be checked by bounded code inspection of checkout creation/payment flow and related tests; future experiment results are not required before selection because an experiment may be chosen to obtain them.\n\n4. Some apparent unknowns are already settled for this use: same-person identity is to come through the existing face-rec flow, and a paid purchase at any one configured prerequisite tour suffices. These should not change the next-action choice unless the owner revises the requirement.\n\nProduction/live data state is genuinely unavailable in the supplied context, but resolving it belongs to later deploy/readiness or runtime-validation questions, not to the current context-handoff/next-atom uncertainty boundary. No live MySQL migration, production discount-code configuration, deployment state, or runtime checkout behavior is proven here.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1624": {
+      "id": "E1624",
+      "pointer": "/records/later_interview_background/data/questions/9/final_answer/limits/1",
+      "start": 0,
+      "end": 178,
+      "text": "Historical records are treated as reports/reviews of bounded atom outcomes; they are not treated as proof that those files or behaviors currently exist in the inspected checkout.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1625": {
+      "id": "E1625",
+      "pointer": "/records/later_interview_background/data/questions/9/final_answer/limits/2",
+      "start": 0,
+      "end": 210,
+      "text": "The connection between historical atom completion and current checkout absence is limited to an observed mismatch in supplied records; deletion cause, merge history, and remote branch state are not established.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1652": {
+      "id": "E1652",
+      "pointer": "/records/later_interview_background/data/snapshot/context_policy",
+      "start": 0,
+      "end": 234,
+      "text": "Preserve all baseline answers verbatim. Pass selector_goal as the separate selector goal input; the fixed delivery goal takes precedence over historical goal wording. This initial copy does not refresh historical development evidence.",
+      "encoding": "string",
+      "other_locations": []
+    }
+  },
+  "updates_applied": false
+}

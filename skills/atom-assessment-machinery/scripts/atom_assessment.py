@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import model_call as calls
 from context import assemble
+import evidence_catalog
 
 HERE = Path(__file__).resolve().parent
 LENS_SCHEMA = {'type': 'object', 'properties': {'analysis': {'type': 'string'}},
@@ -71,7 +72,10 @@ def prepare(args):
                         ('settings.json', settings), ('prompts.json', calls.read(HERE/'prompts.json')),
                         ('final-schema.json', calls.read(HERE/'final-schema.json'))]:
         calls.save(run/name, value)
-    frozen = ['context.json', 'transport-context.json', 'settings.json', 'prompts.json', 'final-schema.json']
+    catalog = evidence_catalog.build(packet)
+    calls.save(run/'evidence-catalog.json', catalog)
+    calls.save(run/'final-schema.json', evidence_catalog.final_schema(calls.read(HERE/'final-schema.json'), catalog))
+    frozen = ['evidence-catalog.json', 'context.json', 'transport-context.json', 'settings.json', 'prompts.json', 'final-schema.json']
     calls.save(run/'manifest.json', {'files': {n: calls.digest(run/n) for n in frozen},
                'runtime': {p.name: calls.digest(p) for p in HERE.glob('*.py')}})
     calls.save(run/'state.json', {'status': 'prepared', 'stages': {}, 'active_stage': None})
@@ -93,13 +97,21 @@ def execute(run):
         settings = calls.read(run/'settings.json')
         packet = calls.read(run/'context.json')
         context = json.dumps(calls.read(run/'transport-context.json'), ensure_ascii=False, separators=(',', ':'))
+        catalog = calls.read(run/'evidence-catalog.json')
         answers = {}
         try:
             for stage in ['changed', 'remaining', 'final']:
                 calls.SCHEMA = calls.read(run/'final-schema.json') if stage == 'final' else LENS_SCHEMA
                 prompt = prompts['common'] + '\n' + prompts[stage] + '\nEVIDENCE PACKET:\n' + context
                 if stage == 'final':
-                    prompt += '\nSEPARATE LENS OUTPUTS:\n' + json.dumps(answers, ensure_ascii=False)
+                    prompt = (prompts['common'] + '\n' + prompts[stage]
+                              + '\nFor evidence fields select only supplied catalog IDs. Do not write locations. '
+                              'Select passages supporting each finding, not merely mentioning its subject. '
+                              'If evidence is unavailable, say so and use an empty evidence list. '
+                              'The catalog represents every leaf of the original packet. Identical passages '
+                              'are displayed once; all original locations remain saved.\nEVIDENCE CATALOG:\n'
+                              + json.dumps(evidence_catalog.prompt_catalog(catalog), ensure_ascii=False, separators=(',', ':'))
+                              + '\nSEPARATE LENS OUTPUTS:\n' + json.dumps(answers, ensure_ascii=False))
                 if len(prompt) >= 1048576:
                     raise ValueError('Prompt exceeds CLI character limit; no truncation applied.')
                 answers[stage] = calls.one_call(run, stage, prompt, state, settings)
@@ -107,7 +119,9 @@ def execute(run):
                       'mode': packet.get('mode', 'cycle_assessment'), 'cycle_id': packet.get('cycle_id'),
                       'context': {'path': str(run/'context.json'), 'sha256': manifest['files']['context.json']},
                       'model_settings': settings, 'lenses': {k: answers[k] for k in ['changed','remaining']},
-                      'assessment': answers['final'], 'updates_applied': False}
+                      'assessment': answers['final'],
+                      'resolved_evidence': evidence_catalog.selected(packet, catalog, answers['final']),
+                      'updates_applied': False}
             calls.save(run/'handoff.json', result)
             state.update(status='completed', active_stage=None)
             state.pop('error', None)

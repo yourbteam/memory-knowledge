@@ -1,0 +1,30 @@
+{
+  "verdict": "connected_final_assessment_passed",
+  "new_model_calls": 1,
+  "reused_lens_calls": 2,
+  "completion": {
+    "session": "01a0baeb-61b7-7062-84c3-a25980346ffe",
+    "usage": {
+      "input_tokens": 158979,
+      "cached_input_tokens": 0,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1548,
+      "reasoning_output_tokens": 39
+    },
+    "elapsed_seconds": 54.066755041945726
+  },
+  "assessment_items": 15,
+  "unique_selected_references": 47,
+  "all_references_retrieve_exact_frozen_passages": true,
+  "old_freeform_locations_rejected_by_schema": true,
+  "changed_passage_rejected": true,
+  "semantic_review": {
+    "goal_scope": "Correct current product goal, historical machinery goal separately preserved; previously incorrect preservation location now exactly resolved.",
+    "contribution": "Actual entrypoint and nine controlled cases retained, no checkout/identity completion inferred.",
+    "remaining": "Integration and current availability uncertainties remain qualified; no absence-everywhere or regression claim.",
+    "updates": "Proposals only, no new atom selected or answers mutated.",
+    "citations": "Selected passages support the substantive findings; absent inspection timestamp explicitly has empty evidence instead of invented reference."
+  },
+  "retained_surface_review": "Generic JSON-leaf enumeration, reversible text offsets, code-owned enums, frozen catalog and automatic resolution; no Taggable-specific IDs or rules in skill code. Existing lenses unchanged.",
+  "status": "Source upgrade retained; not installed, committed or pushed in this step."
+}

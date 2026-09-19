@@ -1,0 +1,9 @@
+{
+  "targets": [
+    "codex",
+    "claude"
+  ],
+  "source_and_installed_tree_sha256": "7922354f3cd9ff74a7a6dca26bb5ca3a4f4273ab2cf1fff0edb9139bdba18c41",
+  "result": "Both installed entrypoints resumed the validated final run and returned the identical handoff.",
+  "new_model_calls": 0
+}
