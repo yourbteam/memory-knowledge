@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "outcome": "Permanent source-bound delivery goal readable by existing installed builder without schema or runtime changes.",
+  "checks": [
+    {
+      "name": "saved_record_accepted",
+      "passed": true,
+      "detail": "Fresh process loaded permanent files using installed builder bind_context and verify_context; complete object and source hash match."
+    },
+    {
+      "name": "delivery_goal_preserved",
+      "passed": true,
+      "detail": "Outcome exactly equals the previously validated product-only delivery goal."
+    },
+    {
+      "name": "all_condition_references_resolve",
+      "passed": true,
+      "detail": "Six exact passages retain locations and hashes; recorded any-one-prerequisite interpretation is explicitly distinguished from owner quotations."
+    },
+    {
+      "name": "stable_answer_excerpt_preserved",
+      "passed": true,
+      "detail": "Only the existing product-goal paragraph is frozen as stable interview context; no evolving status answer is declared fixed."
+    },
+    {
+      "name": "legacy_record_accepted",
+      "passed": true,
+      "detail": "Existing historical goal still passes the installed reader."
+    },
+    {
+      "name": "different_goal_refused",
+      "passed": true,
+      "detail": "Packet goal differs from the fixed goal context"
+    },
+    {
+      "name": "separate_state_does_not_modify_goal",
+      "passed": true,
+      "detail": "Two real historical answers written sequentially to a separate state file; permanent goal binding remained identical."
+    },
+    {
+      "name": "changed_saved_goal_refused",
+      "passed": true,
+      "detail": "Packet goal differs from the fixed goal context"
+    },
+    {
+      "name": "historical_sources_unchanged",
+      "passed": true,
+      "detail": "All four source hashes match the pre-build validation record."
+    }
+  ],
+  "files": {
+    "Tasks/atom-selection-machinery-20260918/goal-record-v1/goal.json": "78c6509f5b1602effea04e2200eb2e44797a99696f2c707dedf7436096ea3068",
+    "Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json": "b6cbcada7719ddd3425d52ddc170813f9ddd66854b2e7daf03e1609000f44c03"
+  },
+  "runtime": {
+    "path": "/Users/kamenkamenov/.codex/skills/atom-building-machinery/scripts/build_progress.py",
+    "sha256": "b4de8aafa514f0868d15ff8fd1221061d1c431b861475e9a6925c311c21b9d91"
+  },
+  "prototype": {
+    "hypothesis": "The accepted goal-object extension can preserve real fixed context and source references using the existing builder format.",
+    "verdict": "promote",
+    "authorization": "proceed with building it first and validating the build",
+    "scope": "New goal-record-v1 data and evidence only; no model calls, commits, installs, sequence activation or product edits.",
+    "limit": "One retained data version and its local validation; no loop implementation."
+  },
+  "retained_surface_review": {
+    "blocking_findings": [],
+    "review": "Exact source passages preserved; product-only goal separated from historical machinery goal; no current-status answer frozen; legacy files unchanged.",
+    "scope_limit": "Completion conditions are recorded business requirements, not an exhaustive executable acceptance suite. No goal-wide completion assessment, incremental updater or selector-to-builder wiring is claimed."
+  }
+}

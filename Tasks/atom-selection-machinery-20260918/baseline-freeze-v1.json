@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "status": "frozen",
+  "frozen_at": "2026-09-18T16:31:27.126163+00:00",
+  "authorization": "Owner instruction: Ok, freeze it then",
+  "baseline_file": "baseline-questions-and-answers-v1.json",
+  "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+  "source_file": "/Users/kamenkamenov/memory-knowledge/Tasks/input-interview-machinery-20260916/recovery-upgrade/live-resume/handoff.json",
+  "question_count": 10,
+  "policy": "Use this fixed question-and-answer snapshot for atom-selection development. Preserve version 1; future answer updates require a new version. Freezing does not refresh the historical evidence."
+}
