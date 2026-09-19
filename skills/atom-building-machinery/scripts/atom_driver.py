@@ -125,7 +125,14 @@ def closeout(request,output,run,approved_transfer,execution=None):
     import atom_sequence
     atom_sequence.record_completion(run, output/'contribution/completion.json')
     controller.authorize_next(run)
-    return {'status':'complete','atom_run':str(run),'contribution':reference(output/'contribution/completion.json')}
+    return completed_result(output,run)
+
+def completed_result(output,run):
+    """Save the evidence handoff before returning the completed driver's response."""
+    from build_handoff import export
+    handoff=export(output,output/'handoff.json')
+    return {'status':'complete','atom_run':str(run),'contribution':reference(output/'contribution/completion.json'),
+            'handoff':str(handoff),'handoff_sha256':reference(handoff)['sha256']}
 
 def drive(path,output,approved_transfer=None):
     request=read(path);output=output.absolute()

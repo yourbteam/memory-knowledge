@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "check": "public_cli_returns_existing_identical_saved_path_on_repeat",
+      "passed": true
+    },
+    {
+      "check": "all_recorded_evidence_judgments_and_escaping_preserved_exactly",
+      "passed": true
+    },
+    {
+      "check": "nine_original_source_references_resolve_without_change",
+      "passed": true
+    },
+    {
+      "check": "actual_failed_build_cannot_export_completed_handoff",
+      "passed": true
+    },
+    {
+      "check": "mismatched_real_result_rejected",
+      "passed": true
+    },
+    {
+      "check": "different_existing_output_not_overwritten",
+      "passed": true
+    },
+    {
+      "check": "actual_driver_completion_response_saves_json_and_returns_verified_path",
+      "passed": true
+    }
+  ],
+  "model_calls": 0,
+  "exporter": {
+    "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/build_handoff.py",
+    "sha256": "d2622b7686b6cfc0fffa2194d262f8a91bcb207e56a65a3ea3037f5c94f4cf0d"
+  },
+  "handoff": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/builder-handoff-v1/handoff.json",
+    "sha256": "b898fd095d65fb7a04a6abdd9fbc18d06cd893216cae4bf40518cf3f80b8645e"
+  },
+  "case": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/selfie-purchase-lookup/closeout-correction/installed-recheck-v2",
+  "scope": "Replay of real completed closeout through public exporter; no new product build or assessment. Driver completion-response function exercised with copied real completed records; upstream build/model execution not repeated."
+}

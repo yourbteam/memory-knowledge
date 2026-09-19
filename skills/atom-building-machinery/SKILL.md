@@ -416,6 +416,18 @@ host policy selection are operator boundaries, not permissions granted to arbitr
 
 ## Selection is outside this skill
 
+Successful driver closeout saves `handoff.json` and returns its absolute path in `handoff`
+with `handoff_sha256`. The file preserves the admitted atom, complete existing assessment
+input (including actual results and progress evidence), independent completion judgment and
+hash-bound source references. Python serializes and reloads it without rewriting any judgment.
+This establishes the recorded atom contribution, not overall goal completion. Pass the saved
+file to the downstream progress assessor; it need not reconstruct the build from scattered files.
+
+For an already completed historical closeout, export to a new file without rebuilding or calling
+a model: `python3 scripts/build_handoff.py --closeout <completed-closeout> --output <new-handoff.json>`.
+This verifies the preserved evidence, not the current product checkout. It does not update a cycle,
+re-authorize a successor, or replace historical records. Incomplete or inconsistent evidence refuses.
+
 Return the verified outcome and remaining evidence to the caller. Do not choose the next atom.
 `authorize-next` retains its historical command name; it checks that this build is complete and
 that sequence continuity permits another approved build. It does not rank or authorize its content.
