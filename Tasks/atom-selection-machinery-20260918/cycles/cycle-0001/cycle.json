@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "cycle_id": "cycle-0001",
+  "goal_id": "taggable-auto-discount-delivery",
+  "goal": {
+    "path": "Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json",
+    "sha256": "b6cbcada7719ddd3425d52ddc170813f9ddd66854b2e7daf03e1609000f44c03"
+  },
+  "input_answers": {
+    "path": "Tasks/atom-selection-machinery-20260918/current-answers-v1/current-answers.json",
+    "sha256": "25963142d3911b8599c7740a500de633c3410e6a1b76493493cba1b3c13c2ee7"
+  },
+  "selection": null,
+  "build": null,
+  "assessment": null,
+  "previous_cycle": null
+}
