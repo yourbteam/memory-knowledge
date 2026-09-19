@@ -74,3 +74,28 @@ prevents concurrent writers. A fresh session gets the original question, latest 
 source evidence and relevant owner feedback. Final checks get the complete saved interview.
 No model history is required for lenses, follow-ups or final checks. A single supplied packet must
 still fit the provider context window; recovery never silently truncates evidence.
+
+## Incremental interview
+
+Reuse a completed answer set after an atom assessment. The separate
+`scripts/incremental-template.json` asks which original answers need updating, including indirect
+consequences; all may remain unchanged. One model call makes an explicit keep/update judgment
+for every original question. Python then runs only selected questions through the existing engine.
+
+```sh
+python3 <skill-dir>/scripts/input_interview.py incremental start --previous ANSWERS.json --assessment ASSESSMENT.json --goal GOAL.json --run NEW_DIRECTORY
+python3 <skill-dir>/scripts/input_interview.py incremental continue --run DIRECTORY
+```
+
+Use `--prepare-only` on start for zero calls, or `--plan-only` on start/continue to stop after
+selection. Optional `--settings` and `--template` apply at start. Selection uses the same frozen
+model settings as the interview. Each selected question normally costs ten more calls before
+any necessary clarification or revision; inspect selection when the authorized call budget is bounded.
+
+Handle any returned question with existing user/reply commands against the returned
+`interview_run`, then use incremental continue. The completed `current-answers.json` contains
+all original questions, copies updated answers verbatim, preserves untouched entries and links
+the previous snapshot, assessment and update decisions. It does not overwrite the previous file.
+The affected-question pass examines all previous answers; subsequent cross-question review covers
+selected questions only, with the full previous answer set provided as context. Do not describe
+this as a fresh full interview or automatic promotion of current project state.

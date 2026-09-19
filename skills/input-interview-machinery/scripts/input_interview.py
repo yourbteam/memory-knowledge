@@ -45,6 +45,9 @@ def resume(root, transport_factory=None):
 
 def main(argv=None, transport_factory=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == 'incremental':
+        import incremental
+        return incremental.main(argv[1:])
     if argv and argv[0] == 'configure':
         saved = sys.argv
         try:

@@ -21,9 +21,27 @@ def packet(root, state):
         raise ValueError('Handoff requires every original question exactly once in original order')
     if any(a['question'] != q for a, q in zip(state['answers'], questions)):
         raise ValueError('Original question changed; preserve corrections separately')
+    # Share identical text without merging question-scoped source identities.
+    sources = review.read(root / 'contexts.json')
+    shared = {}
+    references = {}
+    text_keys = {}
+    for qid, entries in sources.items():
+        references[qid] = []
+        for entry in entries:
+            text = entry['text']
+            if text not in text_keys:
+                key = 'source_' + str(len(shared) + 1)
+                text_keys[text] = key
+                shared[key] = text
+            references[qid].append({'source': {k: v for k, v in entry.items() if k != 'text'},
+                                    'text_ref': text_keys[text]})
     return {'questions_and_answers': state['answers'], 'feedback_history': state['history'],
             'reconciliations': state.get('reconciliations', []),
-            'source_context_by_question': review.read(root / 'contexts.json')}
+            'source_context_by_question': references, 'shared_source_text': shared,
+            'source_reading_instruction': 'Each question has its own source identities under source. '
+                'Resolve text_ref in shared_source_text to read the full unchanged text. '
+                'Shared text does not merge source identities across questions.'}
 
 
 def assemble(root, state, checked=None):

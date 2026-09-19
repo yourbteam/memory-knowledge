@@ -167,17 +167,18 @@
       ]
     },
     "input-interview-machinery": {
-      "canonical_tree_sha256": "3cdf52e53ebcdd7dfa62b6989f86ac68f67aeac5bdb1a1f5815394d66ee8a384",
+      "canonical_tree_sha256": "8f753126da09016f45d595a5f16ef4b782e46ec35ea83b3c1b883658643d4e1b",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "3cdf52e53ebcdd7dfa62b6989f86ac68f67aeac5bdb1a1f5815394d66ee8a384",
+      "projected_tree_sha256": "8f753126da09016f45d595a5f16ef4b782e46ec35ea83b3c1b883658643d4e1b",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],
       "targets": [
-        "codex"
+        "codex",
+        "claude"
       ]
     },
     "phase-ledger-category-contract-foundry": {
