@@ -1,0 +1,6 @@
+{
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "cli": "/Applications/ChatGPT.app/Contents/Resources/codex",
+  "timeout_seconds": 300
+}

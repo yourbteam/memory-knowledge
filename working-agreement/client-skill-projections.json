@@ -34,6 +34,21 @@
         "claude"
       ]
     },
+    "atom-selection-machinery": {
+      "canonical_tree_sha256": "732903234261a4551ec4b1d6b17916c2a73f577eb6dec5808615230f9d86a718",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "732903234261a4551ec4b1d6b17916c2a73f577eb6dec5808615230f9d86a718",
+      "scenario_groups": [
+        "CAP-OPERATIONS"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "corpus-add": {
       "canonical_tree_sha256": "159f0609a05a4e84b76a1f5d94e0f9eedb8cd92f2489b3b6e5a2c667c98240b0",
       "disposition": "SHARED_IDENTICAL",

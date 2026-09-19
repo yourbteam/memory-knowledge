@@ -1,0 +1,17 @@
+{
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "total_calls": 6,
+  "intake_calls": 0,
+  "input_origin": "Original frozen completed GPT-5.5 high interview; existing context-delivery projection unchanged",
+  "input_sha256": "03f2f091c437b86900f455f19bbd0ab2249d8e09726ec5f9720ccf613da0dfe8",
+  "owner_clarification": "The goal for this selection is delivering the agreed Taggable automatic 50% discount. Atom selection is the machinery doing the choosing, not a competing goal.",
+  "comparison_limit": "Earlier Sol arm received goal correction only during narrowing; this run honors correction throughout. This is not an isolated intake-model-only comparison.",
+  "checks": [
+    "Four lenses preserve evidence and uncertainty",
+    "Selection serves only Taggable goal",
+    "Narrowing yields one concrete result with completion evidence",
+    "No unsupported absence or mandatory sequence claims"
+  ],
+  "promotion": false
+}

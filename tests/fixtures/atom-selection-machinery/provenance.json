@@ -1,0 +1,21 @@
+{
+  "source": "Tasks/atom-selection-machinery-20260918/selector-prototype/gpt55-intake-astra-downstream-v1",
+  "purpose": "Captured real responses for offline runtime/export/recovery tests; replay is not a fresh model-quality evaluation.",
+  "sha256": {
+    "input.json": "03f2f091c437b86900f455f19bbd0ab2249d8e09726ec5f9720ccf613da0dfe8",
+    "protocol.json": "108bdb742cf759a9330f91521cd52c4232ac9d3ea4274bbfce800d45546d470c",
+    "distillation-v2/result.json": "e3b9743ebfb902105e4b14b501da398b55f2fb0fb9c417e6a50ace9b2bc6c743",
+    "provider/evidence-supported-obstacles/answer.json": "90d45dd83c2fdecba826da5af09226b779e9d7763980ccececbc96e46707289b",
+    "provider/evidence-supported-obstacles/events.jsonl": "989ad4ce466994d1dd79d4cd14d4a915cff419c024ce1e3f1203217b4f425c0d",
+    "provider/reusable-work/answer.json": "22981416027164e4a88cd40d4021287c3a1322e194bb3e0a8344b5b80da5e10a",
+    "provider/reusable-work/events.jsonl": "ce83be7ba5e1f89d5ba613a48d9e8a22010593291b903c133b34bb2913e0390d",
+    "provider/dependencies/answer.json": "080d8884e0c46a70ba68afd55b1fc11c1d6ad69a146b5f4289d9d8cde86924e0",
+    "provider/dependencies/events.jsonl": "ca4b35b15217c6b2bc5dc0d46382423d25cc7d82952ace4397babe6f2a687e7f",
+    "provider/explicit-unresolved-questions/answer.json": "9f1e68ebabfa127c0cd9e1a08b59a8339a39a2a6cf6d5457d2561848f1d8a9c0",
+    "provider/explicit-unresolved-questions/events.jsonl": "72b67fff40624823d7a43062031bc063148ece8812ba911932c1ea9fbbac8053",
+    "provider/selection/answer.json": "25208bfb4498762b60b7d3862430c44f260e0dce450cfa09fdc027b32e29031d",
+    "provider/selection/events.jsonl": "d3f78823a9f2f27f1b2f77dd3e71a08c7c03515528f3d32e531b5ada45aa5af7",
+    "distillation-v2/provider/narrowing/answer.json": "b7a0d2d821a32d37c26748bd3ecdf14af4289e859b0131fd38812897199e77d4",
+    "distillation-v2/provider/narrowing/events.jsonl": "196df9bff8caa6dd77d266dbd2e1ac611bfe759d92edaee357f9697482c0db2b"
+  }
+}
