@@ -1,0 +1,22 @@
+{
+  "status": "builder_preparation_verified",
+  "scope": "Current-selection source inspection and bounded experiment assignment preparation",
+  "real_cases": 8,
+  "source_quotations_verified": 30,
+  "original_model_answer_preserved": true,
+  "correction_limited_to": "remove runtime directory from code file list and correct one quotation",
+  "builder_prepare_only_accepted": true,
+  "negative_checks": [
+    "changed current-answer binding rejected",
+    "previous selection rejected",
+    "changed historical reference rejected",
+    "product write path rejected",
+    "incorrect source quotation rejected"
+  ],
+  "lossless_transport_roundtrip": true,
+  "remaining": [
+    "Executable probe generation and execution have not run",
+    "Preparation used operator-approved historical source root and a focused correction call; uninterrupted autonomy is not established"
+  ],
+  "raw_run_evidence": "Retained locally; not included in this publication"
+}

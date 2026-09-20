@@ -217,8 +217,14 @@ def advance(run, stop_after=None):
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='op',required=True)
     start=sub.add_parser('start');start.add_argument('--root',type=Path,required=True);start.add_argument('--goal',type=Path,required=True);start.add_argument('--answers',type=Path,required=True);start.add_argument('--assessment',type=Path);start.add_argument('--incremental-run',type=Path);start.add_argument('--skills',type=Path,default=Path.home()/'.codex/skills');start.add_argument('--prepare-only',action='store_true')
-    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
+    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-selection','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
     for cmd in sub.choices.values():cmd.add_argument('--run',type=Path,required=True)
+    sub.choices['prepare-selection'].add_argument('--repository',type=Path,required=True)
+    sub.choices['prepare-selection'].add_argument('--prepare-only',action='store_true')
+    sub.choices['prepare-selection'].add_argument('--reference-root',type=Path,action='append',default=[])
+    sub.choices['prepare-selection'].add_argument('--attempt',type=int,default=1)
+    sub.choices['prepare-selection'].add_argument('--previous',type=Path)
+    sub.choices['prepare-selection'].add_argument('--max-calls',type=int,default=4)
     for name in ['resume', 'approve-transfer']:
         sub.choices[name].add_argument('--stop-after', choices=['build', 'assessment'])
     sub.choices['reply'].add_argument('--request-id',required=True);sub.choices['reply'].add_argument('--reply',type=Path,required=True)
@@ -242,6 +248,18 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         s=read(run/'state.json')
         try:
+            if a.op=='prepare-selection':
+                from selection_preparation import prepare
+                if a.attempt < 1: raise ValueError('Preparation attempt must be positive')
+                suffix='' if a.attempt==1 else '-attempt'+str(a.attempt)
+                result=prepare(s,a.repository,Path(s['cycle']).parent/('selection-preparation'+suffix),a.prepare_only,
+                               reference_roots=a.reference_root,previous=a.previous,max_calls=a.max_calls)
+                if result['action']=='assignment_prepared':
+                    s['selection_preparation']=ref(result['handoff'],Path(s['root']))
+                    s['pending']['selection_preparation']=s['selection_preparation']
+                    save(run/'state.json',s)
+                event(run,'selection_preparation_returned',result=result)
+                print(json.dumps(result));return
             if a.op=='prepare-delivery':
                 from delivery_connection import prepare
                 result=prepare(s,a.worktree);delivery=read(result)
