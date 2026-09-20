@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+  "atomic_outcome": "Restore and validate directed tour-prerequisite storage and its reader on the prod-based auto-50-perc-off delivery branch, reusing compatible historical migration, service and tests. Given a checkout tour ID and configured directed relationships, return configuration status and prerequisite-tour IDs, preserving multiple prerequisites for later paid-purchase qualification at any one of them.",
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "relationship-direction",
+  "case_kind": "failure",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/relationship-direction/stdout.txt",
+      "sha256": "b56288d6d469b050d7f947306c977299d8aab68474607c40b9de4dae3e8bf4d6"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/relationship-direction/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/relationship-direction/telemetry.jsonl",
+      "sha256": "9d02785b33c13fd28015dbe1f7874fce2d7c9153659046eb0d420525a9d6ba5a"
+    }
+  ],
+  "expected_outcome": "With only B-to-A configured, querying A must not infer eligibility or return B as a prerequisite. Relationships are directed, not symmetric.",
+  "operator_path": "Frozen PHPUnit tests invoke actual selected migration and reader using isolated SQLite connections.",
+  "overall_criterion": "Any frozen test fails, changes, skips, or does not execute its named case.",
+  "schema_version": 1
+}

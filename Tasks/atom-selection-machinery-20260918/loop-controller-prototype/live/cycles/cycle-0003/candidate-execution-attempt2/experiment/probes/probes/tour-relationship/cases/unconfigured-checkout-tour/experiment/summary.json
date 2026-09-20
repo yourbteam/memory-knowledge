@@ -1,0 +1,163 @@
+{
+  "champion": "variation-2",
+  "evaluation": {
+    "assessment": {
+      "criteria": [
+        {
+          "id": "correct-decision",
+          "metric": "correct-decision",
+          "reference_pointer": "/decision_correctness"
+        }
+      ],
+      "output_fields": [
+        "raw"
+      ],
+      "reference": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/comparison-reference.json",
+        "sha256": "22cd697ff91a03724a3d9ffcd8c1ad6eec6f06de805585c9accaa5c09bc60772"
+      }
+    },
+    "calibration": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/calibration.json",
+      "sha256": "5bc91406b415558fed7240663ed7e00f97a3f6444d80f12b049897a20c828b26"
+    },
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/judge.py",
+        "sha256": "f022a434224e3d6ef4272159e815a0147945f0b72d42ccf2f977b9d81f5a22d1"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "correct-decision"
+      }
+    ],
+    "selection": {
+      "minimums": {
+        "correct-decision": 1.0
+      }
+    }
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-da44e3b20474f31de60f",
+  "frozen_input_sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+  "hypothesis": "Every approach declared by mini-probe 'tour-relationship' can run against captured case 'unconfigured-checkout-tour', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "correct-decision": 1.0
+      },
+      "rank": 1,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "selection_outcome": "selected",
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts",
+      "sha256": "fa4e44e8a578cf16e0a62ca825cc1a993af5060f876c17b7dd00448dbf8fce51"
+    }
+  },
+  "target_source_sha256": "fa4e44e8a578cf16e0a62ca825cc1a993af5060f876c17b7dd00448dbf8fce51",
+  "variants": [
+    {
+      "duration_ms": 371,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "correct-decision": 0.0
+      },
+      "outcome": {
+        "raw": {
+          "case_id": "unconfigured-checkout-tour",
+          "junit_sha256": "815be1ace2b5cfedd93f4b30a80a3e1e2b6b29ef73f5011c1a0c6fc06e110570",
+          "returncode": 1,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "tests": [
+            {
+              "assertions": 1,
+              "errors": 0,
+              "failures": 1,
+              "name": "testUnconfiguredCheckoutTourHasNoPrerequisites",
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "qualification_failures": [
+        {
+          "actual": 0.0,
+          "metric": "correct-decision",
+          "minimum": 1.0
+        }
+      ],
+      "qualified": false,
+      "reported_metrics": {},
+      "result_sha256": "579c24b90d382d1645bc31897991afe159ddc3e776fa3821295c0d5ce0387eeb",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "1349af736511e2df6bd92af88188b120c8cfc5753aa04b6b61535e7cff203ad1",
+      "telemetry_sha256": "ab1e7ec466bceff80204b7f4e8a91a9d11bf6e6d12f4a2a2228f8ea4e621fd26",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 366,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "correct-decision": 1.0
+      },
+      "outcome": {
+        "raw": {
+          "case_id": "unconfigured-checkout-tour",
+          "junit_sha256": "2c95dd970ff4af4ac0e882f072c2e948023c8b2a1cd3d1485bb09411b3f822e3",
+          "returncode": 0,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "tests": [
+            {
+              "assertions": 19,
+              "errors": 0,
+              "failures": 0,
+              "name": "testUnconfiguredCheckoutTourHasNoPrerequisites",
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "qualification_failures": [],
+      "qualified": true,
+      "reported_metrics": {},
+      "result_sha256": "0c368d9706f28aa6eece3f5f328f5a8113360345e7325215d8c452e1d3876487",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "5d5411ed09b3897d75ebaded1329cf26a362fc10148aff82ba69fe548e31441d",
+      "telemetry_sha256": "15dba31f6725a3e0cf32cb74e890abd298ebbf341075436da122e11a1127918b",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

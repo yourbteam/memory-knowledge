@@ -1,0 +1,21 @@
+{
+  "aggregated_metrics": {
+    "correct-decision": 1.0
+  },
+  "approach_id": "candidate",
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "bundle_sha256": "07e1fa2d3019695e29c3c09aea3c1e570afd8aa080a8ff7bb8b4db60bb2c1542",
+  "case_count": 5,
+  "case_ids": [
+    "configured-checkout-tour",
+    "multiple-prerequisites",
+    "unconfigured-checkout-tour",
+    "relationship-direction",
+    "isolated-migration-rollback"
+  ],
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended"
+}

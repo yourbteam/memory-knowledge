@@ -1,0 +1,5 @@
+{"time": 1789915044.910636, "event": "stage_started", "stage": "prepare"}
+{"time": 1789915044.9462972, "event": "stage_returned", "stage": "prepare", "exit_code": 0}
+{"time": 1789915062.235164, "event": "stage_started", "stage": "review"}
+{"time": 1789915159.835901, "event": "stage_returned", "stage": "review", "exit_code": 0}
+{"time": 1789915209.923146, "event": "stage_reused", "stage": "review"}

@@ -93,7 +93,8 @@ def prepare(surface_path, context_path):
         citations(obligation['evidence'], sources, obligation['id'])
         if any(sources[e['source_id']]['role'] != 'requirement' for e in obligation['evidence']):
             raise ReviewError(f"Obligation {obligation['id']} cites non-requirement evidence; cite its authoritative expectation")
-    return {'schema_version': 1, 'surface_sha256': digest(raw), 'outcome': context['outcome'],
+    return {'schema_version': 1, 'decision': 'candidate_application',
+            'surface_sha256': digest(raw), 'outcome': context['outcome'],
             'changes': surface['changes'], 'obligations': context['obligations'],
             'sources': [{k: v for k, v in s.items() if k != 'origin'} for s in sources.values()]}
 

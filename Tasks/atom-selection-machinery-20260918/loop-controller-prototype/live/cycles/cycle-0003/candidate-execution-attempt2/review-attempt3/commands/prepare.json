@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/source_review.py",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-attempt3/promotion-surface.json",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-attempt3/preview.json",
+    "--prepare-only"
+  ]
+}

@@ -35,7 +35,8 @@ def run():
             assert loop.advance(r)['action']=='goal_complete'
         results.append('Controlled terminal-state probe starts no later stage')
         # False attachment must be rejected by the installed assessment collector, not interpreted by loop.
-        s.update(cycle_number=0);loop.new_cycle(r,s,s['answers']);c=loop.read(s['cycle'])
+        s.update(cycle_number=0,candidate_review={'path':'previous-cycle-review'});loop.new_cycle(r,s,s['answers']);c=loop.read(s['cycle'])
+        assert 'candidate_review' not in s
         assert c['selection'] is None and c['build'] is None and c['assessment'] is None
         results.append('New cycle leaves all unperformed stages empty')
     loop.save(Path(__file__).parent/'mechanical-checks.json',{'checks':results,'all_passed':True,'scope':'Captured record routing plus explicitly controlled enum/terminal probes; no live build claim'})

@@ -1,0 +1,104 @@
+{
+  "build_preparation": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation-attempt2/handoff.json",
+    "sha256": "ee34d19e38ed9a16a344e370f2ada354612148b059ce01f8111dbc5a599bf67e"
+  },
+  "baseline_commit": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+  "delivery_branch": "auto-50-perc-off",
+  "retained_candidate": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/composition/assembly/assembly.json",
+    "sha256": "8b3738f39d21f856f7a874fef1a7efe91f88a4a35064a64f938f8ebf8a8ba993"
+  },
+  "retained_diff": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-attempt2/evidence/candidate.diff",
+    "sha256": "2e1fb34aeac306ef854b9e20062814df3aabe5de6fb0c43b1e72c3f6e1d901c1"
+  },
+  "historical_reuse": [
+    {
+      "path": "app/Services/TourDiscountPrerequisites.php",
+      "historical_origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/implementation-live-01/candidate/taggable-server/app/Services/TourDiscountPrerequisites.php",
+      "historical_sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28",
+      "candidate_sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28",
+      "unchanged_historical_reuse": true
+    },
+    {
+      "path": "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "historical_origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/implementation-live-01/candidate/taggable-server/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "historical_sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf",
+      "candidate_sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf",
+      "unchanged_historical_reuse": true
+    }
+  ],
+  "checkout_before": {
+    "branch": "feature/kiosk-square-return-recovery",
+    "head": "d5ddaa23ed61d3f62c1006584c18e612bacfdb64",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {
+      "Implementation Documents/kiosk-image-created-at-timezone/knowledge.md": "e79e033e08ce9f8e5a5ae19835ef77f85d2dff102271cc79b0084927159a920c",
+      "Implementation Documents/kiosk-square-return-recovery/bench/README.md": "06c4944fbfc774ef3012b01a58e9f0039da082745929d2b1766df5929b2b47c4",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/locations.json": "4228309140861eae8bffc3f659e1ec3b67ac60a052b51e82fd2967dcfdd2b5cb",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/orders.json": "26fd1a234f3bc62ab957a331ba507a36981063a47792f9e307b57df82825ebe4",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/payments.json": "2d09c8fb41a54424a0d76016e626997b3333044d28c92ce0f087fefd3a8a3708",
+      "Implementation Documents/kiosk-square-return-recovery/bench/make-session.php": "639029c589cebe08f29a82d4aec441553f682486336433f90aac7e017d452a20",
+      "Implementation Documents/kiosk-square-return-recovery/bench/run-cases.py": "d8a46f6b1570e2bc59bd5d3a5e3ff20cb0f2325149a460b9b1afef588be4ddd1",
+      "Implementation Documents/kiosk-square-return-recovery/bench/seed.sql": "4580908312a075a1c70deb1e6abbf437784027ab7968e1268f810f77796afdd9",
+      "Implementation Documents/kiosk-square-return-recovery/bench/square-stub.php": "b9e22b5c4861d11b1644537a1589f3d320ce53c16139e467dd63b17009e2cca1",
+      "Implementation Documents/kiosk-square-return-recovery/implementation-plan.md": "550fd1070f1db91087f42d853fdd2712b474b3ecd47c55a9a3ea0c06fad66df3",
+      "Implementation Documents/kiosk-square-return-recovery/knowledge.md": "44f81a459108ac208884a9bb7850a7e7e36aa0e87fbeed702d1c3ad86fd57f66"
+    }
+  },
+  "checkout_after": {
+    "branch": "feature/kiosk-square-return-recovery",
+    "head": "d5ddaa23ed61d3f62c1006584c18e612bacfdb64",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {
+      "Implementation Documents/kiosk-image-created-at-timezone/knowledge.md": "e79e033e08ce9f8e5a5ae19835ef77f85d2dff102271cc79b0084927159a920c",
+      "Implementation Documents/kiosk-square-return-recovery/bench/README.md": "06c4944fbfc774ef3012b01a58e9f0039da082745929d2b1766df5929b2b47c4",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/locations.json": "4228309140861eae8bffc3f659e1ec3b67ac60a052b51e82fd2967dcfdd2b5cb",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/orders.json": "26fd1a234f3bc62ab957a331ba507a36981063a47792f9e307b57df82825ebe4",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/payments.json": "2d09c8fb41a54424a0d76016e626997b3333044d28c92ce0f087fefd3a8a3708",
+      "Implementation Documents/kiosk-square-return-recovery/bench/make-session.php": "639029c589cebe08f29a82d4aec441553f682486336433f90aac7e017d452a20",
+      "Implementation Documents/kiosk-square-return-recovery/bench/run-cases.py": "d8a46f6b1570e2bc59bd5d3a5e3ff20cb0f2325149a460b9b1afef588be4ddd1",
+      "Implementation Documents/kiosk-square-return-recovery/bench/seed.sql": "4580908312a075a1c70deb1e6abbf437784027ab7968e1268f810f77796afdd9",
+      "Implementation Documents/kiosk-square-return-recovery/bench/square-stub.php": "b9e22b5c4861d11b1644537a1589f3d320ce53c16139e467dd63b17009e2cca1",
+      "Implementation Documents/kiosk-square-return-recovery/implementation-plan.md": "550fd1070f1db91087f42d853fdd2712b474b3ecd47c55a9a3ea0c06fad66df3",
+      "Implementation Documents/kiosk-square-return-recovery/knowledge.md": "44f81a459108ac208884a9bb7850a7e7e36aa0e87fbeed702d1c3ad86fd57f66"
+    }
+  },
+  "checkout_preserved": true,
+  "runtime_record": {
+    "php": "/opt/homebrew/bin/php",
+    "php_version": "PHP 8.5.6 (cli) (built: May  5 2026 21:19:36) (NTS)\nCopyright (c) The PHP Group\nBuilt by Homebrew\nZend Engine v4.5.6, Copyright (c) Zend Technologies\n    with Zend OPcache v8.5.6, Copyright (c), by Zend Technologies\n",
+    "phpunit": "/Users/kamenkamenov/taggable-server/vendor/bin/phpunit",
+    "phpunit_version": "PHPUnit 7.5.20 by Sebastian Bergmann and contributors.\n\n",
+    "autoload": "/Users/kamenkamenov/taggable-server/vendor/autoload.php",
+    "autoload_sha256": "02603a4abab4fa662b87e4436044c089dcc27d5fd8fe3eececffd5ba8293659f",
+    "installed_sha256": "9d478a99891bc5f414a6465da0966ecc223a7f535a1e0a7c0f1e74ed0817e7d7",
+    "phpunit_sha256": "1fb9d47c7f192da01d06d1574b85a7e1c02b959cc03a969df1a8c0422abfc574",
+    "versions": {
+      "laravel/framework": {
+        "installed": "v5.8.38",
+        "locked": "v5.8.38"
+      },
+      "phpunit/phpunit": {
+        "installed": "7.5.20",
+        "locked": "7.5.20"
+      }
+    },
+    "pdo_drivers": "[\"dblib\",\"mysql\",\"odbc\",\"pgsql\",\"sqlite\"]"
+  },
+  "runtime_recheck": "PHP version and installed-package metadata, PHPUnit and autoload hashes still match the saved pre-execution record. This is an after-run recheck, not continuous monitoring.",
+  "isolation": "Candidate and assembly are retained outside the product checkout. The delivery branch still points to the recorded baseline. No checkout switch, delivery-branch application or product promotion has been performed.",
+  "database_limitations": [
+    "Target MySQL schema compatibility, including referenced-column types, signedness, indexes and storage engine requirements; neither MySQL inspection nor actual MySQL execution is established by these SQLite tests.",
+    "Delivery-branch restoration, retained version and diff, allowed-path compliance, preservation of the other branch and untracked work, and unchanged surrounding application behavior.",
+    "Full schema equivalence and absence of effects on other existing tables: preservation assertions cover the tours table's presence and recorded fixture rows, not every schema property or production table.",
+    "Explicit rejection tests for duplicate relationships or invalid foreign keys.",
+    "Discount-code availability, same-person paid-purchase qualification, qualification at any one prerequisite, discount application and checkout integration.",
+    "Full application compatibility: PHP 8.5 is outside the declared Composer PHP constraint, and focused execution with the supplied error-reporting setting does not establish general runtime support.",
+    "Final product completion; historical-control success alone cannot establish restoration or satisfy the atom's complete stopping condition."
+  ],
+  "proof_boundary": "Actual tests used isolated SQLite and current dependencies. Supplied historical MySQL DDL supports source inspection only; no actual MySQL migration execution occurred. PHP 8.5 is outside the declared Composer constraint; focused tests do not prove full application compatibility.",
+  "promotion_applied": false,
+  "atom_complete": false
+}

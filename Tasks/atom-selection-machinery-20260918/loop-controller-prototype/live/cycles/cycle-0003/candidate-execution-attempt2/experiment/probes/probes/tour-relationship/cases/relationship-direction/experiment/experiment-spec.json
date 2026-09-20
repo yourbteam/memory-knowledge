@@ -1,0 +1,101 @@
+{
+  "evaluation": {
+    "assessment": {
+      "criteria": [
+        {
+          "id": "correct-decision",
+          "metric": "correct-decision",
+          "reference_pointer": "/decision_correctness"
+        }
+      ],
+      "output_fields": [
+        "raw"
+      ],
+      "reference": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/comparison-reference.json",
+        "sha256": "22cd697ff91a03724a3d9ffcd8c1ad6eec6f06de805585c9accaa5c09bc60772"
+      }
+    },
+    "calibration": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/calibration.json",
+      "sha256": "5bc91406b415558fed7240663ed7e00f97a3f6444d80f12b049897a20c828b26"
+    },
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/judge.py",
+        "sha256": "f022a434224e3d6ef4272159e815a0147945f0b72d42ccf2f977b9d81f5a22d1"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "correct-decision"
+      }
+    ],
+    "selection": {
+      "minimums": {
+        "correct-decision": 1.0
+      }
+    }
+  },
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-9aae41bf045faccacf0c",
+  "frozen_input": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/case-sources/historical_cases.json",
+    "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291"
+  },
+  "hypothesis": "Every approach declared by mini-probe 'tour-relationship' can run against captured case 'relationship-direction', and the declared metrics recommend one bundle.",
+  "schema_version": 5,
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts",
+      "sha256": "fa4e44e8a578cf16e0a62ca825cc1a993af5060f876c17b7dd00448dbf8fce51"
+    }
+  },
+  "variants": [
+    {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/probes/probes/tour-relationship/bundles/control"
+      ],
+      "configuration": {
+        "case_id": "relationship-direction"
+      },
+      "id": "control"
+    },
+    {
+      "adapter": {
+        "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "sha256": "e2609e86ee62ff2461ab6bf858bf1a2c0c2dd609abd6ca57c4bd5dbd0c20c065"
+      },
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts/development_probe_candidate.py",
+        "execute",
+        "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/probes/probes/tour-relationship/bundles/candidate"
+      ],
+      "configuration": {
+        "case_id": "relationship-direction"
+      },
+      "id": "variation-2"
+    }
+  ]
+}

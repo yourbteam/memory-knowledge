@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "development_manifest": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/manifest.json",
+  "probe_id": "tour-relationship",
+  "approach_id": "candidate",
+  "source": {
+    "baseline": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/baseline",
+    "candidate": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate",
+    "entrypoint": "probe.py"
+  },
+  "execution": {
+    "protocol": "experiment-result-v1",
+    "command": [
+      "{python}",
+      "{candidate-entrypoint}"
+    ]
+  }
+}

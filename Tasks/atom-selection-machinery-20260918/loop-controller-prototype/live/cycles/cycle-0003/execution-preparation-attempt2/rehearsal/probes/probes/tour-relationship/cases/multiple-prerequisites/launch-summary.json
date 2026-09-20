@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "multiple-prerequisites",
+  "experiment_id": "development-probe-efa50694d1b303b62ee9",
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "recommendation_sha256": "3f5d6b1772ac75b2bab254e5c41277f6b5aa634dcaba81f210d54c8fc5462afe",
+  "schema_version": 1,
+  "status": "completed"
+}

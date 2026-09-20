@@ -1,0 +1,163 @@
+{
+  "champion": "variation-2",
+  "evaluation": {
+    "assessment": {
+      "criteria": [
+        {
+          "id": "correct-decision",
+          "metric": "correct-decision",
+          "reference_pointer": "/decision_correctness"
+        }
+      ],
+      "output_fields": [
+        "raw"
+      ],
+      "reference": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/comparison-reference.json",
+        "sha256": "22cd697ff91a03724a3d9ffcd8c1ad6eec6f06de805585c9accaa5c09bc60772"
+      }
+    },
+    "calibration": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/calibration.json",
+      "sha256": "5bc91406b415558fed7240663ed7e00f97a3f6444d80f12b049897a20c828b26"
+    },
+    "evaluator": {
+      "adapter": {
+        "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/judge.py",
+        "sha256": "f022a434224e3d6ef4272159e815a0147945f0b72d42ccf2f977b9d81f5a22d1"
+      },
+      "command": [
+        "{python}",
+        "{evaluation-adapter}",
+        "{evaluation-request}",
+        "{evaluation-response}"
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "name": "correct-decision"
+      }
+    ],
+    "selection": {
+      "minimums": {
+        "correct-decision": 1.0
+      }
+    }
+  },
+  "evaluation_error": null,
+  "execution_limits": {
+    "evaluator_timeout_ms": 600000,
+    "variant_timeout_ms": 1800000
+  },
+  "experiment_id": "development-probe-efa50694d1b303b62ee9",
+  "frozen_input_sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+  "hypothesis": "Every approach declared by mini-probe 'tour-relationship' can run against captured case 'multiple-prerequisites', and the declared metrics recommend one bundle.",
+  "promotion_applied": false,
+  "ranking": [
+    {
+      "metrics": {
+        "correct-decision": 1.0
+      },
+      "rank": 1,
+      "variant_id": "variation-2"
+    }
+  ],
+  "schema_version": 1,
+  "selection_outcome": "selected",
+  "status": "completed",
+  "target": {
+    "entrypoint": "development_probe_candidate.py",
+    "machinery": "experiment-machinery",
+    "phase": "development-probe-candidate",
+    "source": {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts",
+      "sha256": "fa4e44e8a578cf16e0a62ca825cc1a993af5060f876c17b7dd00448dbf8fce51"
+    }
+  },
+  "target_source_sha256": "fa4e44e8a578cf16e0a62ca825cc1a993af5060f876c17b7dd00448dbf8fce51",
+  "variants": [
+    {
+      "duration_ms": 386,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "correct-decision": 0.0
+      },
+      "outcome": {
+        "raw": {
+          "case_id": "multiple-prerequisites",
+          "junit_sha256": "d5e27fed827bbba7d034e8b1f3664090a8b3c914cdeb411bcfe66e2c9784cfd9",
+          "returncode": 1,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "tests": [
+            {
+              "assertions": 1,
+              "errors": 0,
+              "failures": 1,
+              "name": "testMultiplePrerequisitesArePreserved",
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "qualification_failures": [
+        {
+          "actual": 0.0,
+          "metric": "correct-decision",
+          "minimum": 1.0
+        }
+      ],
+      "qualified": false,
+      "reported_metrics": {},
+      "result_sha256": "7f77019534d06c245f22ccabbf556eac6afeb1c1845326bcedf03069aa69243d",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "cbb83b8358d479a48e941ee0ab70a427051eb4d299f0e388b0afa6864fcb08d1",
+      "telemetry_sha256": "0be041f5d222ddf81d6da0e5e6f8d6402f5f5c6108f9e1a7286fc95ec4bdb95d",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "control"
+    },
+    {
+      "duration_ms": 392,
+      "eligible": true,
+      "error": null,
+      "exit_code": 0,
+      "integrity_errors": [],
+      "metrics": {
+        "correct-decision": 1.0
+      },
+      "outcome": {
+        "raw": {
+          "case_id": "multiple-prerequisites",
+          "junit_sha256": "f82dd308f061ffeb33a871e5d678272e3ff1a04ca31ff21bcfa22211f9292685",
+          "returncode": 0,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "tests": [
+            {
+              "assertions": 24,
+              "errors": 0,
+              "failures": 0,
+              "name": "testMultiplePrerequisitesArePreserved",
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "qualification_failures": [],
+      "qualified": true,
+      "reported_metrics": {},
+      "result_sha256": "8bccc3b7e5d49d4a55de46e14e341d022348a336e623a61599b1174b4bdc73d5",
+      "status": "completed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b6945ac1cf26bab7879e778e7a5ea5ed472b7532d64b71e363864885b18da241",
+      "telemetry_sha256": "421d1ef877a1a7b8de40a031b862e08da670b0b7a739345b3f48a3f4b7e266c7",
+      "timed_out": false,
+      "timeout_ms": 1800000,
+      "variant_id": "variation-2"
+    }
+  ]
+}

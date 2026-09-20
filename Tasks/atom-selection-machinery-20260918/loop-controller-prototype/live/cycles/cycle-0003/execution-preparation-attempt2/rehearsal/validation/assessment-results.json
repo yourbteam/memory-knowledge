@@ -1,0 +1,80 @@
+{
+  "results": [
+    {
+      "assessment": {
+        "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+        "atomic_step_id": "selected-924aae3beb9e4532",
+        "case_id": "configured-checkout-tour",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "Exact frozen test executed assertions successfully.",
+        "status": "satisfied"
+      },
+      "case_id": "configured-checkout-tour",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+        "atomic_step_id": "selected-924aae3beb9e4532",
+        "case_id": "multiple-prerequisites",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "Exact frozen test executed assertions successfully.",
+        "status": "satisfied"
+      },
+      "case_id": "multiple-prerequisites",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+        "atomic_step_id": "selected-924aae3beb9e4532",
+        "case_id": "unconfigured-checkout-tour",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "Exact frozen test executed assertions successfully.",
+        "status": "satisfied"
+      },
+      "case_id": "unconfigured-checkout-tour",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+        "atomic_step_id": "selected-924aae3beb9e4532",
+        "case_id": "relationship-direction",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "Exact frozen test executed assertions successfully.",
+        "status": "satisfied"
+      },
+      "case_id": "relationship-direction",
+      "status": "accepted"
+    },
+    {
+      "assessment": {
+        "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+        "atomic_step_id": "selected-924aae3beb9e4532",
+        "case_id": "isolated-migration-rollback",
+        "evidence_pointers": [
+          "candidate-stdout",
+          "candidate-telemetry"
+        ],
+        "reason": "Exact frozen test executed assertions successfully.",
+        "status": "satisfied"
+      },
+      "case_id": "isolated-migration-rollback",
+      "status": "accepted"
+    }
+  ],
+  "schema_version": 1
+}

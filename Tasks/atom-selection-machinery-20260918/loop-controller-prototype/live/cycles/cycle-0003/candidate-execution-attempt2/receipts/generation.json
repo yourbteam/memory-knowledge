@@ -1,0 +1,95 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/candidate_builder.py",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/creation-request.json",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation"
+  ],
+  "files": [
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/app/Services/TourDiscountPrerequisites.php",
+      "sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/app/Tours.php",
+      "sha256": "5c419e9d477bc2228b2d9ff3b064cd8049535b52d2bece35bd714190de1e5a6a"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/composer.json",
+      "sha256": "48b6be44fd2800c8e3210649b56f80a517199241340b8e342dad8f93ad6deeaa"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/composer.lock",
+      "sha256": "6e870ebc12d1d5b0eacf8aba57c77c9ec53b1bbde0b003492c160cfd7d07eb94"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/probe.py",
+      "sha256": "817519dec56d711f1c28b8b985192ce85691e141290588dd19adb3a39b4c9c21"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate/tests/Unit/TourDiscountPrerequisitesTest.php",
+      "sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/events.jsonl",
+      "sha256": "0c80463f5d2b20e2e7628a2cd8d826392ed50322b2e628c4952e9f78d6b362f0"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/model/answer.txt",
+      "sha256": "da2d1a10371a59d66745eada3d73dfcbd490ccb7d2000817b799595266d24e69"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/model/events.jsonl",
+      "sha256": "14ead523d9113a7a6ad79a098a9c30c85529064e81a28d97bc20b9e03b3866b1"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/model/invocation.json",
+      "sha256": "8a96a0514b7e20e6c81155cf9ea5cde6e2026e65b29c544c3abc8e1f0e627b15"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/model/prompt.txt",
+      "sha256": "317e1a6092cf068318b7f2b81bfe9e597350759b67a55041907a04b59b05f55c"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/model/schema.json",
+      "sha256": "f9861d3c43923777079e04e95a65dcdc58e9160f1db62e05c9adece6f9362800"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/model/stderr.txt",
+      "sha256": "0e17acefbf04cdae32ce80bca51659c6051f04e0dba50d9e0149bc466922b253"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/prompt.txt",
+      "sha256": "317e1a6092cf068318b7f2b81bfe9e597350759b67a55041907a04b59b05f55c"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/proposal.json",
+      "sha256": "bc11f2029772d4c2178b44aafc527f6281890544c8bac625dfc789ac4df30cdb"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/raw-answer.txt",
+      "sha256": "da2d1a10371a59d66745eada3d73dfcbd490ccb7d2000817b799595266d24e69"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/request.json",
+      "sha256": "42c0336310b7ebee9796710ccf64b8e0d3dd29b3fba95a28c207d16567c2812e"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/result.json",
+      "sha256": "b2fa3f22b4333f83977c3b30507ca5b19896ba17f407d6937884ea64f474f06c"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/schema.json",
+      "sha256": "1d81ca7abd78dcb0ea5738ac5559197d8ba942360ae7c64f60206c3fdef2f0ae"
+    }
+  ],
+  "final": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/result.json",
+    "sha256": "b2fa3f22b4333f83977c3b30507ca5b19896ba17f407d6937884ea64f474f06c"
+  }
+}

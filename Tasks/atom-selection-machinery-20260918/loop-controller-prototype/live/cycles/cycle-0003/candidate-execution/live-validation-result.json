@@ -1,0 +1,21 @@
+{
+  "status": "stopped_at_missing_restoration_sources",
+  "model_calls": 1,
+  "experiment_started": false,
+  "review_started": false,
+  "product_changed": false,
+  "model_response": {
+    "status": "blocked",
+    "reason": "The historical migration and service source bodies required for restoration and reuse were not supplied. Provide database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php and app/Services/TourDiscountPrerequisites.php from the preserved historical implementation. The supplied model, dependency manifest and frozen tests do not establish the historical storage constraints or reader implementation. No change was executed or verified; the assignment stopping condition and all listed unverified obligations remain outstanding.",
+    "edits": []
+  },
+  "context_keys": [
+    "selected_atom",
+    "assignment",
+    "verification",
+    "historical_schema_evidence",
+    "schema_evidence_boundary"
+  ],
+  "confirmed_cause": "The selected assignment requires restoration/reuse, but build_preparation constructs context without the preserved migration and reader bodies. Those bodies are present in verification sources but are not transmitted to the builder. The existing generic builder instruction also says no completed solution is supplied, which must be reconciled explicitly for restoration inputs rather than silently contradicting the task.",
+  "next_proposal": "Mechanically include hash-verified historical migration and reader source, labelled as restoration references rather than current baseline or approved solution; align the builder instruction with use of supplied historical references. Preserve this failed attempt and create a successor request. No manual product edits."
+}

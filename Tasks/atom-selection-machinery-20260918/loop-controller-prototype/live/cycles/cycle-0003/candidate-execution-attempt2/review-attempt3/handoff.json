@@ -1,0 +1,29 @@
+{
+  "status": "candidate_reviewed",
+  "generation": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/result.json",
+    "sha256": "b2fa3f22b4333f83977c3b30507ca5b19896ba17f407d6937884ea64f474f06c"
+  },
+  "experiment": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/development-probe-summary.json",
+    "sha256": "b554861b6c2f643477ee5d97ff4008cf04d9abdda48f397589a42f6a31af68c1"
+  },
+  "review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-attempt3/review.json",
+    "sha256": "731a1e0efa53f69763cc718ae54a29472eb4c6c369b350ffbfbb9d79829f7624"
+  },
+  "selection": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/handoff.json",
+    "sha256": "924aae3beb9e4532bae3e298eb3c1c823e1452bf7c45984b3815cf02477e9f82"
+  },
+  "product_promoted": false,
+  "goal_complete": false,
+  "review_decision": "candidate_application",
+  "candidate_suitable_to_apply": true,
+  "atom_complete": false,
+  "previous_review": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json",
+    "sha256": "a17958dd63f356f6f2d7aa2fe637114c5266ebc0345a825e4d111c7c004de0d8"
+  },
+  "model_calls": 1
+}

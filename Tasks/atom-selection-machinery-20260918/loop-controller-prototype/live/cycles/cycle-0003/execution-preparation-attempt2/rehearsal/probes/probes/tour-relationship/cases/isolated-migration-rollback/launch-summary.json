@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "isolated-migration-rollback",
+  "experiment_id": "development-probe-6775fba957a94d928b82",
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "recommendation_sha256": "25259536a3f4f53a6d7eb0ade694e20869d70b9b742b11a56b88ff44a9f6c1f7",
+  "schema_version": 1,
+  "status": "completed"
+}

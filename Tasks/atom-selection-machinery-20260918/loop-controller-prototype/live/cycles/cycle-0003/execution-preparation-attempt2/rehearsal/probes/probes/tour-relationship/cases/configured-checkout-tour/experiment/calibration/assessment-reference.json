@@ -1,0 +1,3 @@
+{
+  "decision_correctness": "Execute the reviewed frozen machine-authored PHPUnit case against the selected actual product source. Require the exact test hash and name, positive assertion count, zero failures/errors/skips, and successful process exit."
+}

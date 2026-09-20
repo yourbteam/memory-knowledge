@@ -1,0 +1,16 @@
+{
+  "aggregated_summary_sha256": "118c3bbccf4a8b76492a2bd67c0df374731afbf9d3b0b2b1fb8fa31d279d872c",
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_ids": [
+    "configured-checkout-tour",
+    "multiple-prerequisites",
+    "unconfigured-checkout-tour",
+    "relationship-direction",
+    "isolated-migration-rollback"
+  ],
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "recommendation_sha256": "a7e279860ad924b0c88f83c4437ed1753256f8c766d4967c111a0d9f739a9018",
+  "schema_version": 1,
+  "status": "completed"
+}

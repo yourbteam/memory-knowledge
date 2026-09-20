@@ -147,6 +147,17 @@ def prepare(state, verification, assignment_run, template_path, repository, outp
         raise ValueError('Builder baseline contains files outside its committed source catalog')
     units = [{'path': r['path'], 'text': (baseline / r['path']).read_text()} for r in files if r['path'] != 'composer.lock']
     historical_context = json.loads(template['context'])
+    historical_implementation = []
+    for key, row in manifest.items():
+        if not key.startswith('historical_product_'):
+            continue
+        matches = [p for p in assignment['allowed_paths'] if row['origin'].endswith('/' + p)]
+        if len(matches) != 1:
+            raise ValueError('Historical restoration source needs one assigned destination: ' + row['origin'])
+        source = verify({'path': str(verification / relative(row['copy'])), 'sha256': row['sha256']})
+        historical_implementation.append({'path': matches[0], 'origin': row['origin'],
+            'sha256': row['sha256'], 'text': source.read_text(),
+            'role': 'Historical restoration reference, not current baseline or proof of compatibility'})
     test_paths = [p for p in assignment['allowed_paths'] if Path(p).name == test.name]
     if len(test_paths) != 1:
         raise ValueError('Frozen verification needs one matching test destination in the assigned paths')
@@ -161,6 +172,7 @@ def prepare(state, verification, assignment_run, template_path, repository, outp
                 'source_units': units,
                 'context': json.dumps({'selected_atom': read(selection), 'assignment': assignment,
                      'verification': verification_context,
+                     'historical_implementation': historical_implementation,
                      'historical_schema_evidence': historical_context.get('existing_schema'),
                      'schema_evidence_boundary': 'Historical supplied schema evidence; verify target compatibility as required by the assignment. Not a current database execution.'}, ensure_ascii=False)}
     save(output / 'creation-request.json', creation)

@@ -1,0 +1,51 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/source_review.py",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/promotion-surface.json",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json"
+  ],
+  "files": [
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/model/answer.txt",
+      "sha256": "ed91806ea6006a6683bd38c5b3055232550475fa96ce60e1e279a56981aeccbf"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/model/events.jsonl",
+      "sha256": "592aab0a087f6f657453c3dc1c35dd5d81de03e54e1362f0804d89658eb6b82d"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/model/invocation.json",
+      "sha256": "33d529a13f2415e0879103b8d7988316bb26a647cb50cf43064152e02d508241"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/model/prompt.txt",
+      "sha256": "dbe03b401fa3bc073f3db6c0d3ffe7c96b199a9528a6c3c85cd7d32e822fc1b8"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/model/schema.json",
+      "sha256": "527d8f808ec5608bf752563d073262a9c44de3c72057803804c01109db9da3c2"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/model/stderr.txt",
+      "sha256": "61708224a52ccd8a08d2e47192271f1b701470aa55149da7fa0277c2a5f679af"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/packet.json",
+      "sha256": "c61b65a5cb9732c60943d980f90dc0c0c120fb9ad24cd1fa91fbd31aa43a70a1"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/prompt.txt",
+      "sha256": "dbe03b401fa3bc073f3db6c0d3ffe7c96b199a9528a6c3c85cd7d32e822fc1b8"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json.source-review/schema.json",
+      "sha256": "96012b410d3c5856a638fda13e3f94e052a315ef46c310063f568802877a54a1"
+    }
+  ],
+  "final": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/review-input/review.json",
+    "sha256": "a17958dd63f356f6f2d7aa2fe637114c5266ebc0345a825e4d111c7c004de0d8"
+  }
+}

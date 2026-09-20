@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "changes": [
+    {
+      "path": "app/Services/TourDiscountPrerequisites.php",
+      "kind": "added",
+      "before_sha256": null,
+      "after_sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28",
+      "before_mode": null,
+      "after_mode": 420
+    },
+    {
+      "path": "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "kind": "added",
+      "before_sha256": null,
+      "after_sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf",
+      "before_mode": null,
+      "after_mode": 420
+    },
+    {
+      "path": "tests/Unit/TourDiscountPrerequisitesTest.php",
+      "kind": "added",
+      "before_sha256": null,
+      "after_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+      "before_mode": null,
+      "after_mode": 420
+    }
+  ]
+}

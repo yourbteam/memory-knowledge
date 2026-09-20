@@ -1,0 +1,229 @@
+{
+  "obligations": [
+    {
+      "id": "configured-checkout-tour",
+      "verdict": "satisfied",
+      "reason": "The migration stores checkout and prerequisite IDs separately. Both reader methods filter on the checkout ID: a B-to-A row makes B configured and returns A. The supplied fresh execution supports this code trace.",
+      "evidence": [
+        {
+          "source_id": "after-1",
+          "quote": "return $this->connection->table('tour_discount_prerequisites')\n            ->where('checkout_tour_id', $checkoutTourId)\n            ->exists();"
+        },
+        {
+          "source_id": "after-1",
+          "quote": "->where('checkout_tour_id', $checkoutTourId)\n            ->pluck('prerequisite_tour_id')"
+        },
+        {
+          "source_id": "actual-execution-2",
+          "quote": "\"name\": \"testConfiguredCheckoutTourReturnsItsPrerequisite\", \"assertions\": 20, \"failures\": 0, \"errors\": 0, \"skipped\": 0"
+        }
+      ]
+    },
+    {
+      "id": "multiple-prerequisites",
+      "verdict": "satisfied",
+      "reason": "The composite primary key permits different prerequisites for one checkout. The reader collects every matching prerequisite without a limit or purchase-qualification condition, preserving A and C independently.",
+      "evidence": [
+        {
+          "source_id": "after-2",
+          "quote": "$table->primary(\n                ['checkout_tour_id', 'prerequisite_tour_id'],\n                'tour_discount_prerequisites_primary'\n            );"
+        },
+        {
+          "source_id": "after-1",
+          "quote": "->pluck('prerequisite_tour_id')\n            ->map(function ($tourId) {\n                return (int) $tourId;\n            })\n            ->all();"
+        },
+        {
+          "source_id": "actual-execution-4",
+          "quote": "\"name\": \"testMultiplePrerequisitesArePreserved\", \"assertions\": 24, \"failures\": 0, \"errors\": 0, \"skipped\": 0"
+        }
+      ]
+    },
+    {
+      "id": "unconfigured-checkout-tour",
+      "verdict": "satisfied",
+      "reason": "An absent checkout match yields false from exists() and an empty prerequisite collection converted to an array. Neither method consults discount codes, so code availability cannot configure a tour.",
+      "evidence": [
+        {
+          "source_id": "after-1",
+          "quote": "return $this->connection->table('tour_discount_prerequisites')\n            ->where('checkout_tour_id', $checkoutTourId)\n            ->exists();"
+        },
+        {
+          "source_id": "after-1",
+          "quote": "return $this->connection->table('tour_discount_prerequisites')\n            ->where('checkout_tour_id', $checkoutTourId)\n            ->pluck('prerequisite_tour_id')\n            ->map(function ($tourId) {\n                return (int) $tourId;\n            })\n            ->all();"
+        },
+        {
+          "source_id": "actual-execution-6",
+          "quote": "\"name\": \"testUnconfiguredCheckoutTourHasNoPrerequisites\", \"assertions\": 19, \"failures\": 0, \"errors\": 0, \"skipped\": 0"
+        }
+      ]
+    },
+    {
+      "id": "relationship-direction",
+      "verdict": "satisfied",
+      "reason": "Both queries match only checkout_tour_id; neither searches prerequisite_tour_id for reverse edges. Thus B-to-A does not configure A or return B when querying A.",
+      "evidence": [
+        {
+          "source_id": "after-1",
+          "quote": "->where('checkout_tour_id', $checkoutTourId)\n            ->exists();"
+        },
+        {
+          "source_id": "after-1",
+          "quote": "->where('checkout_tour_id', $checkoutTourId)\n            ->pluck('prerequisite_tour_id')"
+        },
+        {
+          "source_id": "actual-execution-5",
+          "quote": "\"name\": \"testRelationshipDirectionDoesNotConfigureThePrerequisiteTour\", \"assertions\": 23, \"failures\": 0, \"errors\": 0, \"skipped\": 0"
+        }
+      ]
+    },
+    {
+      "id": "isolated-migration-rollback",
+      "verdict": "satisfied",
+      "reason": "The actual migration creates only the relationship table and drops that table on rollback. The reader performs only selects. The test uses an isolated in-memory database and compares all recorded tour values before and after migration, reads and rollback; its fresh execution passed.",
+      "evidence": [
+        {
+          "source_id": "after-2",
+          "quote": "Schema::create('tour_discount_prerequisites', function (Blueprint $table) {"
+        },
+        {
+          "source_id": "after-2",
+          "quote": "Schema::dropIfExists('tour_discount_prerequisites');"
+        },
+        {
+          "source_id": "after-3",
+          "quote": "'driver' => 'sqlite',\n            'database' => ':memory:',"
+        },
+        {
+          "source_id": "after-3",
+          "quote": "$this->assertSame(\n            $this->originalTours,\n            $this->tourSnapshot(),\n            'All pre-existing tour rows and recorded column values must remain unchanged.'\n        );"
+        },
+        {
+          "source_id": "actual-execution-3",
+          "quote": "\"name\": \"testIsolatedMigrationRollbackPreservesExistingTours\", \"assertions\": 26, \"failures\": 0, \"errors\": 0, \"skipped\": 0"
+        }
+      ]
+    },
+    {
+      "id": "assignment-boundary",
+      "verdict": "not-satisfied",
+      "reason": "The proposed code stays within the three allowed files and supplies the requested capability, but the assignment's delivery-branch restoration is explicitly unfinished: the candidate remains outside the checkout and the delivery branch remains at baseline. This is a delivery-state gap, not a defect in the reader or migration. SQLite execution and compatible supplied MySQL DDL do not establish actual MySQL execution.",
+      "evidence": [
+        {
+          "source_id": "current-assignment",
+          "quote": "Restore and validate directed tour-prerequisite storage and its reader on the prod-based auto-50-perc-off delivery branch"
+        },
+        {
+          "source_id": "actual-execution-8",
+          "quote": "Candidate and assembly are retained outside the product checkout. The delivery branch still points to the recorded baseline. No checkout switch, delivery-branch application or product promotion has been performed."
+        },
+        {
+          "source_id": "actual-execution-8",
+          "quote": "Actual tests used isolated SQLite and current dependencies. Supplied historical MySQL DDL supports source inspection only; no actual MySQL migration execution occurred."
+        }
+      ]
+    },
+    {
+      "id": "required-proof",
+      "verdict": "satisfied",
+      "reason": "The supplied package retains candidate identities, the complete diff, fresh results for all five cases, dependency versions and matching before/after checkout inventories. The test verifies exact loaded source paths and tour-row preservation. Inspection shows signed integer references matching the supplied tours primary key and InnoDB engine. MySQL execution, full-schema preservation and general PHP 8.5 application compatibility are explicitly unproven; actual delivery restoration remains separately unsatisfied.",
+      "evidence": [
+        {
+          "source_id": "actual-execution-8",
+          "quote": "\"baseline_commit\": \"45826e12cdc8f585e514d7bb09c0d37fa28ed568\",\n  \"delivery_branch\": \"auto-50-perc-off\","
+        },
+        {
+          "source_id": "actual-execution-8",
+          "quote": "\"sha256\": \"2e1fb34aeac306ef854b9e20062814df3aabe5de6fb0c43b1e72c3f6e1d901c1\""
+        },
+        {
+          "source_id": "after-3",
+          "quote": "$this->assertSame(\n            realpath($path),\n            $reflection->getFileName(),\n            'The class must come from the selected product root. Run different roots in separate PHPUnit processes.'\n        );"
+        },
+        {
+          "source_id": "tour-index-ddl",
+          "quote": "ALTER TABLE `tours`\n  ADD PRIMARY KEY (`tour_id`),"
+        },
+        {
+          "source_id": "tour-schema",
+          "quote": "CREATE TABLE `tours` (\n  `tour_id` int NOT NULL,"
+        },
+        {
+          "source_id": "actual-execution-8",
+          "quote": "Actual tests used isolated SQLite and current dependencies. Supplied historical MySQL DDL supports source inspection only; no actual MySQL migration execution occurred. PHP 8.5 is outside the declared Composer constraint; focused tests do not prove full application compatibility."
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "path": "app/Services/TourDiscountPrerequisites.php",
+      "verdict": "satisfied",
+      "reason": "The injected connection reads exactly the migration's table and columns. Checkout-filtered existence and complete integer-ID collection implement configuration and directed prerequisites without mutating tours or introducing qualification logic. No blocking code regression is visible in the supplied context.",
+      "evidence": [
+        {
+          "source_id": "after-1",
+          "quote": "public function __construct(ConnectionInterface $connection)\n    {\n        $this->connection = $connection;\n    }"
+        },
+        {
+          "source_id": "after-1",
+          "quote": "->where('checkout_tour_id', $checkoutTourId)\n            ->exists();"
+        },
+        {
+          "source_id": "after-1",
+          "quote": "->where('checkout_tour_id', $checkoutTourId)\n            ->pluck('prerequisite_tour_id')\n            ->map(function ($tourId) {\n                return (int) $tourId;\n            })\n            ->all();"
+        }
+      ]
+    },
+    {
+      "path": "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "verdict": "satisfied",
+      "reason": "The composite key permits multiple distinct directed prerequisites and prevents duplicate edges. Both foreign keys target the existing tours primary key. Signed integer columns and InnoDB match the supplied MySQL schema; rollback targets only the new table. Actual execution is demonstrated only on SQLite. No blocking migration defect is established.",
+      "evidence": [
+        {
+          "source_id": "after-2",
+          "quote": "$table->engine = 'InnoDB';\n\n            $table->integer('checkout_tour_id');\n            $table->integer('prerequisite_tour_id');"
+        },
+        {
+          "source_id": "after-2",
+          "quote": "$table->foreign('checkout_tour_id', 'tdp_checkout_tour_foreign')\n                ->references('tour_id')->on('tours');\n            $table->foreign('prerequisite_tour_id', 'tdp_prerequisite_tour_foreign')\n                ->references('tour_id')->on('tours');"
+        },
+        {
+          "source_id": "after-2",
+          "quote": "Schema::dropIfExists('tour_discount_prerequisites');"
+        },
+        {
+          "source_id": "tour-index-ddl",
+          "quote": "MODIFY `tour_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=400;"
+        }
+      ]
+    },
+    {
+      "path": "tests/Unit/TourDiscountPrerequisitesTest.php",
+      "verdict": "satisfied",
+      "reason": "The tests load the selected actual migration and service, use isolated SQLite, exercise all five cases, detect unrelated-edge leakage, compare integer prerequisite sets and verify complete recorded tour rows remain unchanged. Teardown disconnects the fixture and restores the facade application. The tests do not prove MySQL execution or full application compatibility, and the evidence discloses those limits. No blocking test regression is visible.",
+      "evidence": [
+        {
+          "source_id": "after-3",
+          "quote": "$this->migration = new \\CreateTourDiscountPrerequisites();\n        $this->reader = new \\App\\Services\\TourDiscountPrerequisites($this->connection);"
+        },
+        {
+          "source_id": "after-3",
+          "quote": "$this->configure(202, 101);\n        $this->configure(202, 303);\n        // An unrelated checkout catches readers that return every stored edge.\n        $this->configure(404, 202);"
+        },
+        {
+          "source_id": "after-3",
+          "quote": "sort($expected, SORT_NUMERIC);\n        sort($actual, SORT_NUMERIC);\n        $this->assertSame($expected, $actual);"
+        },
+        {
+          "source_id": "after-3",
+          "quote": "Facade::clearResolvedInstances();\n                Facade::setFacadeApplication($this->previousFacadeApplication);"
+        },
+        {
+          "source_id": "after-3",
+          "quote": "$this->assertSame(\n            $this->originalTours,\n            $this->tourSnapshot(),\n            'All pre-existing tour rows and recorded column values must remain unchanged.'\n        );"
+        }
+      ]
+    }
+  ],
+  "blocking_findings": []
+}

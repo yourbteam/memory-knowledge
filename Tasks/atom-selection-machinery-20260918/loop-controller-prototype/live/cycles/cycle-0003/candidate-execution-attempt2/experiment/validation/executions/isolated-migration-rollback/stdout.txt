@@ -1,0 +1,1 @@
+{"raw": {"case_id": "isolated-migration-rollback", "returncode": 0, "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5", "tests": [{"name": "testIsolatedMigrationRollbackPreservesExistingTours", "assertions": 26, "failures": 0, "errors": 0, "skipped": 0}], "junit_sha256": "17edfb7e781b5a047ad38100d3486a73f7aecd8aee7a0dfee15cd81ae668e9e2"}}

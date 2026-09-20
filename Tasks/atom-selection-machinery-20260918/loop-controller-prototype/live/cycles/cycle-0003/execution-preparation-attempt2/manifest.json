@@ -1,0 +1,135 @@
+{
+  "schema_version": 2,
+  "case_source_root": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/case-sources",
+  "atomic_step": {
+    "id": "selected-924aae3beb9e4532",
+    "outcome": "Restore and validate directed tour-prerequisite storage and its reader on the prod-based auto-50-perc-off delivery branch, reusing compatible historical migration, service and tests. Given a checkout tour ID and configured directed relationships, return configuration status and prerequisite-tour IDs, preserving multiple prerequisites for later paid-purchase qualification at any one of them.",
+    "practical_value": "Supplies the missing configuration boundary required for Taggable’s automatic 50% discount without changing existing checkout, search, recognition, pricing or payment behavior.",
+    "stopping_condition": "Complete only when the resulting version and diff are retained and the actual restored migration and reader execute against current dependencies in an isolated database, passing all five selected cases while preserving existing tours and rows. Inspect target MySQL schema compatibility, distinguish inspection from actual MySQL execution, and explicitly record unresolved database limitations. A compatibility failure preventing the capability from working leaves restoration incomplete. Keep source inspection, historical-file access checks, isolated delivery-branch setup and minimal dependency adaptations within this job; preserve the other branch and its untracked work. Do not expand into qualification, code selection, checkout integration, UI, recognition changes, production configuration or deployment.",
+    "captured_cases": [
+      {
+        "id": "configured-checkout-tour",
+        "source_ref": "historical_cases.json",
+        "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+        "kind": "success",
+        "expected_outcome": "After the generated migration, store a directed relationship from checkout tour B to prerequisite tour A. The generated reader identifies B as configured and returns A as its prerequisite. A and B are controlled examples derived from the owner flow, not production records."
+      },
+      {
+        "id": "multiple-prerequisites",
+        "source_ref": "historical_cases.json",
+        "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+        "kind": "success",
+        "expected_outcome": "Configure checkout tour B with prerequisite tours A and C. The reader preserves both prerequisites. It does not reduce the configured list to a single arbitrary prerequisite or require purchase at both. Purchase qualification itself remains outside this atom."
+      },
+      {
+        "id": "unconfigured-checkout-tour",
+        "source_ref": "historical_cases.json",
+        "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+        "kind": "failure",
+        "expected_outcome": "A tour absent from the configured checkout relationships is not reported as eligible and has no prerequisite tours returned. Availability of a discount code alone does not configure eligibility."
+      },
+      {
+        "id": "relationship-direction",
+        "source_ref": "historical_cases.json",
+        "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+        "kind": "failure",
+        "expected_outcome": "With only B-to-A configured, querying A must not infer eligibility or return B as a prerequisite. Relationships are directed, not symmetric."
+      },
+      {
+        "id": "isolated-migration-rollback",
+        "source_ref": "historical_cases.json",
+        "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291",
+        "kind": "success",
+        "expected_outcome": "Run the actual generated migration up and down only against an isolated database. It creates and removes the new relationship storage while preserving the pre-existing tours table and its recorded data. The relationship reader does not change tour data."
+      }
+    ]
+  },
+  "mini_probes": [
+    {
+      "id": "tour-relationship",
+      "goal": "Restore and validate directed tour-prerequisite storage and its reader on the prod-based auto-50-perc-off delivery branch, reusing compatible historical migration, service and tests. Given a checkout tour ID and configured directed relationships, return configuration status and prerequisite-tour IDs, preserving multiple prerequisites for later paid-purchase qualification at any one of them.",
+      "practical_value": "Supplies the missing configuration boundary required for Taggable’s automatic 50% discount without changing existing checkout, search, recognition, pricing or payment behavior.",
+      "work_type": "code",
+      "work_type_reason": "Compare unchanged baseline with a candidate using the independently selected frozen tests.",
+      "allowed_paths": [
+        "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+        "app/Services/TourDiscountPrerequisites.php",
+        "tests/Unit/TourDiscountPrerequisitesTest.php"
+      ],
+      "inputs": [
+        {
+          "case_id": "configured-checkout-tour"
+        },
+        {
+          "case_id": "multiple-prerequisites"
+        },
+        {
+          "case_id": "unconfigured-checkout-tour"
+        },
+        {
+          "case_id": "relationship-direction"
+        },
+        {
+          "case_id": "isolated-migration-rollback"
+        }
+      ],
+      "approaches": [
+        {
+          "id": "control",
+          "hypothesis": "The missing relationship baseline cannot satisfy the approved cases.",
+          "implementation": "Run the exact frozen generated test against unchanged baseline product.",
+          "predicted_tradeoff": "Tests fail for absent relationship migration."
+        },
+        {
+          "id": "candidate",
+          "hypothesis": "The candidate satisfies all five selected cases.",
+          "implementation": "Execute the exact frozen tests against the candidate source.",
+          "predicted_tradeoff": "SQLite functional proof; MySQL compatibility remains a separate review obligation."
+        }
+      ],
+      "proof": {
+        "success_criterion": "Each exact frozen test executes its assertions without failure, error or skip.",
+        "failure_criterion": "Any frozen test fails, changes, skips, or does not execute its named case."
+      },
+      "evaluation": {
+        "metrics": [
+          {
+            "name": "correct-decision",
+            "direction": "maximize"
+          }
+        ],
+        "across_cases": [
+          {
+            "name": "correct-decision",
+            "method": "worst"
+          }
+        ]
+      },
+      "winner_output": {
+        "artifact": "tour-relationship",
+        "description": "Candidate source passing all declared functional cases; not product completion."
+      }
+    }
+  ],
+  "composition": {
+    "consumes": [
+      {
+        "probe_id": "tour-relationship",
+        "artifact": "tour-relationship"
+      }
+    ],
+    "assembly_contract": "Compose only the three allowed source paths and execute the frozen tests unchanged.",
+    "final_validation": {
+      "operator_path": "Frozen PHPUnit tests invoke actual selected migration and reader using isolated SQLite connections.",
+      "case_ids": [
+        "configured-checkout-tour",
+        "multiple-prerequisites",
+        "unconfigured-checkout-tour",
+        "relationship-direction",
+        "isolated-migration-rollback"
+      ],
+      "success_criterion": "Each exact frozen test executes its assertions without failure, error or skip.",
+      "failure_criterion": "Any frozen test fails, changes, skips, or does not execute its named case."
+    }
+  }
+}

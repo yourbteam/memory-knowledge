@@ -1,0 +1,23 @@
+{
+  "verdict": "promote_correction",
+  "hypothesis": "A pre-application suitability review can approve the proven isolated candidate without asserting completed delivery; the existing delivery/completion boundaries still refuse advancement.",
+  "live_review": "passed",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "medium",
+  "paid_calls": 1,
+  "candidate_and_test_results_unchanged": true,
+  "full_completion_proof_preserved_in_admission_packet": true,
+  "boundary_checks": {
+    "unchanged_full_requirements": true,
+    "unchanged_candidate_surface": true,
+    "failed_review_blocks_actual_writer": "Promotion review did not pass for the exact surface; no files applied",
+    "negative_writer_test_boundary": "Saved failed model verdict; admitted setup isolated, real promote function and no-write boundary exercised.",
+    "actual_cycle_without_delivery_needs_build": true,
+    "candidate_handoff_rejected_as_completed_build": true,
+    "paid_calls": 0
+  },
+  "receipt_only_resume_passed": true,
+  "atom_complete": false,
+  "product_promoted": false,
+  "installation": "Live prototype uses corrected canonical worktree scripts; client projections not installed in this step."
+}

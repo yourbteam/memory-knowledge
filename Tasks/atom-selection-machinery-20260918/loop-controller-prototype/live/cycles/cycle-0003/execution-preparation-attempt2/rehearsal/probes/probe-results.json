@@ -1,0 +1,11 @@
+{
+  "results": [
+    {
+      "output": "probes/tour-relationship",
+      "probe_id": "tour-relationship",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

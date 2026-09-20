@@ -1,0 +1,252 @@
+{
+  "completion_order": [
+    "multiple-prerequisites",
+    "configured-checkout-tour",
+    "relationship-direction",
+    "unconfigured-checkout-tour",
+    "isolated-migration-rollback"
+  ],
+  "results": [
+    {
+      "case_id": "configured-checkout-tour",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/configured-checkout-tour/stdout.txt",
+          "sha256": "be7a4690f652832252e15c55a1fc14f06f8852ca9e1bc0ae13342a5885ebc64f"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/configured-checkout-tour/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/configured-checkout-tour/telemetry.jsonl",
+          "sha256": "957b06fe350781da8fbb8a0ff1a5ef55f106c9b563177273e60fed38899524ec"
+        }
+      ],
+      "output": "executions/configured-checkout-tour",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "raw": {
+            "case_id": "configured-checkout-tour",
+            "junit_sha256": "df1d07d6a2d46197bdeabfd92b0cbcdd211a4836a24b2d81950711afc57f4a4a",
+            "returncode": 0,
+            "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+            "tests": [
+              {
+                "assertions": 20,
+                "errors": 0,
+                "failures": 0,
+                "name": "testConfiguredCheckoutTourReturnsItsPrerequisite",
+                "skipped": 0
+              }
+            ]
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "multiple-prerequisites",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/multiple-prerequisites/stdout.txt",
+          "sha256": "4b1412ae68068ec297599528a162d1f1b3df183be0a782919fbd36301ec1f112"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/multiple-prerequisites/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/multiple-prerequisites/telemetry.jsonl",
+          "sha256": "15734c69b2cd4b32cb028f1674afa3f6fc73d516584bc8c9fb7269efbf9ccaa1"
+        }
+      ],
+      "output": "executions/multiple-prerequisites",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "raw": {
+            "case_id": "multiple-prerequisites",
+            "junit_sha256": "4dae9e35772f75297031c219924ee9566d7b6da295fb016dbe8bacd27b576a95",
+            "returncode": 0,
+            "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+            "tests": [
+              {
+                "assertions": 24,
+                "errors": 0,
+                "failures": 0,
+                "name": "testMultiplePrerequisitesArePreserved",
+                "skipped": 0
+              }
+            ]
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "unconfigured-checkout-tour",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/unconfigured-checkout-tour/stdout.txt",
+          "sha256": "579cb7fbc2e20f227b873d5adc72c0579dd7245b725c7640ca37736bc0458abc"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/unconfigured-checkout-tour/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/unconfigured-checkout-tour/telemetry.jsonl",
+          "sha256": "0df305abf00322b62d2eed3b11b6672a45a3caa534c30b8f75112c5c086168f0"
+        }
+      ],
+      "output": "executions/unconfigured-checkout-tour",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "raw": {
+            "case_id": "unconfigured-checkout-tour",
+            "junit_sha256": "2561f7f7407bcbd68d2cd82e1caedff2e07d539a57bb1c36c6132f00f095f933",
+            "returncode": 0,
+            "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+            "tests": [
+              {
+                "assertions": 19,
+                "errors": 0,
+                "failures": 0,
+                "name": "testUnconfiguredCheckoutTourHasNoPrerequisites",
+                "skipped": 0
+              }
+            ]
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "relationship-direction",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/relationship-direction/stdout.txt",
+          "sha256": "f34a5499b9e1c795054350fd6f1544aec2d99519204adc21570a572dbfbb731e"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/relationship-direction/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/relationship-direction/telemetry.jsonl",
+          "sha256": "e5dbb7787fe790b4b6fe8f8c1bac56955cb1302501a22481a2007797a16dd189"
+        }
+      ],
+      "output": "executions/relationship-direction",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "raw": {
+            "case_id": "relationship-direction",
+            "junit_sha256": "34307a91af2e5453d90787441483d4d3af86ff5739165b4c1970c145f2a2dc31",
+            "returncode": 0,
+            "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+            "tests": [
+              {
+                "assertions": 23,
+                "errors": 0,
+                "failures": 0,
+                "name": "testRelationshipDirectionDoesNotConfigureThePrerequisiteTour",
+                "skipped": 0
+              }
+            ]
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "isolated-migration-rollback",
+      "error": null,
+      "evidence": [
+        {
+          "id": "candidate-stdout",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/isolated-migration-rollback/stdout.txt",
+          "sha256": "8f76fde9df53f1c640874322cc028efa588f98cf9259c8804036f1e841904279"
+        },
+        {
+          "id": "candidate-stderr",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/isolated-migration-rollback/stderr.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "candidate-telemetry",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/validation/executions/isolated-migration-rollback/telemetry.jsonl",
+          "sha256": "f7c109b08a367513b1808bbd0656db4edfce60cd8246466f8aedae9c61992dc5"
+        }
+      ],
+      "output": "executions/isolated-migration-rollback",
+      "result": {
+        "error": null,
+        "metrics": {},
+        "outcome": {
+          "raw": {
+            "case_id": "isolated-migration-rollback",
+            "junit_sha256": "17edfb7e781b5a047ad38100d3486a73f7aecd8aee7a0dfee15cd81ae668e9e2",
+            "returncode": 0,
+            "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+            "tests": [
+              {
+                "assertions": 26,
+                "errors": 0,
+                "failures": 0,
+                "name": "testIsolatedMigrationRollbackPreservesExistingTours",
+                "skipped": 0
+              }
+            ]
+          }
+        },
+        "schema_version": 1,
+        "status": "completed",
+        "variant_id": "assembly"
+      },
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

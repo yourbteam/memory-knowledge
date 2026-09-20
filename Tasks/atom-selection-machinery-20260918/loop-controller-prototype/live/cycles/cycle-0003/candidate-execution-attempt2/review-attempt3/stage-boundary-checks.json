@@ -1,0 +1,9 @@
+{
+  "unchanged_full_requirements": true,
+  "unchanged_candidate_surface": true,
+  "failed_review_blocks_actual_writer": "Promotion review did not pass for the exact surface; no files applied",
+  "negative_writer_test_boundary": "Saved failed model verdict; admitted setup isolated, real promote function and no-write boundary exercised.",
+  "actual_cycle_without_delivery_needs_build": true,
+  "candidate_handoff_rejected_as_completed_build": true,
+  "paid_calls": 0
+}

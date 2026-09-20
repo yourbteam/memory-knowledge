@@ -1,0 +1,34 @@
+{
+  "experiment_id": "development-probe-da44e3b20474f31de60f",
+  "schema_version": 1,
+  "variants": [
+    {
+      "approach_id": "control",
+      "bundle": "../../bundles/control",
+      "bundle_sha256": "5dc8fa89c3f3190071b3b8e1773b9542f3c2e6c555f9a5479d9165257d97d894",
+      "case_ids": [
+        "configured-checkout-tour",
+        "multiple-prerequisites",
+        "unconfigured-checkout-tour",
+        "relationship-direction",
+        "isolated-migration-rollback"
+      ],
+      "probe_id": "tour-relationship",
+      "variant_id": "control"
+    },
+    {
+      "approach_id": "candidate",
+      "bundle": "../../bundles/candidate",
+      "bundle_sha256": "07e1fa2d3019695e29c3c09aea3c1e570afd8aa080a8ff7bb8b4db60bb2c1542",
+      "case_ids": [
+        "configured-checkout-tour",
+        "multiple-prerequisites",
+        "unconfigured-checkout-tour",
+        "relationship-direction",
+        "isolated-migration-rollback"
+      ],
+      "probe_id": "tour-relationship",
+      "variant_id": "variation-2"
+    }
+  ]
+}

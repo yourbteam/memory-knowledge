@@ -1,0 +1,17 @@
+PHPUnit 7.5.20 by Sebastian Bergmann and contributors.
+
+F                                                                   1 / 1 (100%)
+
+Time: 35 ms, Memory: 10.00 MB
+
+There was 1 failure:
+
+1) Tests\Unit\TourDiscountPrerequisitesTest::testUnconfiguredCheckoutTourHasNoPrerequisites
+Missing product file: /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/probes/probes/tour-relationship/cases/unconfigured-checkout-tour/experiment/variants/control/candidate-source/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php. Supply the generated product under TAGGABLE_SOURCE_ROOT.
+Failed asserting that file "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/probes/probes/tour-relationship/cases/unconfigured-checkout-tour/experiment/variants/control/candidate-source/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php" exists.
+
+/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php:198
+/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php:107
+
+FAILURES!
+Tests: 1, Assertions: 1, Failures: 1.

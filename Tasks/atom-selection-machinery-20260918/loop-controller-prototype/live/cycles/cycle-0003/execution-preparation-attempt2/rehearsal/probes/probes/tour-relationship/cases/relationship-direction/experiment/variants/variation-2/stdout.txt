@@ -1,0 +1,1 @@
+{"raw": {"case_id": "relationship-direction", "returncode": 0, "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5", "tests": [{"name": "testRelationshipDirectionDoesNotConfigureThePrerequisiteTour", "assertions": 23, "failures": 0, "errors": 0, "skipped": 0}], "junit_sha256": "998d28fa992008093c2d892dc4fc8f179d58342687606b349623f39e550a2b87"}}

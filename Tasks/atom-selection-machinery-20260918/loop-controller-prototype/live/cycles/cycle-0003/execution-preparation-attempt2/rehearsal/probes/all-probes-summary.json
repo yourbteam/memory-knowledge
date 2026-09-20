@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "probe_ids": [
+    "tour-relationship"
+  ],
+  "promotion_applied": false,
+  "promotion_candidates_sha256": "2234d1bbe807ab9b9b20a5ed39bf3635e4db5b03543e9844067d936de543193e",
+  "schema_version": 1,
+  "status": "completed"
+}

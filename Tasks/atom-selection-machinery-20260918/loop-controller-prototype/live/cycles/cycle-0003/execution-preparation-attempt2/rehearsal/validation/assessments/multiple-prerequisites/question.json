@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+  "atomic_outcome": "Restore and validate directed tour-prerequisite storage and its reader on the prod-based auto-50-perc-off delivery branch, reusing compatible historical migration, service and tests. Given a checkout tour ID and configured directed relationships, return configuration status and prerequisite-tour IDs, preserving multiple prerequisites for later paid-purchase qualification at any one of them.",
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "multiple-prerequisites",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/multiple-prerequisites/stdout.txt",
+      "sha256": "a23bd59e6b42b774cc62f36bc01bb621c6157a7da674f1da685e3685bc8bbe18"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/multiple-prerequisites/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/multiple-prerequisites/telemetry.jsonl",
+      "sha256": "6eab651e08354a79334125f4cf5a50b2a85cd5f635a3236cde2f154f8ed5c102"
+    }
+  ],
+  "expected_outcome": "Configure checkout tour B with prerequisite tours A and C. The reader preserves both prerequisites. It does not reduce the configured list to a single arbitrary prerequisite or require purchase at both. Purchase qualification itself remains outside this atom.",
+  "operator_path": "Frozen PHPUnit tests invoke actual selected migration and reader using isolated SQLite connections.",
+  "overall_criterion": "Each exact frozen test executes its assertions without failure, error or skip.",
+  "schema_version": 1
+}

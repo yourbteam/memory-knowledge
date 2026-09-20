@@ -1,0 +1,33 @@
+{
+  "command": [
+    "/Applications/ChatGPT.app/Contents/Resources/codex",
+    "exec",
+    "--ignore-user-config",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-astra",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "project_doc_max_bytes=0",
+    "-c",
+    "features.shell_tool=false",
+    "-c",
+    "web_search=\"disabled\"",
+    "--cd",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution/generation/model",
+    "--json",
+    "--output-last-message",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution/generation/model/answer.txt",
+    "--output-schema",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution/generation/model/schema.json",
+    "-"
+  ],
+  "model": "gpt-6-astra",
+  "reasoning_effort": "medium",
+  "conversation": "fresh; no resume",
+  "prompt_sha256": "5335012f67b27ddf4bdbba9f90d057a0dc0c104d76f6385ef714ef81b92bde42"
+}

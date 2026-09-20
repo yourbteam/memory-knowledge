@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "judgments": [
+    {
+      "variant_id": "baseline",
+      "observations": [
+        {
+          "criterion_id": "correct-decision",
+          "verdict": "not-satisfied",
+          "output_pointer": "/raw",
+          "reference_pointer": "/decision_correctness",
+          "reason": "Frozen test did not pass, was skipped, changed, or did not execute exactly its named case."
+        }
+      ]
+    },
+    {
+      "variant_id": "historical-control",
+      "observations": [
+        {
+          "criterion_id": "correct-decision",
+          "verdict": "satisfied",
+          "output_pointer": "/raw",
+          "reference_pointer": "/decision_correctness",
+          "reason": "Exact frozen test executed assertions successfully."
+        }
+      ]
+    }
+  ]
+}

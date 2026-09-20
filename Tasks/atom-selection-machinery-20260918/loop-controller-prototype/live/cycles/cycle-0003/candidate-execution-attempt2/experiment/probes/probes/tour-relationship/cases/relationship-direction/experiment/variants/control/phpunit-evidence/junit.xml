@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Unit\TourDiscountPrerequisitesTest" file="/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php" tests="1" assertions="1" errors="0" failures="1" skipped="0" time="0.011705">
+    <testcase name="testRelationshipDirectionDoesNotConfigureThePrerequisiteTour" class="Tests\Unit\TourDiscountPrerequisitesTest" classname="Tests.Unit.TourDiscountPrerequisitesTest" file="/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php" line="164" assertions="1" time="0.011705">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Unit\TourDiscountPrerequisitesTest::testRelationshipDirectionDoesNotConfigureThePrerequisiteTour
+Missing product file: /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/probes/probes/tour-relationship/cases/relationship-direction/experiment/variants/control/candidate-source/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php. Supply the generated product under TAGGABLE_SOURCE_ROOT.
+Failed asserting that file "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/experiment/probes/probes/tour-relationship/cases/relationship-direction/experiment/variants/control/candidate-source/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php" exists.
+
+/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php:198
+/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php:107
+</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

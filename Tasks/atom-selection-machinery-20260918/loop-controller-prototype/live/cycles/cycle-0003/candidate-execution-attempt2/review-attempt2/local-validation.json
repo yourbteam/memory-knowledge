@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "unchanged_candidate_and_experiments": true,
+  "unchanged_requirements_and_obligations": true,
+  "historical_reuse_hashes_match": true,
+  "checkout_preserved": true,
+  "runtime_rechecked": true,
+  "changed_candidate_rejected": "Review context version or surface hash differs; prepare version one against the exact promotion surface",
+  "paid_calls": 0
+}

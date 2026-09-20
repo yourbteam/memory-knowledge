@@ -1,0 +1,51 @@
+{
+  "status": "evidence_correction_validated_remaining_lifecycle_gap",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "medium",
+  "model_calls": 1,
+  "candidate_regenerated": false,
+  "experiments_repeated": false,
+  "code_files_satisfied": 3,
+  "code_blocking_findings": [],
+  "obligations": [
+    {
+      "id": "configured-checkout-tour",
+      "verdict": "satisfied",
+      "reason": "The migration stores checkout and prerequisite IDs separately. Both reader methods filter on the checkout ID: a B-to-A row makes B configured and returns A. The supplied fresh execution supports this code trace."
+    },
+    {
+      "id": "multiple-prerequisites",
+      "verdict": "satisfied",
+      "reason": "The composite primary key permits different prerequisites for one checkout. The reader collects every matching prerequisite without a limit or purchase-qualification condition, preserving A and C independently."
+    },
+    {
+      "id": "unconfigured-checkout-tour",
+      "verdict": "satisfied",
+      "reason": "An absent checkout match yields false from exists() and an empty prerequisite collection converted to an array. Neither method consults discount codes, so code availability cannot configure a tour."
+    },
+    {
+      "id": "relationship-direction",
+      "verdict": "satisfied",
+      "reason": "Both queries match only checkout_tour_id; neither searches prerequisite_tour_id for reverse edges. Thus B-to-A does not configure A or return B when querying A."
+    },
+    {
+      "id": "isolated-migration-rollback",
+      "verdict": "satisfied",
+      "reason": "The actual migration creates only the relationship table and drops that table on rollback. The reader performs only selects. The test uses an isolated in-memory database and compares all recorded tour values before and after migration, reads and rollback; its fresh execution passed."
+    },
+    {
+      "id": "assignment-boundary",
+      "verdict": "not-satisfied",
+      "reason": "The proposed code stays within the three allowed files and supplies the requested capability, but the assignment's delivery-branch restoration is explicitly unfinished: the candidate remains outside the checkout and the delivery branch remains at baseline. This is a delivery-state gap, not a defect in the reader or migration. SQLite execution and compatible supplied MySQL DDL do not establish actual MySQL execution."
+    },
+    {
+      "id": "required-proof",
+      "verdict": "satisfied",
+      "reason": "The supplied package retains candidate identities, the complete diff, fresh results for all five cases, dependency versions and matching before/after checkout inventories. The test verifies exact loaded source paths and tour-row preservation. Inspection shows signed integer references matching the supplied tours primary key and InnoDB engine. MySQL execution, full-schema preservation and general PHP 8.5 application compatibility are explicitly unproven; actual delivery restoration remains separately unsatisfied."
+    }
+  ],
+  "confirmed_cause": "experiment_preparation assigns the full stopping condition to source review as assignment-boundary; candidate_execution runs this review before any promotion. It therefore asks an isolated candidate to demonstrate already completed delivery.",
+  "next_proposal": "Distinguish pre-promotion code review from delivery completion. Keep branch application and post-application verification mandatory at promotion/completion; do not drop them or mark the atom complete based on source review.",
+  "product_promoted": false,
+  "atom_complete": false
+}

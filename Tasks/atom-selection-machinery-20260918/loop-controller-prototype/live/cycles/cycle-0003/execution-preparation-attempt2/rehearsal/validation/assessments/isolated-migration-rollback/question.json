@@ -1,0 +1,41 @@
+{
+  "allowed_verdicts": [
+    "satisfied",
+    "not-satisfied",
+    "cannot-assess"
+  ],
+  "assembly_sha256": "c17ca7803d0096952b3695f7ecec688d769c6ae8c64e6dd34d44a6f31829f11b",
+  "atomic_outcome": "Restore and validate directed tour-prerequisite storage and its reader on the prod-based auto-50-perc-off delivery branch, reusing compatible historical migration, service and tests. Given a checkout tour ID and configured directed relationships, return configuration status and prerequisite-tour IDs, preserving multiple prerequisites for later paid-purchase qualification at any one of them.",
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "isolated-migration-rollback",
+  "case_kind": "success",
+  "execution_evidence": [
+    {
+      "id": "execution-status",
+      "value": "completed"
+    },
+    {
+      "id": "execution-returncode",
+      "value": 0
+    },
+    {
+      "id": "candidate-stdout",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/isolated-migration-rollback/stdout.txt",
+      "sha256": "a8c1567e65ebbd3c09bb33a8c77a2223f869a30e6db07f37849fb7c1548d9bbf"
+    },
+    {
+      "id": "candidate-stderr",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/isolated-migration-rollback/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "candidate-telemetry",
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/validation/executions/isolated-migration-rollback/telemetry.jsonl",
+      "sha256": "fb89400d4098e5d561909ae64186f55dca74e259c3cb919f6f8d53d3bd0144d0"
+    }
+  ],
+  "expected_outcome": "Run the actual generated migration up and down only against an isolated database. It creates and removes the new relationship storage while preserving the pre-existing tours table and its recorded data. The relationship reader does not change tour data.",
+  "operator_path": "Frozen PHPUnit tests invoke actual selected migration and reader using isolated SQLite connections.",
+  "overall_criterion": "Each exact frozen test executes its assertions without failure, error or skip.",
+  "schema_version": 1
+}

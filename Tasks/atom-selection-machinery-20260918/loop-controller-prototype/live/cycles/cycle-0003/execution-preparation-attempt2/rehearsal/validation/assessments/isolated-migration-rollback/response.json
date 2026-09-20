@@ -1,0 +1,9 @@
+{
+  "case_id": "isolated-migration-rollback",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "Exact frozen test executed assertions successfully.",
+  "verdict": "satisfied"
+}

@@ -1,0 +1,7 @@
+{"time": 1789913215.608914, "event": "stage_started", "stage": "generation"}
+{"time": 1789913322.898606, "event": "stage_returned", "stage": "generation", "exit_code": 0}
+{"time": 1789913322.908591, "event": "stage_started", "stage": "experiment"}
+{"time": 1789913325.598548, "event": "stage_returned", "stage": "experiment", "exit_code": 0}
+{"time": 1789913325.676353, "event": "stage_started", "stage": "review"}
+{"time": 1789913421.366955, "event": "stage_returned", "stage": "review", "exit_code": 0}
+{"time": 1789913421.3696792, "event": "candidate_needs_correction", "product_promoted": false}

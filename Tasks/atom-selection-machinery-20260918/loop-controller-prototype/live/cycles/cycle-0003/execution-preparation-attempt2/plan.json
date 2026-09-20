@@ -1,0 +1,19 @@
+{
+  "status": "prepared_for_rehearsal",
+  "build_preparation": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation-attempt2/handoff.json",
+    "sha256": "ee34d19e38ed9a16a344e370f2ada354612148b059ce01f8111dbc5a599bf67e"
+  },
+  "experiment": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/experiment-request.json",
+    "sha256": "a2b27ce60a6e848a736cc0ad767ea3dc068122382fe738b29be176681f94acdb"
+  },
+  "review_template": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/review-template.json",
+    "sha256": "2693e3d3a788a3ec682a3695df5b9193ddc23ff09320abab037492eb8a1eabd0"
+  },
+  "candidate_binding": "Replace only the candidate source reference with the verified actual candidate, then regenerate hashes before execution.",
+  "review_binding": "Bind actual changed sources and matching experiment evidence after execution; invoke existing independent source review.",
+  "product_execution_authorized": false,
+  "paid_model_calls": 0
+}

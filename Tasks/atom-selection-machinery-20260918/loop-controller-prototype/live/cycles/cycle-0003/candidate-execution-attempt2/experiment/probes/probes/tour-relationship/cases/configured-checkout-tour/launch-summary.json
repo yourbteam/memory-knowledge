@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "configured-checkout-tour",
+  "experiment_id": "development-probe-b5e852b1d9f480e478ab",
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "recommendation_sha256": "c7c62367916e48257d92b32eb682331f7d9a31561d4011df80496ec937b0d86e",
+  "schema_version": 1,
+  "status": "completed"
+}

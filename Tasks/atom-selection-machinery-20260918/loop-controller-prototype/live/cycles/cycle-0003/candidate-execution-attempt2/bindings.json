@@ -1,0 +1,24 @@
+{
+  "preparation": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/handoff.json",
+    "sha256": "233142673ba14544dc7d81597d81bf5923819673a4c9c52803c21a42b200d4b8"
+  },
+  "connection": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/candidate_execution.py",
+    "sha256": "53a3651b08dd50de5f2510f5fc8c3e4b6dc8f163634939331e80f318db081646"
+  },
+  "scripts": {
+    "builder": {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/candidate_builder.py",
+      "sha256": "65fd2477bcdfcba846b57e8fc902c779a38ebc950ce456ba5da957e4a7457000"
+    },
+    "experiment": {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/experiment-machinery/scripts/development_probe_run.py",
+      "sha256": "2dc4c59216eb5a7aab9541ae4b14579e84dbdef1d5bd92920b50f7c37f93de78"
+    },
+    "review": {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/source_review.py",
+      "sha256": "cb6401d289053746ceadfdb86585ba8fc4d9b04bec860bff8c538d324dc32710"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "candidates": [
+    {
+      "execution": {
+        "duration_ms": 158,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "output": {
+        "raw": {
+          "case_id": "isolated-migration-rollback",
+          "junit_sha256": "4f7f17b9b5d51358eb0e5f81f0b34b93664e538a4ee94243531bd49bb9bf5f17",
+          "returncode": 1,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "tests": [
+            {
+              "assertions": 1,
+              "errors": 0,
+              "failures": 1,
+              "name": "testIsolatedMigrationRollbackPreservesExistingTours",
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "variant_id": "control"
+    },
+    {
+      "execution": {
+        "duration_ms": 156,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "output": {
+        "raw": {
+          "case_id": "isolated-migration-rollback",
+          "junit_sha256": "ca76daf11278525332505b71ec3c3b158242e0d7d6f93f78de227870dc7f905d",
+          "returncode": 0,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "tests": [
+            {
+              "assertions": 26,
+              "errors": 0,
+              "failures": 0,
+              "name": "testIsolatedMigrationRollbackPreservesExistingTours",
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "variant_id": "variation-2"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "correct-decision",
+      "metric": "correct-decision",
+      "reference_pointer": "/decision_correctness"
+    }
+  ],
+  "experiment_id": "development-probe-6775fba957a94d928b82",
+  "metrics": [
+    {
+      "direction": "maximize",
+      "name": "correct-decision"
+    }
+  ],
+  "reference": {
+    "decision_correctness": "Execute the reviewed frozen machine-authored PHPUnit case against the selected actual product source. Require the exact test hash and name, positive assertion count, zero failures/errors/skips, and successful process exit."
+  },
+  "schema_version": 2
+}

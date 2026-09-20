@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "baseline",
+      "outcome": {
+        "raw": {
+          "case_id": "configured-checkout-tour",
+          "returncode": 1,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "junit_sha256": "4f0a9a1bba06de8faf25962c5560cb9aed41c1ebc4cb33ba17e96b680f24ed80",
+          "tests": [
+            {
+              "name": "testConfiguredCheckoutTourReturnsItsPrerequisite",
+              "assertions": 1,
+              "failures": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "expected_metrics": {
+        "correct-decision": 0
+      }
+    },
+    {
+      "id": "historical-control",
+      "outcome": {
+        "raw": {
+          "case_id": "configured-checkout-tour",
+          "returncode": 0,
+          "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+          "junit_sha256": "aa9a63796062b3040c0d8a78cf0a313e2b5034370e4f04ca99a4a43f1b452d37",
+          "tests": [
+            {
+              "name": "testConfiguredCheckoutTourReturnsItsPrerequisite",
+              "assertions": 20,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "expected_metrics": {
+        "correct-decision": 1
+      }
+    }
+  ]
+}

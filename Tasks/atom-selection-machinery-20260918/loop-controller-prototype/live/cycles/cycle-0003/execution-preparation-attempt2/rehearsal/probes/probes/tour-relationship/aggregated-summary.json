@@ -1,0 +1,82 @@
+{
+  "case_ids": [
+    "configured-checkout-tour",
+    "multiple-prerequisites",
+    "unconfigured-checkout-tour",
+    "relationship-direction",
+    "isolated-migration-rollback"
+  ],
+  "champion": "candidate",
+  "evaluation": {
+    "metrics": [
+      {
+        "direction": "maximize",
+        "method": "worst",
+        "name": "correct-decision"
+      }
+    ]
+  },
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "qualifications": [
+    {
+      "aggregated_metrics": {
+        "correct-decision": 0.0
+      },
+      "approach_id": "control",
+      "failures": [
+        {
+          "actual": 0.0,
+          "case_id": "configured-checkout-tour",
+          "metric": "correct-decision",
+          "minimum": 1.0
+        },
+        {
+          "actual": 0.0,
+          "case_id": "multiple-prerequisites",
+          "metric": "correct-decision",
+          "minimum": 1.0
+        },
+        {
+          "actual": 0.0,
+          "case_id": "unconfigured-checkout-tour",
+          "metric": "correct-decision",
+          "minimum": 1.0
+        },
+        {
+          "actual": 0.0,
+          "case_id": "relationship-direction",
+          "metric": "correct-decision",
+          "minimum": 1.0
+        },
+        {
+          "actual": 0.0,
+          "case_id": "isolated-migration-rollback",
+          "metric": "correct-decision",
+          "minimum": 1.0
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "aggregated_metrics": {
+        "correct-decision": 1.0
+      },
+      "approach_id": "candidate",
+      "failures": [],
+      "qualified": true
+    }
+  ],
+  "ranking": [
+    {
+      "aggregated_metrics": {
+        "correct-decision": 1.0
+      },
+      "approach_id": "candidate",
+      "rank": 1
+    }
+  ],
+  "schema_version": 1,
+  "selection_outcome": "selected",
+  "status": "completed"
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "experiment_and_review_prepared",
+  "selection": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/handoff.json",
+    "sha256": "924aae3beb9e4532bae3e298eb3c1c823e1452bf7c45984b3815cf02477e9f82"
+  },
+  "creation_request": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/creation-request.json",
+    "sha256": "42c0336310b7ebee9796710ccf64b8e0d3dd29b3fba95a28c207d16567c2812e"
+  },
+  "experiment_rehearsal_request": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/experiment-request.json",
+    "sha256": "a2b27ce60a6e848a736cc0ad767ea3dc068122382fe738b29be176681f94acdb"
+  },
+  "experiment_rehearsal_result": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/rehearsal/development-probe-summary.json",
+    "sha256": "ed349cf4bf0cd02f8a598b4c7fa21b776cb5d8b8ab2e413358944858827a26f8"
+  },
+  "review_template": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/review-template.json",
+    "sha256": "2693e3d3a788a3ec682a3695df5b9193ddc23ff09320abab037492eb8a1eabd0"
+  },
+  "review_rehearsal_prompt": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/review-rehearsal/review.json.source-review/prompt.txt",
+    "sha256": "9515ab77491680891825f8a2cdc663142902f8c426e757113bdf1459e4f6b75e"
+  },
+  "model_calls": 0,
+  "product_started": false,
+  "next": "Generate the actual bounded candidate from creation_request, bind that candidate to a fresh experiment, then obtain its independent review. Historical rehearsal is not that candidate.",
+  "full_driver_admission": "Not granted by preparation; the prior receipt remains disposable-root-only."
+}

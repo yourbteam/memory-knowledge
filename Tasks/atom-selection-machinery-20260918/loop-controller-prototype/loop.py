@@ -66,6 +66,11 @@ def new_cycle(run,s,answers,previous=None):
     save(path,value);s.update(cycle_number=number,cycle=str(path),stage='selection',answers=answers,pending=None)
     s.pop('build_request',None)
     s.pop('build_preparation',None)
+    s.pop('experiment_preparation',None)
+    s.pop('candidate_execution',None)
+    s.pop('candidate_review',None)
+    s.pop('build_attempt',None)
+    s.pop('previous_build_attempts',None)
     s.pop('approved_transfer',None)
 
 def initialize(args):
@@ -199,13 +204,16 @@ def advance(run, stop_after=None):
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='op',required=True)
     start=sub.add_parser('start');start.add_argument('--root',type=Path,required=True);start.add_argument('--goal',type=Path,required=True);start.add_argument('--answers',type=Path,required=True);start.add_argument('--assessment',type=Path);start.add_argument('--incremental-run',type=Path);start.add_argument('--skills',type=Path,default=Path.home()/'.codex/skills');start.add_argument('--prepare-only',action='store_true')
-    for name in ['resume','status','user','reply','attach-build','prepare-build','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
+    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-experiments','execute-candidate','review-candidate','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
     for cmd in sub.choices.values():cmd.add_argument('--run',type=Path,required=True)
     sub.choices['resume'].add_argument('--stop-after', choices=['assessment'])
     sub.choices['reply'].add_argument('--request-id',required=True);sub.choices['reply'].add_argument('--reply',type=Path,required=True)
     sub.choices['attach-build'].add_argument('--request',type=Path,required=True);sub.choices['attach-build'].add_argument('--selection-sha256',required=True)
     for flag in ['verification','assignment-run','creation-template','repository']:
         sub.choices['prepare-build'].add_argument('--'+flag,type=Path,required=True)
+    sub.choices['prepare-build'].add_argument('--attempt',type=int,default=1)
+    sub.choices['review-candidate'].add_argument('--attempt',type=int,required=True)
+    sub.choices['review-candidate'].add_argument('--prepare-only',action='store_true')
     sub.choices['approve-transfer'].add_argument('--sha256',required=True)
     sub.choices['attach-research'].add_argument('--result',type=Path,required=True)
     sub.choices['resolve-decision'].add_argument('--decision',type=Path,required=True)
@@ -217,9 +225,43 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         s=read(run/'state.json')
         try:
+            if a.op=='review-candidate':
+                from candidate_execution import rereview
+                result=rereview(s,a.attempt,a.prepare_only)
+                if not a.prepare_only:
+                    s['candidate_review']=ref(result,Path(s['root']))
+                    s['pending']['candidate_review']=s['candidate_review']
+                    save(run/'state.json',s)
+                print(json.dumps({'action':'review_prepared' if a.prepare_only else read(result)['status'],'result':str(result),'product_promoted':False}));return
+            if a.op=='execute-candidate':
+                from candidate_execution import execute
+                suffix='' if s.get('build_attempt',1)==1 else '-attempt'+str(s['build_attempt'])
+                handoff=execute(s,Path(s['cycle']).parent/('candidate-execution'+suffix))
+                result=read(handoff)
+                s['candidate_execution']=ref(handoff,Path(s['root']))
+                s['pending']['candidate_execution']=s['candidate_execution']
+                save(run/'state.json',s)
+                print(json.dumps({'action':result['status'],'handoff':str(handoff),'product_promoted':False}));return
+            if a.op=='prepare-experiments':
+                from experiment_preparation import finish
+                suffix='' if s.get('build_attempt',1)==1 else '-attempt'+str(s['build_attempt'])
+                handoff=finish(s,Path(s['cycle']).parent/('execution-preparation'+suffix))
+                s['experiment_preparation']=ref(handoff,Path(s['root']))
+                s['pending']['experiment_and_review_prepared']=s['experiment_preparation']
+                save(run/'state.json',s)
+                event(run,'experiment_and_review_prepared',handoff=str(handoff),model_calls=0,product_started=False)
+                print(json.dumps({'action':'experiment_and_review_prepared','handoff':str(handoff),'pending':'prepare_build'}));return
             if a.op=='prepare-build':
                 from build_preparation import prepare
-                handoff=prepare(s,a.verification,a.assignment_run,a.creation_template,a.repository,Path(s['cycle']).parent/'build-preparation')
+                if a.attempt<max(1,s.get('build_attempt',1)):raise ValueError('Cannot rewind an existing build attempt')
+                suffix='' if a.attempt==1 else '-attempt'+str(a.attempt)
+                handoff=prepare(s,a.verification,a.assignment_run,a.creation_template,a.repository,Path(s['cycle']).parent/('build-preparation'+suffix))
+                if a.attempt>s.get('build_attempt',1):
+                    s.setdefault('previous_build_attempts',[]).append({k:s[k] for k in ['build_attempt','build_preparation','experiment_preparation','candidate_execution','candidate_review','error'] if k in s})
+                    s.pop('candidate_review',None);s['pending'].pop('candidate_review',None)
+                    s.pop('experiment_preparation',None);s.pop('candidate_execution',None);s.pop('error',None)
+                    s['pending'].pop('experiment_and_review_prepared',None);s['pending'].pop('candidate_execution',None)
+                s['build_attempt']=a.attempt
                 s['build_preparation']=ref(handoff,Path(s['root']))
                 s['pending']['verification_prepared']=s['build_preparation']
                 save(run/'state.json',s)

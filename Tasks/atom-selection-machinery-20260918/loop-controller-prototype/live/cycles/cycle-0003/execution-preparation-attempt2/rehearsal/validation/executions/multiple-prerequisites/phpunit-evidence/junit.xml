@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Unit\TourDiscountPrerequisitesTest" file="/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php" tests="1" assertions="24" errors="0" failures="0" skipped="0" time="0.006381">
+    <testcase name="testMultiplePrerequisitesArePreserved" class="Tests\Unit\TourDiscountPrerequisitesTest" classname="Tests.Unit.TourDiscountPrerequisitesTest" file="/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php" line="140" assertions="24" time="0.006381"/>
+  </testsuite>
+</testsuites>

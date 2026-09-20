@@ -1,0 +1,15 @@
+{
+  "case_id": "configured-checkout-tour",
+  "returncode": 0,
+  "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+  "tests": [
+    {
+      "name": "testConfiguredCheckoutTourReturnsItsPrerequisite",
+      "assertions": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "junit_sha256": "595ce143a83b01889d7038f8befb22a2346a789277d8e7355d8e012a989b176b"
+}

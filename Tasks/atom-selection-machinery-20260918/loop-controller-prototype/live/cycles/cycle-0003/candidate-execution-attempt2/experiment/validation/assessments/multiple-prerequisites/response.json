@@ -1,0 +1,9 @@
+{
+  "case_id": "multiple-prerequisites",
+  "evidence_pointers": [
+    "candidate-stdout",
+    "candidate-telemetry"
+  ],
+  "reason": "Exact frozen test executed assertions successfully.",
+  "verdict": "satisfied"
+}

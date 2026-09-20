@@ -1,0 +1,4 @@
+{
+  "status": "stopped",
+  "reason": "Builder blocked: The historical migration and service source bodies required for restoration and reuse were not supplied. Provide database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php and app/Services/TourDiscountPrerequisites.php from the preserved historical implementation. The supplied model, dependency manifest and frozen tests do not establish the historical storage constraints or reader implementation. No change was executed or verified; the assignment stopping condition and all listed unverified obligations remain outstanding."
+}

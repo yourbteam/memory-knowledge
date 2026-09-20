@@ -1,0 +1,32 @@
+{
+  "assessment": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/judge.py",
+      "sha256": "f022a434224e3d6ef4272159e815a0147945f0b72d42ccf2f977b9d81f5a22d1"
+    },
+    "command": [
+      "{python}",
+      "{assessment-adapter}",
+      "{assessment-request}",
+      "{assessment-response}"
+    ]
+  },
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "baseline": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/baseline",
+    "sha256": "2fab645ae88a3b90acc11ebb27d2b8cedf1a2bfa6eecfa7edba361d3c96a215f"
+  },
+  "development_manifest": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/manifest.json",
+    "sha256": "d6e9d24455c9ed6fefd6669fddfa3982639dd35de5afafdadb3851accb40604a"
+  },
+  "probe_requests": [
+    {
+      "probe_id": "tour-relationship",
+      "request": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/cross-case.json",
+      "request_sha256": "09fddd80edd334c0bbcece8d9ee4a8b80eac067cf5f6cf572c6554d8cbd0e673"
+    }
+  ],
+  "promotion_applied": false,
+  "schema_version": 1
+}

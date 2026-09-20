@@ -1,0 +1,52 @@
+{
+  "approach_build_requests": [
+    {
+      "approach_id": "control",
+      "request": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/build-control.json"
+    },
+    {
+      "approach_id": "candidate",
+      "request": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/candidate-build.json"
+    }
+  ],
+  "assessment": {
+    "criteria": [
+      {
+        "id": "correct-decision",
+        "metric": "correct-decision",
+        "reference_pointer": "/decision_correctness"
+      }
+    ],
+    "output_fields": [
+      "raw"
+    ],
+    "reference": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/comparison-reference.json",
+      "sha256": "22cd697ff91a03724a3d9ffcd8c1ad6eec6f06de805585c9accaa5c09bc60772"
+    }
+  },
+  "calibration": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/calibration.json",
+    "sha256": "5bc91406b415558fed7240663ed7e00f97a3f6444d80f12b049897a20c828b26"
+  },
+  "development_manifest": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/manifest.json",
+  "evaluator": {
+    "adapter": {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/execution-preparation-attempt2/judge.py",
+      "sha256": "f022a434224e3d6ef4272159e815a0147945f0b72d42ccf2f977b9d81f5a22d1"
+    },
+    "command": [
+      "{python}",
+      "{evaluation-adapter}",
+      "{evaluation-request}",
+      "{evaluation-response}"
+    ]
+  },
+  "probe_id": "tour-relationship",
+  "schema_version": 1,
+  "selection": {
+    "minimums": {
+      "correct-decision": 1
+    }
+  }
+}

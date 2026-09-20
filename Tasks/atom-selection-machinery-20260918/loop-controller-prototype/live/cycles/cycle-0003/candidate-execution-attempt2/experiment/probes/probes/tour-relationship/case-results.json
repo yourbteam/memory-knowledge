@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "case_id": "configured-checkout-tour",
+      "output": "cases/configured-checkout-tour",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "multiple-prerequisites",
+      "output": "cases/multiple-prerequisites",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "unconfigured-checkout-tour",
+      "output": "cases/unconfigured-checkout-tour",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "relationship-direction",
+      "output": "cases/relationship-direction",
+      "returncode": 0,
+      "status": "completed"
+    },
+    {
+      "case_id": "isolated-migration-rollback",
+      "output": "cases/isolated-migration-rollback",
+      "returncode": 0,
+      "status": "completed"
+    }
+  ],
+  "schema_version": 1
+}

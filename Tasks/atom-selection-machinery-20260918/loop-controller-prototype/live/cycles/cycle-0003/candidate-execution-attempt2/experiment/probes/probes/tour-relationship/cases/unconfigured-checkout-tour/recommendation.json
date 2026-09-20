@@ -1,0 +1,14 @@
+{
+  "approach_id": "candidate",
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "bundle": "../../bundles/candidate",
+  "bundle_sha256": "07e1fa2d3019695e29c3c09aea3c1e570afd8aa080a8ff7bb8b4db60bb2c1542",
+  "case_id": "unconfigured-checkout-tour",
+  "experiment_id": "development-probe-da44e3b20474f31de60f",
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "rank": 1,
+  "schema_version": 1,
+  "status": "recommended",
+  "variant_id": "variation-2"
+}

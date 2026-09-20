@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "failed",
+  "change_surface_sha256": "a2a0ec9b6effdf524efaf5369e4e64bc7e272e2b1a36885feddacb536ecb59c4",
+  "blocking_findings": [
+    "assignment-boundary: The supplied changes stay within the three allowed files and implement only storage, reading, and tests. Schema inspection supports MySQL compatibility: signed integer foreign keys reference the signed integer tours primary key on InnoDB. However, branch isolation, preservation of other work, historical reuse, retained source version/diff, and the actual dependency environment are not evidenced. Execution shown is SQLite; no separate database-limitations report is supplied.",
+    "required-proof: The supplied code and fresh per-case results support all five behavioral cases and tour-data preservation. They do not establish the retained repository version/diff, branch preservation, historical provenance, or installed dependency versions used for execution. Composer constraints describe expected dependencies, not the execution environment. MySQL compatibility can be inspected here, but actual MySQL execution and the required limitations record are not supplied."
+  ]
+}

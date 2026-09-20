@@ -1,0 +1,2 @@
+{"time": 1789912716.699948, "event": "stage_started", "stage": "generation"}
+{"time": 1789912727.555579, "event": "stage_returned", "stage": "generation", "exit_code": 2}

@@ -31,15 +31,15 @@
       ]
     },
     "atom-building-machinery": {
-      "canonical_tree_sha256": "f5b3a88c4d3e17ff9b8a35d69dd3b67de69bba546e295b9f13bd11d4b03a814e",
+      "canonical_tree_sha256": "573b540134d3431d3ce72f7b416477639cb7d9a8213ca81777a722048ea8073a",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "3bbc89a19ccef19ce45da9257e257b54b89340176a0d5101a28844c495be431b",
-        "codex": "69cd73583b479b37b0031009bd0433335d500e51e754d9fa508f6693e9c47410"
+        "claude": "1d6d6bffabcf6c059891378077bc86a872cad2cba007710eeb2066f0139b0e1a",
+        "codex": "cc949d51f427e9f45e23baa1fc9e54cca63a69b9441db611616dd9f0106a65e2"
       },
       "scenario_groups": [
         "CAP-PDI"

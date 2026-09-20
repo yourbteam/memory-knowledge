@@ -14,8 +14,8 @@ Anchors must occur inside a supplied source unit. A new file requires one empty 
 Preserve unrelated behavior. Never edit tests, dependencies or the operator outside the allowed boundary.
 Do not claim to have executed or verified the change. If necessary context is missing, return blocked
 with the concrete missing input and no edits. Do not invent APIs, schema names or business decisions.
-No completed solution or favorable review is supplied. Your exact output will undergo independent
-experiments and source review; you cannot provide its verdict.
+When historical code is supplied for an approved restoration, treat it as reference source, not as the current baseline or a proven solution. Check it against the current requirements and dependencies.
+Your exact output will undergo independent experiments and source review; you cannot provide its verdict.
 '''
 
 

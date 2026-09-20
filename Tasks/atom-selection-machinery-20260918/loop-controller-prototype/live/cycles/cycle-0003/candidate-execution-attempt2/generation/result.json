@@ -1,0 +1,42 @@
+{
+  "status": "candidate",
+  "source": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/candidate-execution-attempt2/generation/candidate",
+  "changed_paths": [
+    "app/Services/TourDiscountPrerequisites.php",
+    "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+    "tests/Unit/TourDiscountPrerequisitesTest.php"
+  ],
+  "files": [
+    {
+      "path": "app/Services/TourDiscountPrerequisites.php",
+      "sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28"
+    },
+    {
+      "path": "app/Tours.php",
+      "sha256": "5c419e9d477bc2228b2d9ff3b064cd8049535b52d2bece35bd714190de1e5a6a"
+    },
+    {
+      "path": "composer.json",
+      "sha256": "48b6be44fd2800c8e3210649b56f80a517199241340b8e342dad8f93ad6deeaa"
+    },
+    {
+      "path": "composer.lock",
+      "sha256": "6e870ebc12d1d5b0eacf8aba57c77c9ec53b1bbde0b003492c160cfd7d07eb94"
+    },
+    {
+      "path": "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf"
+    },
+    {
+      "path": "probe.py",
+      "sha256": "817519dec56d711f1c28b8b985192ce85691e141290588dd19adb3a39b4c9c21"
+    },
+    {
+      "path": "tests/Unit/TourDiscountPrerequisitesTest.php",
+      "sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5"
+    }
+  ],
+  "proposal_sha256": "974b1f92a62d023e5fea9c42c29255f760c91a06478ef597a9cd9ed2bbfd3f6a",
+  "request_sha256": "42c0336310b7ebee9796710ccf64b8e0d3dd29b3fba95a28c207d16567c2812e",
+  "raw_answer_sha256": "da2d1a10371a59d66745eada3d73dfcbd490ccb7d2000817b799595266d24e69"
+}

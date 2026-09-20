@@ -1,0 +1,10 @@
+{
+  "atomic_step_id": "selected-924aae3beb9e4532",
+  "case_id": "relationship-direction",
+  "experiment_id": "development-probe-9aae41bf045faccacf0c",
+  "probe_id": "tour-relationship",
+  "promotion_applied": false,
+  "recommendation_sha256": "26acded70974d4b5667115bdc393768441931212aba6bc21e32b6b16adc23a13",
+  "schema_version": 1,
+  "status": "completed"
+}
