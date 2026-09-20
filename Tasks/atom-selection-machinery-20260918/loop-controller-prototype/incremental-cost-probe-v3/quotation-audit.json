@@ -1,0 +1,2135 @@
+{
+  "goal": {
+    "basis_count": 13,
+    "retained_original_pairs": 13,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [],
+    "rows": [
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Delivery goal only. The historical machinery-development goal remains separate and unchanged.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "if the second location offers a 50% discount code associated with it or the tour we automatically apply the discounted code and discount to the new checkout.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Location A needs to have a purchase through payment and location B's checkout needs the new 50% discount automatically applied on checkout before payment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "This new addition only needs to locate a 50% discount code and apply it automatically to the order in the check out. The rest will not be changed and stays as it is now.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment",
+        "quote": "The historical selfie-purchase-lookup atom completed a bounded product contribution: RecognitionPurchaseEvidence::forSelfie connects the caller\u2019s selfie key and configured recognition helper to the existing full purchase-evidence resolver.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Both lenses\u2019 bounded-contribution conclusions are supported by the original records: the historical atom completed the internal selfie-to-purchase-evidence connection, but the fixed delivery goal requires the complete qualified checkout sequence and automatic 50% discount application before payment while preserving other behavior.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment",
+        "quote": "The atom does not establish eligible-current-tour checkout wiring, applicable existing 50% code lookup, or automatic application to the order before payment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Proposed completion-evidence entry: request version-bound evidence of the complete checkout sequence, including searchable prior purchase provenance, recognition and prerequisite qualification, applicable code selection, discounted order before payment, and preservation of surrounding behavior.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New fixed-goal evidence says the delivery goal is the Taggable automatic 50% discount, with historical machinery development separate/provenance only.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      }
+    ]
+  },
+  "current_position": {
+    "basis_count": 49,
+    "retained_original_pairs": 16,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "assessment:E1038",
+        "quote": "\"branch\": \"feature/kiosk-square-return-recovery\""
+      },
+      {
+        "source_id": "assessment:E1040",
+        "quote": "\"head\": \"d5ddaa23ed61d3f62c1006584c18e612bacfdb64\""
+      },
+      {
+        "source_id": "assessment:E1050",
+        "quote": "\"path\": \"app/Services/RecognitionPurchaseEvidence.php\", \"exists\": false"
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed."
+      },
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed"
+      },
+      {
+        "source_id": "previous:current-checkout-inspection",
+        "quote": "\"references_in_current_app\": {\n    \"PriorTourPurchaseEligibility\": 0,\n    \"TourDiscountPrerequisites\": 0,\n    \"findAutomaticFiftyPercentForTour\": 0,\n    \"SearchPaymentEvidence\": 0,\n    \"RecognitionPurchaseEvidence\": 0\n  }"
+      },
+      {
+        "source_id": "previous:current-checkout-inspection",
+        "quote": "\"selector_method_present\": false"
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "Existing answer says current checkout position was based on later inspection of branch `feature/kiosk-square-return-recovery` at head `d5ddaa23...` and leaves intended delivery branch uncertain. New evidence says the owner chose `prod` as the baseline, created local branch `auto-50-perc-off`, and recorded baseline commit `45826e12...`."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Delivery goal only. The historical machinery-development goal remains separate and unchanged.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:tour-prerequisite-structure-historical-proof",
+        "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "\"installed_cases_passed\": 7",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "\"installed_assertions\": 324",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "Tests used controlled owner-derived SQLite fixtures.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:search-payment-evidence-historical-review",
+        "quote": "This supports the internal service outcome, not production payment verification or discount eligibility.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:usable-fifty-percent-selector-historical-review",
+        "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0064",
+        "quote": "Current RecognitionPurchaseEvidence exposes forMatches and forReference, but no forSelfie entrypoint. A bounded app/routes search found no caller of RecognitionPurchaseEvidence. Nine current-baseline operator tests report available=false and no recognition request. Existing helper plus forMatches produces the recorded expected results in all nine cases.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0703",
+        "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0706",
+        "quote": "All nine captured executions show the required request defaults, paid/unpaid and duplicate preservation, refusals, missing-history exception, unchanged dependencies and database. The recorded contribution-command failure remains a closeout limitation; this supports the bounded product outcome, not universal machinery reliability.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:interview-live-acceptance",
+        "quote": "A fresh three-question interview replayed the actual clarification-control design change from this task.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:interview-installed-proof",
+        "quote": "\"passed\": true",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:builder-decoupling",
+        "quote": "The installed atom builder accepts an owner-approved bounded atom without comparative selection.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:builder-decoupling",
+        "quote": "Neither generates or ranks successor atoms.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0990",
+        "quote": "auto-50-perc-off",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0991",
+        "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1115",
+        "quote": "?? .claude/worktrees/\n?? \"Implementation Documents/kiosk-image-created-at-timezone/\"\n?? \"Implementation Documents/kiosk-square-return-recovery/bench/\"\n?? \"Implementation Documents/kiosk-square-return-recovery/implementation-plan.md\"\n?? \"Implementation Documents/kiosk-square-return-recovery/knowledge.md\"\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0994",
+        "quote": "Current checkout tour to configured prerequisite tours",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0996",
+        "quote": "No matching migration or service in commit tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0997",
+        "quote": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1012",
+        "quote": "ProductDiscount.php contains model fields and relations only; no automatic selector method",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1024",
+        "quote": "checkout tour ID",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1025",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1026",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1027",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1055",
+        "quote": "No claim of absence from remote deployments or every differently named implementation",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1056",
+        "quote": "No product code built and no overall goal completion judgment",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1274",
+        "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1683",
+        "quote": "applyDiscount() {\n                // Guard: empty field AND no saved redemption code \u2192 nothing to apply.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1719",
+        "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');\n            if (code) {\n                Elements.discount.val(code);\n                DataController.applyDiscount();",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1239",
+        "quote": "postPayment percent discount calculation",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1241",
+        "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1172",
+        "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1527",
+        "quote": "// Store face IDs (matched image IDs in v2)",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1408",
+        "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){\n                    $transactionId = $order->uuid;",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "Existing answer says the new `auto-50-perc-off` baseline needs version-bound evidence and that whether historical files/equivalent behavior exist there is uncertain. New assessment supplies that missing baseline assessment: the committed tree at `45826e12...` was inspected, prerequisite storage/reader and named historical evidence services are missing in the inspected customer web path, automatic selector is missing, existing recognition and supplied-code checkout handling are present, and no fresh product tests or full checkout execution occurred. For distance-to-goal use, the current position should no longer say the baseline is wholly uninspected; it should record this bounded committed-tree research result while preserving that delivery remains unproved.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      }
+    ]
+  },
+  "latest_contribution": {
+    "basis_count": 25,
+    "retained_original_pairs": 0,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "current-checkout-inspection",
+        "quote": "\"selector_method_present\": false"
+      },
+      {
+        "source_id": "current-conversation-chronology",
+        "quote": "(5) packaging and installed replay verification completed"
+      },
+      {
+        "source_id": "current-conversation-chronology",
+        "quote": "(8) owner said \"we can always adjust it, so for the time being we can freeze these 10\""
+      },
+      {
+        "source_id": "fixed-dual-goal",
+        "quote": "Do not present local product wins as autonomy gains."
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"all_prompts_and_schemas_match\": true"
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"handoff_matches_live_acceptance\": true"
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"new_model_calls\": 0"
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"passed\": true"
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"public CLI complete action\""
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"recorded_calls_replayed\": 51"
+      },
+      {
+        "source_id": "interview-installed-proof",
+        "quote": "\"wrong request rejected before calls\""
+      },
+      {
+        "source_id": "interview-live-acceptance",
+        "quote": "52 GPT-5.5 high calls in one fresh session; no retries or product edits."
+      },
+      {
+        "source_id": "interview-live-acceptance",
+        "quote": "Python exported every original question exactly once with its actual final answer, evidence and feedback history."
+      },
+      {
+        "source_id": "interview-live-acceptance",
+        "quote": "The saved owner correction resolved the decision in the same session through the normal feedback path and eight lenses."
+      },
+      {
+        "source_id": "reply:6a0abac6-6801-4b32-937b-f68e8ba846a7",
+        "quote": "Prior-tour-purchase eligibility is the latest product atom among the supplied historical product records, not the latest overall machinery completion."
+      },
+      {
+        "source_id": "reply:6a0abac6-6801-4b32-937b-f68e8ba846a7",
+        "quote": "The current conversation chronology resolves the requested ordering."
+      },
+      {
+        "source_id": "reply:6a0abac6-6801-4b32-937b-f68e8ba846a7",
+        "quote": "The most recent completed implementation and validation before this selection intake was packaging and installed verification of input-interview-machinery."
+      },
+      {
+        "source_id": "reply:6a0abac6-6801-4b32-937b-f68e8ba846a7",
+        "quote": "The subsequent ten-question template freeze was a configuration decision, not a newer implementation experiment."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "assessment:E0933",
+        "quote": "Job: Establish the automatic-discount capability and first missing connection in taggable-server on auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568. Produce one version-bound assessment tracing eligible current-tour checkout through prerequisite lookup, existing face-recognition qualification of the same person\u2019s paid purchase at any one prerequisite tour, applicable existing 50% code selection, and application before payment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0933",
+        "quote": "Implementation and subsequent delivery validation remain later work; this assessment itself does not deliver the discount.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0990",
+        "quote": "auto-50-perc-off",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0991",
+        "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0994",
+        "quote": "Current checkout tour to configured prerequisite tours",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0996",
+        "quote": "No matching migration or service in commit tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0997",
+        "quote": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1024",
+        "quote": "checkout tour ID",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1025",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1026",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1027",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1056",
+        "quote": "No product code built and no overall goal completion judgment",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:selected_work_completion",
+        "quote": "The selected research job's central deliverable is present: a version-bound connection assessment, source call-path evidence, historical provenance references, explicit uncertainties, and a concrete first implementation boundary with inputs, outputs, acceptance cases and protected behavior.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true,
+        "resolved_location": "assessment.selected_work_completion.reason"
+      },
+      {
+        "source_id": "assessment:selected_work_completion",
+        "quote": "Focused-test availability remains an unexplained handoff limitation.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true,
+        "resolved_location": "assessment.selected_work_completion.reason"
+      }
+    ]
+  },
+  "flow_and_capabilities": {
+    "basis_count": 35,
+    "retained_original_pairs": 7,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed"
+      },
+      {
+        "source_id": "previous",
+        "quote": "A completed historical atom added `RecognitionPurchaseEvidence::forSelfie`, which takes the supplied selfie key and configured recognition helper, queries the fixed purchase-search collection, and delegates to the existing purchase-evidence resolver."
+      },
+      {
+        "source_id": "previous",
+        "quote": "In controlled fixtures, nine actual-source executions showed the entrypoint available, issuing one `SearchFacesByImage` request with the expected collection, selfie key, `MaxFaces=100`, and `FaceMatchThreshold=80`, while preserving paid, unpaid, duplicate, provider-error, invalid-reference, and missing-history outcomes."
+      },
+      {
+        "source_id": "previous",
+        "quote": "The ten questions are approved and frozen; the reusable interview process is installed."
+      },
+      {
+        "source_id": "previous",
+        "quote": "available current-code surface, where `ProductDiscount` exists with fields a later selector/application path would need to inspect or preserve, including discount code, discount amount/type, tour, status, and usage fields"
+      },
+      {
+        "source_id": "previous",
+        "quote": "partly built or absent current checkout evidence, where the later inspected branch reported expected historical service/migration paths absent, `selector_method_present` false, and zero named references including `RecognitionPurchaseEvidence`"
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New evidence establishes `taggable-server`, local branch `auto-50-perc-off`, based on prod commit `45826e12...`."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "the available starting surface and branch dependency have changed from an unspecified/intended target to a concrete baseline, without implying any product capability was added."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E1751",
+        "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1752",
+        "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1274",
+        "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1719",
+        "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');\n            if (code) {\n                Elements.discount.val(code);\n                DataController.applyDiscount();",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1241",
+        "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1244",
+        "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1012",
+        "quote": "ProductDiscount.php contains model fields and relations only; no automatic selector method",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1169",
+        "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0) {",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1009",
+        "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0996",
+        "quote": "No matching migration or service in commit tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0997",
+        "quote": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1024",
+        "quote": "checkout tour ID",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1025",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1026",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1027",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1043",
+        "quote": "Existing tours and rows unchanged",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1044",
+        "quote": "No checkout, pricing, recognition or payment behavior changes in this restoration",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "historically tested product source material, including directed tour prerequisites, prior-tour purchase eligibility, search-payment evidence, recognition-purchase evidence including `forSelfie`, and the usable 50% selector",
+        "found_verbatim": true,
+        "inherited_reference": true
+      }
+    ]
+  },
+  "obstacle_observations": {
+    "basis_count": 27,
+    "retained_original_pairs": 2,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "decision",
+        "quote": "No overall goal completion judgment."
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed."
+      },
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed"
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment."
+      },
+      {
+        "source_id": "goal",
+        "quote": "Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+      },
+      {
+        "source_id": "previous:current-checkout-inspection",
+        "quote": "\"branch\": \"feature/kiosk-square-return-recovery\""
+      },
+      {
+        "source_id": "previous:current-checkout-inspection",
+        "quote": "\"references_in_current_app\": {\n    \"PriorTourPurchaseEligibility\": 0,\n    \"TourDiscountPrerequisites\": 0,\n    \"findAutomaticFiftyPercentForTour\": 0,\n    \"SearchPaymentEvidence\": 0,\n    \"RecognitionPurchaseEvidence\": 0\n  }"
+      },
+      {
+        "source_id": "previous:current-checkout-inspection",
+        "quote": "\"selector_method_present\": false"
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "\"No checkout wiring or live discount application in this atom.\""
+      },
+      {
+        "source_id": "previous:tour-prerequisite-structure-historical-proof",
+        "quote": "\"Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite.\""
+      },
+      {
+        "source_id": "previous:usable-fifty-percent-selector-historical-review",
+        "quote": "\"Full payment and production behavior remain explicitly outside the proof boundary.\""
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "Existing answer treats the inspected `feature/kiosk-square-return-recovery` absence as the main observed current-checkout obstacle and says the target branch relationship is unknown."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New evidence says `prod` is the baseline and `auto-50-perc-off` is the new branch, while no product code was built or inspected."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0996",
+        "quote": "No matching migration or service in commit tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0997",
+        "quote": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1012",
+        "quote": "ProductDiscount.php contains model fields and relations only; no automatic selector method",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1024",
+        "quote": "checkout tour ID",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1025",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1026",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1027",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1274",
+        "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1719",
+        "quote": "// Check for existing redemption code",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1241",
+        "quote": "$order->product_discount_id = $discountCode->product_discount_id;",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1009",
+        "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1055",
+        "quote": "No claim of absence from remote deployments or every differently named implementation",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:current-checkout-inspection",
+        "quote": "\"Absence does not establish deletion cause or absence from every remote branch.\"",
+        "found_verbatim": true,
+        "inherited_reference": true
+      }
+    ]
+  },
+  "prior_options": {
+    "basis_count": 57,
+    "retained_original_pairs": 29,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "update_reason",
+        "quote": "Existing inventory records historical product atoms, machinery approaches, and the old inspected checkout state, but omits the newly tried procedural approach: owner-selected baseline and branch creation."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "For prior-options use, this prevents repeating the branch-baseline decision and preserves that it is only setup, not product implementation."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "This new addition only needs to locate a 50% discount code and apply it automatically to the order in the check out. The rest will not be changed and stays as it is now.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "\"installed_cases_passed\": 7",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "\"installed_assertions\": 324",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "No checkout wiring or live discount application in this atom.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "All 19 cases / 25 input executions passed again. Five cases selected a code; all five passed real verification as the same record and the extracted payment usage guard.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "Full payment and production behavior remain explicitly outside the proof boundary.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "After copying the byte-identical assembly service to the product, all 12 cases and 18 inputs were repeated by explicitly loading the actual product service, both actual product dependencies and actual Eloquent model files.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "This supports the internal service outcome, not production payment verification or discount eligibility.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "Current RecognitionPurchaseEvidence exposes forMatches and forReference, but no forSelfie entrypoint.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "All nine captured executions show the required request defaults, paid/unpaid and duplicate preservation, refusals, missing-history exception, unchanged dependencies and database.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "\"branch\": \"feature/kiosk-square-return-recovery\"",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "\"head\": \"d5ddaa23ed61d3f62c1006584c18e612bacfdb64\"",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "That inspection reports expected historical service/migration paths as not present, `selector_method_present` as false, and zero current app references for the named historical service/method terms it checked.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "Read-only current checkout and local reachable Git history inspection, no remote fetch, deployment inspection, database query or runtime test. Absence does not establish deletion cause or absence from every remote branch.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "The saved owner correction resolved the decision in the same session through the normal feedback path and eight lenses.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "\"recorded_calls_replayed\": 51",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "\"new_model_calls\": 0",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "The installed atom builder accepts an owner-approved bounded atom without comparative selection.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "Status: proposed design for a bounded prototype. This document consolidates the intended capability and its use of the distilled methodology. It does not claim that the new selection process is implemented or proven",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous",
+        "quote": "The purpose is to prevent technically valid but low-value infrastructure work from repeatedly displacing meaningful progress.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment",
+        "quote": "The research reduced uncertainty about the selected delivery baseline by assessing the committed tree at 45826e12cdc8f585e514d7bb09c0d37fa28ed568. The recorded worktree remained on feature/kiosk-square-return-recovery with untracked files; this was not execution from a checked-out delivery branch or evidence of today's checkout.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Within the inspected customer web path, the research identified the missing directed prerequisite relationship and absent historical purchase-evidence services. It documented a concrete restoration boundary with checkout-tour and configured-pair inputs, prerequisite-ID outputs, historical references, five acceptance cases and protected behavior. This is decision-enabling research, not an implemented restoration.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Existing recognition and purchase surfaces are present, but their composition into qualifying evidence is missing from the traced checkout.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "The source trace identifies reusable recognition and supplied-code handling. Checkout reads a redeem-code cookie, previews an entered or saved code, and saves the discounted order during postPayment before provider handling. That existing automation does not establish prerequisite-based qualification or automatic discovery of a 50% code.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Current checkout tour to configured prerequisite tours",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "No matching migration or service in commit tree",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "checkout tour ID",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "configured-checkout-tour",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "multiple-prerequisites",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "unconfigured-checkout-tour",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "relationship-direction",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "isolated-migration-rollback",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Existing tours and rows unchanged",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "No checkout, pricing, recognition or payment behavior changes in this restoration",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Executable reuse is unverified. The result reports 15 of 15 historical proof hashes verified, but the referenced historical source/test bodies and detailed verification outputs are not included here. Zero fresh product tests ran; compatibility with current dependencies and target MySQL remains outstanding. The packet does not explain whether focused existing tests were runnable or why none ran.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "assessment",
+        "quote": "No product code built and no overall goal completion judgment",
+        "found_verbatim": true,
+        "inherited_reference": false
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "Existing inventory records historical product atoms and the branch-baseline setup, but not the newly completed research approach or its outcome. New assessment adds a tried/completed source-level assessment approach and a documented candidate implementation boundary: restore directed tour prerequisite storage and reader using historical sources/tests, with proposed acceptance cases and protected behavior, while noting zero fresh product tests and no implementation. For prior-options use, this prevents repeating the same baseline capability assessment and preserves the restoration boundary as researched but not built.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      }
+    ]
+  },
+  "decision_boundary": {
+    "basis_count": 8,
+    "retained_original_pairs": 8,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "For boundary use, that resolves the specific authority to proceed on the new local feature branch from prod, but only for the stated baseline setup; it does not authorize treating product work as complete or erase mandatory product conditions.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      }
+    ]
+  },
+  "owner_preferences": {
+    "basis_count": 13,
+    "retained_original_pairs": 13,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Delivery goal only. The historical machinery-development goal remains separate and unchanged.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "For comparison use, otherwise valid next actions should respect prod as the baseline and the named feature branch as the working branch.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "This is a concrete owner preference/decision, not a product-progress claim.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:selection-design",
+        "quote": "The purpose is to prevent technically valid but low-value infrastructure work from repeatedly displacing meaningful progress.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:selection-design",
+        "quote": "Infrastructure rule: a piping, orchestration, gate, logging or packaging candidate must identify the concrete goal contribution it enables, why existing machinery cannot deliver it adequately, and the evidence for that limitation.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:selection-design",
+        "quote": "The selected action can be implementation, assessment or a small experiment.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:selection-design",
+        "quote": "Use qualitative comparison when it is sufficient. Do not invent numerical weights or treat the number of favorable statements as a score.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:selection-design",
+        "quote": "Start with local inspection and reuse existing results. Before any paid probe, freeze its exact question, evidence size and call/time limits.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      }
+    ]
+  },
+  "practical_limits": {
+    "basis_count": 21,
+    "retained_original_pairs": 8,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed"
+      },
+      {
+        "source_id": "owner_preferences:selection-design",
+        "quote": "Selection effort is proportionate to the decision, with no automatic expansion into expensive reruns."
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "\"path\": \"app/Services/PriorTourPurchaseEligibility.php\",\n      \"exists\": false"
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "\"path\": \"app/Services/TourDiscountPrerequisites.php\",\n      \"exists\": false"
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "\"path\": \"database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php\",\n      \"exists\": false"
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "\"references_in_current_app\": {\n    \"PriorTourPurchaseEligibility\": 0,\n    \"TourDiscountPrerequisites\": 0,\n    \"findAutomaticFiftyPercentForTour\": 0,\n    \"SearchPaymentEvidence\": 0,\n    \"RecognitionPurchaseEvidence\": 0\n  }"
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "\"selector_method_present\": false"
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "Absence does not establish deletion cause or absence from every remote branch."
+      },
+      {
+        "source_id": "practical_limits:current-checkout-inspection",
+        "quote": "Read-only current checkout and local reachable Git history inspection, no remote fetch, deployment inspection, database query or runtime test."
+      },
+      {
+        "source_id": "practical_limits:current-owner-request",
+        "quote": "The ten questions are approved and frozen; the reusable interview process is installed."
+      },
+      {
+        "source_id": "practical_limits:owner-clarifications",
+        "quote": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at."
+      },
+      {
+        "source_id": "practical_limits:owner-clarifications",
+        "quote": "Location A needs to have a purchase through payment and location B's checkout needs the new 50% discount automatically applied on checkout before payment."
+      },
+      {
+        "source_id": "practical_limits:owner-clarifications",
+        "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code."
+      },
+      {
+        "source_id": "practical_limits:owner-clarifications",
+        "quote": "there needs to be a new structure that establishes this eligibility."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "For feasible next-action scope, this changes available local access/start point and removes ambiguity about prod-vs-dev baseline, but it does not add deadline, budget, deployment access, or test evidence."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New evidence records a concrete local branch and baseline commit, while limiting the record to branch creation with no code built/tested/integrated/deployed."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1056",
+        "quote": "No product code built and no overall goal completion judgment",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "practical_limits:current-owner-request",
+        "quote": "No specific new deadline or monetary budget is stated.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "practical_limits:current-owner-request",
+        "quote": "The owner requests this real interview, using the previously agreed default GPT-5.5 high.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "latest_contribution:interview-live-acceptance",
+        "quote": "52 GPT-5.5 high calls in one fresh session; no retries or product edits.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "latest_contribution:interview-installed-proof",
+        "quote": "\"recorded_calls_replayed\": 51",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "latest_contribution:interview-installed-proof",
+        "quote": "\"new_model_calls\": 0",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "owner_preferences:selection-design",
+        "quote": "Start with local inspection and reuse existing results. Before any paid probe, freeze its exact question, evidence size and call/time limits. Do not repeat the full 21-candidate run or add automatic retries.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New assessment changes that last claim: it records a committed-tree source assessment at `45826e12...`, while also adding practical limits that zero fresh product tests ran, target MySQL compatibility remains outstanding, no live DB/AWS/browser/payment/deployment behavior was tested, and the alternate kiosk API was not exhaustively traced.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      }
+    ]
+  },
+  "decision_uncertainty": {
+    "basis_count": 20,
+    "retained_original_pairs": 4,
+    "nonverbatim": [],
+    "new_location_mismatches": [],
+    "removed_original_pairs": [
+      {
+        "source_id": "decision",
+        "quote": "No overall goal completion judgment."
+      },
+      {
+        "source_id": "decision",
+        "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed."
+      },
+      {
+        "source_id": "decision",
+        "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed"
+      },
+      {
+        "source_id": "goal",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged."
+      },
+      {
+        "source_id": "previous:decision_uncertainty",
+        "quote": "Historical records are treated as reports/reviews of bounded atom outcomes; they are not treated as proof that those files or behaviors currently exist in the inspected checkout."
+      },
+      {
+        "source_id": "previous:decision_uncertainty",
+        "quote": "Historical records report bounded completions or supported reviews for atom work, while the inspected current checkout marks the expected historical service/migration paths as absent and has no selector references."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New evidence resolves part of that uncertainty: the intended baseline is prod and the local feature branch is `auto-50-perc-off` at commit `45826e12...`."
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "Remaining uncertainty changes shape: whether historical artifacts or required behavior exist on that new baseline still needs bounded observation, but the branch-target question itself is no longer missing."
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "decision",
+        "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1527",
+        "quote": "            ]);\n\n            // Store face IDs (matched image IDs in v2)\n            if (!empty($matchedImageIds)) {\n                foreach ($matchedImageIds as $matchedId) {\n                    UserSelfieFaceId::create([\n                        'user_selfie_history_id' => $selfieHistory->id,\n                        'face_id' => (string) $matchedId,\n                        'provider' => $storageProvider,\n                    ]);\n                }\n            }\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1172",
+        "quote": "                    $matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];\n                }\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1408",
+        "quote": "    public function getPurchaseHistory() {\n        $data = array();\n        $orders = Order::where('status_id', 4)->where('user_id', Auth::user()->id)->orderBy('created', 'desc')->get();\n        foreach($orders as $order) {\n            $payment = Payments::where('status_id', 4)->where('order_id', $order->order_id)->first();\n            if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){\n                    $transactionId = $order->uuid;\n                }\n                else{\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1274",
+        "quote": "        // Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {\n            $redeemCode = $_COOKIE['redeem-code'];\n            $discountCode = ProductDiscount::whereRaw('LOWER(discount_code) = ?', [strtolower($redeemCode)])\n                ->where('tour_id', $tourTimeSlot->tour_id)\n                ->first();\n        }\n\n",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1241",
+        "quote": "                $order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim": true,
+        "inherited_reference": false,
+        "new_assessment_location_matches": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "goal",
+        "quote": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "previous:decision_uncertainty",
+        "quote": "Future experiment results are not required before selection; bounded observations or experiments are listed as possible next actions to reduce uncertainty.",
+        "found_verbatim": true,
+        "inherited_reference": true
+      },
+      {
+        "source_id": "update_reason",
+        "quote": "New assessment resolves part of that uncertainty: in the inspected committed customer web path, prerequisite storage/reader, historical purchase-evidence services, and automatic selector/qualification-discovery connections are missing, while supplied-code checkout handling exists.",
+        "found_verbatim": true,
+        "inherited_reference": false
+      }
+    ]
+  }
+}

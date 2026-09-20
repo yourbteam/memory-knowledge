@@ -1,0 +1,49 @@
+{
+  "results": [
+    {
+      "mode": "full",
+      "stages": [
+        "00-direct",
+        "01-connections",
+        "02-conditions",
+        "03-support",
+        "04-use",
+        "05-consistency",
+        "06-unanswered-dependencies",
+        "07-decision-boundary",
+        "08-exact-relationship",
+        "00-followup",
+        "01-connections",
+        "02-conditions",
+        "03-support",
+        "04-use",
+        "05-consistency",
+        "06-unanswered-dependencies",
+        "07-decision-boundary",
+        "08-exact-relationship",
+        "cross-question"
+      ],
+      "passed": true
+    },
+    {
+      "mode": "direct",
+      "stages": [
+        "00-direct",
+        "00-followup",
+        "cross-question"
+      ],
+      "passed": true
+    },
+    {
+      "mode": "direct-revision",
+      "stages": [
+        "cross-question",
+        "revise",
+        "cross-question"
+      ],
+      "passed": true
+    }
+  ],
+  "provider_calls": 0,
+  "meaning": "Control-path tests with captured answers; injected review verdict, not live semantic proof."
+}

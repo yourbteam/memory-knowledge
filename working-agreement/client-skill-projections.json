@@ -167,12 +167,12 @@
       ]
     },
     "input-interview-machinery": {
-      "canonical_tree_sha256": "8f753126da09016f45d595a5f16ef4b782e46ec35ea83b3c1b883658643d4e1b",
+      "canonical_tree_sha256": "5f84b088b8c63385ecc943613950dd0a6231f9528e625bbed799da84a955d5b8",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "8f753126da09016f45d595a5f16ef4b782e46ec35ea83b3c1b883658643d4e1b",
+      "projected_tree_sha256": "5f84b088b8c63385ecc943613950dd0a6231f9528e625bbed799da84a955d5b8",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],

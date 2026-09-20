@@ -173,7 +173,7 @@ def submit(root, request_id, reply, transport_factory=None, recovering=False):
             review.save(initial_folder / 'answer.json', answer)
             review.save(folder / 'review-input.json', {'question': effective_question,
                 'private_context': [{'id':'interview-context-and-feedback','text':json.dumps(packet,ensure_ascii=False)}], 'starting_answer': answer})
-            result = review.run(folder / 'review-input.json', folder / 'review',
+            result = configure.refine(root, folder / 'review-input.json', folder / 'review',
                 initial_session=session, transport_factory=factory)
             final = review.read(folder / 'review/final-answer.json')
             review.save(folder / 'result.json', result)

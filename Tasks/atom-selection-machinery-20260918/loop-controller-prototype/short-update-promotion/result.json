@@ -1,0 +1,26 @@
+{
+  "status": "promoted_and_installed",
+  "hypothesis": "Incremental updates retain the validated answer quality while using one direct answer and one combined-answer check, preserving initial intake and operator control.",
+  "prototype_evidence": [
+    "incremental-cost-probe-v2/result.md",
+    "incremental-cost-probe-v3/result.md"
+  ],
+  "tree_hashes": {
+    "/private/tmp/memory-knowledge-atom-selection-publish/skills/input-interview-machinery": "5f84b088b8c63385ecc943613950dd0a6231f9528e625bbed799da84a955d5b8",
+    "/Users/kamenkamenov/.codex/skills/input-interview-machinery": "5f84b088b8c63385ecc943613950dd0a6231f9528e625bbed799da84a955d5b8",
+    "/Users/kamenkamenov/.claude/skills/input-interview-machinery": "5f84b088b8c63385ecc943613950dd0a6231f9528e625bbed799da84a955d5b8"
+  },
+  "validation": [
+    "codex-validate.json",
+    "claude-validate.json",
+    "codex-validate_dialogue.json",
+    "claude-validate_dialogue.json"
+  ],
+  "fresh_provider_calls": 0,
+  "live_answers_changed": false,
+  "live_loop_stage": "incremental",
+  "committed": false,
+  "scope": "input-interview-machinery only; existing owner-decision support retained from earlier work",
+  "verification_boundary": "Real saved responses through both installed public entry points with injected provider interruption and review verdicts. Exact direct prompts matched the six-case prototype. No fresh model quality claim for installed orchestration.",
+  "next": "Resume the real incremental update through the promoted machinery; do not copy replay outputs into live answers."
+}

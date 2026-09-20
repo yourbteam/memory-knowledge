@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "source": "/Users/kamenkamenov/.claude/skills/input-interview-machinery",
+  "provider_calls": 0,
+  "recorded_answer_updates": 7,
+  "combined_answer_checks": 7,
+  "exact_direct_prompt_matches": 6,
+  "checks": [
+    "all ten final answers preserved",
+    "three untouched entries identical",
+    "failure before export then resume",
+    "completed steps not repeated",
+    "unchanged replay export",
+    "corrupt source rejected",
+    "full intake retains lens engine"
+  ],
+  "limits": "Recorded responses verify installed orchestration; check prompts contain updated combined context and were not newly submitted to a model."
+}

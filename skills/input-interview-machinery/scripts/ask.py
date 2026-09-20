@@ -97,7 +97,7 @@ def ask(questions_path, contexts_path, output, transport_factory=None, caller_se
                                                         'session': session})
             review.save(folder / 'review-input.json', {'question': question,
                 'private_context': contexts[current_id], 'starting_answer': initial})
-            result = review.run(folder / 'review-input.json', folder / 'review',
+            result = configure.refine(output, folder / 'review-input.json', folder / 'review',
                                 transport_factory=factory, initial_session=session)
             final = review.read(folder / 'review/final-answer.json')
             answers.append({'question': question, 'initial_answer': initial,

@@ -1,0 +1,97 @@
+{
+  "answer": "Decision-relevant uncertainties after the assessment:\n\n1. The branch target remains settled, but the inspection boundary is now sharper. The delivery baseline is still `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568`; however, the new research assessed the committed tree, not a checked-out delivery worktree or deployed checkout. This affects whether the next action can rely on source-level findings, or first needs worktree/runtime confirmation. It can be checked by bounded local observation of the actual worktree and, later, runtime/deployment evidence if that becomes the selected concern.\n\n2. The broad “do required artifacts exist on the baseline?” uncertainty is partly resolved for the inspected customer web path. The directed prerequisite storage/reader is missing, the historical purchase-evidence services are absent from the baseline service tree, and automatic prerequisite-based qualification/code discovery is absent from the traced checkout path. Supplied-code checkout handling does exist. This affects whether the next action should restore the prerequisite structure first, reconcile historical services, or integrate existing checkout discount handling later. The available route is code inspection plus the recorded first implementation boundary; future implementation is not required before selection.\n\n3. Executable reuse remains uncertain. The assessment identifies historical prerequisite source/test/proof references and reports proof-hash verification, but no fresh product tests ran and compatibility with current dependencies/MySQL remains outstanding. This affects whether the next action can directly restore preserved historical source or should first run/adapt focused compatibility tests. It can be checked through existing historical records plus bounded local test execution against the current baseline and dependency set.\n\n4. Recognition-to-paid-purchase qualification remains unresolved. Existing recognition and purchase surfaces are reusable, but stored recognition identifiers vary by path, `searchFacesByImage` may return a null external image reference, and purchase history can include fully discounted orders without payment. This affects whether the next action after prerequisite restoration should reconcile recognition/purchase provenance before checkout integration. It can be checked by bounded code tracing and focused observations/tests of the existing recognition and purchase-history paths.\n\n5. Checkout discount persistence is partly understood but not the required automation. Existing checkout reads a supplied redeem-code cookie, previews a discount, and `postPayment` saves the discounted order before provider handling. That does not establish automatic discovery of an applicable 50% code from prerequisite eligibility. This affects whether later work can reuse the supplied-code discount pipeline while adding qualification/discovery upstream. It can be checked in the traced checkout controller/view code and focused checkout tests.\n\n6. The alternate kiosk API path remains unresolved. The assessment did not exhaustively trace it, and the supplied packet does not establish whether it belongs to the intended delivery surface. This affects whether the next action may stay on the customer web checkout path or must include kiosk-path scope. It can be resolved by an owner answer if scope is unclear, or by a bounded route/API trace if selection chooses that observation.\n\n7. Production/live state remains unavailable in supplied context. Live database migration state, configured discount codes, deployment state, AWS/browser/payment behavior, and runtime checkout behavior could change readiness or validation choices, but they are not required before selecting an implementation or bounded-observation next action. They should be checked only through authorized database, deployment, or runtime observations when those become the selected work.\n\nSettled items should not be reopened as alternatives without new owner revision: same-person establishment uses the existing face-recognition flow, and a paid purchase at any one configured prerequisite tour suffices.",
+  "basis": [
+    {
+      "source_id": "decision",
+      "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568."
+    },
+    {
+      "source_id": "assessment:E0992",
+      "quote": "true"
+    },
+    {
+      "source_id": "assessment:E1109",
+      "quote": "feature/kiosk-square-return-recovery\n"
+    },
+    {
+      "source_id": "assessment:E0995",
+      "quote": "missing_in_inspected_source"
+    },
+    {
+      "source_id": "assessment:E1007",
+      "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+    },
+    {
+      "source_id": "assessment:E1022",
+      "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+    },
+    {
+      "source_id": "assessment:E1023",
+      "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+    },
+    {
+      "source_id": "assessment:E1045",
+      "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+    },
+    {
+      "source_id": "assessment:E1047",
+      "quote": "0"
+    },
+    {
+      "source_id": "assessment:E1527",
+      "quote": "            ]);\n\n            // Store face IDs (matched image IDs in v2)\n            if (!empty($matchedImageIds)) {\n                foreach ($matchedImageIds as $matchedId) {\n                    UserSelfieFaceId::create([\n                        'user_selfie_history_id' => $selfieHistory->id,\n                        'face_id' => (string) $matchedId,\n                        'provider' => $storageProvider,\n                    ]);\n                }\n            }\n"
+    },
+    {
+      "source_id": "assessment:E1172",
+      "quote": "                    $matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];\n                }\n"
+    },
+    {
+      "source_id": "assessment:E1408",
+      "quote": "    public function getPurchaseHistory() {\n        $data = array();\n        $orders = Order::where('status_id', 4)->where('user_id', Auth::user()->id)->orderBy('created', 'desc')->get();\n        foreach($orders as $order) {\n            $payment = Payments::where('status_id', 4)->where('order_id', $order->order_id)->first();\n            if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){\n                    $transactionId = $order->uuid;\n                }\n                else{\n"
+    },
+    {
+      "source_id": "assessment:E1274",
+      "quote": "        // Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {\n            $redeemCode = $_COOKIE['redeem-code'];\n            $discountCode = ProductDiscount::whereRaw('LOWER(discount_code) = ?', [strtolower($redeemCode)])\n                ->where('tour_id', $tourTimeSlot->tour_id)\n                ->first();\n        }\n\n"
+    },
+    {
+      "source_id": "assessment:E1241",
+      "quote": "                $order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+    },
+    {
+      "source_id": "assessment:E1054",
+      "quote": "Alternate kiosk API path not exhaustively traced"
+    },
+    {
+      "source_id": "assessment:E1053",
+      "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+    },
+    {
+      "source_id": "goal",
+      "quote": "No, just one, but establishing \"same person\" happens through face rec flow in the code."
+    },
+    {
+      "source_id": "goal",
+      "quote": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed."
+    },
+    {
+      "source_id": "previous:decision_uncertainty",
+      "quote": "Future experiment results are not required before selection; bounded observations or experiments are listed as possible next actions to reduce uncertainty."
+    },
+    {
+      "source_id": "update_reason",
+      "quote": "New assessment resolves part of that uncertainty: in the inspected committed customer web path, prerequisite storage/reader, historical purchase-evidence services, and automatic selector/qualification-discovery connections are missing, while supplied-code checkout handling exists."
+    }
+  ],
+  "limits": [
+    "This updates decision-relevant uncertainty only; it does not select a next atom, authorize implementation, deploy, change production data, or judge goal completion.",
+    "The new assessment is bounded to source-level research of the committed customer web checkout path; it is not execution from a checked-out delivery branch, live checkout, browser/payment run, deployment inspection, or production database observation.",
+    "The assessment resolves some baseline-source questions but leaves executable reuse, focused-test availability, current dependency/MySQL compatibility, recognition/purchase provenance, alternate kiosk scope, and live runtime state unresolved.",
+    "Historical artifacts and proposed acceptance cases remain evidence routes and candidate restoration material, not newly passing tests or implemented product behavior.",
+    "Future experiments or bounded observations may be selected specifically to obtain missing evidence; their results are not required now for this uncertainty handoff."
+  ],
+  "self_assessment": {
+    "choice": "ready",
+    "reason": "The consumer can use this now because it separates resolved source-level uncertainties from remaining decision-relevant unknowns, names what each unknown would change, and gives bounded routes for checking them without demanding future experiment results or expanding into deployment readiness.",
+    "question": ""
+  }
+}

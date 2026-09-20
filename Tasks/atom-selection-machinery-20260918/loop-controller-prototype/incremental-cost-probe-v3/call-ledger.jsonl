@@ -1,0 +1,12 @@
+{"number": 1, "stage": "00-direct", "folder": "updates/latest_contribution/attempts/0001", "started": 1789905116.2125041}
+{"number": 2, "stage": "00-direct", "folder": "updates/flow_and_capabilities/attempts/0001", "started": 1789905155.190913}
+{"number": 3, "stage": "00-direct", "folder": "updates/obstacle_observations/attempts/0001", "started": 1789905207.938904}
+{"number": 4, "stage": "00-direct", "folder": "updates/prior_options/attempts/0001", "started": 1789905254.549248}
+{"number": 5, "stage": "00-direct", "folder": "updates/practical_limits/attempts/0001", "started": 1789905339.757987}
+{"number": 6, "stage": "00-direct", "folder": "updates/decision_uncertainty/attempts/0001", "started": 1789905377.941059}
+{"number": 7, "stage": "cross-question", "folder": "checks/latest_contribution/attempts/0001", "started": 1789905427.432498}
+{"number": 8, "stage": "cross-question", "folder": "checks/flow_and_capabilities/attempts/0001", "started": 1789905442.997341}
+{"number": 9, "stage": "cross-question", "folder": "checks/obstacle_observations/attempts/0001", "started": 1789905458.518721}
+{"number": 10, "stage": "cross-question", "folder": "checks/prior_options/attempts/0001", "started": 1789905480.042839}
+{"number": 11, "stage": "cross-question", "folder": "checks/practical_limits/attempts/0001", "started": 1789905497.4123762}
+{"number": 12, "stage": "cross-question", "folder": "checks/decision_uncertainty/attempts/0001", "started": 1789905509.815011}

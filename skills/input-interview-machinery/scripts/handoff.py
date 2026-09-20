@@ -36,7 +36,27 @@ def packet(root, state):
                 shared[key] = text
             references[qid].append({'source': {k: v for k, v in entry.items() if k != 'text'},
                                     'text_ref': text_keys[text]})
-    return {'questions_and_answers': state['answers'], 'feedback_history': state['history'],
+    answers = state['answers']
+    if configure.incremental_policy(root):
+        previous = review.read(root/'incremental-previous.json')['questions']
+        replacements = {a['question']['id']:a for a in answers}
+        original_ids = [a['question']['id'] for a in previous]
+        if not set(replacements).issubset(original_ids):
+            raise ValueError('Incremental answers contain an unknown original question')
+        # All new answers are present together; unchanged answers keep their original content.
+        common = [{k:v for k,v in ref.items()} for ref in references[ids[0]]
+                  if ref['source']['id'] != 'update_reason']
+        answers = []
+        for original in previous:
+            qid = original['question']['id']
+            if qid in replacements:
+                answers.append(replacements[qid])
+            else:
+                answers.append({'question':original['question'],
+                    'initial_answer':original['final_answer'], 'final_answer':original['final_answer'],
+                    'session':original['session'], 'execution_mode':'preserved_saved_answer'})
+                references[qid] = copy.deepcopy(common)
+    return {'questions_and_answers': answers, 'feedback_history': state['history'],
             'reconciliations': state.get('reconciliations', []),
             'source_context_by_question': references, 'shared_source_text': shared,
             'source_reading_instruction': 'Each question has its own source identities under source. '
@@ -149,7 +169,7 @@ def close(root, transport_factory=None):
                 data={'question':item.get('effective_question',item['question']),
                       'private_context':[{'id':'complete-interview', 'text':json.dumps(contents,ensure_ascii=False)}], 'starting_answer':answer}
                 review.save(revision/'input.json',data)
-                review.run(revision/'input.json',revision/'review',transport_factory=factory,initial_session=session)
+                configure.refine(root, revision/'input.json',revision/'review',transport_factory=factory,initial_session=session)
                 final=review.read(revision/'review/final-answer.json')
                 if final==item['final_answer']:
                     raise ValueError('Cross-question revision produced no change; requires operator review')

@@ -27,16 +27,24 @@ def prepare(args):
         review.validate(item['final_answer'], review.eng.submission_schema())
         if item['final_answer']['self_assessment']['choice'] != 'ready':
             raise ValueError('Previous answers must be ready.')
-    assessment = review.read(args.assessment)
-    if assessment.get('kind') != 'atom_assessment':
-        raise ValueError('Supply an Atom Assessment Machinery handoff.')
+    role = 'decision' if getattr(args, 'decision', None) else 'assessment'
+    update = review.read(getattr(args, role))
+    expected = 'owner_decision_resolution' if role == 'decision' else 'atom_assessment'
+    if update.get('kind') != expected:
+        raise ValueError('Expected update kind: ' + expected)
     goal = review.read(args.goal)
-    bindings = {k:ref(getattr(args,k)) for k in ['previous','assessment','goal']}
+    bindings = {k:ref(getattr(args,k)) for k in ['previous',role,'goal']}
     args.run.mkdir(parents=True, exist_ok=False)
-    for name, value in [('previous.json',previous),('assessment.json',assessment),('goal.json',goal),
+    for name, value in [('previous.json',previous),(role+'.json',update),('goal.json',goal),
                         ('model-settings.json',configure.new_settings(args.settings)),
                         ('template.json',review.read(args.template)),('bindings.json',bindings)]:
         review.save(args.run/name,value)
+    if role == 'decision':
+        template = review.read(args.run/'template.json')
+        for key in ['selection_question', 'update_instruction']:
+            template[key] = template[key].replace('new assessment', 'owner decision and its recorded evidence').replace('supplied assessment', 'supplied owner decision')
+        template['selection_question'] += ' An owner decision is not a completed build or a fresh inspection of product functionality. It can resolve the specific choice it states, not unrelated product gaps.'
+        review.save(args.run/'template.json', template)
     files = {p.name:ref(p)['sha256'] for p in args.run.glob('*.json')}
     review.save(args.run/'manifest.json',{'files':files})
     return args.run.resolve()
@@ -46,7 +54,8 @@ def inputs(root):
     for name, expected in review.read(root/'manifest.json')['files'].items():
         if ref(root/name)['sha256'] != expected:
             raise ValueError('Frozen input changed: '+name)
-    return {k:review.read(root/(k+'.json')) for k in ['previous','assessment','goal']}
+    role = 'decision' if 'decision.json' in review.read(root/'manifest.json')['files'] else 'assessment'
+    return {k:review.read(root/(k+'.json')) for k in ['previous',role,'goal']}
 
 
 def plan(root, packet, factory):
@@ -65,6 +74,7 @@ def plan(root, packet, factory):
 
 
 def merge(root, packet, decisions, updated=None):
+    role = 'decision' if 'decision' in packet else 'assessment'
     old=packet['previous'];result=copy.deepcopy(old)
     selected=[q['question']['id'] for q in old['questions'] if decisions[q['question']['id']]['decision']=='update']
     if selected:
@@ -84,14 +94,17 @@ def merge(root, packet, decisions, updated=None):
         replacement['question']=copy.deepcopy(original['question'])
         replacement['effective_question']=copy.deepcopy(original.get('effective_question',original['question']))
         replacement['incremental_provenance']={'interview':ref(root/'interview/handoff.json'),
-            'assessment':review.read(root/'bindings.json')['assessment'], 'decision':decisions[qid],
+            ('owner_decision' if role == 'decision' else role):review.read(root/'bindings.json')[role], 'decision':decisions[qid],
             'incremental_question':item['question']}
         result['questions'][index]=replacement
         changes.append({'question_id':qid,'evidence':replacement['incremental_provenance']})
     bindings=review.read(root/'bindings.json');snapshot=copy.deepcopy(old.get('snapshot',{}))
     snapshot.update(version=snapshot.get('version',0)+1,kind='incremental_update',previous_snapshot=bindings['previous'],
-        updates=changes,assessment=bindings['assessment'],selection=ref(root/'selection.json'),review_scope=selected,
+        updates=changes,selection=ref(root/'selection.json'),review_scope=selected,
         context_policy='Unchanged entries preserved. Changed answers copied verbatim from the incremental interview; no new product state inferred by code.')
+    snapshot.pop('assessment', None)
+    snapshot.pop('decision', None)
+    snapshot[role] = bindings[role]
     result['snapshot']=snapshot
     result['cross_question_review']='selected_questions_only' if selected else 'no_questions_selected'
     result['checked_snapshot']=(updated or {}).get('checked_snapshot')
@@ -116,6 +129,19 @@ def advance(root, plan_only=False, factory=None):
         if plan_only:return {'action':'updates_selected','selection':str(root/'selection.json'),
                              'question_ids':[q['question']['id'] for q in selected]}
         template=review.read(root/'template.json')
+        run=root/'interview'
+        # Only new/unstarted interviews adopt the promoted policy. Saved legacy runs keep theirs.
+        direct = configure.incremental_policy(run) is not None or not (run/'questions.json').exists()
+        if direct:
+            run.mkdir(exist_ok=True)
+            previous=run/'incremental-previous.json'
+            if previous.exists() and review.read(previous)!=packet['previous']:
+                raise ValueError('Incremental previous answers changed')
+            review.save(previous,packet['previous'])
+            review.save(run/'incremental-policy.json',{'mode':'direct-update','previous_sha256':ref(previous)['sha256']})
+            preservation = 'For claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.'
+            if preservation not in template['update_instruction']:
+                template['update_instruction'] += chr(10)+preservation
         questions={'id':'incremental','questions':[]};contexts={}
         source_list=[{'id':k,'text':json.dumps(v,ensure_ascii=False,separators=(',',':'))} for k,v in packet.items()]
         for item in selected:
@@ -139,10 +165,13 @@ def advance(root, plan_only=False, factory=None):
         return merge(root,packet,decisions,review.read(run/'handoff.json'))
 
 
-def main(argv=None):
+def main(argv=None, factory=None):
     parser=argparse.ArgumentParser(description=__doc__);sub=parser.add_subparsers(dest='op',required=True)
     start=sub.add_parser('start')
-    for name in ['previous','assessment','goal']:start.add_argument('--'+name,type=Path,required=True)
+    for name in ['previous','goal']:start.add_argument('--'+name,type=Path,required=True)
+    source=start.add_mutually_exclusive_group(required=True)
+    source.add_argument('--assessment',type=Path)
+    source.add_argument('--decision',type=Path)
     start.add_argument('--template',type=Path,default=P/'incremental-template.json')
     start.add_argument('--settings',type=Path)
     start.add_argument('--prepare-only',action='store_true')
@@ -150,7 +179,7 @@ def main(argv=None):
     for command in [start,cont]:
         command.add_argument('--run',type=Path,required=True);command.add_argument('--plan-only',action='store_true')
     args=parser.parse_args(argv);root=prepare(args) if args.op=='start' else args.run.resolve()
-    result={'action':'prepared','run':str(root)} if getattr(args,'prepare_only',False) else advance(root,args.plan_only)
+    result={'action':'prepared','run':str(root)} if getattr(args,'prepare_only',False) else advance(root,args.plan_only,factory)
     print(json.dumps(result,ensure_ascii=False));return result
 
 

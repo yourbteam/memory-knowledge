@@ -89,13 +89,16 @@ python3 <skill-dir>/scripts/input_interview.py incremental continue --run DIRECT
 
 Use `--prepare-only` on start for zero calls, or `--plan-only` on start/continue to stop after
 selection. Optional `--settings` and `--template` apply at start. Selection uses the same frozen
-model settings as the interview. Each selected question normally costs ten more calls before
-any necessary clarification or revision; inspect selection when the authorized call budget is bounded.
+model settings as the interview. New incremental interviews use one evidence-preserving answer update and one final dependency
+check per selected question (two calls), before any necessary clarification or revision; inspect selection when the authorized call budget is bounded.
 
 Handle any returned question with existing user/reply commands against the returned
 `interview_run`, then use incremental continue. The completed `current-answers.json` contains
 all original questions, copies updated answers verbatim, preserves untouched entries and links
 the previous snapshot, assessment and update decisions. It does not overwrite the previous file.
-The affected-question pass examines all previous answers; subsequent cross-question review covers
-selected questions only, with the full previous answer set provided as context. Do not describe
+The affected-question pass examines all previous answers; subsequent cross-question review targets
+selected questions against the combined current answer set, including unchanged answers.
+Incremental updates, replies and cross-question revisions do not run the eight intake lenses.
+Initial complete interviews retain all eight lenses. Interrupted legacy interviews retain their
+original full-lens behavior; prepared but unstarted incremental interviews adopt the shorter path. Do not describe
 this as a fresh full interview or automatic promotion of current project state.

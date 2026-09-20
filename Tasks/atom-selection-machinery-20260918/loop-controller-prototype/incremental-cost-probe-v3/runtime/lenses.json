@@ -1,0 +1,42 @@
+[
+  {
+    "id": "connections",
+    "name": "Connections",
+    "instruction": "Inspect only relationships required by the question or asserted by the latest answer. Is each connection between an input, entity, reference, operation and result established by the available context, or merely assumed from names, proximity or similarity? If a consequential connection is unsupported, supply available support or state the precise unknown. Do not expand into unrelated relationships."
+  },
+  {
+    "id": "conditions",
+    "name": "Conditions and state",
+    "instruction": "Inspect when the latest answer’s claims hold. Does it preserve relevant prerequisites, branches, transitions, exceptions and distinctions between an initial state and a later state? Do not equate membership or existence with a current property. Correct only distinctions that affect the requested use, using the available context; do not enumerate hypothetical edge cases."
+  },
+  {
+    "id": "support",
+    "name": "Evidence strength",
+    "instruction": "Compare each consequential conclusion with its support. Distinguish what the source shows from what a report says, an assumption permits, or remains unknown. Does a quotation establish the asserted effect or only part of it? Supply available missing support or narrow the claim. Do not demand runtime proof for a source-level question or invent missing authority."
+  },
+  {
+    "id": "use",
+    "name": "Intended use",
+    "instruction": "Can the next step perform the use declared in the original question with this answer and its limitations? Identify only missing information that could change that use. If it is in your context, incorporate it; if not, preserve the supported answer and request the necessary information. Remove demands that concern excluded or unrelated tasks. An explicit unknown is useful but is not a supplied fact."
+  },
+  {
+    "id": "consistency",
+    "name": "Consistency and preservation",
+    "instruction": "Check the entire accumulated answer for contradictions between conclusions, conditions, evidence, limits and readiness. Confirm earlier supported corrections remain represented and later edits have not erased or weakened them. Preserve valid uncertainty. Do not call a required fact resolved merely because its absence is now described clearly; judge readiness for the original stated use."
+  },
+  {
+    "id": "unanswered-dependencies",
+    "name": "Unanswered dependencies",
+    "instruction": "Re-read the original question. Does the answer supply what was requested, or merely explain why it remains unknown? If missing information prevents answering the original question, retain needs_input and one precise follow-up question, even if the explanation of the gap is useful and complete. If the original question only asks whether available evidence is sufficient, a supported finding of insufficiency can be ready. Do not invent missing dependencies or demand evidence beyond the original question scope or evidence level. Preserve all supported content, quotations, assumptions and limitations. ready must have an empty question; needs_input must have a specific necessary follow-up. Do not treat readiness as proof that your reasoning is correct."
+  },
+  {
+    "id": "decision-boundary",
+    "name": "Decision boundary",
+    "instruction": "Read the original question together with its supplied scope, permitted assumptions, and required evidence level. Identify exactly what must be established to answer it. For each remaining uncertainty: could resolving it change the answer within that boundary? Is it required now, or does it belong to a separate downstream question? Stop only when the required conclusion is supported at the requested evidence level. Do not lower that level because a summary supplies a plausible answer. Do not expand the task because another dependency remains unresolved. Preserve explicitly permitted assumptions. If the boundary itself is ambiguous and changes whether you should stop, ask one targeted clarification. Do not invent findings. Apply this reasoning before the final readiness judgment; return the complete answer with ready and an empty question, or needs_input with one necessary follow-up."
+  },
+  {
+    "id": "exact-relationship",
+    "name": "Exact relationship",
+    "instruction": "Identify the exact relationship required by the original question. In your lens_assessment.reason: (1) quote the required relationship verbatim from the question or governing requirement; (2) quote the statement in the latest answer or its supplied evidence claimed to establish or ask about that relationship; (3) explicitly compare them without weakening, broadening or substituting either relationship. Do not silently replace a specific predicate with a more general association. (4) Explain whether the cited statement could be true while the required relationship is false or unresolved, and why. If you use a possible alternative, label it as a logical test of the inference, not evidence that the alternative occurred. If the relationship is already explicitly unresolved, check whether the follow-up asks about that same relationship. If no such relation is being asserted or asked about, say not applicable rather than inventing one. Revise the accumulated answer only if this comparison reveals a consequential gap; preserve valid facts, quotations, permitted assumptions, evidence level, original scope and stopping boundaries. Return a complete answer, not just the comparison. No change is valid when the exact relationship is supported. Do not invent missing facts or owner authority."
+  }
+]

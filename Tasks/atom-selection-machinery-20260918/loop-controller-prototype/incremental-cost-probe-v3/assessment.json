@@ -1,0 +1,975 @@
+{
+  "schema_version": 1,
+  "kind": "atom_assessment",
+  "mode": "research_assessment",
+  "cycle_id": "cycle-0002",
+  "context": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0002/assessment/context.json",
+    "sha256": "d4945d47136074765c5d4210a3ab7f89d67b43ede78bc6f6b27103283500abb7"
+  },
+  "model_settings": {
+    "model": "gpt-6-astra",
+    "reasoning": "medium",
+    "cli": "codex",
+    "timeout_seconds": 300
+  },
+  "lenses": {
+    "changed": {
+      "analysis": "The research established a bounded source-level diagnosis and a plausible first implementation boundary: restore directed tour-prerequisite storage and its reader on the recorded prod-derived baseline. It did not implement or demonstrate the automatic discount. This substantially supports the selected job’s decision-enabling purpose, but historical reuse readiness and executable compatibility remain unverified within this packet. The selected job explicitly required a version-bound connection assessment and left implementation and delivery validation to later work (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/distillation-routine-checks-v1/run/handoff.json, chosen_atom, “Done when” passage).\n\nThe version boundary is supported, with an important distinction. Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/observations.json, entries 0–2, records auto-50-perc-off and prod both resolving to 45826e12cdc8f585e514d7bb09c0d37fa28ed568, while the checked-out branch remained feature/kiosk-square-return-recovery. The status output lists untracked paths and no tracked changes. Thus this was inspection of the selected committed tree, not execution from a checked-out auto-50-perc-off worktree. The result’s inspected_committed_tree=true accurately preserves that distinction (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, baseline).\n\nThe first missing connection is reasonably supported within the inspected scope. The commit-tree listing contains neither the historical prerequisite migration/reader nor the named purchase-evidence services; the recorded prerequisite/automatic-discount identifier search returned no matches (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/observations.json, entries 3–4). The supplied Tours model has no prerequisite relationship, and UserDifferentTour only declares its table, key and timestamp setting (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Tours.php, class body; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/UserDifferentTour.php, class body). These support absence of the historical implementation and no identified equivalent in the traced source. They do not establish the contents of a live database, every differently named implementation, or why historical files are absent; a minimal Eloquent model does not enumerate its database schema.\n\nExisting recognition and purchase surfaces are present, but their composition into qualifying evidence is missing from the traced checkout. HomeController::submitImage stores user, tour and selfie history with timeslot fields explicitly null; history-recording exceptions are caught without stopping the main flow. Its version-2 branch assigns matched product-image IDs to detectedFaceIds, and submitImageStream explicitly stores “matched image IDs in v2.” Therefore the research’s phrase “records ... face IDs” needs qualification: the stored identifiers are not uniformly Rekognition face IDs (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Http/Controllers/CustomerUser/HomeController.php, submitImage historical-tracking block and submitImageStream history block). AmazonFaceRecognitionService::searchFacesByImage returns similarity and a nullable externalImageId, plus distinct failure outcomes; this is a usable source interface, not evidence that a historical search can actually be resolved to the same person’s paid prerequisite purchase (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Helpers/AmazonFaceRecognitionService.php, searchFacesByImage).\n\nAbsence of the historical services must not be interpreted as absence of all purchase handling. HomeController::faceRecognitionProcess already joins recognized image associations to orders and payments with status_id=4, scoped to the authenticated user and requested timeslot. getPurchaseHistory also includes 100%-discount orders without a payment. Those are existing behaviors worth preserving, but neither establishes the required cross-tour qualification; a displayed purchase history entry is not necessarily a paid purchase (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Http/Controllers/CustomerUser/HomeController.php, faceRecognitionProcess queries q1/q2 and getPurchaseHistory).\n\nThe discount-path findings are supported by supplied source. ProductDiscount has fields, relationships and a unique-batch scope, but no automatic 50% selector (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/ProductDiscount.php, complete class). The customer routes connect order creation, checkout display, discount preview and payment (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/routes/web.php, customer checkout/payment routes). postCheckout reads a supplied redeem-code cookie; the view automatically previews an existing cookie code and submits the discount field for payment. This existing cookie automation is not automatic discovery based on prerequisite eligibility (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/resources/views/customer/checkout-refactored.blade.php, DataController.applyDiscount, document-ready initialization and ResponseController.buildPaymentData). CheckoutController::discount calculates a preview, while postPayment saves the discounted total and discount association before provider handling. Consequently, preview must be distinguished from persisted order discount application; neither path supplies the missing qualification and discovery mechanism (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Http/Controllers/CustomerUser/Checkout/CheckoutController.php, postCheckout, discount and postPayment).\n\nThe proposed restoration boundary is concrete: checkout-tour ID plus directed configured pairs produce configuration status and prerequisite IDs. It names configured/unconfigured tours, multiple prerequisites, direction and isolated rollback as acceptance cases, and protects existing tour rows and checkout/pricing/recognition/payment behavior. However, these are proposed acceptance cases, not fresh passing tests. The historical implementation, test and proof files appear only as references in this packet; their bodies and detailed hash-verification output are absent. The reported “15 of 15 verified” therefore cannot independently establish historical test coverage or compatibility here (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, first_supported_implementation_boundary and validation).\n\nThe demonstrated contribution is reduced uncertainty about this committed customer web path: restoration of a specific upstream dependency is justified more strongly than immediate integration of supposedly available historical components. It is not proof that restoration alone completes qualification or is the only possible implementation order. The research records zero fresh product tests, no live database/AWS/browser/payment/deployment testing, and incomplete tracing of the alternate kiosk API. Current-dependency tests and target MySQL compatibility remain outstanding. These limits prevent a claim of fully validated research coverage, implemented product progress, or delivery of the complete automatic-discount sequence (Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, validation, limits and first_supported_implementation_boundary.remaining_validation)."
+    },
+    "remaining": {
+      "analysis": "Selected research job\n\nThe central research question is substantially answered: the inspected committed tree lacks the directed prerequisite structure, and the assessment identifies restoration of its storage and reader as the first implementation boundary. Inputs, outputs, historical artifact references, five acceptance cases and protected behavior are recorded. Implementation itself is explicitly later work, so its absence is not a research failure. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/distillation-routine-checks-v1/run/handoff.json, /chosen_atom, “Done when”; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /findings/0 and /first_supported_implementation_boundary.]\n\nThree limitations remain in the research handoff:\n\n1. Executable reuse and dependency compatibility remain unverified. The result reports “15 of 15” historical proof hashes verified but zero fresh product tests, and explicitly defers rerunning preserved tests against current dependencies. The packet contains historical artifact references, not their source/test bodies or detailed verification outputs. This supports a restoration candidate, not a demonstrated compatible restoration. The selected job requested focused existing tests where available; the packet does not explain whether those tests were runnable during this assessment or why none ran. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /validation and /first_supported_implementation_boundary/remaining_validation; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/distillation-routine-checks-v1/run/handoff.json, /selection_reasoning, “Where available, use existing focused tests”.]\n\n2. Coverage beyond customer web checkout remains unresolved. The result explicitly says the alternate kiosk API path was not exhaustively traced. No supplied evidence establishes whether that separate path belongs to the intended delivery surface. This limits whole-product conclusions, although it does not erase the identified prerequisite gap in the inspected tree. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /limits/0–2.]\n\n3. The historical recognition approach has not been reconciled fully with the baseline’s existing recognition variants. In HomeController, submitImage can store multiple-face selfie metadata, while submitImageStream stores matched image IDs as face IDs. The assessment identifies missing historical evidence services but does not establish compatibility across these representations or their linkage to a paid historical purchase. This is an unresolved downstream integration question, not evidence that the existing recognition flow is broken. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Http/Controllers/CustomerUser/HomeController.php, submitImage multi-face handling and submitImageStream, “Store face IDs (matched image IDs in v2)”; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /findings/2.]\n\nBaseline identity is no longer missing. Both auto-50-perc-off and prod resolve to 45826e12cdc8f585e514d7bb09c0d37fa28ed568. However, the active worktree remained feature/kiosk-square-return-recovery with listed untracked files; the assessment inspected the target committed tree without switching checkout. It should not be described as testing a checked-out delivery branch. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/observations.json, entries 0–3; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /baseline.]\n\nFixed delivery goal\n\nThe product still needs the configured current-tour-to-prerequisite relationship and an integrated qualification path establishing the same person’s paid purchase at any one configured prerequisite tour. Existing selfie capture and recognition helpers are reusable surfaces, but the historical evidence services are absent from the inspected baseline, and restoring files alone would not establish that qualification. [Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json, /goal/outcome and /goal/completion_conditions/3–5; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /findings/0–2.]\n\nAutomatic discovery of an applicable existing 50% code and its connection to checkout before payment are also missing from the traced path. Supplied-code handling already exists: postCheckout reads a redeem-code cookie; the checkout view previews an entered or saved code; postPayment calculates and saves the discount before provider handling. That behavior does not implement purchase-based qualification or automatic code discovery. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/app/Http/Controllers/CustomerUser/Checkout/CheckoutController.php, postCheckout, discount and postPayment; Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/source/resources/views/customer/checkout-refactored.blade.php, DataController.applyDiscount and document-ready redemption-code handling.]\n\nFinally, delivery lacks version-bound execution evidence of the complete qualified checkout sequence and preservation of surrounding behavior. No fresh product, browser, live recognition, database, payment or deployment validation was performed. Actual prerequisite configuration, applicable code availability, target MySQL compatibility and deployed behavior therefore remain unknown—not demonstrated failures. These are delivery implementation/validation gaps, not requirements to turn this research job into a deployment exercise. [Tasks/atom-selection-machinery-20260918/loop-controller-prototype/baseline-capability-assessment-v1/result.json, /validation, /limits, /findings/3/limits and /first_supported_implementation_boundary/remaining_validation; Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json, /goal/outcome.]"
+    }
+  },
+  "assessment": {
+    "achieved": [
+      {
+        "statement": "The research reduced uncertainty about the selected delivery baseline by assessing the committed tree at 45826e12cdc8f585e514d7bb09c0d37fa28ed568. The recorded worktree remained on feature/kiosk-square-return-recovery with untracked files; this was not execution from a checked-out delivery branch or evidence of today's checkout.",
+        "evidence": [
+          "E0990",
+          "E0991",
+          "E0992",
+          "E1103",
+          "E1109",
+          "E1115"
+        ]
+      },
+      {
+        "statement": "Within the inspected customer web path, the research identified the missing directed prerequisite relationship and absent historical purchase-evidence services. It documented a concrete restoration boundary with checkout-tour and configured-pair inputs, prerequisite-ID outputs, historical references, five acceptance cases and protected behavior. This is decision-enabling research, not an implemented restoration.",
+        "evidence": [
+          "E0994",
+          "E0995",
+          "E0996",
+          "E0997",
+          "E1007",
+          "E1023",
+          "E1024",
+          "E1025",
+          "E1026",
+          "E1027",
+          "E1028",
+          "E1030",
+          "E1032",
+          "E1038",
+          "E1039",
+          "E1040",
+          "E1041",
+          "E1042",
+          "E1043",
+          "E1044",
+          "E1045"
+        ]
+      },
+      {
+        "statement": "The source trace identifies reusable recognition and supplied-code handling. Checkout reads a redeem-code cookie, previews an entered or saved code, and saves the discounted order during postPayment before provider handling. That existing automation does not establish prerequisite-based qualification or automatic discovery of a 50% code.",
+        "evidence": [
+          "E1169",
+          "E1172",
+          "E1274",
+          "E1683",
+          "E1684",
+          "E1719",
+          "E1239",
+          "E1241",
+          "E1244",
+          "E1022"
+        ]
+      }
+    ],
+    "remaining": [
+      {
+        "statement": "Overall delivery still requires the configured prerequisite relationship, same-person paid-purchase qualification through the existing recognition flow, applicable existing 50% code discovery, and automatic application before payment. The inspected source does not establish those integrated connections.",
+        "evidence": [
+          "E0030",
+          "E0051",
+          "E0057",
+          "E0063",
+          "E0995",
+          "E1007",
+          "E1009",
+          "E1011",
+          "E1012",
+          "E1022"
+        ]
+      },
+      {
+        "statement": "Recognition compatibility and purchase provenance remain unresolved. Stored identifiers differ by recognition variant: version 2 stores matched image IDs, historical tracking leaves timeslot fields null, and searchFacesByImage can return a null external reference. Existing purchase-history behavior also includes fully discounted orders without payment, so history presence alone cannot establish a qualifying paid purchase.",
+        "evidence": [
+          "E1526",
+          "E1527",
+          "E1493",
+          "E1172",
+          "E1408",
+          "E1409",
+          "E1009"
+        ]
+      },
+      {
+        "statement": "Executable reuse is unverified. The result reports 15 of 15 historical proof hashes verified, but the referenced historical source/test bodies and detailed verification outputs are not included here. Zero fresh product tests ran; compatibility with current dependencies and target MySQL remains outstanding. The packet does not explain whether focused existing tests were runnable or why none ran.",
+        "evidence": [
+          "E1028",
+          "E1030",
+          "E1032",
+          "E1034",
+          "E1036",
+          "E1045",
+          "E1046",
+          "E1047",
+          "E0936"
+        ]
+      },
+      {
+        "statement": "Version-bound execution evidence for the whole checkout sequence and preservation of surrounding behavior is missing. No live database, AWS, browser, payment or deployment behavior was tested; applicable code configuration was not queried. The alternate kiosk API was not exhaustively traced, and its inclusion in the intended delivery surface is not established by this packet.",
+        "evidence": [
+          "E0030",
+          "E1015",
+          "E1053",
+          "E1054",
+          "E1055"
+        ]
+      }
+    ],
+    "goal_completion": {
+      "judgment": "not_established",
+      "reason": "The fixed goal requires an observable, qualified automatic-discount checkout sequence. Both lenses' central conclusion is supported by the original records: the research identifies missing connections and reusable source surfaces, but adds no product implementation and supplies no execution proof of the complete sequence or preserved surrounding behavior. These findings are bounded to the recorded committed customer web path, not today's checkout or every deployment.",
+      "evidence": [
+        "E0030",
+        "E0039",
+        "E0045",
+        "E0995",
+        "E1007",
+        "E1011",
+        "E1022",
+        "E1047",
+        "E1053",
+        "E1055",
+        "E1056"
+      ]
+    },
+    "interview_updates": [
+      {
+        "statement": "Proposed current_position and latest_contribution update: replace the earlier 'selected baseline uninspected' uncertainty with the recorded committed-tree source assessment. Record the missing prerequisite and qualification/discovery connections alongside existing recognition and supplied-code handling. Preserve the distinction between research progress and product delivery.",
+        "evidence": [
+          "E0146",
+          "E0933",
+          "E0992",
+          "E0995",
+          "E1007",
+          "E1011",
+          "E1022",
+          "E1056"
+        ]
+      },
+      {
+        "statement": "Proposed flow_and_capabilities and prior_options update: retain the documented prerequisite restoration boundary and historical artifacts as research findings available for later consideration, without selecting or authorizing an implementation. Its acceptance cases are proposed checks, not newly passing tests.",
+        "evidence": [
+          "E1023",
+          "E1028",
+          "E1030",
+          "E1032",
+          "E1038",
+          "E1039",
+          "E1040",
+          "E1041",
+          "E1042",
+          "E1045",
+          "E1047"
+        ]
+      },
+      {
+        "statement": "Proposed decision_uncertainty update: preserve questions about focused-test availability, historical artifact compatibility, recognition identifier and purchase linkage, and whether the alternate kiosk API belongs to delivery scope. For overall completion, request version-bound evidence of qualification, code selection, discounted order before payment and preservation of existing behavior.",
+        "evidence": [
+          "E0936",
+          "E1045",
+          "E1047",
+          "E1009",
+          "E1527",
+          "E1054",
+          "E0030"
+        ]
+      }
+    ],
+    "selected_work_completion": {
+      "judgment": "established",
+      "reason": "The selected research job's central deliverable is present: a version-bound connection assessment, source call-path evidence, historical provenance references, explicit uncertainties, and a concrete first implementation boundary with inputs, outputs, acceptance cases and protected behavior. Implementation and delivery validation were explicitly later work. The lenses correctly identify limits—zero fresh tests, unverified executable compatibility and incomplete alternate-path coverage—which restrict the result to a source-level research conclusion rather than invalidate that bounded contribution. Focused-test availability remains an unexplained handoff limitation.",
+      "evidence": [
+        "E0933",
+        "E0936",
+        "E0991",
+        "E0992",
+        "E0995",
+        "E1009",
+        "E1022",
+        "E1023",
+        "E1024",
+        "E1025",
+        "E1026",
+        "E1027",
+        "E1038",
+        "E1039",
+        "E1040",
+        "E1041",
+        "E1042",
+        "E1043",
+        "E1044",
+        "E1045",
+        "E1047",
+        "E1054",
+        "E1751",
+        "E1752"
+      ]
+    }
+  },
+  "resolved_evidence": {
+    "E0030": {
+      "id": "E0030",
+      "pointer": "/records/goal/data/goal/outcome",
+      "start": 0,
+      "end": 440,
+      "text": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/input_answers/data/questions/0/final_answer/basis/0/quote",
+          "start": 0,
+          "end": 440
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/1/final_answer/basis/0/quote",
+          "start": 0,
+          "end": 440
+        },
+        {
+          "pointer": "/records/selection/data/goal",
+          "start": 0,
+          "end": 440
+        }
+      ]
+    },
+    "E0039": {
+      "id": "E0039",
+      "pointer": "/records/goal/data/goal/completion_conditions/1/text",
+      "start": 0,
+      "end": 154,
+      "text": "Location A needs to have a purchase through payment and location B's checkout needs the new 50% discount automatically applied on checkout before payment.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/input_answers/data/questions/0/final_answer/basis/3/quote",
+          "start": 0,
+          "end": 154
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/8/final_answer/basis/22/quote",
+          "start": 0,
+          "end": 154
+        }
+      ]
+    },
+    "E0045": {
+      "id": "E0045",
+      "pointer": "/records/goal/data/goal/completion_conditions/2/text",
+      "start": 0,
+      "end": 169,
+      "text": "This new addition only needs to locate a 50% discount code and apply it automatically to the order in the check out. The rest will not be changed and stays as it is now.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/input_answers/data/questions/0/final_answer/basis/4/quote",
+          "start": 0,
+          "end": 169
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/5/final_answer/basis/4/quote",
+          "start": 0,
+          "end": 169
+        }
+      ]
+    },
+    "E0051": {
+      "id": "E0051",
+      "pointer": "/records/goal/data/goal/completion_conditions/3/text",
+      "start": 0,
+      "end": 245,
+      "text": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/input_answers/data/questions/0/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/3/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/5/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 245
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/8/final_answer/basis/21/quote",
+          "start": 0,
+          "end": 245
+        }
+      ]
+    },
+    "E0057": {
+      "id": "E0057",
+      "pointer": "/records/goal/data/goal/completion_conditions/4/text",
+      "start": 0,
+      "end": 87,
+      "text": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/input_answers/data/questions/0/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/3/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/5/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/6/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/8/final_answer/basis/23/quote",
+          "start": 0,
+          "end": 87
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/9/final_answer/basis/5/quote",
+          "start": 0,
+          "end": 87
+        }
+      ]
+    },
+    "E0063": {
+      "id": "E0063",
+      "pointer": "/records/goal/data/goal/completion_conditions/5/text",
+      "start": 0,
+      "end": 181,
+      "text": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/input_answers/data/questions/0/final_answer/basis/7/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/5/final_answer/basis/7/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/6/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 181
+        },
+        {
+          "pointer": "/records/input_answers/data/questions/9/final_answer/basis/6/quote",
+          "start": 0,
+          "end": 181
+        }
+      ]
+    },
+    "E0146": {
+      "id": "E0146",
+      "pointer": "/records/input_answers/data/questions/1/final_answer/answer",
+      "start": 0,
+      "end": 4599,
+      "text": "Already demonstrated: the supplied historical records support several bounded product atoms, only within their recorded boundaries. A directed tour-prerequisite structure passed five frozen isolated-SQLite cases. Prior-tour purchase eligibility passed seven installed cases with 324 assertions against controlled owner-derived SQLite fixtures. Search-payment evidence is historically reported as a controlled internal-service proof, not production payment verification, live discount eligibility, or checkout behavior. A usable 50% selector was historically reviewed as supported for deterministic selection or none, preservation of attributes and existing members, payment-usage guard execution, unchanged state, and promoted-path repetition; that still does not establish checkout installation or end-to-end checkout application.\n\nThe selfie-purchase-lookup atom demonstrated a bounded internal-service advance. Before that atom, RecognitionPurchaseEvidence exposed forMatches and forReference, but no forSelfie entrypoint; baseline executions reported available=false and no recognition request. After the atom, RecognitionPurchaseEvidence::forSelfie was added to query the fixed purchase-search-history collection through the configured Amazon face-recognition helper and return the existing full purchase-evidence resolver output through forMatches. Nine controlled actual-source executions validated empty matches, one paid match, unpaid-before-paid ordering, duplicate-reference preservation, provider failure/no-face/no-collection, invalid later reference, and missing-history behavior. The proof boundary is controlled SQLite fixtures and intercepted provider HTTP with a direct service call. This is bounded historical internal-service product progress, not checkout delivery, live same-person identity, prerequisite qualification, discount application, production deployment, or an autonomy gain.\n\nFor machinery/provenance, the input interview machinery is demonstrated for this intake purpose by a live chronological replay and by an installed-entry-point proof. The build-only atom builder is demonstrated as a build capability by captured-assignment validation and installed-controller validation; it accepts approved bounded atoms without comparative selection and does not generate or rank successor atoms. Under the fixed goal record, the delivery goal here is the Taggable automatic-discount product outcome; the historical machinery-development goal remains separate provenance rather than an additional completion condition for this product assessment.\n\nCurrent delivery baseline update: the intended delivery baseline uncertainty has been reduced. The owner chose a new feature branch `auto-50-perc-off`, based on `prod`, and the recorded delivery baseline is `taggable-server`, local branch `auto-50-perc-off`, based on prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568`. This changes the current-position framing: the older inspection of `feature/kiosk-square-return-recovery` at head `d5ddaa23ed61d3f62c1006584c18e612bacfdb64` remains useful bounded evidence about that inspected non-baseline branch, but it is no longer the intended delivery-branch reference. The new baseline evidence is branch creation only; it reports no product code built, tested, integrated, or deployed.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence is still not demonstrated. The new delivery branch needs version-bound evidence that the relevant product pieces are present and wired through the real flow: prerequisite structure, eligibility service, payment and recognition evidence services, selector integration, automatic discount application in checkout before payment, preservation of surrounding checkout/search/payment behavior, tests through the real checkout path, and promotion or deployment evidence as applicable.\n\nStill uncertain: whether the historical product files exist on the new `auto-50-perc-off` baseline branch, whether equivalent implementation exists under other names, what the exact current checkout code on that branch contains beyond the established baseline commit, whether live MySQL migration, production data, payment records, recognition behavior, and configured discount codes satisfy the intended flow, and whether the automatic 50% code has ever been applied in a real checkout. The earlier uncertainty about which branch is intended for delivery is resolved by the owner decision, but product completion remains unproved.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0933": {
+      "id": "E0933",
+      "pointer": "/records/selection/data/chosen_atom",
+      "start": 0,
+      "end": 1789,
+      "text": "Job: Establish the automatic-discount capability and first missing connection in taggable-server on auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568. Produce one version-bound assessment tracing eligible current-tour checkout through prerequisite lookup, existing face-recognition qualification of the same person’s paid purchase at any one prerequisite tour, applicable existing 50% code selection, and application before payment. Keep routine access checks, source inspection, historical-artifact lookup and focused existing tests inside this job.\n\nWhy it matters: Historical component proofs make reuse plausible, but the selected baseline’s contents and checkout connections remain uninspected. Absence findings from another branch cannot justify restoration here. This assessment determines whether delivery needs reuse, integration or restoration of a specific dependency, enabling a bounded product change. No supplied evidence establishes an access blocker requiring a separate prerequisite job.\n\nDone when: One concise evidence package records the inspected commit and worktree state, relevant checkout call path, and each required connection as supported, demonstrably missing, incompatible or unresolved. It cites source locations and historical provenance, distinguishes source inference from executed tests, and identifies the first supported implementation boundary with inputs, dependencies, acceptance cases and surrounding behavior to preserve. If the mechanism already exists, identify its remaining validation gap. If unavailable evidence prevents the determination, identify the exact blocker and bounded follow-up. Implementation and subsequent delivery validation remain later work; this assessment itself does not deliver the discount.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0936": {
+      "id": "E0936",
+      "pointer": "/records/selection/data/selection_reasoning",
+      "start": 3823,
+      "end": 5977,
+      "text": "Inspect only the source and existing evidence needed to trace current-tour eligibility, prerequisite lookup, recognition-to-paid-purchase qualification, applicable existing-code selection, and application to the order before payment. Check equivalent behavior as well as historical class names. Identify where existing checkout/search/payment behavior must be preserved. Consult referenced historical artifacts or reachable local history only to resolve a specific reuse question. Where available, use existing focused tests to distinguish executable behavior from source-level inference.\n\nThis atom does not restore services, change product behavior, build a new inspection framework, investigate the old branch’s deletion history, or expand into production configuration and deployment. Those exclusions bound this contribution; they are not arguments against recommending later implementation.\n\nCompletion evidence\n\nDeliver one concise evidence package identifying the inspected commit and worktree state, the relevant checkout call path, and the status of each required connection: present with supporting evidence, demonstrably missing, incompatible, or unresolved. Include source locations, historical artifact provenance, and any existing test commands and observed results. Explicitly distinguish source inspection from executed behavior.\n\nThe package must identify the first concrete implementation boundary supported by those findings, with its inputs, dependencies and acceptance cases. If a required artifact cannot be located within the stated scope, record precisely what remains unresolved rather than claiming absence everywhere or searching indefinitely. If the complete mechanism already exists, identify the remaining validation gap instead of inventing a code change.\n\nThe assessment succeeds by resolving the restoration-versus-integration choice, or by exposing a specific access/evidence blocker with a bounded follow-up. A file inventory alone is insufficient. Full delivery still requires version-bound evidence of the qualified checkout sequence, automatic application before payment, and preservation of surrounding behavior.\n\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0990": {
+      "id": "E0990",
+      "pointer": "/records/research_evidence_0/data/baseline/branch",
+      "start": 0,
+      "end": 16,
+      "text": "auto-50-perc-off",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/research_evidence_1/data/branch",
+          "start": 0,
+          "end": 16
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/0/argv/2",
+          "start": 0,
+          "end": 16
+        }
+      ]
+    },
+    "E0991": {
+      "id": "E0991",
+      "pointer": "/records/research_evidence_0/data/baseline/commit",
+      "start": 0,
+      "end": 40,
+      "text": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+      "encoding": "string",
+      "other_locations": [
+        {
+          "pointer": "/records/research_evidence_1/data/commit",
+          "start": 0,
+          "end": 40
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/3/argv/4",
+          "start": 0,
+          "end": 40
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/4/argv/6",
+          "start": 0,
+          "end": 40
+        }
+      ]
+    },
+    "E0992": {
+      "id": "E0992",
+      "pointer": "/records/research_evidence_0/data/baseline/inspected_committed_tree",
+      "start": 0,
+      "end": 4,
+      "text": "true",
+      "encoding": "json",
+      "other_locations": []
+    },
+    "E0994": {
+      "id": "E0994",
+      "pointer": "/records/research_evidence_0/data/findings/0/connection",
+      "start": 0,
+      "end": 54,
+      "text": "Current checkout tour to configured prerequisite tours",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0995": {
+      "id": "E0995",
+      "pointer": "/records/research_evidence_0/data/findings/0/status",
+      "start": 0,
+      "end": 27,
+      "text": "missing_in_inspected_source",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0996": {
+      "id": "E0996",
+      "pointer": "/records/research_evidence_0/data/findings/0/evidence/0",
+      "start": 0,
+      "end": 47,
+      "text": "No matching migration or service in commit tree",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E0997": {
+      "id": "E0997",
+      "pointer": "/records/research_evidence_0/data/findings/0/evidence/1",
+      "start": 0,
+      "end": 94,
+      "text": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1007": {
+      "id": "E1007",
+      "pointer": "/records/research_evidence_0/data/findings/2/evidence/0",
+      "start": 0,
+      "end": 164,
+      "text": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1009": {
+      "id": "E1009",
+      "pointer": "/records/research_evidence_0/data/findings/2/limits",
+      "start": 0,
+      "end": 117,
+      "text": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1011": {
+      "id": "E1011",
+      "pointer": "/records/research_evidence_0/data/findings/3/status",
+      "start": 0,
+      "end": 40,
+      "text": "automatic_selector_missing_from_baseline",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1012": {
+      "id": "E1012",
+      "pointer": "/records/research_evidence_0/data/findings/3/evidence/0",
+      "start": 0,
+      "end": 90,
+      "text": "ProductDiscount.php contains model fields and relations only; no automatic selector method",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1015": {
+      "id": "E1015",
+      "pointer": "/records/research_evidence_0/data/findings/3/limits",
+      "start": 0,
+      "end": 58,
+      "text": "Existing codes and runtime configuration were not queried.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1022": {
+      "id": "E1022",
+      "pointer": "/records/research_evidence_0/data/findings/4/limits",
+      "start": 0,
+      "end": 119,
+      "text": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1023": {
+      "id": "E1023",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/outcome",
+      "start": 0,
+      "end": 125,
+      "text": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1024": {
+      "id": "E1024",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/inputs/0",
+      "start": 0,
+      "end": 16,
+      "text": "checkout tour ID",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1025": {
+      "id": "E1025",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/inputs/1",
+      "start": 0,
+      "end": 52,
+      "text": "configured directed checkout/prerequisite tour pairs",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1026": {
+      "id": "E1026",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/outputs/0",
+      "start": 0,
+      "end": 35,
+      "text": "whether checkout tour is configured",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1027": {
+      "id": "E1027",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/outputs/1",
+      "start": 0,
+      "end": 25,
+      "text": "its prerequisite tour IDs",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1028": {
+      "id": "E1028",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/historical_sources/0/path",
+      "start": 0,
+      "end": 204,
+      "text": "Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/atom-run/evidence/experiment-000002/composition/assembly/source/taggable-server/app/Services/TourDiscountPrerequisites.php",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1030": {
+      "id": "E1030",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/historical_sources/1/path",
+      "start": 0,
+      "end": 238,
+      "text": "Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/atom-run/evidence/experiment-000002/composition/assembly/source/taggable-server/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1032": {
+      "id": "E1032",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/historical_sources/2/path",
+      "start": 0,
+      "end": 175,
+      "text": "Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/implementation-live-01/candidate/taggable-server/tests/Unit/TourDiscountPrerequisitesTest.php",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1034": {
+      "id": "E1034",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/historical_sources/3/path",
+      "start": 0,
+      "end": 115,
+      "text": "Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/installed-validation-receipt.json",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1036": {
+      "id": "E1036",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/historical_sources/4/path",
+      "start": 0,
+      "end": 98,
+      "text": "Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/final-proof.json",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1038": {
+      "id": "E1038",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/acceptance_cases/0",
+      "start": 0,
+      "end": 24,
+      "text": "configured-checkout-tour",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1039": {
+      "id": "E1039",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/acceptance_cases/1",
+      "start": 0,
+      "end": 22,
+      "text": "multiple-prerequisites",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1040": {
+      "id": "E1040",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/acceptance_cases/2",
+      "start": 0,
+      "end": 26,
+      "text": "unconfigured-checkout-tour",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1041": {
+      "id": "E1041",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/acceptance_cases/3",
+      "start": 0,
+      "end": 22,
+      "text": "relationship-direction",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1042": {
+      "id": "E1042",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/acceptance_cases/4",
+      "start": 0,
+      "end": 27,
+      "text": "isolated-migration-rollback",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1043": {
+      "id": "E1043",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/protected_behavior/0",
+      "start": 0,
+      "end": 33,
+      "text": "Existing tours and rows unchanged",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1044": {
+      "id": "E1044",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/protected_behavior/1",
+      "start": 0,
+      "end": 81,
+      "text": "No checkout, pricing, recognition or payment behavior changes in this restoration",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1045": {
+      "id": "E1045",
+      "pointer": "/records/research_evidence_0/data/first_supported_implementation_boundary/remaining_validation",
+      "start": 0,
+      "end": 186,
+      "text": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1046": {
+      "id": "E1046",
+      "pointer": "/records/research_evidence_0/data/validation/historical_proof_hashes",
+      "start": 0,
+      "end": 17,
+      "text": "15 of 15 verified",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1047": {
+      "id": "E1047",
+      "pointer": "/records/research_evidence_0/data/validation/fresh_product_tests",
+      "start": 0,
+      "end": 1,
+      "text": "0",
+      "encoding": "json",
+      "other_locations": [
+        {
+          "pointer": "/records/research_evidence_0/data/validation/fresh_model_calls",
+          "start": 0,
+          "end": 1
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/0/exit_code",
+          "start": 0,
+          "end": 1
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/1/exit_code",
+          "start": 0,
+          "end": 1
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/2/exit_code",
+          "start": 0,
+          "end": 1
+        },
+        {
+          "pointer": "/records/research_evidence_2/data/3/exit_code",
+          "start": 0,
+          "end": 1
+        }
+      ]
+    },
+    "E1053": {
+      "id": "E1053",
+      "pointer": "/records/research_evidence_0/data/limits/0",
+      "start": 0,
+      "end": 116,
+      "text": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1054": {
+      "id": "E1054",
+      "pointer": "/records/research_evidence_0/data/limits/1",
+      "start": 0,
+      "end": 48,
+      "text": "Alternate kiosk API path not exhaustively traced",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1055": {
+      "id": "E1055",
+      "pointer": "/records/research_evidence_0/data/limits/2",
+      "start": 0,
+      "end": 85,
+      "text": "No claim of absence from remote deployments or every differently named implementation",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1056": {
+      "id": "E1056",
+      "pointer": "/records/research_evidence_0/data/limits/3",
+      "start": 0,
+      "end": 61,
+      "text": "No product code built and no overall goal completion judgment",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1103": {
+      "id": "E1103",
+      "pointer": "/records/research_evidence_2/data/0/stdout",
+      "start": 0,
+      "end": 82,
+      "text": "45826e12cdc8f585e514d7bb09c0d37fa28ed568\n45826e12cdc8f585e514d7bb09c0d37fa28ed568\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1109": {
+      "id": "E1109",
+      "pointer": "/records/research_evidence_2/data/1/stdout",
+      "start": 0,
+      "end": 37,
+      "text": "feature/kiosk-square-return-recovery\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1115": {
+      "id": "E1115",
+      "pointer": "/records/research_evidence_2/data/2/stdout",
+      "start": 0,
+      "end": 305,
+      "text": "?? .claude/worktrees/\n?? \"Implementation Documents/kiosk-image-created-at-timezone/\"\n?? \"Implementation Documents/kiosk-square-return-recovery/bench/\"\n?? \"Implementation Documents/kiosk-square-return-recovery/implementation-plan.md\"\n?? \"Implementation Documents/kiosk-square-return-recovery/knowledge.md\"\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1169": {
+      "id": "E1169",
+      "pointer": "/records/research_evidence_3/data",
+      "start": 9034,
+      "end": 9517,
+      "text": "        }\n    }\n\n    public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0) {\n        try {\n            $client = new \\GuzzleHttp\\Client(['base_uri' => self::$AmazonFaceRecognitionURL]);\n            $raw_body = [\n                \"CollectionId\" => $collectionId,\n                \"Image\" => [\n                    \"S3Object\" => [\n                        \"Bucket\" => self::$AmazonFaceRecognitionBucketName,\n                        \"Name\" => $s3Key\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1172": {
+      "id": "E1172",
+      "pointer": "/records/research_evidence_3/data",
+      "start": 10599,
+      "end": 11317,
+      "text": "                    // first unlabelled match. Downstream, the kiosk face-\n                    // rec flow (FaceRecController::bridgeFaceIdsToMatches)\n                    // only reads `faceId`, so a null externalImageId\n                    // costs nothing; ComplianceController is the only\n                    // consumer that actually reads it and already skips\n                    // rows that don't parse as an int.\n                    $matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];\n                }\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1239": {
+      "id": "E1239",
+      "pointer": "/records/research_evidence_4/data",
+      "start": 13745,
+      "end": 14555,
+      "text": "            $discountType = DiscountType::where('id', $discountCode->discount_type)->first();\n            if($discountType->name == self::discoutPercent) {\n                // Use helper method that properly handles applied_for_photos partial discounts\n                $discountedAmount = $this->calculateDiscountedTotal($order, $discountCode, 'percent');\n                $total = number_format($discountedAmount, 2, '.', '');\n\n                Log::debug(\"postPayment percent discount calculation\", [\n                    'order_id' => $order->order_id,\n                    'original_amount' => $order->amount,\n                    'discount_percent' => $discountCode->discount,\n                    'applied_for_photos' => $discountCode->applied_for_photos ?? 0,\n                    'calculated_total' => $total,\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1241": {
+      "id": "E1241",
+      "pointer": "/records/research_evidence_4/data",
+      "start": 14995,
+      "end": 15590,
+      "text": "                $order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();\n\n                // Complete unique code redemption if applicable\n                $this->completeUniqueCodeRedemption($order);\n\n            } else if($discountType->name == self::discoutFixed) {\n                // Use helper method for consistency\n                $discountedAmount = $this->calculateDiscountedTotal($order, $discountCode, 'fixed');\n                $total = number_format($discountedAmount, 2, '.', '');\n\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1244": {
+      "id": "E1244",
+      "pointer": "/records/research_evidence_4/data",
+      "start": 16636,
+      "end": 17229,
+      "text": "            // Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {\n            $paymentMethod = $request->paymentMethod;\n        }\n\n\t\t\t\t\t\t\t\t\t//if (isset($paymentMethod) && $paymentMethod == \"Stripe\") {\n                                    if (isset($paymentMethod) && $paymentMethod == \"Stripe\" && empty(Session::get('isKiosk'))) {\n\t\t\t\t\t\t\t\t\t\tif($pay) {\n\t\t\t\t\t\t\t\t\t\t\t\t\t$client = new Client();\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1274": {
+      "id": "E1274",
+      "pointer": "/records/research_evidence_4/data",
+      "start": 32435,
+      "end": 32912,
+      "text": "            $stockPhotoCount = count($stockids);\n        }\n\n        // Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {\n            $redeemCode = $_COOKIE['redeem-code'];\n            $discountCode = ProductDiscount::whereRaw('LOWER(discount_code) = ?', [strtolower($redeemCode)])\n                ->where('tour_id', $tourTimeSlot->tour_id)\n                ->first();\n        }\n\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1408": {
+      "id": "E1408",
+      "pointer": "/records/research_evidence_5/data",
+      "start": 39559,
+      "end": 40082,
+      "text": "    }\n\n    public function getPurchaseHistory() {\n        $data = array();\n        $orders = Order::where('status_id', 4)->where('user_id', Auth::user()->id)->orderBy('created', 'desc')->get();\n        foreach($orders as $order) {\n            $payment = Payments::where('status_id', 4)->where('order_id', $order->order_id)->first();\n            if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){\n                    $transactionId = $order->uuid;\n                }\n                else{\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1409": {
+      "id": "E1409",
+      "pointer": "/records/research_evidence_5/data",
+      "start": 40082,
+      "end": 40827,
+      "text": "                    continue;\n                }\n            }\n            else{\n                $transactionId = $payment->transaction_id;\n            }\n            $orderProductCount = OrderProduct::where('order_id', $order->order_id)->count();\n            $orderProductProductImage = OrderProduct::where('order_id', $order->order_id)->where('product_image_id', '!=', 'NULL')->first();\n            if(isset($orderProductProductImage) && !empty($orderProductProductImage)) {\n                $productImage = ProductImage::where('product_image_id', $orderProductProductImage->product_image_id)->first();\n                $tourTimeSlot = TourTimeSlots::find($productImage->tour_time_slots_id);\n                $date = new DateTime($order->created);\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1493": {
+      "id": "E1493",
+      "pointer": "/records/research_evidence_5/data",
+      "start": 89008,
+      "end": 89606,
+      "text": "\n            // Extract tour context from session\n            $decode_array = Session::get('decode_array');\n            $tourId = isset($decode_array['TourId']) ? $decode_array['TourId'] : null;\n            $operatorId = isset($decode_array['OperatorId']) ? $decode_array['OperatorId'] : null;\n            $tourDate = isset($decode_array['TourDate']) ? $decode_array['TourDate'] : null;\n\n            // Timeslot info is not available during selfie submission\n            // It would be in the images browsing request, not here\n            $timeslotId = null;\n            $timeslotDatetime = null;\n\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1526": {
+      "id": "E1526",
+      "pointer": "/records/research_evidence_5/data",
+      "start": 105909,
+      "end": 106442,
+      "text": "                'user_id' => $user->id,\n                'tour_id' => $tourId,\n                'operator_id' => $operatorId,\n                'timeslot_id' => null,\n                'tour_date' => $tourDate,\n                'timeslot_datetime' => null,\n                'consent_given_at' => $consentTimestamp,\n                'storage_url' => $fullStorageUrl,\n                'storage_provider' => $storageProvider,\n                's3_bucket' => $s3Bucket,\n                's3_key' => $s3Key,\n                's3_region' => $s3Region,\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1527": {
+      "id": "E1527",
+      "pointer": "/records/research_evidence_5/data",
+      "start": 106442,
+      "end": 106907,
+      "text": "            ]);\n\n            // Store face IDs (matched image IDs in v2)\n            if (!empty($matchedImageIds)) {\n                foreach ($matchedImageIds as $matchedId) {\n                    UserSelfieFaceId::create([\n                        'user_selfie_history_id' => $selfieHistory->id,\n                        'face_id' => (string) $matchedId,\n                        'provider' => $storageProvider,\n                    ]);\n                }\n            }\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1683": {
+      "id": "E1683",
+      "pointer": "/records/research_evidence_12/data",
+      "start": 28021,
+      "end": 28598,
+      "text": "            applyDiscount() {\n                // Guard: empty field AND no saved redemption code → nothing to apply.\n                // Prevents an empty \"Redeem\" click from calling the discount endpoint\n                // and re-rendering the pricing. A present redeem-code cookie still\n                // auto-applies (handled by the else branch below).\n                if (Elements.discount.val() == '' && !Cookies.get('redeem-code')) {\n                    return;\n                }\n\n                Elements.enablePaymentFields();\n\n                let discountCode = null;\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1684": {
+      "id": "E1684",
+      "pointer": "/records/research_evidence_12/data",
+      "start": 28598,
+      "end": 29129,
+      "text": "                if (Elements.discount.val() != '') {\n                    discountCode = Elements.discount.val();\n                } else {\n                    let code = Cookies.get('redeem-code');\n                    if (code) {\n                        Elements.discount.val(code);\n                        Elements.redemptionCodeContainer.css('display', 'flex');\n                        discountCode = code;\n                    }\n                }\n\n                console.log('Discount function called with code:', discountCode);\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1719": {
+      "id": "E1719",
+      "pointer": "/records/research_evidence_12/data",
+      "start": 47573,
+      "end": 48049,
+      "text": "            // Update kiosk confirm button text based on current total\n            if (typeof window.updateKioskConfirmButtonText === 'function') {\n                window.updateKioskConfirmButtonText();\n            }\n            @endif\n\n            // Check for existing redemption code\n            let code = Cookies.get('redeem-code');\n            if (code) {\n                Elements.discount.val(code);\n                DataController.applyDiscount();\n            } else {\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1751": {
+      "id": "E1751",
+      "pointer": "/records/research_evidence_13/data",
+      "start": 13587,
+      "end": 14522,
+      "text": "        Route::get('/images/{timeslot_id?}/{timeslot_date?}/more', 'CustomerUser\\HomeController@findMoreImages')->name('customer_images_get');\n        Route::get('/images/{timeslot_id?}/{timeslot_date?}/{search?}', 'CustomerUser\\HomeController@images')->name('customer_images');\n\n        Route::post('/image', 'CustomerUser\\HomeController@image');\n\n        Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');\n\n        Route::post('/linked', 'CustomerUser\\Checkout\\CheckoutController@linked')->name('linked_user');\n        Route::get('/{order_id}/qr-code', 'CustomerUser\\Checkout\\CheckoutController@getOrderQrCode');\n\n",
+      "encoding": "string",
+      "other_locations": []
+    },
+    "E1752": {
+      "id": "E1752",
+      "pointer": "/records/research_evidence_13/data",
+      "start": 14522,
+      "end": 15180,
+      "text": "        Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');\n\n        Route::get('/finish-transaction', 'CustomerUser\\Checkout\\CheckoutController@getFinishTransaction');\n\n        Route::post('/getpriceperimage', 'CustomerUser\\HomeController@getPricePerImage');\n\n        Route::get('/collections', 'CustomerUser\\HomeController@getCollections');\n        Route::get('/collections/filters', 'CustomerUser\\HomeController@getCollectionsOrders');\n        Route::post('/collections/get', 'CustomerUser\\HomeController@getCollectionsImages');\n\n        Route::post('/collections/update-images', 'CustomerUser\\HomeController@updateImages');\n\n",
+      "encoding": "string",
+      "other_locations": []
+    }
+  },
+  "updates_applied": false
+}

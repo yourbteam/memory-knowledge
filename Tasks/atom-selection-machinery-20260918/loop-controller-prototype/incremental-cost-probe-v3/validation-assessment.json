@@ -1,0 +1,79 @@
+{
+  "verdict": "pass_for_this_extended_case",
+  "reviewer": "calling assistant; semantic review, not blind independent review",
+  "question_results": {
+    "latest_contribution": "Replaces old interview packaging with completed baseline research; restoration remains proposed, zero fresh product tests.",
+    "flow_and_capabilities": "Adds absent prerequisite/evidence/automatic-selector connections and available supplied-code checkout surfaces, with source-only scope.",
+    "obstacle_observations": "Replaces uninspected baseline obstacle with observed missing connections; preserves alternative implementations and runtime limits.",
+    "prior_options": "Preserves historical outcomes and references, adds completed research and researched-but-unbuilt restoration; historical machinery claims are explicitly scoped to supplied evidence.",
+    "practical_limits": "Records source inspection, zero fresh tests, MySQL and kiosk unknowns; permissions are limited to the frozen supplied context, not the current conversation.",
+    "decision_uncertainty": "Separates resolved source absence from remaining compatibility, provenance and runtime unknowns; does not require future experiments before selection."
+  },
+  "model_checks": {
+    "latest_contribution": {
+      "decision": "keep",
+      "reason": "No consequential supported change is needed. The other answers consistently reinforce the latest_contribution answer\u2019s frame: the latest completed contribution is the source-level baseline research assessment, not product delivery; it inspected the committed auto-50-perc-off/prod tree, found missing prerequisite/evidence/selector connections, documented reusable recognition and supplied-code surfaces, and proposed prerequisite storage/reader restoration without implementation or fresh product tests. There is no owner correction, later feedback, or cross-answer dependency that changes the promise, observed result, demonstrated effect, or retained limits of the saved answer."
+    },
+    "flow_and_capabilities": {
+      "decision": "keep",
+      "reason": "No consequential supported change is needed. The flow_and_capabilities answer already incorporates the later assessment\u2019s concrete source-level findings, preserves the committed-tree versus checked-out-worktree boundary, distinguishes supplied-code checkout handling from automatic prerequisite-based discovery, and aligns with the other answers on the fixed goal, missing prerequisite/evidence/selector connections, proposed-but-unbuilt restoration boundary, and unresolved runtime/testing/deployment limits. No owner correction or later answer contradicts it."
+    },
+    "obstacle_observations": {
+      "decision": "keep",
+      "reason": "No consequential supported change is needed. The latest obstacle_observations answer already incorporates the later assessment\u2019s key dependency updates: the baseline is no longer merely uninspected, the inspected committed customer web path is missing prerequisite storage/reader, historical evidence services, and automatic selector/qualification-discovery connections, while supplied-code discount handling and recognition/purchase surfaces remain reusable but insufficient. The other answers reinforce the same boundaries: research progress is not delivery, prerequisite restoration is only a first supported implementation boundary, executable/MySQL/runtime compatibility and alternate kiosk scope remain unresolved, and no owner correction contradicts the diagnosis."
+    },
+    "prior_options": {
+      "decision": "keep",
+      "reason": "No consequential supported change is needed. The latest saved `prior_options` answer already incorporates the later completed source-level baseline assessment, distinguishes it from product implementation, preserves the researched-but-unbuilt prerequisite restoration boundary, records zero fresh product tests and unresolved MySQL/executable/runtime/kiosk limits, and keeps the owner branch/prod baseline decision separate from delivery proof. The other answers reinforce the same boundaries rather than correcting them: fixed goal remains the automatic 50% checkout flow, current position/latest contribution/flow/obstacles/practical limits/uncertainty all align with the same committed-tree assessment and remaining gaps, and there is no later owner correction or dependency that changes the inventory."
+    },
+    "practical_limits": {
+      "decision": "keep",
+      "reason": "No consequential supported change is needed. The other answers reinforce the saved practical-limits answer: the prod-based `auto-50-perc-off` baseline is the feasible local start, the assessment was source-level against the committed tree rather than runtime/deployment proof, zero fresh product tests ran, no live DB/AWS/browser/payment/deployment validation occurred, MySQL compatibility and alternate kiosk scope remain unresolved, and no deadline/budget/spending cap is supplied. There is no later owner correction that changes the practical limits or permitted effort boundary."
+    },
+    "decision_uncertainty": {
+      "decision": "keep",
+      "reason": "The latest saved decision_uncertainty answer remains consistent with the other answers: it incorporates the committed-tree assessment, treats the branch target as settled, records the resolved source-level absences and reusable supplied-code handling, and preserves remaining uncertainties around executable reuse, MySQL/dependency compatibility, recognition/purchase linkage, kiosk scope, and live runtime state. No later owner correction or cross-question dependency changes a concrete claim or requires a revision."
+    }
+  },
+  "quotation_count": 268,
+  "new_six_quotation_count": 185,
+  "quotation_audit": "All quotations occur verbatim in supplied context. Inherited reference pairs are checked against previous answers; new assessment references are checked at their cited catalog entry or named assessment field. This does not independently re-open every historical original source.",
+  "diagnostic_false_positives_resolved": [
+    {
+      "question": "latest_contribution",
+      "source_id": "assessment:selected_work_completion",
+      "quote": "The selected research job's central deliverable is present: a version-bound connection assessment, source call-path evidence, historical provenance references, explicit uncertainties, and a concrete first implementation boundary with inputs, outputs, acceptance cases and protected behavior.",
+      "found_verbatim": true,
+      "inherited_reference": false,
+      "new_assessment_location_matches": true,
+      "resolved_location": "assessment.selected_work_completion.reason"
+    },
+    {
+      "question": "latest_contribution",
+      "source_id": "assessment:selected_work_completion",
+      "quote": "Focused-test availability remains an unexplained handoff limitation.",
+      "found_verbatim": true,
+      "inherited_reference": false,
+      "new_assessment_location_matches": true,
+      "resolved_location": "assessment.selected_work_completion.reason"
+    }
+  ],
+  "reference_retention_review": "Retained material historical evidence remains available in combined set, including detailed historical references in prior_options and current_position. Superseded old-branch and uninspected-baseline references were replaced with newer assessment references; not every old reference is copied into each revised answer.",
+  "combined_review": "All ten usable for next selection; no consequential contradictions found. Research is not implementation, acceptance cases are not executed tests, committed source is not runtime. Three unchanged answers and v2 current_position preserved exactly.",
+  "integrity": "Frozen manifest verified and live answer hash unchanged.",
+  "telemetry": {
+    "calls": 12,
+    "model": "gpt-5.5",
+    "reasoning": "high",
+    "elapsed_provider_seconds": 406.8032684326172,
+    "usage": {
+      "input_tokens": 939623,
+      "cached_input_tokens": 86016,
+      "output_tokens": 19373
+    }
+  },
+  "promotion": false,
+  "installed": false,
+  "live_loop_updated": false,
+  "recommendation": "Promote evidence-preserving direct update plus combined-answer dependency checks for incremental updates, then validate through the resumed live loop. Preserve full initial interview."
+}

@@ -1,0 +1,55 @@
+{
+  "id": "extended-incremental-probe",
+  "questions": [
+    {
+      "id": "goal",
+      "text": "What final outcome has the owner asked us to achieve, and what must be observably true to call it complete?",
+      "consumer_use": "Supply the fixed goal and completion conditions shared by every candidate-generation lens and comparison. Preserve linked deliverables and who or what must deliver them: building machinery that performs work is different from manually delivering that work. Use owner statements; separate approved conditions from your interpretation. Do not substitute intermediate activity, tests passed, or atoms completed for the end outcome."
+    },
+    {
+      "id": "current_position",
+      "text": "Against those completion conditions, what is already demonstrated, what remains unfinished, and what is still uncertain?",
+      "consumer_use": "Establish the current distance to the goal. Link each claimed achievement to identifiable evidence and its actual tested boundary; distinguish prototype, installed capability and observed use. Identify the records and source locations supporting material statements. Preserve unknowns and conflicting or outdated records rather than assigning unsupported completion percentages."
+    },
+    {
+      "id": "latest_contribution",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.\nOriginal question: What did the latest completed atom or experiment promise, what actually happened, and what did that change toward the goal?",
+      "consumer_use": "Supply the new evidence that triggers this selection. Include the observed contribution, failures, surprises and retained limitations, with records. Separate a successful mechanism from its demonstrated effect on the goal. If this is the first selection, explicitly say no previous atom exists and provide the starting observations; do not manufacture a predecessor. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    },
+    {
+      "id": "flow_and_capabilities",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.\nOriginal question: How does the relevant work reach the final outcome, and which existing capabilities and dependencies affect what can be done next?",
+      "consumer_use": "Give diagnosis and the use-what-already-works lens a practical map of the relevant flow. Identify usable existing code, tools, processes and interfaces, prerequisites and affected consumers, citing inspected sources. Distinguish available, partly built, tested and assumed capabilities. Describe enough of the flow to judge consequences without inventing a complete implementation roadmap. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    },
+    {
+      "id": "obstacle_observations",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.\nOriginal question: What observed problems are preventing progress, and what evidence supports or challenges the explanations currently being considered?",
+      "consumer_use": "Supply symptoms, known upstream causes, downstream effects, contrary cases and competing explanations to the diagnosis step. Distinguish observations from causal hypotheses. State what else would remain blocked if a suspected obstacle disappeared. Do not declare the latest defect the governing constraint, demand a proven diagnosis before intake can finish, or invent rival explanations just to fill a list. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    },
+    {
+      "id": "prior_options",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.\nOriginal question: What relevant approaches have already been tried, partly built, proposed, rejected or deferred, and why?",
+      "consumer_use": "Prevent repetition, omission of partly completed work, and premature exclusion of viable alternatives. Preserve outcomes and reasons with evidence; distinguish an owner prohibition from a historical preference or failed implementation. Say when no relevant history is known. This is an inventory of existing knowledge, not a request to generate or select the new candidate set. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    },
+    {
+      "id": "decision_boundary",
+      "text": "What next decision are we making now, what changes are in scope, and what authority and mandatory conditions govern it?",
+      "consumer_use": "Define the level and boundary of the next-action choice, the owner or decision authority, existing execution permission, excluded work and conditions that must not be traded away. Include protected quality and behavior. Distinguish selecting a recommendation from permission to build it. Reuse recorded owner decisions; do not request repeated approval or invent restrictions."
+    },
+    {
+      "id": "owner_preferences",
+      "text": "What owner priorities or acceptable tradeoffs should distinguish otherwise valid next actions?",
+      "consumer_use": "Supply established preferences for the common comparison specification before candidates are judged. Separate preferences from mandatory conditions already recorded. Quote or identify their authority; mark inferred or unsettled tradeoffs as such. Do not fabricate weights, thresholds, a ranking or a favored candidate. Later comparison defines the evidence methods and selection rule from this context."
+    },
+    {
+      "id": "practical_limits",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.\nOriginal question: What real limits, deadlines, delay consequences and permitted analysis effort affect this choice?",
+      "consumer_use": "Set proportionate selection effort and feasible next-action scope. Include known time, model-call or spending limits, access, available people or systems, and material implementation, integration or operating burdens. Distinguish actual estimates and their basis from a spending cap. State when no deadline or budget is specified rather than inventing one; paid experiments still require the applicable authorization. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    },
+    {
+      "id": "decision_uncertainty",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.\nOriginal question: What missing or disputed information could change the next-action choice, and where could it be checked?",
+      "consumer_use": "Supply decision-relevant uncertainty and available evidence routes. Explain what choice each unknown affects and whether existing records, code, an owner answer or a bounded observation could resolve it. Separate absent supplied context from genuinely unavailable information. Do not require future experiment results now: the selector may choose an experiment precisely to obtain them. Do not turn intake into an unbounded investigation. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    }
+  ]
+}

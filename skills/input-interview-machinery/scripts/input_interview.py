@@ -47,7 +47,7 @@ def main(argv=None, transport_factory=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == 'incremental':
         import incremental
-        return incremental.main(argv[1:])
+        return incremental.main(argv[1:], transport_factory)
     if argv and argv[0] == 'configure':
         saved = sys.argv
         try:

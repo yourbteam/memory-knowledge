@@ -1,0 +1,12 @@
+{
+  "session": "01a0bea9-34a6-7203-bce1-c9f16b3a16de",
+  "elapsed": 52.7369589805603,
+  "usage": {
+    "input_tokens": 57035,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2611,
+    "reasoning_output_tokens": 516
+  },
+  "completed": true
+}

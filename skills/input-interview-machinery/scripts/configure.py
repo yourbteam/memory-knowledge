@@ -109,3 +109,41 @@ if __name__=='__main__':
         editable(a.file);result=settings({'provider':a.provider,'model':a.model,'reasoning':a.reasoning});write(a.file,result)
     else:result=change(a.file,a.operation,a.id,read(a.question) if a.question else None,read(a.order) if a.order else None)
     print(json.dumps(result,ensure_ascii=False))
+
+
+def incremental_policy(root):
+    """Absent policy preserves legacy/full interviews, including interrupted runs."""
+    import hashlib
+    file = Path(root)/'incremental-policy.json'
+    if not file.exists(): return None
+    policy = read(file)
+    if policy.get('mode') != 'direct-update':
+        raise ValueError('Unknown incremental policy; expected direct-update')
+    previous = Path(root)/'incremental-previous.json'
+    if hashlib.sha256(previous.read_bytes()).hexdigest() != policy['previous_sha256']:
+        raise ValueError('Incremental previous answers changed; restore the frozen snapshot')
+    return policy
+
+
+def refine(root, input_path, output, **kwargs):
+    """Incremental answers already received their model call; full intake keeps all lenses."""
+    import run as review
+    if incremental_policy(root) is None:
+        return review.run(input_path, output, **kwargs)
+    data = read(input_path)
+    answer = data['starting_answer']
+    review.validate(answer, review.eng.submission_schema())
+    choice = answer['self_assessment']
+    if bool(choice['question'].strip()) != (choice['choice'] == 'needs_input'):
+        raise ValueError('Answer must pair needs_input with a question, or ready with no question')
+    output = Path(output); output.mkdir(parents=True, exist_ok=True)
+    for name, value in [('input.json', data), ('final-answer.json', answer)]:
+        if (output/name).exists() and read(output/name) != value:
+            raise ValueError('Cannot reuse changed direct-update output: '+name)
+        review.save(output/name, value)
+    result = {'completed':True, 'execution_mode':'direct-update', 'lens_calls':0,
+              'new_model_calls':0, 'session':kwargs.get('initial_session'),
+              'final_readiness':choice['choice'],
+              'meaning':'Direct incremental answer preserved; final dependency review still required.'}
+    review.save(output/'result.json', result)
+    return result

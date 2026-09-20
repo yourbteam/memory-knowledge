@@ -1,0 +1,125 @@
+{
+  "answer": "Observed problems now have a more specific source-level shape than the prior “new baseline still uninspected” diagnosis. The selected prod-derived baseline was inspected as a committed tree at `45826e12cdc8f585e514d7bb09c0d37fa28ed568`, but not as a checked-out/running delivery branch. Within that inspected customer web checkout path, the current-tour-to-prerequisite relationship is missing, the named historical purchase/recognition evidence services are absent, the automatic 50% selector is missing, and the traced checkout path lacks automatic prerequisite-based qualification and code discovery.\n\nThe main supported obstacle is therefore not merely branch ambiguity anymore. It is that the inspected source does not yet contain the upstream prerequisite structure or the integrated qualification/discovery connections needed for the goal: eligible current tour -> configured prerequisite tours -> same-person paid prior purchase -> applicable existing 50% code -> discounted order before payment. The assessment identifies a concrete first implementation boundary: restore directed tour prerequisite storage and reader on the prod-based branch, using checkout-tour ID and configured directed prerequisite pairs to produce configuration status and prerequisite tour IDs. That boundary is decision-enabling research, not an implemented fix.\n\nEvidence supporting this obstacle: the assessment reports no matching prerequisite migration or service, no prerequisite identifiers in the searched app/database/routes/tests/customer view surface, absence of the historical evidence services, and no automatic selector in `ProductDiscount.php`. Existing checkout code can already read and preview a supplied redeem-code cookie and persist a discounted order during payment, but that challenges only an overbroad “no discount handling exists” explanation. It does not supply automatic discovery of a qualifying 50% code based on a prior prerequisite purchase.\n\nCurrent causal hypotheses: historical atom outputs may need to be restored or reconciled onto the prod-based branch; some outputs may exist only in task artifacts, other branches, or archived states; equivalent behavior under different names is not ruled out everywhere; and even if prerequisite storage is restored, recognition/purchase provenance, same-person qualification, selector integration, and checkout application remain separate missing or unverified connections. The supplied assessment supports prerequisite restoration as the first implementation boundary, but it does not prove that this alone completes qualification or that it is the only valid implementation order.\n\nEvidence challenging simple explanations: the baseline identity is no longer missing; both `auto-50-perc-off` and `prod` resolve to the same commit. The old `feature/kiosk-square-return-recovery` absence should remain historical mismatch evidence, not the governing current-target diagnosis. The inspected code also has reusable surfaces: face-recognition search can return similarity and external image references, purchase history/order/payment logic exists, and supplied-code discount handling exists. Those surfaces reduce the plausibility of “nothing relevant exists,” while leaving the required automatic cross-tour qualification and code discovery unproved.\n\nIf the prerequisite-storage obstacle disappeared, progress would still be blocked by unverified executable compatibility, current dependency/MySQL compatibility, recognition identifier and purchase-provenance reconciliation, applicable 50% code discovery, checkout wiring before payment, preservation of checkout/search/payment behavior, and version-bound execution evidence. No live database, AWS, browser, payment, deployment, production configuration, or exhaustive alternate kiosk API behavior was tested, so runtime delivery remains unproven rather than demonstrated failed.",
+  "basis": [
+    {
+      "source_id": "decision",
+      "quote": "Delivery baseline established: taggable-server, new local branch auto-50-perc-off, based on prod commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568."
+    },
+    {
+      "source_id": "assessment:E0992",
+      "quote": "true"
+    },
+    {
+      "source_id": "assessment:E1109",
+      "quote": "feature/kiosk-square-return-recovery\n"
+    },
+    {
+      "source_id": "assessment:E0995",
+      "quote": "missing_in_inspected_source"
+    },
+    {
+      "source_id": "assessment:E0996",
+      "quote": "No matching migration or service in commit tree"
+    },
+    {
+      "source_id": "assessment:E0997",
+      "quote": "No prerequisite configuration identifiers in app/database/routes/tests or customer view search"
+    },
+    {
+      "source_id": "assessment:E1007",
+      "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+    },
+    {
+      "source_id": "assessment:E1011",
+      "quote": "automatic_selector_missing_from_baseline"
+    },
+    {
+      "source_id": "assessment:E1012",
+      "quote": "ProductDiscount.php contains model fields and relations only; no automatic selector method"
+    },
+    {
+      "source_id": "assessment:E1022",
+      "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+    },
+    {
+      "source_id": "assessment:E1023",
+      "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+    },
+    {
+      "source_id": "assessment:E1024",
+      "quote": "checkout tour ID"
+    },
+    {
+      "source_id": "assessment:E1025",
+      "quote": "configured directed checkout/prerequisite tour pairs"
+    },
+    {
+      "source_id": "assessment:E1026",
+      "quote": "whether checkout tour is configured"
+    },
+    {
+      "source_id": "assessment:E1027",
+      "quote": "its prerequisite tour IDs"
+    },
+    {
+      "source_id": "assessment:E1274",
+      "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing"
+    },
+    {
+      "source_id": "assessment:E1719",
+      "quote": "// Check for existing redemption code"
+    },
+    {
+      "source_id": "assessment:E1241",
+      "quote": "$order->product_discount_id = $discountCode->product_discount_id;"
+    },
+    {
+      "source_id": "assessment:E1009",
+      "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+    },
+    {
+      "source_id": "assessment:E1045",
+      "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+    },
+    {
+      "source_id": "assessment:E1047",
+      "quote": "0"
+    },
+    {
+      "source_id": "assessment:E1053",
+      "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+    },
+    {
+      "source_id": "assessment:E1054",
+      "quote": "Alternate kiosk API path not exhaustively traced"
+    },
+    {
+      "source_id": "assessment:E1055",
+      "quote": "No claim of absence from remote deployments or every differently named implementation"
+    },
+    {
+      "source_id": "goal",
+      "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged."
+    },
+    {
+      "source_id": "goal",
+      "quote": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at."
+    },
+    {
+      "source_id": "previous:current-checkout-inspection",
+      "quote": "\"Absence does not establish deletion cause or absence from every remote branch.\""
+    }
+  ],
+  "limits": [
+    "This updates diagnosis inputs only; it does not implement restoration, run tests, deploy, query production data, or judge overall completion.",
+    "The new assessment inspected the selected committed tree, not a checked-out/running `auto-50-perc-off` delivery worktree and not today’s deployed checkout behavior.",
+    "The source-level absence findings are bounded to the committed customer web checkout path; they do not prove absence from remotes, deployments, databases, every differently named implementation, or the incompletely traced alternate kiosk API.",
+    "Existing supplied-code discount handling and recognition/purchase surfaces are reusable context, not evidence of automatic prerequisite-based 50% code discovery or complete checkout delivery.",
+    "Historical proof hashes and artifact references support reuse consideration, but executable compatibility remains unverified because zero fresh product tests ran and current dependency/MySQL compatibility remains outstanding."
+  ],
+  "self_assessment": {
+    "choice": "ready",
+    "reason": "The consumer can use this now for diagnosis because the answer replaces the outdated uninspected-baseline blocker with the supported source-level missing connections, preserves contrary cases and limits, distinguishes observations from hypotheses, and states what would remain blocked even if the first suspected obstacle were fixed.",
+    "question": ""
+  }
+}

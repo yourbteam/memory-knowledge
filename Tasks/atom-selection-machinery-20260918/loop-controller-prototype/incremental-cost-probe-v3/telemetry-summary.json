@@ -1,0 +1,11 @@
+{
+  "calls": 12,
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "elapsed_provider_seconds": 406.8032684326172,
+  "usage": {
+    "input_tokens": 939623,
+    "cached_input_tokens": 86016,
+    "output_tokens": 19373
+  }
+}

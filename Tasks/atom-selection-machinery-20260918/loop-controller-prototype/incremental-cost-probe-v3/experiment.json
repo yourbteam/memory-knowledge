@@ -1,0 +1,27 @@
+{
+  "hypothesis": "The same evidence-preserving two-call update works across the six other affected answers and yields a consistent combined answer set.",
+  "question_ids": [
+    "latest_contribution",
+    "flow_and_capabilities",
+    "obstacle_observations",
+    "prior_options",
+    "practical_limits",
+    "decision_uncertainty"
+  ],
+  "fresh_call_limit": 12,
+  "model": {
+    "provider": "codex",
+    "model": "gpt-5.5",
+    "reasoning": "high"
+  },
+  "method": "Produce all six direct revisions first, combine with validated current_position and three unchanged answers, then run the existing final dependency check once for each new revision against that complete set. Calling assistant also checks all ten together.",
+  "criteria": [
+    "Each answer incorporates the concrete change in selection.json for its own consumer use.",
+    "Retained material claims preserve supporting references; new claims use supplied evidence and exact quotations.",
+    "Research remains separate from implementation and source inspection from runtime proof; fixed goal and owner decisions remain unchanged.",
+    "No consequential contradictions across the final ten answers; readiness agrees with stated use and limitations."
+  ],
+  "stop": "Exactly twelve calls maximum; record keep/revise/needs_input without automatic repair or retries.",
+  "promotion": false,
+  "live_loop_updated": false
+}
