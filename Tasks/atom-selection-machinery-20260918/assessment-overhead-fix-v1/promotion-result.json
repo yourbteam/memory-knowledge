@@ -1,0 +1,19 @@
+{
+  "status": "promoted",
+  "comparison": "same frozen real assessment; three fresh Astra medium calls",
+  "before_input_tokens": 632483,
+  "after_input_tokens": 353628,
+  "input_reduction_percent": 44.09,
+  "before_seconds": 167.1,
+  "after_seconds": 140.87,
+  "retries": 0,
+  "selected_citations_verified": 52,
+  "original_context_reconstructs_exactly": true,
+  "quality_review": "No material decision regression identified in this comparison. Atom complete; overall delivery incomplete; remaining product work and evidence limits preserved.",
+  "installed": [
+    "codex",
+    "claude"
+  ],
+  "raw_evidence": "Kept locally; excluded from publication.",
+  "limitation": "One frozen real-case comparison, not a statistical reliability estimate."
+}

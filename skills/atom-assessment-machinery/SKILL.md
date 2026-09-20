@@ -26,3 +26,5 @@ Inspect `state.json`, stage `events.jsonl`, and `handoff.json`. The handoff pres
 The handoff is a proposed update for the incremental interview. Do not mutate current answers, mark the goal complete, advance a cycle, or select another atom merely because this run completed. Preserve a completed atom separately from overall goal completion. Saved prompts, sources, model settings and results are the audit trail.
 
 Final assessment evidence fields contain code-supplied IDs. The handoff’s resolved_evidence maps each selected ID to exact frozen-context pointers, character offsets and text, preserving duplicate locations. Python checks retrieval; the model remains responsible for whether the passage supports the claim.
+
+Assessment transport shares repeated evidence and decodes embedded JSON only when its original text can be reconstructed exactly. The untouched context stays saved. Citation locations may include `json_paths`: decode those JSON-text fields in order before following the final pointer and character offsets. New assessments use this representation; do not rewrite frozen historical runs.

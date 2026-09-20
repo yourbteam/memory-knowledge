@@ -8,6 +8,7 @@ from pathlib import Path
 import model_call as calls
 from context import assemble
 import evidence_catalog
+import evidence_transport
 
 HERE = Path(__file__).resolve().parent
 LENS_SCHEMA = {'type': 'object', 'properties': {'analysis': {'type': 'string'}},
@@ -33,25 +34,8 @@ def historical(root, path):
 
 
 def compact(packet):
-    """Remove only the builder's duplicate progress object, preserving a reversible pointer."""
-    transport = copy.deepcopy(packet)
-    for role, record in transport['records'].items():
-        data = record['data']
-        if isinstance(data, dict) and 'assessment_input' in data and 'completion' in data:
-            progress = data['assessment_input'].get('progress_result')
-            if progress is not None and data['completion'].get('progress_result') == progress:
-                data['completion']['progress_result'] = {
-                    '$ref': '/records/' + role + '/data/assessment_input/progress_result'}
-    restored = copy.deepcopy(transport)
-    for role, record in restored['records'].items():
-        data = record['data']
-        if isinstance(data, dict) and 'assessment_input' in data and 'completion' in data:
-            pointer = {'$ref': '/records/' + role + '/data/assessment_input/progress_result'}
-            if data['completion'].get('progress_result') == pointer:
-                data['completion']['progress_result'] = data['assessment_input']['progress_result']
-    if restored != packet:
-        raise ValueError('Context transport did not round-trip.')
-    return transport
+    """Share identical values and expose embedded JSON without losing original text."""
+    return evidence_transport.pack(packet)
 
 
 def prepare(args):
@@ -109,7 +93,7 @@ def execute(run):
                               'Select passages supporting each finding, not merely mentioning its subject. '
                               'If evidence is unavailable, say so and use an empty evidence list. '
                               'The catalog represents every leaf of the original packet. Identical passages '
-                              'are displayed once; all original locations remain saved.\nEVIDENCE CATALOG:\n'
+                              'are displayed once; all original locations remain saved. json_paths lists successive JSON text fields to decode before following pointer.\nEVIDENCE CATALOG:\n'
                               + json.dumps(evidence_catalog.prompt_catalog(catalog), ensure_ascii=False, separators=(',', ':'))
                               + '\nSEPARATE LENS OUTPUTS:\n' + json.dumps(answers, ensure_ascii=False))
                 if len(prompt) >= 1048576:

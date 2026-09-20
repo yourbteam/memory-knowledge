@@ -16,12 +16,12 @@
       ]
     },
     "atom-assessment-machinery": {
-      "canonical_tree_sha256": "7922354f3cd9ff74a7a6dca26bb5ca3a4f4273ab2cf1fff0edb9139bdba18c41",
+      "canonical_tree_sha256": "dab93060d13a395dff140490a60df1c2ec737c38a70b7d4f67ff4363e99b92e3",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "7922354f3cd9ff74a7a6dca26bb5ca3a4f4273ab2cf1fff0edb9139bdba18c41",
+      "projected_tree_sha256": "dab93060d13a395dff140490a60df1c2ec737c38a70b7d4f67ff4363e99b92e3",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],
