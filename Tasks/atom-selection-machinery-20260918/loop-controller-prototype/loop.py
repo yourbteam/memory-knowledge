@@ -69,6 +69,10 @@ def new_cycle(run,s,answers,previous=None):
     s.pop('experiment_preparation',None)
     s.pop('candidate_execution',None)
     s.pop('candidate_review',None)
+    s.pop('build_output',None)
+    s.pop('build_recheck_from',None)
+    s.pop('delivery_context',None)
+    s.pop('delivery_preparation',None)
     s.pop('build_attempt',None)
     s.pop('previous_build_attempts',None)
     s.pop('approved_transfer',None)
@@ -178,11 +182,20 @@ def advance(run, stop_after=None):
             save(run/'state.json',s);return s['pending']
         elif stage=='build':
             cp=Path(s['cycle']);c=read(cp);request=resolve(s['build_request'],root)
-            args=tool(s,'build')+[str(request),str(cp.parent/'build')]
+            args=tool(s,'build')+[str(request),s.get('build_output',str(cp.parent/'build'))]
+            if s.get('build_recheck_from'):args+=['--recheck-closeout-from',s['build_recheck_from']]
+            if s.get('delivery_context'):args+=['--delivery-context',str(resolve(s['delivery_context'],root))]
             if s.get('approved_transfer'):args+=['--approved-transfer-sha256',s['approved_transfer']]
             result=call(run,'build',args)
             if result.get('status')!='complete':s['pending']=result;save(run/'state.json',s);return result
-            c['build']=ref(result['handoff'],root);save(cp,c);s.update(stage='assessment',pending=None);save(run/'state.json',s)
+            handoff=Path(result['handoff'])
+            if not handoff.resolve().is_relative_to(root.resolve()):
+                expected=Path(s['build_output'])/'handoff.json'
+                if handoff!=expected or sha(handoff)!=result['handoff_sha256']:raise ValueError('External builder handoff differs from the authorized output')
+                imported=cp.parent/'build-handoff.json'
+                if imported.exists() and imported.read_bytes()!=handoff.read_bytes():raise ValueError('Saved builder handoff changed')
+                imported.write_bytes(handoff.read_bytes());handoff=imported
+            c['build']=ref(handoff,root);save(cp,c);s.update(stage='assessment',pending=None);save(run/'state.json',s)
         elif stage=='assessment':
             cp=Path(s['cycle']);c=read(cp);dest=cp.parent/'assessment';args=tool(s,'assessment')
             if (dest/'manifest.json').exists():args+=['resume','--run',str(dest)]
@@ -204,9 +217,10 @@ def advance(run, stop_after=None):
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='op',required=True)
     start=sub.add_parser('start');start.add_argument('--root',type=Path,required=True);start.add_argument('--goal',type=Path,required=True);start.add_argument('--answers',type=Path,required=True);start.add_argument('--assessment',type=Path);start.add_argument('--incremental-run',type=Path);start.add_argument('--skills',type=Path,default=Path.home()/'.codex/skills');start.add_argument('--prepare-only',action='store_true')
-    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-experiments','execute-candidate','review-candidate','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
+    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
     for cmd in sub.choices.values():cmd.add_argument('--run',type=Path,required=True)
-    sub.choices['resume'].add_argument('--stop-after', choices=['assessment'])
+    for name in ['resume', 'approve-transfer']:
+        sub.choices[name].add_argument('--stop-after', choices=['build', 'assessment'])
     sub.choices['reply'].add_argument('--request-id',required=True);sub.choices['reply'].add_argument('--reply',type=Path,required=True)
     sub.choices['attach-build'].add_argument('--request',type=Path,required=True);sub.choices['attach-build'].add_argument('--selection-sha256',required=True)
     for flag in ['verification','assignment-run','creation-template','repository']:
@@ -214,6 +228,9 @@ def main():
     sub.choices['prepare-build'].add_argument('--attempt',type=int,default=1)
     sub.choices['review-candidate'].add_argument('--attempt',type=int,required=True)
     sub.choices['review-candidate'].add_argument('--prepare-only',action='store_true')
+    sub.choices['prepare-completion'].add_argument('--schema-export',type=Path,required=True)
+    sub.choices['prepare-completion'].add_argument('--table',action='append',required=True)
+    sub.choices['prepare-delivery'].add_argument('--worktree',type=Path,required=True)
     sub.choices['approve-transfer'].add_argument('--sha256',required=True)
     sub.choices['attach-research'].add_argument('--result',type=Path,required=True)
     sub.choices['resolve-decision'].add_argument('--decision',type=Path,required=True)
@@ -225,6 +242,17 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         s=read(run/'state.json')
         try:
+            if a.op=='prepare-delivery':
+                from delivery_connection import prepare
+                result=prepare(s,a.worktree);delivery=read(result)
+                request=Path(s['cycle']).parent/'delivery-request.json'
+                value=read(delivery['request']['path'])
+                if sha(Path(delivery['request']['path']))!=delivery['request']['sha256']:raise ValueError('Prepared delivery request changed')
+                if request.exists() and read(request)!=value:raise ValueError('Saved delivery request differs')
+                save(request,value)
+                s.update(delivery_preparation=ref(result,Path(s['root'])),build_request=ref(request,Path(s['root'])),build_output=delivery['output'],pending=None)
+                save(run/'state.json',s)
+                print(json.dumps({'action':'delivery_prepared','preparation':str(result),'product_promoted':False}));return
             if a.op=='review-candidate':
                 from candidate_execution import rereview
                 result=rereview(s,a.attempt,a.prepare_only)
@@ -267,6 +295,14 @@ def main():
                 save(run/'state.json',s)
                 event(run,'verification_prepared',handoff=str(handoff),model_calls=0,product_started=False)
                 print(json.dumps({'action':'verification_prepared','handoff':str(handoff),'pending':'prepare_build'}));return
+            if a.op=='prepare-completion':
+                from completion_preparation import prepare
+                prepared=prepare(s,a.schema_export,a.table)
+                local=Path(s['cycle']).parent/'completion-request.json'
+                save(local,read(prepared['request']['path']))
+                s.update(build_request=ref(local,Path(s['root'])),build_output=prepared['output'],build_recheck_from=prepared['original'],delivery_context=ref(prepared['config']['path'],Path(s['root'])),pending=None)
+                s.pop('approved_transfer',None);save(run/'state.json',s)
+                print(json.dumps(advance(run,'build')));return
             if a.op=='attach-research':
                 attach_research(run,s,a.result)
                 print(json.dumps({'action':'research_recorded','next':'assessment','run':str(run)}));return

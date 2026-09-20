@@ -86,7 +86,7 @@ def promote(request,output,run,state,root):
     receipt={'schema_version':1,'status':'promoted','atomic_step_id':atom['atomic_step_id'],'controller':'prototype-driven-implementation','experiment_event_sha256':state['current_experiment']['event_sha256'],'experiment_assembly_sha256':state['current_experiment']['assembly_sha256'],'contract_surface':atom['contract_surface'],'changed_paths':[v['path'] for v in changes],'change_surface':reference(surface_path),'review':reference(review_path),'evidence':[{'case_id':c['case_id'],**reference(original/c['case_id']/'stdout.txt')} for c in atom['captured_cases']]}
     path=save(output/'promotion.json',receipt);controller.record_promotion(run,path);event(output,'promotion-recorded')
 
-def closeout(request,output,run,approved_transfer,execution=None):
+def closeout(request,output,run,approved_transfer,execution=None,delivery_context=None):
     execution=output if execution is None else execution
     authorization=controller._authorize_validation(run)
     authorization_path=save(output/'authorizations'/(digest(document(authorization))+'.json'),authorization)
@@ -107,6 +107,9 @@ def closeout(request,output,run,approved_transfer,execution=None):
     if execution!=output:
         original=read(output/'recheck-source.json')
         result['original_execution']={'reference':reference(output/'recheck-source.json'),'original':original['original'],'driver_source':original['driver_source']}
+    if delivery_context is not None:
+        from completion_evidence import collect
+        result['delivery_evidence']=collect(delivery_context,request,execution,output)
     result_path=output/'actual-result.txt'
     if not result_path.exists():save(result_path,result)
     text=result_path.read_text();relative=str(result_path.relative_to(Path(request['repository_root'])))
@@ -134,7 +137,7 @@ def completed_result(output,run):
     return {'status':'complete','atom_run':str(run),'contribution':reference(output/'contribution/completion.json'),
             'handoff':str(handoff),'handoff_sha256':reference(handoff)['sha256']}
 
-def drive(path,output,approved_transfer=None):
+def drive(path,output,approved_transfer=None,delivery_context=None):
     request=read(path);output=output.absolute()
     if request.get('schema_version')==2:request=generated_request(request,output,SOURCE)
     root=validate(request,SOURCE)
@@ -158,12 +161,12 @@ def drive(path,output,approved_transfer=None):
                 elif stage=='promotion':promote(request,output,run,state,root)
                 elif stage=='validation':
                     path=output/'validation.json';adapter(request,'validation',run,path,output);controller.record_validation(run,path);event(output,'validation-recorded')
-                elif stage=='complete':return closeout(request,output,run,approved_transfer)
+                elif stage=='complete':return closeout(request,output,run,approved_transfer,delivery_context=delivery_context)
                 else:raise Refusal(f'Unsupported verified state: {stage}')
             raise Refusal('Expected bounded stage sequence did not complete')
         finally:os.chdir(prior)
 
-def recheck_closeout(path,output,original,approved_transfer=None):
+def recheck_closeout(path,output,original,approved_transfer=None,delivery_context=None):
     """Re-assess a completed execution in a separate immutable evidence namespace."""
     original=Path(original).absolute();output=Path(output).absolute()
     request=read(path)
@@ -191,15 +194,15 @@ def recheck_closeout(path,output,original,approved_transfer=None):
         save(output/'request.json',request)
         save(output/'driver-source.json',{'driver_sha256':digest(Path(__file__).read_bytes()),'contract_sha256':digest(Path(__file__).with_name('driver_contract.py').read_bytes())})
         prior=Path.cwd();os.chdir(root)
-        try:return closeout(request,output,run,approved_transfer,execution=original)
+        try:return closeout(request,output,run,approved_transfer,execution=original,delivery_context=delivery_context)
         finally:os.chdir(prior)
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('request');parser.add_argument('output');parser.add_argument('--approved-transfer-sha256');parser.add_argument('--recheck-closeout-from');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('request');parser.add_argument('output');parser.add_argument('--approved-transfer-sha256');parser.add_argument('--recheck-closeout-from');parser.add_argument('--delivery-context',type=Path);args=parser.parse_args()
     output=Path(args.output).absolute()
     try:
-        result=(recheck_closeout(Path(args.request),output,Path(args.recheck_closeout_from),args.approved_transfer_sha256) if args.recheck_closeout_from else drive(Path(args.request),output,args.approved_transfer_sha256));print(json.dumps(result));return 0 if result['status']=='complete' else 3
+        result=(recheck_closeout(Path(args.request),output,Path(args.recheck_closeout_from),args.approved_transfer_sha256,args.delivery_context) if args.recheck_closeout_from else drive(Path(args.request),output,args.approved_transfer_sha256,args.delivery_context));print(json.dumps(result));return 0 if result['status']=='complete' else 3
     except (Refusal,controller.AtomError,OSError,ValueError,KeyError,subprocess.SubprocessError) as error:
         if output.is_dir():event(output,'stopped',reason=str(error))
         print(json.dumps({'status':'stopped','reason':str(error)}));return 2

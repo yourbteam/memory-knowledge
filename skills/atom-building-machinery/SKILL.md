@@ -394,6 +394,18 @@ Obtain explicit review-transfer authorization for the new packet and resume the 
 with `--approved-transfer-sha256 <new-packet-digest>`. A current blocker still withholds closeout;
 complete its required correction verification before invoking this recheck.
 
+### Include delivery observations in completion
+
+When the promised proof includes delivery isolation or schema inspection, pass
+`--delivery-context <config.json>` to the driver or its closeout recheck. The config names
+`repository_root`, a hash-bound `baseline` JSON (branch, commit, checkout_before),
+`preserved_checkout`, and hash-bound `schema_evidence` text files. The mechanical collector
+saves the applied diff including additions, checks the actual changed paths, compares the other
+checkout and its previously recorded untracked files, and includes the schema sources. New
+untracked paths are reported separately; their cause is not inferred. The existing completion
+model judges these observations. Saved-export inspection must not be described as live MySQL
+execution. The config and resulting evidence are preserved beside the completion payload.
+
 ## Required goal-sequence continuity
 
 Controller `start` and driver starts now require one registered goal sequence. Initialize it once

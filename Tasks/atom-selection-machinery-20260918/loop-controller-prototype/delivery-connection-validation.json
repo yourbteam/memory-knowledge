@@ -1,0 +1,26 @@
+{
+  "scope": "Reviewed candidate delivery and completion evidence collection",
+  "result": "passed",
+  "delivery": "Existing loop applied the three reviewed files and validated them in the isolated delivery worktree",
+  "validation_cases_passed": 5,
+  "existing_untracked_files_preserved": 11,
+  "completion_model": "gpt-6-astra",
+  "reasoning_effort": "medium",
+  "independent_completion": "supported",
+  "installed_clients": [
+    "codex",
+    "claude"
+  ],
+  "installed_validation": "Both installed collectors reproduced the exact independently assessed evidence",
+  "negative_check": "Changed baseline hash refused",
+  "product_branch": "auto-50-perc-off",
+  "product_commit": "f98199db51c27acdf75612839cd96f2326d4551f",
+  "product_remote_verified": true,
+  "next_cycle_started": false,
+  "limitations": [
+    "Schema compatibility assessed from the saved MySQL export; no live MySQL execution",
+    "Focused SQLite tests do not establish full application runtime compatibility",
+    "This atom delivers prerequisite storage and lookup; qualification and discount application remain unfinished"
+  ],
+  "full_execution_evidence": "Retained locally; excluded from this publication"
+}
