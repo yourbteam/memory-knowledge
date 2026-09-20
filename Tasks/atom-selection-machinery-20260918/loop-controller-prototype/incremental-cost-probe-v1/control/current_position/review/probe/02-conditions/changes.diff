@@ -1,0 +1,11 @@
+--- previous-answer
++++ current-answer
+@@ -136,7 +136,7 @@
+   ],
+   "self_assessment": {
+     "choice": "ready",
+-    "reason": "The answer now makes the required connections explicit: historical contributions are tied to their bounded records, current source findings are tied to the committed-tree assessment, existing supplied-code discount behavior is not overstated, and remaining delivery gaps are stated as unfinished or uncertain rather than converted into completion claims.",
++    "reason": "The answer preserves the relevant state and condition boundaries: historical proofs, committed-tree source inspection, existing supplied-code behavior, proposed restoration scope, and unfinished delivery requirements are kept distinct.",
+     "question": ""
+   }
+ }

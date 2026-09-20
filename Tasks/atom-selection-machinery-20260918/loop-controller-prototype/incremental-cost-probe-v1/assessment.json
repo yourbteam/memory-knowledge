@@ -1,0 +1,84 @@
+{
+  "verdict": "The eight extra passes are not justified as a mandatory default by this case; neither output is a clean winner under all frozen criteria.",
+  "hypothesis_result": "Practical answer equivalence and substantial cost reduction supported; full evidence-preservation equivalence not established.",
+  "criteria": [
+    {
+      "criterion": "Updates the baseline from uninspected to source-inspected at the recorded commit; does not imply the working checkout changed.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "Both name the exact inspected commit and distinguish it from the active working branch."
+    },
+    {
+      "criterion": "Carries the missing prerequisite relationship and qualification/code-discovery connections, and the existing recognition and supplied-code handling.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "Both carry missing prerequisite/qualification/discovery connections and reusable supplied-code and recognition surfaces."
+    },
+    {
+      "criterion": "Preserves historical product proofs as historical and bounded; does not infer they are installed on the selected baseline.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "Both preserve historical/internal proof boundaries. Full path adds per-component fixture detail; short compresses it."
+    },
+    {
+      "criterion": "Distinguishes completed research from implementation; no automatic discount or overall delivery claim.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "Both explicitly distinguish decision-enabling research from implementation and leave product completion unestablished."
+    },
+    {
+      "criterion": "Preserves consequential unknowns: fresh tests and executable compatibility, runtime/database/recognition behavior, and alternate-path scope.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "Both retain executable reuse, MySQL, recognition/purchase linkage, runtime/code configuration and kiosk scope uncertainty."
+    },
+    {
+      "criterion": "Preserves fixed goal and owner decisions; does not introduce new scope or authorization.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "No new goal, permission or authority is created in either answer."
+    },
+    {
+      "criterion": "Material claims are supported by the supplied evidence, with usable source references and no misleading quotations.",
+      "short": "partial",
+      "full": "partial",
+      "reason": "Short has 22 verbatim quotes but drops direct references for its retained historical atom claims. Full restores those references and adds source support, but introduces a joined nonverbatim quotation under assessment:E1038-E1042. This starts at connections and survives support plus final check."
+    },
+    {
+      "criterion": "Answer is usable for deciding remaining work; its readiness is consistent with the disclosed evidence boundary.",
+      "short": "satisfied",
+      "full": "satisfied",
+      "reason": "Both supply the same actionable distance-to-goal picture; both final checks keep their answer. Calling-assistant review finds no different next-work implication, subject to the recorded evidence-quality defects."
+    }
+  ],
+  "costs": {
+    "control": {
+      "seconds": 575.4837636947632,
+      "input_tokens": 592687,
+      "cached_input_tokens": 43008,
+      "output_tokens": 29713,
+      "calls": 10
+    },
+    "short": {
+      "seconds": 55.52918028831482,
+      "input_tokens": 117095,
+      "cached_input_tokens": 10752,
+      "output_tokens": 2563,
+      "calls": 2
+    },
+    "actual_fresh_calls": 11,
+    "shared_initial_charged_to_each_comparison_path": true
+  },
+  "input_token_reduction_fraction": 0.8024336622871768,
+  "elapsed_reduction_fraction": 0.9035086933959661,
+  "independent_blind_review": false,
+  "assessor": "calling assistant; manual source comparison plus deterministic verbatim quote audit",
+  "changes_from_lenses": "connections restores historical refs and introduces joined quote; support adds direct source citations; remaining six lens verdicts no_change. Four of those no_change responses still rewrite some JSON content.",
+  "recommendation": "Do not run the 70-call revision batch now. Preserve existing evidence references during the bounded incremental update, then recheck this same case before promoting a shorter path. Do not add a broad lens stack to compensate.",
+  "promotion_applied": false,
+  "live_loop_updated": false,
+  "limitations": [
+    "One paired case with shared initial answer; does not establish general reliability or downstream atom-selection equivalence.",
+    "Token counts are observed provider telemetry; no dollar-cost estimate or pricing claim."
+  ]
+}

@@ -1,0 +1,11 @@
+--- previous-answer
++++ current-answer
+@@ -168,7 +168,7 @@
+   ],
+   "self_assessment": {
+     "choice": "ready",
+-    "reason": "The answer supports the declared use: it gives the next step a bounded current-distance picture, preserves tested boundaries and uncertainty, and does not require a different evidence level before the current-position answer can be used.",
++    "reason": "The answer supplies the requested current-distance assessment from the available records and correctly treats remaining unknowns as part of the answer rather than as blockers to answering this question.",
+     "question": ""
+   }
+ }

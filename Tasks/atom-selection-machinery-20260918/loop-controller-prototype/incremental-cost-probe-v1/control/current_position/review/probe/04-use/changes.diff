@@ -1,0 +1,11 @@
+--- previous-answer
++++ current-answer
+@@ -168,7 +168,7 @@
+   ],
+   "self_assessment": {
+     "choice": "ready",
+-    "reason": "The answer now keeps the supported source-level findings distinct from historical reports, proposed implementation boundaries, and unknown runtime behavior, with added direct support for the reusable source surfaces it claims.",
++    "reason": "The answer supports the declared use: it gives the next step a bounded current-distance picture, preserves tested boundaries and uncertainty, and does not require a different evidence level before the current-position answer can be used.",
+     "question": ""
+   }
+ }

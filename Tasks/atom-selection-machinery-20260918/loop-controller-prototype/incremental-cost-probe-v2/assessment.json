@@ -1,0 +1,108 @@
+{
+  "verdict": "same-case win; retain prototype correction",
+  "hypothesis_held_for_this_case": true,
+  "criteria": [
+    {
+      "criterion": "Updates the baseline from uninspected to source-inspected at the recorded commit; does not imply the working checkout changed.",
+      "judgment": "satisfied",
+      "reason": "Exact commit and inspected-tree versus active-worktree distinction preserved."
+    },
+    {
+      "criterion": "Carries the missing prerequisite relationship and qualification/code-discovery connections, and the existing recognition and supplied-code handling.",
+      "judgment": "satisfied",
+      "reason": "Missing prerequisite/evidence services/automatic selector and reusable recognition and supplied-code checkout surfaces retained."
+    },
+    {
+      "criterion": "Preserves historical product proofs as historical and bounded; does not infer they are installed on the selected baseline.",
+      "judgment": "satisfied",
+      "reason": "Historical controlled SQLite, provider-interception and internal-service boundaries retained with supporting references."
+    },
+    {
+      "criterion": "Distinguishes completed research from implementation; no automatic discount or overall delivery claim.",
+      "judgment": "satisfied",
+      "reason": "Research is explicitly not implementation; automatic-discount delivery remains unproved."
+    },
+    {
+      "criterion": "Preserves consequential unknowns: fresh tests and executable compatibility, runtime/database/recognition behavior, and alternate-path scope.",
+      "judgment": "satisfied",
+      "reason": "Fresh tests, dependency/MySQL compatibility, recognition and purchase provenance, live configuration and kiosk scope uncertainties remain explicit."
+    },
+    {
+      "criterion": "Preserves fixed goal and owner decisions; does not introduce new scope or authorization.",
+      "judgment": "satisfied",
+      "reason": "Fixed product goal and prod-based branch remain unchanged; no new permissions asserted."
+    },
+    {
+      "criterion": "Material claims are supported by the supplied evidence, with usable source references and no misleading quotations.",
+      "judgment": "satisfied",
+      "reason": "Historical references retained for the continuing historical claims; all 49 quotes exist in supplied text and all newly cited assessment entries match. Superseded branch-inspection references replaced by the version-bound new evidence; redundant old owner wording replaced by the retained baseline decision reference."
+    },
+    {
+      "criterion": "Answer is usable for deciding remaining work; its readiness is consistent with the disclosed evidence boundary.",
+      "judgment": "satisfied",
+      "reason": "Answer remains usable for identifying unfinished work; final dependency check kept it without revision."
+    }
+  ],
+  "metrics": {
+    "calls": 2,
+    "seconds": 80.16905498504639,
+    "input_tokens": 120075,
+    "output_tokens": 3960
+  },
+  "quote_count": 49,
+  "historical_and_other_unchanged_reference_pairs_retained": 16,
+  "existing_answer_basis_pairs_removed": [
+    {
+      "source_id": "assessment:E1038",
+      "quote": "\"branch\": \"feature/kiosk-square-return-recovery\""
+    },
+    {
+      "source_id": "assessment:E1040",
+      "quote": "\"head\": \"d5ddaa23ed61d3f62c1006584c18e612bacfdb64\""
+    },
+    {
+      "source_id": "assessment:E1050",
+      "quote": "\"path\": \"app/Services/RecognitionPurchaseEvidence.php\", \"exists\": false"
+    },
+    {
+      "source_id": "decision",
+      "quote": "Owner decision and branch creation only; no product code built, tested, integrated or deployed."
+    },
+    {
+      "source_id": "decision",
+      "quote": "use a new feature branch auto-50-perc-off\nprod branch is the baseline branch, not dev\nok, then proceed"
+    },
+    {
+      "source_id": "previous:current-checkout-inspection",
+      "quote": "\"references_in_current_app\": {\n    \"PriorTourPurchaseEligibility\": 0,\n    \"TourDiscountPrerequisites\": 0,\n    \"findAutomaticFiftyPercentForTour\": 0,\n    \"SearchPaymentEvidence\": 0,\n    \"RecognitionPurchaseEvidence\": 0\n  }"
+    },
+    {
+      "source_id": "previous:current-checkout-inspection",
+      "quote": "\"selector_method_present\": false"
+    },
+    {
+      "source_id": "update_reason",
+      "quote": "Existing answer says current checkout position was based on later inspection of branch `feature/kiosk-square-return-recovery` at head `d5ddaa23...` and leaves intended delivery branch uncertain. New evidence says the owner chose `prod` as the baseline, created local branch `auto-50-perc-off`, and recorded baseline commit `45826e12...`."
+    }
+  ],
+  "unchanged_final_check": {
+    "decision": "keep",
+    "reason": "The latest saved answer remains usable. The later supplied assessment is already incorporated: it replaces the prior baseline-uninspected uncertainty with bounded committed-tree source research at `45826e12...`, records the missing prerequisite storage/reader, named historical evidence services, and automatic selector, preserves reusable recognition and supplied-code checkout surfaces, and keeps the no-fresh-tests/no-full-checkout-execution limits. The other question answers either predate that assessment or are consistent with it: they establish the same product goal, branch/baseline authority, practical limits, and unresolved delivery/runtime uncertainties. There is no owner correction, feedback, or concrete dependency that changes a retained claim."
+  },
+  "control_metrics": {
+    "seconds": 575.4837636947632,
+    "input_tokens": 592687,
+    "cached_input_tokens": 43008,
+    "output_tokens": 29713,
+    "calls": 10
+  },
+  "installed_or_promoted": false,
+  "live_answers_unchanged": true,
+  "live_stage": "incremental",
+  "reviewer": "calling assistant; semantic reading plus mechanical quotation/location checks",
+  "limits": [
+    "One real case and one new run; stochastic variation remains.",
+    "Historical references retain their original prior-answer provenance, not the namespace of the newer assessment.",
+    "No seven-answer batch or final atom selection executed."
+  ]
+}

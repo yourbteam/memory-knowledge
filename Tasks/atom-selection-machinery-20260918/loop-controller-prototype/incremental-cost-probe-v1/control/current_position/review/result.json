@@ -1,0 +1,9 @@
+{
+  "completed": true,
+  "execution_mode": "live",
+  "lens_calls": 8,
+  "new_model_calls": 8,
+  "session": "01a0be84-33d3-7cc2-bdcc-f273f6d39a7c",
+  "final_readiness": "ready",
+  "meaning": "All fixed lens passes completed; this is not a claim of semantic completeness."
+}

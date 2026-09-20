@@ -1,0 +1,9 @@
+{
+  "fingerprint": "3935176ef38f651a4baeb4e99c85f5f578d42e9af121c9ad6d0bf0cb040892c8",
+  "stage": "00-direct",
+  "attempt": 1,
+  "status": "completed",
+  "started": 1789902229.796082,
+  "session": "01a0be7c-9156-74f2-80c7-7e2426799985",
+  "answer_file": "attempts/0001/answer.json"
+}

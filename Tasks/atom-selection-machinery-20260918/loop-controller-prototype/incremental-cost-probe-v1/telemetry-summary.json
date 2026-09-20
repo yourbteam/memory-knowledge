@@ -1,0 +1,18 @@
+{
+  "control": {
+    "seconds": 575.4837636947632,
+    "input_tokens": 592687,
+    "cached_input_tokens": 43008,
+    "output_tokens": 29713,
+    "calls": 10
+  },
+  "short": {
+    "seconds": 55.52918028831482,
+    "input_tokens": 117095,
+    "cached_input_tokens": 10752,
+    "output_tokens": 2563,
+    "calls": 2
+  },
+  "actual_fresh_calls": 11,
+  "shared_initial_charged_to_each_comparison_path": true
+}

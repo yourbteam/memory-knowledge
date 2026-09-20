@@ -1,0 +1,396 @@
+{
+  "short": {
+    "basis_count": 22,
+    "nonverbatim": [],
+    "assessment_location_mismatch": [],
+    "rows": [
+      {
+        "source_id": "goal:E0030",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "assessment:E0991",
+        "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1024",
+        "quote": "checkout tour ID",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1025",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1026",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1027",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1056",
+        "quote": "No product code built and no overall goal completion judgment",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1527",
+        "quote": "Store face IDs (matched image IDs in v2)",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1408",
+        "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1719",
+        "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1239",
+        "quote": "postPayment percent discount calculation",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      }
+    ]
+  },
+  "control": {
+    "basis_count": 39,
+    "nonverbatim": [
+      {
+        "source_id": "assessment:E1038-E1042",
+        "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback",
+        "found_verbatim_in_supplied_context": false,
+        "found_at_named_assessment_entry": false
+      }
+    ],
+    "assessment_location_mismatch": [
+      {
+        "source_id": "assessment:E1038-E1042",
+        "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback",
+        "found_verbatim_in_supplied_context": false,
+        "found_at_named_assessment_entry": false
+      }
+    ],
+    "rows": [
+      {
+        "source_id": "goal:E0030",
+        "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person\u2019s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:tour-prerequisite-structure-historical-proof",
+        "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "\"installed_cases_passed\": 7",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "\"installed_assertions\": 324",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+        "quote": "Tests used controlled owner-derived SQLite fixtures.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:search-payment-evidence-historical-review",
+        "quote": "This supports the internal service outcome, not production payment verification or discount eligibility.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:usable-fifty-percent-selector-historical-review",
+        "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "previous:assessment:E0703",
+        "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": null
+      },
+      {
+        "source_id": "assessment:E0991",
+        "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E0992",
+        "quote": "true",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1109",
+        "quote": "feature/kiosk-square-return-recovery\n",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E0995",
+        "quote": "missing_in_inspected_source",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1007",
+        "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1011",
+        "quote": "automatic_selector_missing_from_baseline",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1169",
+        "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1172",
+        "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1408",
+        "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1719",
+        "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1274",
+        "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1239",
+        "quote": "postPayment percent discount calculation",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1241",
+        "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1244",
+        "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1751",
+        "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1752",
+        "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1022",
+        "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1023",
+        "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1024",
+        "quote": "checkout tour ID",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1025",
+        "quote": "configured directed checkout/prerequisite tour pairs",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1026",
+        "quote": "whether checkout tour is configured",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1027",
+        "quote": "its prerequisite tour IDs",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1038-E1042",
+        "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback",
+        "found_verbatim_in_supplied_context": false,
+        "found_at_named_assessment_entry": false
+      },
+      {
+        "source_id": "assessment:E1045",
+        "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1047",
+        "quote": "0",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1053",
+        "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1054",
+        "quote": "Alternate kiosk API path not exhaustively traced",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1055",
+        "quote": "No claim of absence from remote deployments or every differently named implementation",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1056",
+        "quote": "No product code built and no overall goal completion judgment",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1527",
+        "quote": "// Store face IDs (matched image IDs in v2)",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      },
+      {
+        "source_id": "assessment:E1009",
+        "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility.",
+        "found_verbatim_in_supplied_context": true,
+        "found_at_named_assessment_entry": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{"number": 1, "stage": "00-direct", "folder": "control/current_position/initial/attempts/0001", "started": 1789902229.7967439}
+{"number": 2, "stage": "01-connections", "folder": "control/current_position/review/probe/01-connections/attempts/0001", "started": 1789902271.098728}
+{"number": 3, "stage": "02-conditions", "folder": "control/current_position/review/probe/02-conditions/attempts/0001", "started": 1789902356.5497868}
+{"number": 4, "stage": "03-support", "folder": "control/current_position/review/probe/03-support/attempts/0001", "started": 1789902404.984419}
+{"number": 5, "stage": "04-use", "folder": "control/current_position/review/probe/04-use/attempts/0001", "started": 1789902461.746837}
+{"number": 6, "stage": "05-consistency", "folder": "control/current_position/review/probe/05-consistency/attempts/0001", "started": 1789902518.2843058}
+{"number": 7, "stage": "06-unanswered-dependencies", "folder": "control/current_position/review/probe/06-unanswered-dependencies/attempts/0001", "started": 1789902602.447387}
+{"number": 8, "stage": "07-decision-boundary", "folder": "control/current_position/review/probe/07-decision-boundary/attempts/0001", "started": 1789902655.194438}
+{"number": 9, "stage": "08-exact-relationship", "folder": "control/current_position/review/probe/08-exact-relationship/attempts/0001", "started": 1789902730.1476119}
+{"number": 10, "stage": "cross-question", "folder": "control/bounded-final-check/attempts/0001", "started": 1789902789.064827}
+{"number": 11, "stage": "cross-question", "folder": "short/bounded-final-check/attempts/0001", "started": 1789902805.4152231}

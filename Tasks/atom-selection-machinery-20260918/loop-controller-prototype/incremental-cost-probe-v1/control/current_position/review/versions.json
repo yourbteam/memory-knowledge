@@ -1,0 +1,1450 @@
+[
+  {
+    "index": 1,
+    "stage": "01-connections",
+    "lens": {
+      "id": "connections",
+      "name": "Connections",
+      "instruction": "Inspect only relationships required by the question or asserted by the latest answer. Is each connection between an input, entity, reference, operation and result established by the available context, or merely assumed from names, proximity or similarity? If a consequential connection is unsupported, supply available support or state the precise unknown. Do not expand into unrelated relationships."
+    },
+    "session": "01a0be7d-32b5-7d02-b9fd-420fa611840c",
+    "assessment": {
+      "decision": "changed",
+      "reason": "The starting answer’s bottom-line distance-to-goal judgment is supported, but the connections lens exposed two places that needed sharper self-contained support: the historical atom claims needed their direct historical-record basis restored, and the checkout-discount connection needed to distinguish existing supplied-code persistence from the still-missing automatic prerequisite-qualified discovery/application path. No completion finding changed."
+    },
+    "answer_changed": true,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source. It also identified reusable existing surfaces: recognition/search helpers, purchase-history/payment-related behavior, customer checkout routes, redeem-code cookie preview behavior, and `postPayment` discount persistence before provider handling. Those supplied-code paths establish existing manual/supplied-code discount handling, but they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer now makes the required connections explicit: historical contributions are tied to their bounded records, current source findings are tied to the committed-tree assessment, existing supplied-code discount behavior is not overstated, and remaining delivery gaps are stated as unfinished or uncertain rather than converted into completion claims.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 2,
+    "stage": "02-conditions",
+    "lens": {
+      "id": "conditions",
+      "name": "Conditions and state",
+      "instruction": "Inspect when the latest answer’s claims hold. Does it preserve relevant prerequisites, branches, transitions, exceptions and distinctions between an initial state and a later state? Do not equate membership or existence with a current property. Correct only distinctions that affect the requested use, using the available context; do not enumerate hypothetical edge cases."
+    },
+    "session": "01a0be7e-808c-7a53-a138-a6eca1d857d7",
+    "assessment": {
+      "decision": "no_change",
+      "reason": "The answer already preserves the relevant conditions and state transitions: historical controlled/internal proofs are separated from current committed-tree inspection; the selected committed tree is distinguished from the checked-out worktree and from deployed/runtime behavior; reusable checkout and recognition surfaces are not treated as completed qualification; and the proposed prerequisite-restoration boundary is kept separate from implemented product progress. No consequential unsupported condition error is apparent under this lens."
+    },
+    "answer_changed": true,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source. It also identified reusable existing surfaces: recognition/search helpers, purchase-history/payment-related behavior, customer checkout routes, redeem-code cookie preview behavior, and `postPayment` discount persistence before provider handling. Those supplied-code paths establish existing manual/supplied-code discount handling, but they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer preserves the relevant state and condition boundaries: historical proofs, committed-tree source inspection, existing supplied-code behavior, proposed restoration scope, and unfinished delivery requirements are kept distinct.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 3,
+    "stage": "03-support",
+    "lens": {
+      "id": "support",
+      "name": "Evidence strength",
+      "instruction": "Compare each consequential conclusion with its support. Distinguish what the source shows from what a report says, an assumption permits, or remains unknown. Does a quotation establish the asserted effect or only part of it? Supply available missing support or narrow the claim. Do not demand runtime proof for a source-level question or invent missing authority."
+    },
+    "session": "01a0be7f-3da9-7b01-9a7f-d9c5e4e7525b",
+    "assessment": {
+      "decision": "changed",
+      "reason": "The answer’s main conclusions were supported, but several consequential reusable-surface claims needed stronger direct support from the supplied source context. I added available source quotes for recognition/search behavior, customer checkout routes, redeem-code cookie handling, and discount persistence before provider handling, while preserving the same boundaries and uncertainty."
+    },
+    "answer_changed": true,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source.\n\nThe same source trace identified reusable existing surfaces, but only within source-inspection limits: recognition/search helpers exist, purchase-history and payment-related behavior exists, customer checkout/payment routes exist, redeem-code cookie preview behavior exists, and `postPayment` can calculate and save a supplied-code discount before provider handling. Those supplied-code paths establish existing manual or cookie-supplied discount handling to preserve or reuse; they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1169",
+          "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)"
+        },
+        {
+          "source_id": "assessment:E1172",
+          "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1274",
+          "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        },
+        {
+          "source_id": "assessment:E1241",
+          "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+        },
+        {
+          "source_id": "assessment:E1244",
+          "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {"
+        },
+        {
+          "source_id": "assessment:E1751",
+          "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');"
+        },
+        {
+          "source_id": "assessment:E1752",
+          "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1009",
+          "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer now keeps the supported source-level findings distinct from historical reports, proposed implementation boundaries, and unknown runtime behavior, with added direct support for the reusable source surfaces it claims.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 4,
+    "stage": "04-use",
+    "lens": {
+      "id": "use",
+      "name": "Intended use",
+      "instruction": "Can the next step perform the use declared in the original question with this answer and its limitations? Identify only missing information that could change that use. If it is in your context, incorporate it; if not, preserve the supported answer and request the necessary information. Remove demands that concern excluded or unrelated tasks. An explicit unknown is useful but is not a supplied fact."
+    },
+    "session": "01a0be80-1b65-7621-adf5-ecb50370d656",
+    "assessment": {
+      "decision": "no_change",
+      "reason": "The answer is usable for the declared next step: it states what is demonstrated, unfinished, and uncertain; ties material claims to supplied evidence and tested boundaries; distinguishes historical controlled/internal capability from source inspection and from delivery/runtime proof; and preserves the key limitations without demanding excluded evidence. No missing information in the supplied context would change that use."
+    },
+    "answer_changed": true,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source.\n\nThe same source trace identified reusable existing surfaces, but only within source-inspection limits: recognition/search helpers exist, purchase-history and payment-related behavior exists, customer checkout/payment routes exist, redeem-code cookie preview behavior exists, and `postPayment` can calculate and save a supplied-code discount before provider handling. Those supplied-code paths establish existing manual or cookie-supplied discount handling to preserve or reuse; they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1169",
+          "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)"
+        },
+        {
+          "source_id": "assessment:E1172",
+          "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1274",
+          "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        },
+        {
+          "source_id": "assessment:E1241",
+          "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+        },
+        {
+          "source_id": "assessment:E1244",
+          "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {"
+        },
+        {
+          "source_id": "assessment:E1751",
+          "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');"
+        },
+        {
+          "source_id": "assessment:E1752",
+          "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1009",
+          "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer supports the declared use: it gives the next step a bounded current-distance picture, preserves tested boundaries and uncertainty, and does not require a different evidence level before the current-position answer can be used.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 5,
+    "stage": "05-consistency",
+    "lens": {
+      "id": "consistency",
+      "name": "Consistency and preservation",
+      "instruction": "Check the entire accumulated answer for contradictions between conclusions, conditions, evidence, limits and readiness. Confirm earlier supported corrections remain represented and later edits have not erased or weakened them. Preserve valid uncertainty. Do not call a required fact resolved merely because its absence is now described clearly; judge readiness for the original stated use."
+    },
+    "session": "01a0be80-f83b-7450-9cf2-27bec49478ef",
+    "assessment": {
+      "decision": "no_change",
+      "reason": "The accumulated answer is internally consistent: it preserves the distinction between historical bounded atoms, source-level baseline inspection, proposed implementation boundary, and undemonstrated product delivery. It does not treat missing-source findings as goal completion, keeps the checked-out-branch limitation, and preserves the relevant uncertainties and limits. No consequential supported issue requires revision under this lens."
+    },
+    "answer_changed": false,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source.\n\nThe same source trace identified reusable existing surfaces, but only within source-inspection limits: recognition/search helpers exist, purchase-history and payment-related behavior exists, customer checkout/payment routes exist, redeem-code cookie preview behavior exists, and `postPayment` can calculate and save a supplied-code discount before provider handling. Those supplied-code paths establish existing manual or cookie-supplied discount handling to preserve or reuse; they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1169",
+          "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)"
+        },
+        {
+          "source_id": "assessment:E1172",
+          "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1274",
+          "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        },
+        {
+          "source_id": "assessment:E1241",
+          "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+        },
+        {
+          "source_id": "assessment:E1244",
+          "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {"
+        },
+        {
+          "source_id": "assessment:E1751",
+          "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');"
+        },
+        {
+          "source_id": "assessment:E1752",
+          "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1009",
+          "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer supports the declared use: it gives the next step a bounded current-distance picture, preserves tested boundaries and uncertainty, and does not require a different evidence level before the current-position answer can be used.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 6,
+    "stage": "06-unanswered-dependencies",
+    "lens": {
+      "id": "unanswered-dependencies",
+      "name": "Unanswered dependencies",
+      "instruction": "Re-read the original question. Does the answer supply what was requested, or merely explain why it remains unknown? If missing information prevents answering the original question, retain needs_input and one precise follow-up question, even if the explanation of the gap is useful and complete. If the original question only asks whether available evidence is sufficient, a supported finding of insufficiency can be ready. Do not invent missing dependencies or demand evidence beyond the original question scope or evidence level. Preserve all supported content, quotations, assumptions and limitations. ready must have an empty question; needs_input must have a specific necessary follow-up. Do not treat readiness as proof that your reasoning is correct."
+    },
+    "session": "01a0be82-4104-7560-8c1a-fd6f00a3b7c3",
+    "assessment": {
+      "decision": "no_change",
+      "reason": "The answer directly supplies the requested current-distance picture from available evidence: what is demonstrated, what remains unfinished, and what is uncertain. The unresolved items are themselves part of the requested answer, not missing dependencies that prevent answering; no follow-up is necessary."
+    },
+    "answer_changed": true,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source.\n\nThe same source trace identified reusable existing surfaces, but only within source-inspection limits: recognition/search helpers exist, purchase-history and payment-related behavior exists, customer checkout/payment routes exist, redeem-code cookie preview behavior exists, and `postPayment` can calculate and save a supplied-code discount before provider handling. Those supplied-code paths establish existing manual or cookie-supplied discount handling to preserve or reuse; they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1169",
+          "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)"
+        },
+        {
+          "source_id": "assessment:E1172",
+          "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1274",
+          "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        },
+        {
+          "source_id": "assessment:E1241",
+          "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+        },
+        {
+          "source_id": "assessment:E1244",
+          "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {"
+        },
+        {
+          "source_id": "assessment:E1751",
+          "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');"
+        },
+        {
+          "source_id": "assessment:E1752",
+          "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1009",
+          "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer supplies the requested current-distance assessment from the available records and correctly treats remaining unknowns as part of the answer rather than as blockers to answering this question.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 7,
+    "stage": "07-decision-boundary",
+    "lens": {
+      "id": "decision-boundary",
+      "name": "Decision boundary",
+      "instruction": "Read the original question together with its supplied scope, permitted assumptions, and required evidence level. Identify exactly what must be established to answer it. For each remaining uncertainty: could resolving it change the answer within that boundary? Is it required now, or does it belong to a separate downstream question? Stop only when the required conclusion is supported at the requested evidence level. Do not lower that level because a summary supplies a plausible answer. Do not expand the task because another dependency remains unresolved. Preserve explicitly permitted assumptions. If the boundary itself is ambiguous and changes whether you should stop, ask one targeted clarification. Do not invent findings. Apply this reasoning before the final readiness judgment; return the complete answer with ready and an empty question, or needs_input with one necessary follow-up."
+    },
+    "session": "01a0be83-0f14-7112-8303-ac1ad0f23beb",
+    "assessment": {
+      "decision": "no_change",
+      "reason": "The answer already stays inside the decision boundary for the current-position question: it records what is demonstrated from the supplied records, distinguishes source inspection from execution and delivery, preserves downstream uncertainties, and does not require additional evidence before answering."
+    },
+    "answer_changed": false,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source.\n\nThe same source trace identified reusable existing surfaces, but only within source-inspection limits: recognition/search helpers exist, purchase-history and payment-related behavior exists, customer checkout/payment routes exist, redeem-code cookie preview behavior exists, and `postPayment` can calculate and save a supplied-code discount before provider handling. Those supplied-code paths establish existing manual or cookie-supplied discount handling to preserve or reuse; they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1169",
+          "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)"
+        },
+        {
+          "source_id": "assessment:E1172",
+          "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1274",
+          "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        },
+        {
+          "source_id": "assessment:E1241",
+          "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+        },
+        {
+          "source_id": "assessment:E1244",
+          "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {"
+        },
+        {
+          "source_id": "assessment:E1751",
+          "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');"
+        },
+        {
+          "source_id": "assessment:E1752",
+          "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1009",
+          "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer supplies the requested current-distance assessment from the available records and correctly treats remaining unknowns as part of the answer rather than as blockers to answering this question.",
+        "question": ""
+      }
+    }
+  },
+  {
+    "index": 8,
+    "stage": "08-exact-relationship",
+    "lens": {
+      "id": "exact-relationship",
+      "name": "Exact relationship",
+      "instruction": "Identify the exact relationship required by the original question. In your lens_assessment.reason: (1) quote the required relationship verbatim from the question or governing requirement; (2) quote the statement in the latest answer or its supplied evidence claimed to establish or ask about that relationship; (3) explicitly compare them without weakening, broadening or substituting either relationship. Do not silently replace a specific predicate with a more general association. (4) Explain whether the cited statement could be true while the required relationship is false or unresolved, and why. If you use a possible alternative, label it as a logical test of the inference, not evidence that the alternative occurred. If the relationship is already explicitly unresolved, check whether the follow-up asks about that same relationship. If no such relation is being asserted or asked about, say not applicable rather than inventing one. Revise the accumulated answer only if this comparison reveals a consequential gap; preserve valid facts, quotations, permitted assumptions, evidence level, original scope and stopping boundaries. Return a complete answer, not just the comparison. No change is valid when the exact relationship is supported. Do not invent missing facts or owner authority."
+    },
+    "session": "01a0be84-33d3-7cc2-bdcc-f273f6d39a7c",
+    "assessment": {
+      "decision": "no_change",
+      "reason": "Required relationship: \"Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment.\" Latest answer statement addressing that relationship: \"Unfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated.\" The required relationship is the full integrated prerequisite-qualified checkout sequence, not merely recognition, purchase history, supplied-code handling, or discount persistence. The latest answer preserves that exact predicate and explicitly says existing supplied-code paths \"do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\" As a logical test of inference, supplied-code discount persistence could be true while automatic prerequisite-qualified discount discovery/application remains false or unresolved; the answer already makes that distinction. No consequential revision is supported."
+    },
+    "answer_changed": false,
+    "answer": {
+      "answer": "Already demonstrated: historical records still support several bounded product atoms only within their recorded proof boundaries. A directed tour-prerequisite migration/reader was historically installed and tested in isolated SQLite; prior-tour purchase eligibility was historically tested against controlled owner-derived SQLite fixtures; search-payment evidence was reviewed as a controlled internal-service proof; a usable 50% selector was reviewed as supported for deterministic selection and guard behavior; and the selfie-purchase-lookup atom added a bounded `RecognitionPurchaseEvidence::forSelfie` service entrypoint. These remain historical controlled/internal-source contributions, not live checkout delivery, production payment verification, current-branch availability, prerequisite-qualified checkout behavior, or automatic discount application.\n\nNewly demonstrated by the latest assessment: the selected prod-derived baseline is no longer wholly uninspected. The committed tree for `auto-50-perc-off` / prod commit `45826e12cdc8f585e514d7bb09c0d37fa28ed568` was assessed at source level. The active worktree was still `feature/kiosk-square-return-recovery`, so this is best treated as inspection of the selected committed tree, not execution from a checked-out delivery branch. Within the inspected customer web path, the assessment found the directed prerequisite storage/reader missing, named historical purchase-evidence services absent, and the automatic 50% selector missing from baseline source.\n\nThe same source trace identified reusable existing surfaces, but only within source-inspection limits: recognition/search helpers exist, purchase-history and payment-related behavior exists, customer checkout/payment routes exist, redeem-code cookie preview behavior exists, and `postPayment` can calculate and save a supplied-code discount before provider handling. Those supplied-code paths establish existing manual or cookie-supplied discount handling to preserve or reuse; they do not establish prerequisite-based qualification or automatic discovery of an applicable 50% code.\n\nThe latest research changed the current distance-to-goal picture by reducing branch/source uncertainty and identifying a first supported implementation boundary: restore directed tour-prerequisite storage and reader on the prod-based branch, with checkout tour ID and configured directed tour pairs as inputs, configured status and prerequisite tour IDs as outputs, and acceptance cases for configured tours, multiple prerequisites, unconfigured tours, direction, and isolated rollback. That boundary is decision-enabling research, not implemented product progress; its acceptance cases are proposed checks, not newly passing tests.\n\nUnfinished: the complete paid-prerequisite-purchase -> same-person recognition -> eligible current tour -> applicable existing 50% code -> discounted order before payment sequence remains undemonstrated. The inspected source does not establish the integrated connections for prerequisite lookup, recognition-to-paid-purchase qualification, automatic applicable-code discovery, or automatic qualified discount application before payment. Existing supplied-code discount persistence before provider handling is present, but it is not connected to the required prerequisite-qualified automatic flow. No fresh product tests, browser run, live database/AWS/payment/deployment validation, or full checkout execution was performed.\n\nStill uncertain: executable reuse of historical artifacts on current dependencies, target MySQL migration compatibility, recognition identifier compatibility across baseline variants, linkage from stored recognition/search data to a qualifying paid prerequisite purchase, applicable live 50% code configuration, deployed/runtime behavior, production database/payment state, and whether the alternate kiosk API belongs to the intended delivery surface. Existing purchase-history behavior also includes fully discounted orders without payment, so purchase-history presence alone cannot prove the required paid purchase. The assessment also does not prove absence from every differently named implementation or deployment. Product completion remains not established.",
+      "basis": [
+        {
+          "source_id": "goal:E0030",
+          "quote": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal."
+        },
+        {
+          "source_id": "previous:tour-prerequisite-structure-historical-proof",
+          "quote": "Installed directed tour relationship migration and reader; all five frozen cases passed against installed source in isolated SQLite."
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_cases_passed\": 7"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "\"installed_assertions\": 324"
+        },
+        {
+          "source_id": "previous:prior-tour-purchase-eligibility-historical-proof",
+          "quote": "Tests used controlled owner-derived SQLite fixtures."
+        },
+        {
+          "source_id": "previous:search-payment-evidence-historical-review",
+          "quote": "This supports the internal service outcome, not production payment verification or discount eligibility."
+        },
+        {
+          "source_id": "previous:usable-fifty-percent-selector-historical-review",
+          "quote": "deterministic selection or none, explicit exclusions, preserved attributes and existing members, actual verifier acceptance with matching record identity, payment usage guard execution, unchanged state, and promoted-path repetition."
+        },
+        {
+          "source_id": "previous:assessment:E0703",
+          "quote": "Baseline source and nine unavailable results establish the missing entrypoint; the after source and actual-source executions establish direct selfie-key lookup with complete recorded purchase evidence. This is an internal service capability demonstrated with controlled fixtures and intercepted provider HTTP, without checkout integration or identity decisions."
+        },
+        {
+          "source_id": "assessment:E0991",
+          "quote": "45826e12cdc8f585e514d7bb09c0d37fa28ed568"
+        },
+        {
+          "source_id": "assessment:E0992",
+          "quote": "true"
+        },
+        {
+          "source_id": "assessment:E1109",
+          "quote": "feature/kiosk-square-return-recovery\n"
+        },
+        {
+          "source_id": "assessment:E0995",
+          "quote": "missing_in_inspected_source"
+        },
+        {
+          "source_id": "assessment:E1007",
+          "quote": "RecognitionPurchaseEvidence, SearchPaymentEvidence, MatchedSearchOrders, RecordedPaymentEvidence and SearchRecognitionRegistration absent from baseline service tree"
+        },
+        {
+          "source_id": "assessment:E1011",
+          "quote": "automatic_selector_missing_from_baseline"
+        },
+        {
+          "source_id": "assessment:E1169",
+          "quote": "public function searchFacesByImage($s3Key, $collectionId, $maxFaces = 100, $threshold = 80.0)"
+        },
+        {
+          "source_id": "assessment:E1172",
+          "quote": "$matches[] = [\n                        'faceId' => $faceMatch->Face->FaceId,\n                        'externalImageId' => $faceMatch->Face->ExternalImageId ?? null,\n                        'similarity' => (float)$faceMatch->Similarity,\n                    ];"
+        },
+        {
+          "source_id": "assessment:E1408",
+          "quote": "if(!isset($payment) || empty($payment)) {\n                if($order->discount == 100){"
+        },
+        {
+          "source_id": "assessment:E1719",
+          "quote": "// Check for existing redemption code\n            let code = Cookies.get('redeem-code');"
+        },
+        {
+          "source_id": "assessment:E1274",
+          "quote": "// Check for redemption code from cookie FIRST to calculate correct pricing\n        $discountCode = null;\n        if (isset($_COOKIE['redeem-code'])) {"
+        },
+        {
+          "source_id": "assessment:E1239",
+          "quote": "postPayment percent discount calculation"
+        },
+        {
+          "source_id": "assessment:E1241",
+          "quote": "$order->discount = $discountCode->discount;\n                $order->product_discount_id = $discountCode->product_discount_id;\n                $order->save();"
+        },
+        {
+          "source_id": "assessment:E1244",
+          "quote": "// Increment uses for all discount codes (including unique batch templates)\n            $discountCode->uses = $discountCode->uses+1;\n            $discountCode->save();\n        }\n\t\t\t\t\t\t\t\t if(isset($request->paymentMethod) && !empty($request->paymentMethod)) {"
+        },
+        {
+          "source_id": "assessment:E1751",
+          "quote": "Route::post('/checkout/{timeslot_id?}/{timeslot_date?}', 'CustomerUser\\Checkout\\CheckoutController@postCheckout');\n        Route::get('/checkout/{order_id}', 'CustomerUser\\Checkout\\CheckoutController@checkout')->name('checkout_page');\n        Route::get('/checkout/{order_id}/{discount?}/{numberOfSelectedPhotos?}', 'CustomerUser\\Checkout\\CheckoutController@discount');"
+        },
+        {
+          "source_id": "assessment:E1752",
+          "quote": "Route::post('/payment', 'CustomerUser\\Checkout\\CheckoutController@postPayment');"
+        },
+        {
+          "source_id": "assessment:E1022",
+          "quote": "Source trace only; no browser/payment run. Automatic qualification and code discovery are absent from this traced path."
+        },
+        {
+          "source_id": "assessment:E1023",
+          "quote": "Restore directed tour prerequisite storage and reader on the prod-based branch, reusing preserved historical source and tests"
+        },
+        {
+          "source_id": "assessment:E1024",
+          "quote": "checkout tour ID"
+        },
+        {
+          "source_id": "assessment:E1025",
+          "quote": "configured directed checkout/prerequisite tour pairs"
+        },
+        {
+          "source_id": "assessment:E1026",
+          "quote": "whether checkout tour is configured"
+        },
+        {
+          "source_id": "assessment:E1027",
+          "quote": "its prerequisite tour IDs"
+        },
+        {
+          "source_id": "assessment:E1038-E1042",
+          "quote": "configured-checkout-tour; multiple-prerequisites; unconfigured-checkout-tour; relationship-direction; isolated-migration-rollback"
+        },
+        {
+          "source_id": "assessment:E1045",
+          "quote": "Rerun preserved tests against restored source and current dependencies; inspect target MySQL schema compatibility before migration deployment. No restoration executed in this assessment."
+        },
+        {
+          "source_id": "assessment:E1047",
+          "quote": "0"
+        },
+        {
+          "source_id": "assessment:E1053",
+          "quote": "Assessment covers committed customer web checkout path; no live database, AWS, browser, payment or deployment tested"
+        },
+        {
+          "source_id": "assessment:E1054",
+          "quote": "Alternate kiosk API path not exhaustively traced"
+        },
+        {
+          "source_id": "assessment:E1055",
+          "quote": "No claim of absence from remote deployments or every differently named implementation"
+        },
+        {
+          "source_id": "assessment:E1056",
+          "quote": "No product code built and no overall goal completion judgment"
+        },
+        {
+          "source_id": "assessment:E1527",
+          "quote": "// Store face IDs (matched image IDs in v2)"
+        },
+        {
+          "source_id": "assessment:E1009",
+          "quote": "Restoring component files alone would not establish identity policy, search-origin linkage or integrated eligibility."
+        }
+      ],
+      "limits": [
+        "This answer uses only the supplied saved context and assessment; it does not independently inspect files, run tests, query databases, fetch remotes, deploy, or exercise checkout.",
+        "The latest assessment is bounded to the committed customer web checkout path at the recorded baseline commit; it is not proof from a checked-out `auto-50-perc-off` worktree, today’s checkout, a deployment, or every differently named implementation.",
+        "Historical atom records remain bounded controlled/internal-source evidence and do not prove current baseline availability, live recognition, prerequisite qualification, checkout wiring, production data, or automatic discount application.",
+        "The first supported implementation boundary is a research conclusion and proposed restoration scope, not an implemented restoration or newly passing test suite.",
+        "Existing supplied-code discount persistence is preserved as a reusable checkout surface, not treated as evidence of automatic prerequisite-qualified discount discovery or application.",
+        "No fresh product tests, browser/payment/AWS/database/deployment validation, or version-bound full checkout execution evidence is supplied."
+      ],
+      "self_assessment": {
+        "choice": "ready",
+        "reason": "The answer supplies the requested current-distance assessment from the available records and correctly treats remaining unknowns as part of the answer rather than as blockers to answering this question.",
+        "question": ""
+      }
+    }
+  }
+]

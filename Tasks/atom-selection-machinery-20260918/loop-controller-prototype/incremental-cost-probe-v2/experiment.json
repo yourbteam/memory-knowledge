@@ -1,0 +1,26 @@
+{
+  "hypothesis": "Adding explicit evidence-preservation instructions to the direct update retains supporting references for retained claims while incorporating the accepted assessment, without eight lenses.",
+  "case": "current_position",
+  "why_this_case": "Real substantive baseline inspection replaces prior uncertainty; tests incorporation, historical preservation and no false product completion.",
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "control": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/incremental-cost-probe-v1",
+  "candidate": "direct update with evidence-preservation instruction + unchanged final dependency check",
+  "fresh_call_limit": 2,
+  "no_automatic_revision_or_retry": true,
+  "criteria": [
+    "Updates the baseline from uninspected to source-inspected at the recorded commit; does not imply the working checkout changed.",
+    "Carries the missing prerequisite relationship and qualification/code-discovery connections, and the existing recognition and supplied-code handling.",
+    "Preserves historical product proofs as historical and bounded; does not infer they are installed on the selected baseline.",
+    "Distinguishes completed research from implementation; no automatic discount or overall delivery claim.",
+    "Preserves consequential unknowns: fresh tests and executable compatibility, runtime/database/recognition behavior, and alternate-path scope.",
+    "Preserves fixed goal and owner decisions; does not introduce new scope or authorization.",
+    "Material claims are supported by the supplied evidence, with usable source references and no misleading quotations.",
+    "Answer is usable for deciding remaining work; its readiness is consistent with the disclosed evidence boundary."
+  ],
+  "decision_rule": "Compare both answers against every criterion using the frozen context, without treating the control or model self-approval as ground truth. Any material short-path regression rejects replacement. Equal quality favors lower measured calls/tokens/time for this case only. A needed revision means that bounded path did not finish; do not silently add calls.",
+  "assessment": "Calling assistant reviews both raw answers and check verdicts; no extra judge call and no claim of independent blind review.",
+  "limits": "One paired case, not general reliability; shared initial avoids initial-generation variance; live loop remains untouched.",
+  "promotion": false,
+  "changed_instruction": "For claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim."
+}

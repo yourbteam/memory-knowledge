@@ -1,0 +1,9 @@
+{
+  "fingerprint": "e4a2ca4daf9fc2f0abc101823b4759be714cf24808520bd6dd27cbb2ced560f6",
+  "stage": "05-consistency",
+  "attempt": 1,
+  "status": "completed",
+  "started": 1789902518.2825332,
+  "session": "01a0be80-f83b-7450-9cf2-27bec49478ef",
+  "answer_file": "attempts/0001/answer.json"
+}

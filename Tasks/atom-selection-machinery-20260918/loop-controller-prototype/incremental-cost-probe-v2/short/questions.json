@@ -1,0 +1,10 @@
+{
+  "id": "incremental-cost-probe",
+  "questions": [
+    {
+      "id": "current_position",
+      "text": "Update the previous answer to this original question using the supplied assessment and evidence. Return the complete answer, preserving still-valid information, historical boundaries and uncertainty. Do not invent changes. If no supported change is needed, retain the previous answer.\nOriginal question: Against those completion conditions, what is already demonstrated, what remains unfinished, and what is still uncertain?\nFor claims you retain from the previous answer, retain their existing source references and exact quotations. Add references for new or changed claims. Remove an old reference only when its claim is removed or corrected; do not copy outdated evidence as support for a new claim.",
+      "consumer_use": "Establish the current distance to the goal. Link each claimed achievement to identifiable evidence and its actual tested boundary; distinguish prototype, installed capability and observed use. Identify the records and source locations supporting material statements. Preserve unknowns and conflicting or outdated records rather than assigning unsupported completion percentages. This incremental answer replaces only the answer with the same original question ID. Other original answers are context, not additional tasks."
+    }
+  ]
+}
