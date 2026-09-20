@@ -1,0 +1,35 @@
+{
+  "root": "baseline",
+  "case_id": "unconfigured-checkout-tour",
+  "command": [
+    "/opt/homebrew/bin/php",
+    "-d",
+    "error_reporting=8191",
+    "/Users/kamenkamenov/taggable-server/vendor/bin/phpunit",
+    "--no-configuration",
+    "--bootstrap",
+    "/Users/kamenkamenov/taggable-server/vendor/autoload.php",
+    "--filter",
+    "testUnconfiguredCheckoutTourHasNoPrerequisites$",
+    "--log-junit",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/unconfigured-checkout-tour/junit.xml",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php"
+  ],
+  "source_root": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/baseline",
+  "returncode": 1,
+  "seconds": 0.05195408291183412,
+  "tests": [
+    {
+      "name": "testUnconfiguredCheckoutTourHasNoPrerequisites",
+      "assertions": 1,
+      "failures": [
+        "Tests\\Unit\\TourDiscountPrerequisitesTest::testUnconfiguredCheckoutTourHasNoPrerequisites\nMissing product file: /Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/baseline/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php. Supply the generated product under TAGGABLE_SOURCE_ROOT.\nFailed asserting that file \"/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/baseline/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php\" exists.\n\n/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php:198\n/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php:107\n"
+      ],
+      "errors": [],
+      "skipped": 0
+    }
+  ],
+  "verdict": "missing_feature",
+  "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+  "junit_sha256": "29d80c3a5f57b77bf9100a2737e5629b006b7646ec2daefb42e6897175094eaf"
+}

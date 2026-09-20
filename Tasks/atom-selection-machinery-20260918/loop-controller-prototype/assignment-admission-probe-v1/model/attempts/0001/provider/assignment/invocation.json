@@ -1,0 +1,32 @@
+{
+  "command": [
+    "/Applications/ChatGPT.app/Contents/Resources/codex",
+    "exec",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-astra",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "project_doc_max_bytes=0",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "features.shell_tool=false",
+    "--cd",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/model/attempts/0001",
+    "--json",
+    "--output-schema",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/model/attempts/0001/provider/assignment/schema.json",
+    "--output-last-message",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/model/attempts/0001/provider/assignment/answer.json",
+    "-"
+  ],
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "session": null,
+  "prompt_sha256": "eaac30697645e71a07927f429845ce5e29485496473dafba0b6eafb2b19bfc85"
+}

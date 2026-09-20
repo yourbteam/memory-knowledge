@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Real historical assessment routes to incremental, not goal completion",
+    "Controlled enum branches stop for established and surface cannot_assess",
+    "Actual captured owner question survives save/resume verbatim and blocks advancement",
+    "Controlled terminal-state probe starts no later stage",
+    "New cycle leaves all unperformed stages empty"
+  ],
+  "all_passed": true,
+  "scope": "Captured record routing plus explicitly controlled enum/terminal probes; no live build claim"
+}

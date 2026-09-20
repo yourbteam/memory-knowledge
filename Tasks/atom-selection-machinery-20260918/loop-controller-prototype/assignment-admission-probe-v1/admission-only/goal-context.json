@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "goal": {
+    "id": "taggable-auto-discount-delivery",
+    "outcome": "Deliver the agreed Taggable automatic 50% discount: at an eligible current-tour checkout, use the existing face-recognition flow to establish the same person’s paid purchase at any one configured prerequisite tour, locate an applicable existing 50% discount code, and apply it before payment. Keep the remaining checkout/search/payment behavior unchanged. Atom selection is the machinery choosing the work, not a competing development goal.",
+    "outcome_source": {
+      "path": "Tasks/atom-selection-machinery-20260918/packaging-v1/goal.txt",
+      "sha256": "985dd3a101d3a087cf89ded7b39ead8fc4ae4fe063763c782e0cf4138d883a03"
+    },
+    "completion_conditions": [
+      {
+        "text": "if the second location offers a 50% discount code associated with it or the tour we automatically apply the discounted code and discount to the new checkout.",
+        "source": {
+          "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+          "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+          "json_pointer": "/questions/0/final_answer/basis/4/quote"
+        },
+        "recorded_source_id": "original-product-request",
+        "source_kind": "recorded_owner_statement"
+      },
+      {
+        "text": "Location A needs to have a purchase through payment and location B's checkout needs the new 50% discount automatically applied on checkout before payment.",
+        "source": {
+          "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+          "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+          "json_pointer": "/questions/0/final_answer/basis/5/quote"
+        },
+        "recorded_source_id": "owner-clarifications",
+        "source_kind": "recorded_owner_statement"
+      },
+      {
+        "text": "This new addition only needs to locate a 50% discount code and apply it automatically to the order in the check out. The rest will not be changed and stays as it is now.",
+        "source": {
+          "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+          "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+          "json_pointer": "/questions/0/final_answer/basis/6/quote"
+        },
+        "recorded_source_id": "owner-clarifications",
+        "source_kind": "recorded_owner_statement"
+      },
+      {
+        "text": "First we check if the tour currently getting checked out is in the list of eligible tours for the discount, then through the new structure in the database we establish the prerequisite tours that previously the user must have made a purchase at.",
+        "source": {
+          "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+          "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+          "json_pointer": "/questions/0/final_answer/basis/7/quote"
+        },
+        "recorded_source_id": "owner-clarifications",
+        "source_kind": "recorded_owner_statement"
+      },
+      {
+        "text": "No, just one, but establishing \"same person\" happens through face rec flow in the code.",
+        "source": {
+          "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+          "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+          "json_pointer": "/questions/0/final_answer/basis/8/quote"
+        },
+        "recorded_source_id": "owner-clarifications",
+        "source_kind": "recorded_owner_statement"
+      },
+      {
+        "text": "Interpretation recorded in approved historical atoms: a paid purchase at any one configured prerequisite tour suffices; do not reinterpret this as only one relationship row allowed.",
+        "source": {
+          "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+          "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+          "json_pointer": "/questions/0/final_answer/basis/9/quote"
+        },
+        "recorded_source_id": "owner-clarifications",
+        "source_kind": "recorded_interpretation"
+      }
+    ],
+    "stable_interview_context": {
+      "question_id": "goal",
+      "answer_excerpt": "The Taggable product outcome the machinery is delivering is conditional: after the same person, established through the existing face-rec flow, has completed a paid purchase at any one configured prerequisite tour corresponding to the earlier location-A purchase, then at a later location-B/current-tour checkout, if that current tour is eligible and has the relevant 50% discount code associated with the location or tour, the system automatically locates and applies that discount code to the order before payment. The existing checkout/search/payment flow otherwise stays unchanged.",
+      "source": {
+        "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+        "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6",
+        "json_pointer": "/questions/0/final_answer/answer"
+      }
+    },
+    "initial_interview": {
+      "path": "Tasks/atom-selection-machinery-20260918/baseline-questions-and-answers-v1.json",
+      "sha256": "0430bea867c5764c8a76ed9848fe55e059e89ae389e5b047c64d84c7fa4c61d6"
+    },
+    "preservation": {
+      "scope": "Delivery goal only. The historical machinery-development goal remains separate and unchanged.",
+      "fixed": "Outcome, recorded business conditions and the selected product-goal excerpt.",
+      "changing": "Development status and later interview answers belong in separate versioned records. The initial interview reference is historical, not current-state evidence."
+    }
+  },
+  "approved_source_sha256": "78c6509f5b1602effea04e2200eb2e44797a99696f2c707dedf7436096ea3068"
+}

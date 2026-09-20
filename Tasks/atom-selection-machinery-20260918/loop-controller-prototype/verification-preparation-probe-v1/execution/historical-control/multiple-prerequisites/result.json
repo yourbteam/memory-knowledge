@@ -1,0 +1,33 @@
+{
+  "root": "historical-control",
+  "case_id": "multiple-prerequisites",
+  "command": [
+    "/opt/homebrew/bin/php",
+    "-d",
+    "error_reporting=8191",
+    "/Users/kamenkamenov/taggable-server/vendor/bin/phpunit",
+    "--no-configuration",
+    "--bootstrap",
+    "/Users/kamenkamenov/taggable-server/vendor/autoload.php",
+    "--filter",
+    "testMultiplePrerequisitesArePreserved$",
+    "--log-junit",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/multiple-prerequisites/junit.xml",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php"
+  ],
+  "source_root": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/historical-control",
+  "returncode": 0,
+  "seconds": 0.050261083990335464,
+  "tests": [
+    {
+      "name": "testMultiplePrerequisitesArePreserved",
+      "assertions": 24,
+      "failures": [],
+      "errors": [],
+      "skipped": 0
+    }
+  ],
+  "verdict": "passed",
+  "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+  "junit_sha256": "d40f5e4a66398b6bfc2f9c0544305a7b6a5aac88d69c211cab25f3e11e39d65b"
+}

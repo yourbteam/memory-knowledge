@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": [
+        "reuse",
+        "adapt",
+        "blocked"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "enum": [
+              "configured-checkout-tour",
+              "multiple-prerequisites",
+              "unconfigured-checkout-tour",
+              "relationship-direction",
+              "isolated-migration-rollback"
+            ]
+          },
+          "test_method": {
+            "type": "string",
+            "enum": [
+              "testConfiguredCheckoutTourReturnsItsPrerequisite",
+              "testMultiplePrerequisitesArePreserved",
+              "testUnconfiguredCheckoutTourHasNoPrerequisites",
+              "testRelationshipDirectionDoesNotConfigureThePrerequisiteTour",
+              "testIsolatedMigrationRollbackPreservesExistingTours"
+            ]
+          },
+          "why_this_test": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "case_id",
+          "test_method",
+          "why_this_test"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "needed_changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outside_test_coverage": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_baseline_result": {
+      "type": "string"
+    },
+    "expected_historical_control_result": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision",
+    "reason",
+    "cases",
+    "needed_changes",
+    "outside_test_coverage",
+    "expected_baseline_result",
+    "expected_historical_control_result"
+  ],
+  "additionalProperties": false
+}

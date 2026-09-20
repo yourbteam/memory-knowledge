@@ -1,0 +1,22 @@
+{
+  "selection": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/handoff.json",
+    "sha256": "924aae3beb9e4532bae3e298eb3c1c823e1452bf7c45984b3815cf02477e9f82"
+  },
+  "current_answers": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/input.json",
+    "sha256": "181c3acf2ad2928a3ead889b18d8585c4f8418693b2c8a145c8b70e29063bcec"
+  },
+  "goal_context": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json",
+    "sha256": "b6cbcada7719ddd3425d52ddc170813f9ddd66854b2e7daf03e1609000f44c03"
+  },
+  "historical_request": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/atom-request.json",
+    "sha256": "fec36608b63be4684f1b613ff197cf3c8ac83c369e92a058bc3cef9a437b36d1"
+  },
+  "historical_cases": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/value-packet.json",
+    "sha256": "dff6711262076abc0f0b461b7774a2ae4d1a20c9b07eb06248e84021ddf55291"
+  }
+}

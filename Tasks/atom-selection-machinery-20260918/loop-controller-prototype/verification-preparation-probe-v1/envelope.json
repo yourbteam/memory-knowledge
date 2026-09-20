@@ -1,0 +1,15 @@
+{
+  "outcome": "Prepare and execute verification for the selected restoration before product generation",
+  "scope": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1",
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "max_model_calls": 1,
+  "excluded": [
+    "product edits",
+    "live-loop advancement",
+    "install",
+    "commit",
+    "deployment"
+  ],
+  "hypothesis": "Astra can select compatible historical tests; Python can run them unchanged and distinguish missing feature from working historical capability."
+}

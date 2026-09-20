@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "root": "/Users/kamenkamenov/memory-knowledge",
+  "skills": "/private/tmp/memory-knowledge-atom-selection-publish/skills",
+  "goal": {
+    "path": "Tasks/atom-selection-machinery-20260918/goal-record-v1/goal-context.json",
+    "sha256": "b6cbcada7719ddd3425d52ddc170813f9ddd66854b2e7daf03e1609000f44c03"
+  },
+  "answers": {
+    "path": "Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0002/incremental/current-answers.json",
+    "sha256": "181c3acf2ad2928a3ead889b18d8585c4f8418693b2c8a145c8b70e29063bcec"
+  },
+  "stage": "build",
+  "pending": {
+    "action": "prepare_build",
+    "selection": {
+      "path": "Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/handoff.json",
+      "sha256": "924aae3beb9e4532bae3e298eb3c1c823e1452bf7c45984b3815cf02477e9f82"
+    },
+    "instruction": "Calling assistant must review the recommendation and use the existing builder admission process. Supply an authorized prepared driver request bound to this selection; do not infer permission from prose.",
+    "verification_prepared": {
+      "path": "Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation/handoff.json",
+      "sha256": "01039aaf02474bb4f1055d7cda1e45af600cdc9876c437270865c7d3c0b41084"
+    }
+  },
+  "cycle_number": 3,
+  "goal_text_sha256": "bb7a1a8313f280883979f554387249ebb9c4f34e4f6079e3ee1b1145fb8d5844",
+  "bootstrap_assessment": {
+    "path": "Tasks/atom-selection-machinery-20260918/citation-connected-final-v1/handoff.json",
+    "sha256": "4b2ece965af5857e3bbcc11f8458c5837eb4e0dd1a0b3116e6a9111f4822fb46"
+  },
+  "incremental_run": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0002/incremental",
+  "cycle": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/cycle.json",
+  "last_assessment": {
+    "path": "Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0002/assessment/handoff.json",
+    "sha256": "84d5c49185a5243446ccf8a0d1f6fdc365dc44bb7d2654533eaae204c9bb6c5d"
+  },
+  "build_preparation": {
+    "path": "Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation/handoff.json",
+    "sha256": "01039aaf02474bb4f1055d7cda1e45af600cdc9876c437270865c7d3c0b41084"
+  }
+}

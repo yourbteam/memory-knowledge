@@ -1,0 +1,33 @@
+{
+  "root": "historical-control",
+  "case_id": "unconfigured-checkout-tour",
+  "command": [
+    "/opt/homebrew/bin/php",
+    "-d",
+    "error_reporting=8191",
+    "/Users/kamenkamenov/taggable-server/vendor/bin/phpunit",
+    "--no-configuration",
+    "--bootstrap",
+    "/Users/kamenkamenov/taggable-server/vendor/autoload.php",
+    "--filter",
+    "testUnconfiguredCheckoutTourHasNoPrerequisites$",
+    "--log-junit",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/unconfigured-checkout-tour/junit.xml",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php"
+  ],
+  "source_root": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/historical-control",
+  "returncode": 0,
+  "seconds": 0.04870779090560973,
+  "tests": [
+    {
+      "name": "testUnconfiguredCheckoutTourHasNoPrerequisites",
+      "assertions": 19,
+      "failures": [],
+      "errors": [],
+      "skipped": 0
+    }
+  ],
+  "verdict": "passed",
+  "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+  "junit_sha256": "584e6adb519299787036b1af4f65c35523fbebe75249e50d1b11cbd632918212"
+}

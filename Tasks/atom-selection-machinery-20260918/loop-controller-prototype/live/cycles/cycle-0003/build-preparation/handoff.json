@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "status": "verification_prepared",
+  "selection": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/handoff.json",
+    "sha256": "924aae3beb9e4532bae3e298eb3c1c823e1452bf7c45984b3815cf02477e9f82"
+  },
+  "assignment": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/assignment.json",
+    "sha256": "196c2bd9e74c384b40f86ba10e151772291fa2bd9adc708f1ac6a28821b3fe11"
+  },
+  "baseline_commit": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+  "creation_request": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation/creation-request.json",
+    "sha256": "9668a5d804957b27e7c98a7bec3b630a4fcf81a48c6ee77bbc6935916fba567c"
+  },
+  "verification": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation/verification.json",
+    "sha256": "5700c373b99eae487b5f83b151e32acfc24040561a201c5f767ea8d5d527aee5"
+  },
+  "builder_prompt": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation/builder-preview/prompt.txt",
+    "sha256": "5335012f67b27ddf4bdbba9f90d057a0dc0c104d76f6385ef714ef81b92bde42"
+  },
+  "evidence": [
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/selection/handoff.json",
+      "sha256": "924aae3beb9e4532bae3e298eb3c1c823e1452bf7c45984b3815cf02477e9f82"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/assignment.json",
+      "sha256": "196c2bd9e74c384b40f86ba10e151772291fa2bd9adc708f1ac6a28821b3fe11"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/sources.json",
+      "sha256": "565e50294ab5e9749de3729be6220116ba73422192f0fb3443f25927241bc458"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/implementation-creation-request.json",
+      "sha256": "df941ab7c87d4f59cbbdae7b2f0e0666d3b368e50c52dbfc9203829a915e30c5"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/assignment.json",
+      "sha256": "196c2bd9e74c384b40f86ba10e151772291fa2bd9adc708f1ac6a28821b3fe11"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/historical_request.json",
+      "sha256": "fec36608b63be4684f1b613ff197cf3c8ac83c369e92a058bc3cef9a437b36d1"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php",
+      "sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/historical_runner.py",
+      "sha256": "6894966b7778e7f2d465c7c82926a6d5dde46f736ca5d771c11e2cb8a8ae72cc"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/historical_product_0.php",
+      "sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/historical_product_1.php",
+      "sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/configured-checkout-tour/result.json",
+      "sha256": "e1f5d060d825bd5d54e1d21c32f157adddae049b21654b959e2b6adaf70711fa"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/configured-checkout-tour/junit.xml",
+      "sha256": "4f0a9a1bba06de8faf25962c5560cb9aed41c1ebc4cb33ba17e96b680f24ed80"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/multiple-prerequisites/result.json",
+      "sha256": "9d74177c094cba56949bd6341d77bdca5144b5ea972a862054b813abb0a30f5d"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/multiple-prerequisites/junit.xml",
+      "sha256": "fc8bcb65cbc852c43a2c9d87320ac5214596730abd19b8819d67011bac51661d"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/unconfigured-checkout-tour/result.json",
+      "sha256": "2bc6ff19d9785f6f6ca7e4a6acd5c6ccaa7c37a667af88384b55d6e139c3f1c2"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/unconfigured-checkout-tour/junit.xml",
+      "sha256": "29d80c3a5f57b77bf9100a2737e5629b006b7646ec2daefb42e6897175094eaf"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/relationship-direction/result.json",
+      "sha256": "da79a78febd68a1e04ec9cc7d223234223dc1ac6b9f1d19ed6bac796ad6b0724"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/relationship-direction/junit.xml",
+      "sha256": "ff41142ecabaf2d93516ff2f708d531aeaf88cc551120baaba1a7b43293de1e6"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/isolated-migration-rollback/result.json",
+      "sha256": "33ae81b12e3698564b6f4a29d7547bd51ed51302883afcf85d10abaa8c0f1a27"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/baseline/isolated-migration-rollback/junit.xml",
+      "sha256": "6d2844a7a197b24a9259ac27ae3b9c590df475109ce48b79adfcb100855d992e"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/configured-checkout-tour/result.json",
+      "sha256": "d2b8a75d8929e8d11b256516cdf5069fcac4ff5c076960b2d9499df35de5c225"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/configured-checkout-tour/junit.xml",
+      "sha256": "aa9a63796062b3040c0d8a78cf0a313e2b5034370e4f04ca99a4a43f1b452d37"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/multiple-prerequisites/result.json",
+      "sha256": "7607ef913d97ee8ebace0076d2d8e01fbc716b55e8e894ee2ff45444c10ae4e2"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/multiple-prerequisites/junit.xml",
+      "sha256": "d40f5e4a66398b6bfc2f9c0544305a7b6a5aac88d69c211cab25f3e11e39d65b"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/unconfigured-checkout-tour/result.json",
+      "sha256": "fa3a86dc15a191eb116dfdd3b39a7eda5623abac7d62de30bae4cee536b6697a"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/unconfigured-checkout-tour/junit.xml",
+      "sha256": "584e6adb519299787036b1af4f65c35523fbebe75249e50d1b11cbd632918212"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/relationship-direction/result.json",
+      "sha256": "4ae10387be5cb232c814efe0d10a6649930ef3b0014a4f85f77548ed95607fc6"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/relationship-direction/junit.xml",
+      "sha256": "eba584d62d1b75461365a822bd5e797fb30ab65e4952a660fd56d32c7fb6c127"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/isolated-migration-rollback/result.json",
+      "sha256": "3445cb9d9d027e68d8678f21ece2335c13800532bfdf846efaa0e194193cb12b"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/isolated-migration-rollback/junit.xml",
+      "sha256": "706f627d35c5b6569c406474619a9daddabfa6d6b2796ec7fe099be42dc9d904"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources.json",
+      "sha256": "3d01a4805ccbbc88d0acaba0e6c1ca8632db619d0b15432cecd2112f4083ba6a"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/assessment.json",
+      "sha256": "1a65cf4320988f9bb25ec0ad9f50cac01a6b4e37e45aa3d9e40e2824252b0c5e"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/result.json",
+      "sha256": "c55b93dbb4230fad1b4461a1d7b95bbd89b712cc3d324d6e30498d2995199804"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/input-state.json",
+      "sha256": "9959ef700b462e9f3069010d673f8d877c0fa63350ff3f659f8a3f4d6e9862e6"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/model/attempts/0001/answer.json",
+      "sha256": "1a65cf4320988f9bb25ec0ad9f50cac01a6b4e37e45aa3d9e40e2824252b0c5e"
+    },
+    {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/candidate_builder.py",
+      "sha256": "ea35ba015e514f7e4274f6687e8232eef7b51364e05f23a06e80698b342d383f"
+    },
+    {
+      "path": "/private/tmp/memory-knowledge-atom-selection-publish/skills/atom-building-machinery/scripts/candidate_builder_contract.py",
+      "sha256": "0dd3bf491373e32edc5c3c51152433383f4cbc2b3cb0f4c2c57147aabbb05db9"
+    }
+  ],
+  "product_started": false,
+  "model_calls": 0,
+  "remaining": [
+    "Authorized candidate build and complete experiment/review/validation preparation remain required."
+  ],
+  "unverified_obligations": [
+    "Target MySQL schema compatibility, including referenced-column types, signedness, indexes and storage engine requirements; neither MySQL inspection nor actual MySQL execution is established by these SQLite tests.",
+    "Delivery-branch restoration, retained version and diff, allowed-path compliance, preservation of the other branch and untracked work, and unchanged surrounding application behavior.",
+    "Full schema equivalence and absence of effects on other existing tables: preservation assertions cover the tours table's presence and recorded fixture rows, not every schema property or production table.",
+    "Explicit rejection tests for duplicate relationships or invalid foreign keys.",
+    "Discount-code availability, same-person paid-purchase qualification, qualification at any one prerequisite, discount application and checkout integration.",
+    "Full application compatibility: PHP 8.5 is outside the declared Composer PHP constraint, and focused execution with the supplied error-reporting setting does not establish general runtime support.",
+    "Final product completion; historical-control success alone cannot establish restoration or satisfy the atom's complete stopping condition."
+  ]
+}

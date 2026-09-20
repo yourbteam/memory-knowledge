@@ -1,0 +1,33 @@
+{
+  "root": "historical-control",
+  "case_id": "isolated-migration-rollback",
+  "command": [
+    "/opt/homebrew/bin/php",
+    "-d",
+    "error_reporting=8191",
+    "/Users/kamenkamenov/taggable-server/vendor/bin/phpunit",
+    "--no-configuration",
+    "--bootstrap",
+    "/Users/kamenkamenov/taggable-server/vendor/autoload.php",
+    "--filter",
+    "testIsolatedMigrationRollbackPreservesExistingTours$",
+    "--log-junit",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/execution/historical-control/isolated-migration-rollback/junit.xml",
+    "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/sources/TourDiscountPrerequisitesTest.php"
+  ],
+  "source_root": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/verification-preparation-probe-v1/historical-control",
+  "returncode": 0,
+  "seconds": 0.04878812492825091,
+  "tests": [
+    {
+      "name": "testIsolatedMigrationRollbackPreservesExistingTours",
+      "assertions": 26,
+      "failures": [],
+      "errors": [],
+      "skipped": 0
+    }
+  ],
+  "verdict": "passed",
+  "test_sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5",
+  "junit_sha256": "706f627d35c5b6569c406474619a9daddabfa6d6b2796ec7fe099be42dc9d904"
+}

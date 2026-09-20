@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "actual_loop_cli": true,
+  "existing_builder_prepare_only": true,
+  "resume_same_handoff": true,
+  "test_source_preserved": true,
+  "all_five_cases_preserved": true,
+  "coverage_limits_preserved": true,
+  "assignment_preserved": true,
+  "model_calls": 0,
+  "live_state_unchanged": true,
+  "product_build_not_marked_complete": true,
+  "rejections": [
+    "Assignment belongs to a different current_answers",
+    "Verification decision differs from the saved model answer"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "status": "connected_and_validated",
+  "live_handoff": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/live/cycles/cycle-0003/build-preparation/handoff.json",
+  "real_builder_prepare_only": true,
+  "model_calls": 0,
+  "product_started": false,
+  "all_5_selected_cases_preserved": true,
+  "test_bytes_preserved": true,
+  "coverage_limits_preserved": true,
+  "product_checkout_unchanged": true,
+  "loop_mechanical_checks_passed": true,
+  "review": "The new command prepares builder input only and records its reference on the current selected cycle. It leaves the build and assessment empty, keeps preparation pending and does not bypass existing full driver admission. Historical source context is reused with its age explicit; existing source is exported from the frozen delivery commit. Both initial preparation and idempotent replay ran through loop CLI and candidate_builder --prepare-only. Rejected changed answers and edited test selection."
+}

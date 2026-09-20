@@ -1,0 +1,32 @@
+{
+  "assignment": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/atom-selection-machinery-20260918/loop-controller-prototype/assignment-admission-probe-v1/assignment.json",
+    "copy": "sources/assignment.json",
+    "sha256": "196c2bd9e74c384b40f86ba10e151772291fa2bd9adc708f1ac6a28821b3fe11"
+  },
+  "historical_request": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/atom-request.json",
+    "copy": "sources/historical_request.json",
+    "sha256": "fec36608b63be4684f1b613ff197cf3c8ac83c369e92a058bc3cef9a437b36d1"
+  },
+  "test": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/verification-live-01/candidate/taggable-server/tests/Unit/TourDiscountPrerequisitesTest.php",
+    "copy": "sources/TourDiscountPrerequisitesTest.php",
+    "sha256": "cf6953d7521fc8a091da4e0bdd17d1f2fdb8a4a5193522d4dc293815e051e3e5"
+  },
+  "historical_runner": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/execution_adapter.py",
+    "copy": "sources/historical_runner.py",
+    "sha256": "6894966b7778e7f2d465c7c82926a6d5dde46f736ca5d771c11e2cb8a8ae72cc"
+  },
+  "historical_product_0": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/implementation-live-01/candidate/taggable-server/database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+    "copy": "sources/historical_product_0.php",
+    "sha256": "a9ad06d73b57abae98f574914e70c5e410f374d8867fa80efdd574f7f651bdaf"
+  },
+  "historical_product_1": {
+    "origin": "/Users/kamenkamenov/memory-knowledge/Tasks/taggable-cross-location-discount-atoms-20260911/tour-prerequisite-structure/implementation-live-01/candidate/taggable-server/app/Services/TourDiscountPrerequisites.php",
+    "copy": "sources/historical_product_1.php",
+    "sha256": "58761b380541b4dbd44928e638506679d459da965ad19478c824b22caa65df28"
+  }
+}

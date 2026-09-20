@@ -1,0 +1,49 @@
+{
+  "commit": "45826e12cdc8f585e514d7bb09c0d37fa28ed568",
+  "branch": "auto-50-perc-off",
+  "product_paths_present": {
+    "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php": false,
+    "app/Services/TourDiscountPrerequisites.php": false
+  },
+  "baseline_kind": "Exact committed files required by this isolated test; not a complete application export",
+  "runtime": {
+    "php": "/opt/homebrew/bin/php",
+    "php_version": "PHP 8.5.6 (cli) (built: May  5 2026 21:19:36) (NTS)\nCopyright (c) The PHP Group\nBuilt by Homebrew\nZend Engine v4.5.6, Copyright (c) Zend Technologies\n    with Zend OPcache v8.5.6, Copyright (c), by Zend Technologies\n",
+    "phpunit": "/Users/kamenkamenov/taggable-server/vendor/bin/phpunit",
+    "phpunit_version": "PHPUnit 7.5.20 by Sebastian Bergmann and contributors.\n\n",
+    "autoload": "/Users/kamenkamenov/taggable-server/vendor/autoload.php",
+    "autoload_sha256": "02603a4abab4fa662b87e4436044c089dcc27d5fd8fe3eececffd5ba8293659f",
+    "installed_sha256": "9d478a99891bc5f414a6465da0966ecc223a7f535a1e0a7c0f1e74ed0817e7d7",
+    "phpunit_sha256": "1fb9d47c7f192da01d06d1574b85a7e1c02b959cc03a969df1a8c0422abfc574",
+    "versions": {
+      "laravel/framework": {
+        "installed": "v5.8.38",
+        "locked": "v5.8.38"
+      },
+      "phpunit/phpunit": {
+        "installed": "7.5.20",
+        "locked": "7.5.20"
+      }
+    },
+    "pdo_drivers": "[\"dblib\",\"mysql\",\"odbc\",\"pgsql\",\"sqlite\"]"
+  },
+  "checkout_before": {
+    "branch": "feature/kiosk-square-return-recovery",
+    "head": "d5ddaa23ed61d3f62c1006584c18e612bacfdb64",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {
+      "Implementation Documents/kiosk-image-created-at-timezone/knowledge.md": "e79e033e08ce9f8e5a5ae19835ef77f85d2dff102271cc79b0084927159a920c",
+      "Implementation Documents/kiosk-square-return-recovery/bench/README.md": "06c4944fbfc774ef3012b01a58e9f0039da082745929d2b1766df5929b2b47c4",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/locations.json": "4228309140861eae8bffc3f659e1ec3b67ac60a052b51e82fd2967dcfdd2b5cb",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/orders.json": "26fd1a234f3bc62ab957a331ba507a36981063a47792f9e307b57df82825ebe4",
+      "Implementation Documents/kiosk-square-return-recovery/bench/fixtures/payments.json": "2d09c8fb41a54424a0d76016e626997b3333044d28c92ce0f087fefd3a8a3708",
+      "Implementation Documents/kiosk-square-return-recovery/bench/make-session.php": "639029c589cebe08f29a82d4aec441553f682486336433f90aac7e017d452a20",
+      "Implementation Documents/kiosk-square-return-recovery/bench/run-cases.py": "d8a46f6b1570e2bc59bd5d3a5e3ff20cb0f2325149a460b9b1afef588be4ddd1",
+      "Implementation Documents/kiosk-square-return-recovery/bench/seed.sql": "4580908312a075a1c70deb1e6abbf437784027ab7968e1268f810f77796afdd9",
+      "Implementation Documents/kiosk-square-return-recovery/bench/square-stub.php": "b9e22b5c4861d11b1644537a1589f3d320ce53c16139e467dd63b17009e2cca1",
+      "Implementation Documents/kiosk-square-return-recovery/implementation-plan.md": "550fd1070f1db91087f42d853fdd2712b474b3ecd47c55a9a3ea0c06fad66df3",
+      "Implementation Documents/kiosk-square-return-recovery/knowledge.md": "44f81a459108ac208884a9bb7850a7e7e36aa0e87fbeed702d1c3ad86fd57f66"
+    }
+  },
+  "live_state_sha256": "a0e77a6dac7b58210996089b21a66d13238382f5c3eb3df45cc28134ca0353ae"
+}

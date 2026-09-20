@@ -1,0 +1,32 @@
+{
+  "status": "admission_passed",
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "manual_answer_edits": 0,
+  "changed_assignment_refused": "Owner authorization must approve this exact request and repository",
+  "product_root_refused": true,
+  "implementation_started": false,
+  "live_loop_changed": false,
+  "semantic_review": {
+    "verdict": "passed",
+    "reviewer": "calling assistant; not independent model review",
+    "findings": [
+      "Outcome remains directed prerequisite storage and lookup, not automatic discount delivery.",
+      "All five historical cases retained, explicitly identified as controlled examples.",
+      "Only migration, reader and focused test edit paths selected.",
+      "Current dependency execution, existing data preservation, MySQL inspection limits and branch isolation retained.",
+      "No product permission, result, hash or source identity invented by Astra."
+    ],
+    "qualification": "The context and historical path/case catalog were supplied by this prototype. Autonomous collection and full prepared-driver construction remain outside this test."
+  },
+  "remaining": "A full prepared driver also requires experiments, candidates and review/validation adapters; this test covers assignment admission only.",
+  "fresh_model_calls": 1,
+  "model_elapsed_seconds": 26.418237924575806,
+  "usage": {
+    "input_tokens": 49768,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 691,
+    "reasoning_output_tokens": 33
+  }
+}

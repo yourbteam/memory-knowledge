@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "candidate",
+        "blocked"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "anchor": {
+            "type": "string"
+          },
+          "replacement": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "anchor",
+          "replacement"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "status",
+    "reason",
+    "edits"
+  ],
+  "additionalProperties": false
+}

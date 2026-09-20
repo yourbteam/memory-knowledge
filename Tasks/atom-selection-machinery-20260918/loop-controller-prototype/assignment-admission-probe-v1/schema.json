@@ -1,0 +1,69 @@
+{
+  "type": "object",
+  "properties": {
+    "outcome": {
+      "type": "string"
+    },
+    "practical_value": {
+      "type": "string"
+    },
+    "stopping_condition": {
+      "type": "string"
+    },
+    "contribution": {
+      "type": "string"
+    },
+    "proof": {
+      "type": "string"
+    },
+    "before_description": {
+      "type": "string"
+    },
+    "before_quote": {
+      "type": "string"
+    },
+    "allowed_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "database/migrations/2026_09_14_000001_create_tour_discount_prerequisites.php",
+          "app/Services/TourDiscountPrerequisites.php",
+          "tests/Unit/TourDiscountPrerequisitesTest.php"
+        ]
+      }
+    },
+    "case_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "configured-checkout-tour",
+          "multiple-prerequisites",
+          "unconfigured-checkout-tour",
+          "relationship-direction",
+          "isolated-migration-rollback"
+        ]
+      }
+    },
+    "missing_information": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "outcome",
+    "practical_value",
+    "stopping_condition",
+    "contribution",
+    "proof",
+    "before_description",
+    "before_quote",
+    "allowed_paths",
+    "case_ids",
+    "missing_information"
+  ],
+  "additionalProperties": false
+}

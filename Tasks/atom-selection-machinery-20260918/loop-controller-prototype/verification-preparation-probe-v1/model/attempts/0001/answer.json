@@ -1,0 +1,43 @@
+{
+  "decision": "reuse",
+  "reason": "The unchanged tests exercise all five selected functional cases through the actual migration and reader, using isolated in-memory SQLite and the supplied dependencies. Separate processes and exact-class source checks support baseline/control isolation. Missing baseline product files are an expected test failure, not a test mismatch. No concrete adaptation is justified by the supplied evidence.",
+  "cases": [
+    {
+      "case_id": "configured-checkout-tour",
+      "test_method": "testConfiguredCheckoutTourReturnsItsPrerequisite",
+      "why_this_test": "Creates storage through the product migration, inserts B-to-A, and asserts B is configured with exactly A as an integer prerequisite ID while preserving tour rows."
+    },
+    {
+      "case_id": "multiple-prerequisites",
+      "test_method": "testMultiplePrerequisitesArePreserved",
+      "why_this_test": "Asserts B returns exactly A and C, independent of ordering, and checks an unrelated checkout relationship to detect unfiltered results. Tour rows remain unchanged."
+    },
+    {
+      "case_id": "unconfigured-checkout-tour",
+      "test_method": "testUnconfiguredCheckoutTourHasNoPrerequisites",
+      "why_this_test": "Queries D while only B-to-A exists and asserts false configuration status and an empty prerequisite array, with tour rows unchanged."
+    },
+    {
+      "case_id": "relationship-direction",
+      "test_method": "testRelationshipDirectionDoesNotConfigureThePrerequisiteTour",
+      "why_this_test": "Checks that B-to-A configures B but leaves A unconfigured with no prerequisites, detecting an incorrectly symmetric reader."
+    },
+    {
+      "case_id": "isolated-migration-rollback",
+      "test_method": "testIsolatedMigrationRollbackPreservesExistingTours",
+      "why_this_test": "Executes the actual migration up and down in isolated SQLite, verifies relationship storage and reader behavior, and checks that the tours table and all recorded fixture values survive migration and reader calls."
+    }
+  ],
+  "needed_changes": [],
+  "outside_test_coverage": [
+    "Target MySQL schema compatibility, including referenced-column types, signedness, indexes and storage engine requirements; neither MySQL inspection nor actual MySQL execution is established by these SQLite tests.",
+    "Delivery-branch restoration, retained version and diff, allowed-path compliance, preservation of the other branch and untracked work, and unchanged surrounding application behavior.",
+    "Full schema equivalence and absence of effects on other existing tables: preservation assertions cover the tours table's presence and recorded fixture rows, not every schema property or production table.",
+    "Explicit rejection tests for duplicate relationships or invalid foreign keys.",
+    "Discount-code availability, same-person paid-purchase qualification, qualification at any one prerequisite, discount application and checkout integration.",
+    "Full application compatibility: PHP 8.5 is outside the declared Composer PHP constraint, and focused execution with the supplied error-reporting setting does not establish general runtime support.",
+    "Final product completion; historical-control success alone cannot establish restoration or satisfy the atom's complete stopping condition."
+  ],
+  "expected_baseline_result": "All five selected methods are expected to fail during setUp at the missing migration-file assertion on commit 45826e12cdc8f585e514d7bb09c0d37fa28ed568. That assertion precedes the missing reader-file check. These are expected results, not observed execution.",
+  "expected_historical_control_result": "All five methods are expected to pass against the unchanged historical migration and reader using the supplied runner and SQLite runtime. Fresh execution must confirm this expectation; any runtime failure must be distinguished from a functional assertion failure. No execution is claimed."
+}
