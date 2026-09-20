@@ -447,3 +447,24 @@ that sequence continuity permits another approved build. It does not rank or aut
 The driver uses builder-owned contribution verification for build-only packets. It judges the
 promised outcome and progress claim, not whether the atom was the best choice. Existing runs keep
 legacy receipt and closeout handling. Do not rewrite historical records during migration.
+
+
+## Prepared runtime adapters
+
+The loop's `execute-prepared --runtime-config <json>` uses this skill's
+`scripts/runtime_adapters.py`. The configuration contains `schema_version: 1`,
+`adapter`, and `settings`. Only `php-composer` is implemented. Its Docker settings
+contain `backend: "docker"`, an existing `autoload` path, and `docker` with an immutable
+`image` SHA-256 and existing `composer` executable. Host settings use `backend: "host"`,
+`php` and `autoload`. The legacy PHP CLI arguments translate into the same adapter.
+
+The adapter checks platform requirements before generation and preserves image, dependency
+and implementation identities for execution. The shared controller dispatches preparation,
+isolation and execution without PHP commands. Unsupported environments and mismatched
+adapters stop before model calls. Root marker detection is a bounded routing check, not
+complete mixed-project discovery; select a component root for a mixed project.
+
+New candidate prompts use readable assignment-first sections and record `sections-v1`;
+historical candidate records retain exact legacy prompt verification. The caller must use
+the matching updated lineage verifier. Runtime readiness does not establish that generated
+code or its experiment passes.

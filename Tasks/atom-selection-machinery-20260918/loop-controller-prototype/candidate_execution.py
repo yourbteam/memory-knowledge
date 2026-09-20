@@ -71,7 +71,14 @@ def verify_generation(generation, request_path, skills):
     changed = sorted(p for p in set(before) | set(after) if before.get(p) != after.get(p))
     if changed != result['changed_paths'] or any(p not in request['allowed_paths'] for p in changed):
         raise ValueError('Candidate delta differs from its allowed creation boundary')
-    prompt = (INSTRUCTION + '\n' + json.dumps(packet, ensure_ascii=False)).encode()
+    if result.get('prompt_format') == 'sections-v1':
+        from builder_prompt import render
+        prompt = render(INSTRUCTION, packet).encode()
+    elif 'prompt_format' not in result:
+        # Exact historical builder format; never rewrite old generation records.
+        prompt = (INSTRUCTION + '\n' + json.dumps(packet, ensure_ascii=False)).encode()
+    else:
+        raise ValueError('Unknown preserved builder prompt format')
     if (generation / 'prompt.txt').read_bytes() != prompt or (generation / 'model/prompt.txt').read_bytes() != prompt:
         raise ValueError('Candidate prompt differs from the prepared request')
     invocation = read(generation / 'model/invocation.json')

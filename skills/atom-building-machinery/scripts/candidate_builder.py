@@ -32,7 +32,8 @@ def run(request_path, output, prepare_only=False):
     original = request_path.read_bytes(); request = json.loads(original)
     packet = prepare(request)
     output_boundary(output, request['baseline'])
-    prompt = INSTRUCTION + '\n' + json.dumps(packet, ensure_ascii=False)
+    from builder_prompt import render
+    prompt = render(INSTRUCTION, packet)
     output.mkdir(parents=True, exist_ok=False)
     write(output / 'request.json', original)
     write(output / 'prompt.txt', prompt.encode()); write(output / 'schema.json', schema())
@@ -53,6 +54,7 @@ def run(request_path, output, prepare_only=False):
         if request_path.read_bytes() != original or prepare(request) != packet:
             raise BuildError('Creation inputs changed during model execution')
         result = materialize(request, reply, output / 'candidate')
+        result['prompt_format'] = 'sections-v1'
         result['request_sha256'] = digest(original)
         result['raw_answer_sha256'] = digest(raw.encode())
         write(output / 'result.json', result)

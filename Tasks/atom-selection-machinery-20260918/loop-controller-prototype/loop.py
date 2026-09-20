@@ -217,8 +217,14 @@ def advance(run, stop_after=None):
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='op',required=True)
     start=sub.add_parser('start');start.add_argument('--root',type=Path,required=True);start.add_argument('--goal',type=Path,required=True);start.add_argument('--answers',type=Path,required=True);start.add_argument('--assessment',type=Path);start.add_argument('--incremental-run',type=Path);start.add_argument('--skills',type=Path,default=Path.home()/'.codex/skills');start.add_argument('--prepare-only',action='store_true')
-    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-selection','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
+    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-selection','execute-prepared','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
     for cmd in sub.choices.values():cmd.add_argument('--run',type=Path,required=True)
+    sub.choices['execute-prepared'].add_argument('--php',type=Path)
+    sub.choices['execute-prepared'].add_argument('--runtime-config',type=Path)
+    sub.choices['execute-prepared'].add_argument('--docker-runtime',type=Path)
+    sub.choices['execute-prepared'].add_argument('--autoload',type=Path)
+    sub.choices['execute-prepared'].add_argument('--prepare-only',action='store_true')
+    sub.choices['execute-prepared'].add_argument('--attempt',type=int,default=1)
     sub.choices['prepare-selection'].add_argument('--repository',type=Path,required=True)
     sub.choices['prepare-selection'].add_argument('--prepare-only',action='store_true')
     sub.choices['prepare-selection'].add_argument('--reference-root',type=Path,action='append',default=[])
@@ -248,6 +254,17 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         s=read(run/'state.json')
         try:
+            if a.op=='execute-prepared':
+                from prepared_execution import execute
+                if a.attempt < 1: raise ValueError('Execution attempt must be positive')
+                suffix='' if a.attempt==1 else '-attempt'+str(a.attempt)
+                result=execute(s,Path(s['cycle']).parent/('prepared-execution'+suffix),a.php,a.autoload,a.prepare_only,a.docker_runtime,a.runtime_config)
+                if result.get('handoff'):
+                    s['prepared_execution']=ref(result['handoff'],Path(s['root']))
+                    s['pending']['prepared_execution']=s['prepared_execution']
+                    save(run/'state.json',s)
+                event(run,'prepared_execution_returned',result=result)
+                print(json.dumps(result));return
             if a.op=='prepare-selection':
                 from selection_preparation import prepare
                 if a.attempt < 1: raise ValueError('Preparation attempt must be positive')
