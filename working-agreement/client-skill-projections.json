@@ -50,12 +50,12 @@
       ]
     },
     "atom-selection-machinery": {
-      "canonical_tree_sha256": "732903234261a4551ec4b1d6b17916c2a73f577eb6dec5808615230f9d86a718",
+      "canonical_tree_sha256": "b49ec091255e799960a016260e6ccb89f4b67b376b7add4e24c5e2fac6e67bf5",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "732903234261a4551ec4b1d6b17916c2a73f577eb6dec5808615230f9d86a718",
+      "projected_tree_sha256": "b49ec091255e799960a016260e6ccb89f4b67b376b7add4e24c5e2fac6e67bf5",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],
