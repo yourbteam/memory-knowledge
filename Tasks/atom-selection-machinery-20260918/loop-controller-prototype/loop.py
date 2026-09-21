@@ -20,9 +20,9 @@ def save(p, data):
     os.replace(tmp,p)
 
 def ref(p, root):
-    p=Path(p).resolve();return {'path':str(p.relative_to(root)), 'sha256':sha(p)}
+    root=Path(root).resolve();p=Path(p).resolve();return {'path':str(p.relative_to(root)), 'sha256':sha(p)}
 def resolve(r, root):
-    p=root/r['path']
+    root=Path(root).resolve();p=root/r['path']
     if not p.resolve().is_relative_to(root) or sha(p)!=r['sha256']:raise ValueError('Changed or out-of-root record: '+r['path'])
     return p
 
@@ -135,7 +135,7 @@ def attach_research(run, s, path):
     for e in d['evidence']:resolve(e,root)
     if c['build'] is not None or c['assessment'] is not None:raise ValueError('Cannot replace completed stages')
     c['research_result']=r;save(cp,c)
-    s.update(stage='assessment',pending=None);s.pop('update_decision',None)
+    s.update(stage='assessment',pending=None);s.pop('update_decision',None);s.pop('error',None)
     save(run/'state.json',s)
 
 
@@ -262,7 +262,10 @@ def main():
                 if result.get('handoff'):
                     s['prepared_execution']=ref(result['handoff'],Path(s['root']))
                     s['pending']['prepared_execution']=s['prepared_execution']
-                    save(run/'state.json',s)
+                    if result.get('research_result'):
+                        attach_research(run,s,Path(result['research_result']))
+                    else:
+                        save(run/'state.json',s)
                 event(run,'prepared_execution_returned',result=result)
                 print(json.dumps(result));return
             if a.op=='prepare-selection':
