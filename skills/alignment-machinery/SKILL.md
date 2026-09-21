@@ -35,11 +35,16 @@ whole set. In both, the model's answer is checked against a register the model d
 | distillation | names candidate rules across the whole set, each citing its lines | hybrid |
 | ruling | puts every candidate to a person and keeps the answer in their words | mechanical |
 | landing | says, for each approved rule, whether the harness already produces it or a check must be built | hybrid |
-| gate | lets nothing reach a page before its ruling exists | mechanical |
 
-`invocation`, `register`, `disposition`, `distillation`, `ruling` and `landing` are built — six of
-seven. The gate is not, and this file will say so until it is: nothing yet stops a page being built
-while a rule it should answer to has no ruling.
+All six are built, and six is the whole machinery. What comes out at the end is the list this
+exists to produce: every change the client's return implies, ruled by a person, split into the ones
+the harness already produces and the ones that need building, each naming the file and the line.
+
+A seventh step was considered and dropped on 21 September — a gate that would have refused to call
+a page finished while a change from that client's return was unruled or unbuilt. It is recorded
+here as a decision rather than left out, because the next reader will think of it too. Kamen's
+reason: the machinery exists to produce the list of changes, and it does; a gate would have refused
+pages against records nothing yet writes, which is automation ahead of the need.
 
 ## Invocation
 

@@ -225,7 +225,7 @@ def finish(work: pathlib.Path) -> dict:
                                                      if c["id"] == cid),
                          "he_said": r["because"]}
                         for cid, r in sorted(ruled.items()) if r["answer"] == "rejected"],
-        "next_step": "gate",
+        "next_step": "landing",
     }
 
 

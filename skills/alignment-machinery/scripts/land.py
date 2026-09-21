@@ -407,7 +407,7 @@ def finish(work: pathlib.Path) -> dict:
         "counts": counts,
         "landed_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "landed": landed,
-        "next_step": "gate",
+        "next_step": "apply the changes the harness does not yet produce",
     }
 
 
