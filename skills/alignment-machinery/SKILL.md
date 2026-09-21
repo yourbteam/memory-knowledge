@@ -37,10 +37,9 @@ whole set. In both, the model's answer is checked against a register the model d
 | landing | says, for each approved rule, whether the harness already produces it or a check must be built | hybrid |
 | gate | lets nothing reach a page before its ruling exists | mechanical |
 
-`invocation`, `register`, `disposition`, `distillation` and `ruling` are built — five of seven.
-`landing` and the gate are not, and this file will say so until they are. A rule nobody has landed
-is a decision, not yet a change to how a page is built; the gate cannot hold a page to a rule
-whose place in the harness nobody has found.
+`invocation`, `register`, `disposition`, `distillation`, `ruling` and `landing` are built — six of
+seven. The gate is not, and this file will say so until it is: nothing yet stops a page being built
+while a rule it should answer to has no ruling.
 
 ## Invocation
 
@@ -233,6 +232,50 @@ against the client's documents rather than against the other candidates. And the
 while ruling, which rules the harness already satisfies and which need building, is not answerable
 from a client's return at all: the answer is a fact about our own code, and it comes from tracing
 the harness once per rule.
+
+## Landing
+
+```bash
+python3 <skill-dir>/scripts/land.py open  --work <run directory> --harness <repo root>
+python3 <skill-dir>/scripts/land.py ask   --work <run directory> --reader 1
+python3 <skill-dir>/scripts/land.py read  --work <run directory> --answers <file>
+python3 <skill-dir>/scripts/land.py settle --work <run directory>
+python3 <skill-dir>/scripts/land.py ask-owner --work <run directory>
+python3 <skill-dir>/scripts/land.py rule  --work <run directory> --id <rule> \
+        --choice already|needs-a-check --because "<his words>"
+python3 <skill-dir>/scripts/land.py finish --work <run directory>
+python3 <skill-dir>/scripts/land.py show  --work <run directory>
+```
+
+A rule the owner approved is a decision, not yet a change to how a page is built. Two of his rules
+can read alike and mean opposite things for the work: one describes what the harness already does
+for every client, and the other describes something that has to be built. Nothing in a client's
+return tells those apart, because the answer is not in the client's document at all — it is a fact
+about our own code. So this step asks one question per approved rule: does the harness already
+produce this, or must a check be built, and where.
+
+It reads the ruled list the ruling step finished in the same run, and takes one declared input
+beyond it — the harness's own root, pinned by the commit it was read at and by the count of files
+left uncommitted beside it. A claim that something is already true is worthless against code that
+is not what runs.
+
+Three readers who cannot see each other answer every rule, and an answer is refused unless it names
+the place in the harness and quotes the line that decides it, checked as a literal substring of
+that file. That check is the whole difference between a falsifiable claim and a believed one: a
+citation nobody can find is how a rule gets reported satisfied when it is not. Where the three
+agree the answer stands with its citations; where they differ the rule goes to the owner with the
+readings first and then a recommendation from a model that did no reading. `finish` refuses while
+any rule is unanswered or any disagreement unruled.
+
+On the twenty rules from Maria's three Step 9 returns: twelve the harness already produces,
+standing behind 1,879 of the changed lines, and eight needing a check, standing behind 369.
+Eighteen were unanimous and two went to Kamen, who ruled both as needing a check. Sixty citations
+were given and every one was found verbatim — fifty-eight of them in a single file, and two in the
+page screens, which is itself an answer about where this step of the harness is decided.
+
+Two things the readers found while reading are kept in the record and are not rules, because nobody
+asked for them: a structural check still looks for a label the page stopped printing, and our own
+build-workflow table prints internal phase names on a client page.
 
 ## What it does not do
 
