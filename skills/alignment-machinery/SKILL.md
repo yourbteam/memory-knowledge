@@ -36,8 +36,8 @@ whole set. In both, the model's answer is checked against a register the model d
 | ruling | puts every candidate to a person and keeps the answer in their words | mechanical |
 | gate | lets nothing reach a page before its ruling exists | mechanical |
 
-`invocation`, `register` and `disposition` are built. The three after them are not, and this file
-will say so until they are.
+`invocation`, `register`, `disposition` and `distillation` are built. The two after them are not,
+and this file will say so until they are.
 
 ## Invocation
 
@@ -146,6 +146,54 @@ One check is worth naming because it fired both ways. A quote must be the passag
 enough of them — a reader answering a long paragraph with one word has not shown what it judged. The
 minimum yields where the passage itself is shorter, because B Team's calendar cells hold nothing but
 a four-letter code, and eleven correct answers were refused before it did.
+
+## Distillation
+
+```bash
+python3 <skill-dir>/scripts/distil.py gather --work <new directory> --from <run> --from <run>
+python3 <skill-dir>/scripts/distil.py brief   --work <run>      # for the proposing model
+python3 <skill-dir>/scripts/distil.py propose --work <run> --candidates <file>
+python3 <skill-dir>/scripts/distil.py ask     --work <run> --reader 1
+python3 <skill-dir>/scripts/distil.py read    --work <run> --answers <file>
+python3 <skill-dir>/scripts/distil.py settle  --work <run>
+python3 <skill-dir>/scripts/distil.py ask-owner --work <run>
+python3 <skill-dir>/scripts/distil.py rule    --work <run> --id <passage+change> \
+        --choice yes|no --because "<his words>"
+python3 <skill-dir>/scripts/distil.py name    --work <run>
+```
+
+Every step before this one works on one returned document. This one does not, and that is why it
+exists: a rule is rarely visible inside a single return. So the one thing a caller can get wrong
+here is not which document they named but which set of runs — leave one out and what comes back is
+a smaller answer wearing every mark of a complete one. `gather` therefore takes the runs by name,
+refuses anything that is not a finished disposition at the current version, recomputes each
+record's arithmetic against the register the disposition did not write, and then looks in the
+folders those runs came from: another finished record sitting there unnamed is refused by name.
+Records from a superseded version of the step are left alone as history.
+
+The passages the readers called evidence of a rule are not one change each. The same change appears
+on every calendar slot, on every line held. Naming the distinct changes is a grouping job, and
+grouping cannot be put to three blind readers — asked to group 162 things, three readers return
+three different sets of groups and agreement is not even defined. So the work is split. One model
+that does no judging reads the whole gathering and proposes the changes, each a sentence with no
+client in it; a sentence naming a client is refused, because a change that only makes sense for one
+client is the thing this machinery exists to tell apart. Then every passage goes to three readers
+who cannot see each other, as one question with the same answers every time.
+
+**The question allows more than one answer, and that is a correction the data forced.** Asked which
+single change a passage belonged under, the readers split on 22 of 162 — and every one of those 22
+was a block that renamed its labels, added a new paragraph and dropped the agency's working rows at
+once. They were not disagreeing about the facts; the question let only one through. One real change
+drew no evidence at all, because the rows it describes never disappear on their own. Asked instead
+which changes a passage shows, all that apply, the same three readers split on 8 of 3,564
+pairings, that change carried 28 passages, and 80 of the 162 passages named more than one.
+
+Agreement is counted change by change. Where the three agree the answer stands; where they differ,
+that one pairing goes to Kamen with the client's words and ours first, then the three readings,
+then one recommendation from a model that did no judging — and that recommender is told in terms
+not to reason from which change needs evidence, because the first one did exactly that. `name`
+refuses while any pairing is unruled, and proves that every passage was weighed against every
+change and each pairing answered once.
 
 ## What it does not do
 
