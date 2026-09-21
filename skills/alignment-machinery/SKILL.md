@@ -36,7 +36,8 @@ whole set. In both, the model's answer is checked against a register the model d
 | ruling | puts every candidate to a person and keeps the answer in their words | mechanical |
 | gate | lets nothing reach a page before its ruling exists | mechanical |
 
-Only `invocation` is built. The rest are not, and this file will say so until they are.
+`invocation` and `register` are built. The four after them are not, and this file will say so until
+they are.
 
 ## Invocation
 
@@ -84,6 +85,29 @@ A version that answers the return much better than the named one is not proof of
 drafts converge on a client's voice. It is a question the caller must have faced. So the machinery
 refuses unless `pairing_evidence` names that version — either it is the one they were reading, or the
 caller says why it is not.
+
+## The register
+
+```bash
+python3 <skill-dir>/scripts/register.py hold --work <run directory>
+python3 <skill-dir>/scripts/register.py show --work <run directory>
+```
+
+It reads the run the invocation accepted, checks both documents are still the exact files that were
+accepted, and lines them up paragraph by paragraph. What comes out is one ordered list: every
+paragraph the client changed, added or removed, with their words and ours verbatim and the heading it
+sits under. It judges nothing and it drops nothing.
+
+Differences are grouped by the stretch they arrived from, and each stretch is marked rewritten, cut
+or inserted. That grouping is not decoration. On Vivacom's return of 20 September the ungrouped
+record said 184 paragraphs removed, and every one of those 184 turned out to sit inside a passage she
+had rewritten — the record was making a claim about the client that the documents did not support.
+Grouped, the same return reads as 96 passages, the largest being 93 paragraphs of ours answered by 8
+of hers under her calendar heading, which is what that return actually was.
+
+One promise is made and therefore checked rather than trusted: every paragraph of both documents is
+accounted for exactly once. The arithmetic is written into the record and recomputed every time it is
+read, and nothing is written when it does not add up.
 
 ## What it does not do
 
