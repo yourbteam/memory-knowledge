@@ -36,8 +36,8 @@ whole set. In both, the model's answer is checked against a register the model d
 | ruling | puts every candidate to a person and keeps the answer in their words | mechanical |
 | gate | lets nothing reach a page before its ruling exists | mechanical |
 
-`invocation` and `register` are built. The four after them are not, and this file will say so until
-they are.
+`invocation`, `register` and `disposition` are built. The three after them are not, and this file
+will say so until they are.
 
 ## Invocation
 
@@ -108,6 +108,44 @@ of hers under her calendar heading, which is what that return actually was.
 One promise is made and therefore checked rather than trusted: every paragraph of both documents is
 accounted for exactly once. The arithmetic is written into the record and recomputed every time it is
 read, and nothing is written when it does not add up.
+
+## Disposition
+
+```bash
+python3 <skill-dir>/scripts/dispose.py ask    --work <run directory> --reader 1
+python3 <skill-dir>/scripts/dispose.py read   --work <run directory> --answers <file>
+python3 <skill-dir>/scripts/dispose.py settle --work <run directory>
+python3 <skill-dir>/scripts/dispose.py ask-owner --work <run directory>
+python3 <skill-dir>/scripts/dispose.py rule   --work <run directory> --id <passage> \
+        --choice <answer> --because "<his words>"
+python3 <skill-dir>/scripts/dispose.py finish --work <run directory>
+```
+
+Every passage the register holds is put to one question, and the only two answers are: this is the
+client's own wording here, or this is evidence of a rule for every page. The question carries the
+test with it — take the change, remove everything particular to this client, and if what is left
+still says how a page should be built, it is evidence of a rule.
+
+Three readers answer, each blind to the other two, each quoting the words it judged. That number is
+not decoration. A single reader gave a different answer on the same passages from one run to the
+next, which is not a method; three readers and a stated test are what make the answer belong to the
+evidence rather than to the run.
+
+Where all three agree, the answer stands with its three reasons. Where they split, no model casts
+the deciding vote. The passage goes to Kamen, and what reaches him is the client's words and ours
+first, then all three readings, then one plain recommendation written by a different model that did
+no judging — in that order, because a recommendation read before the evidence is a ruling made by
+the recommender. `finish` refuses while any split is unruled, naming each one.
+
+On Maria's three Step 9 returns of 20 September the method ran over 898 changed lines in 181
+passages. Two returns came out unanimous. The third split on seven passages and went to Kamen, who
+ruled six as rules for every page and one as her own wording. Nineteen of the 898 lines are the
+client's own wording; the rest are evidence of a rule.
+
+One check is worth naming because it fired both ways. A quote must be the passage's own words, and
+enough of them — a reader answering a long paragraph with one word has not shown what it judged. The
+minimum yields where the passage itself is shorter, because B Team's calendar cells hold nothing but
+a four-letter code, and eleven correct answers were refused before it did.
 
 ## What it does not do
 

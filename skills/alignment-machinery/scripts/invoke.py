@@ -141,8 +141,13 @@ _STATUS_WORDS = ("final", "review", "draft", "copy", "paras")
 _VERSION = re.compile(r"v\d+(?:[-.]\d+)*", re.IGNORECASE)
 
 
-def paragraphs(path: pathlib.Path) -> list[str]:
-    """A document's non-empty paragraphs, tables included, with no dependency beyond the standard library."""
+def read_document(path: pathlib.Path) -> list[tuple[str, str]]:
+    """Each non-empty paragraph of a document with the style it carries, tables included.
+
+    One reader for the whole machinery, with no dependency beyond the standard library. Two readers
+    would count one document two ways, and a count taken two ways is how a caller talks itself out
+    of the right file.
+    """
     if path.suffix.lower() == ".docx":
         try:
             with zipfile.ZipFile(path) as archive:
@@ -154,11 +159,27 @@ def paragraphs(path: pathlib.Path) -> list[str]:
         found = []
         for para in root.iter(_W + "p"):
             text = re.sub(r"\s+", " ", "".join(t.text or "" for t in para.iter(_W + "t"))).strip()
-            if text:
-                found.append(text)
+            if not text:
+                continue
+            style = ""
+            marker = para.find(f"{_W}pPr/{_W}pStyle")
+            if marker is not None:
+                style = marker.get(_W + "val") or ""
+            found.append((text, style))
         return found
-    text = path.read_text(encoding="utf-8", errors="replace")
-    return [line for line in (re.sub(r"\s+", " ", raw).strip() for raw in text.splitlines()) if line]
+    found = []
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        text = re.sub(r"\s+", " ", raw).strip()
+        if not text:
+            continue
+        opening = re.match(r"(#{1,6})\s+", text)
+        found.append((text, f"Heading{len(opening.group(1))}" if opening else ""))
+    return found
+
+
+def paragraphs(path: pathlib.Path) -> list[str]:
+    """A document's non-empty paragraphs, as text alone."""
+    return [text for text, _ in read_document(path)]
 
 
 def _share(returned: set[str], other: set[str]) -> float:
