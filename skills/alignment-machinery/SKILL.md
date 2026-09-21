@@ -34,10 +34,13 @@ whole set. In both, the model's answer is checked against a register the model d
 | disposition | marks each difference as this client's wording or evidence of a rule | hybrid |
 | distillation | names candidate rules across the whole set, each citing its lines | hybrid |
 | ruling | puts every candidate to a person and keeps the answer in their words | mechanical |
+| landing | says, for each approved rule, whether the harness already produces it or a check must be built | hybrid |
 | gate | lets nothing reach a page before its ruling exists | mechanical |
 
-`invocation`, `register`, `disposition` and `distillation` are built. The two after them are not,
-and this file will say so until they are.
+`invocation`, `register`, `disposition`, `distillation` and `ruling` are built — five of seven.
+`landing` and the gate are not, and this file will say so until they are. A rule nobody has landed
+is a decision, not yet a change to how a page is built; the gate cannot hold a page to a rule
+whose place in the harness nobody has found.
 
 ## Invocation
 
@@ -194,6 +197,42 @@ then one recommendation from a model that did no judging — and that recommende
 not to reason from which change needs evidence, because the first one did exactly that. `name`
 refuses while any pairing is unruled, and proves that every passage was weighed against every
 change and each pairing answered once.
+
+## Ruling
+
+```bash
+python3 <skill-dir>/scripts/rule.py next   --work <run directory>
+python3 <skill-dir>/scripts/rule.py answer --work <run directory> --change <id> \
+        --choice approved|rejected|reworded --because "<his words>" [--wording "<his sentence>"]
+python3 <skill-dir>/scripts/rule.py show   --work <run directory>
+python3 <skill-dir>/scripts/rule.py finish --work <run directory>
+```
+
+Nothing the distillation named is a rule yet. Three models had a hand in that list — one proposed
+the changes, three read every passage against them, one wrote advice where they differed — and a
+change to how every client's page is built is the one thing their agreement cannot settle. So this
+step puts each change to the owner alone. No model recommends an answer here.
+
+It reads the written list and presents one change at a time, heaviest evidence first, with the
+client's words against ours beneath it and the count of clients, passages and changed lines behind
+it. Three answers: approved, rejected, or approved with his own sentence replacing the proposed
+one. A change he has not answered stays a candidate and is reported as one, and `finish` refuses
+while any remain. A ruling is never written over — the same answer may be recorded again, a
+different one is refused naming the answer that stands — because a record of the last thing typed
+is not a record of what he decided. Each ruling keeps the sentence he answered and the evidence
+that stood behind it at the time.
+
+On the twenty-two changes distilled from Maria's three Step 9 returns: twenty rules, eighteen
+approved as written, two in his own wording, two rejected, and 2,248 of the 2,252 changed lines
+standing behind a rule.
+
+Two things came out of that ruling which nothing upstream could see. One candidate contradicted a
+rule he had approved twenty minutes earlier — the working record staying off the client page — and
+no model weighing the candidates against each other would have caught it, because each was read
+against the client's documents rather than against the other candidates. And the question he asked
+while ruling, which rules the harness already satisfies and which need building, is not answerable
+from a client's return at all: the answer is a fact about our own code, and it comes from tracing
+the harness once per rule.
 
 ## What it does not do
 
