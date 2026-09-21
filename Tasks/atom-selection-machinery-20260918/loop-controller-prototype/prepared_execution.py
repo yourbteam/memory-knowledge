@@ -18,7 +18,7 @@ from candidate_execution import once, verify_generation, emit, files
 RUNTIME_DIRECTORIES = ['experiment/results']
 RUNTIME_FILES = ['experiment/report.md']
 MAX_REVIEW_ARTIFACT_BYTES = 500000
-MAX_REVIEW_JSON_FIELD_BYTES = 8000
+MAX_REVIEW_JSON_FIELD_BYTES = 16000
 
 
 def json_field_metadata(value):

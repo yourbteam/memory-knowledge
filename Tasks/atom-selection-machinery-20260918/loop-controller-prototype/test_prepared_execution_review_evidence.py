@@ -62,6 +62,16 @@ class ReviewEvidenceTest(unittest.TestCase):
         self.assertEqual(projection["checks"], [{"ok": True}])
         self.assertFalse(projection["queries"]["content_included"])
 
+    def test_retains_complete_trace_field_within_proven_sixteen_kilobyte_budget(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "case.trace.json"
+            checks = [{"name": "x" * 15000, "observed_expected": True}]
+            path.write_text(json.dumps({"status": "observed", "checks": checks}))
+            item = prepared_execution.review_evidence(self.reference(path))
+        projection = json.loads(item["text"])
+        self.assertEqual(item["transport"], "bounded_json_projection")
+        self.assertEqual(projection["checks"], checks)
+
     def test_paired_stdout_is_metadata_only(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
