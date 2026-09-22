@@ -19,6 +19,21 @@ def save(p, data):
         json.dump(data,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
     os.replace(tmp,p)
 
+def save_versioned_record(p, data):
+    """Preserve an earlier immutable record and select a content-bound successor path."""
+    p=Path(p)
+    if p.exists() and read(p)!=data:
+        raw=json.dumps(data,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()
+        p=p.with_name(p.stem+'-'+hashlib.sha256(raw).hexdigest()[:16]+p.suffix)
+    if p.exists():
+        if read(p)!=data:raise ValueError('Versioned record hash collision: '+str(p))
+        return p
+    save(p,data);return p
+
+def save_success_state(run, state):
+    state.pop('error', None)
+    save(run/'state.json', state)
+
 def ref(p, root):
     root=Path(root).resolve();p=Path(p).resolve();return {'path':str(p.relative_to(root)), 'sha256':sha(p)}
 def resolve(r, root):
@@ -56,6 +71,19 @@ def tool(s, name):
            'build':('atom-building-machinery','atom_driver.py')}
     skill,script=names[name];return [sys.executable,'-B',str(Path(s['skills'])/skill/'scripts'/script)]
 
+def clear_prior_cycle_state(state, cycle_path):
+    root=Path(state['root']).resolve();cycle_dir=Path(cycle_path).resolve().parent
+    removed=[]
+    for name in ('selection_preparation','prepared_execution','research_correction'):
+        reference=state.get(name)
+        if not reference:continue
+        path=(root/reference['path']).resolve()
+        if not path.is_relative_to(cycle_dir):
+            state.pop(name);removed.append(name)
+    if 'assessment_attempt' in state:
+        state.pop('assessment_attempt');removed.append('assessment_attempt')
+    return removed
+
 def new_cycle(run,s,answers,previous=None):
     root=Path(s['root']);number=s.get('cycle_number',0)+1
     path=run/'cycles'/f'cycle-{number:04d}'/'cycle.json'
@@ -64,6 +92,7 @@ def new_cycle(run,s,answers,previous=None):
     # Replay after a crash before the state pointer was committed.
     if path.exists() and read(path)!=value:raise ValueError('Existing next cycle differs')
     save(path,value);s.update(cycle_number=number,cycle=str(path),stage='selection',answers=answers,pending=None)
+    clear_prior_cycle_state(s,path)
     s.pop('build_request',None)
     s.pop('build_preparation',None)
     s.pop('experiment_preparation',None)
@@ -93,7 +122,7 @@ def initialize(args):
         s['stage']='incremental'
         s['incremental_run']=str(args.incremental_run.resolve()) if args.incremental_run else str(run/'bootstrap-interview')
     else:new_cycle(run,s,answers)
-    save(run/'state.json',s);return s
+    save_success_state(run,s);return s
 
 def assessment_action(data):
     if data.get('kind')!='atom_assessment':raise ValueError('Not an assessment handoff')
@@ -121,22 +150,105 @@ def resolve_decision(run, s, path):
     if c['build'] is not None or c['assessment'] is not None:raise ValueError('Cannot replace performed build stages')
     c['decision_resolution']=decision_ref;save(cp,c)
     s.update(stage='incremental',pending=None,update_decision=decision_ref,incremental_run=str(cp.parent/'decision-interview'))
-    save(run/'state.json',s)
+    save_success_state(run,s)
 
 def attach_research(run, s, path):
     root=Path(s['root']);cp=Path(s['cycle']);c=read(cp);d=read(path)
     r=ref(path,root)
     if c.get('research_result')==r and s['stage']=='assessment':return
-    if s['stage']!='build' or (s.get('pending') or {}).get('action')!='prepare_build':
+    normal_completion=s['stage']=='build' and (s.get('pending') or {}).get('action')=='prepare_build'
+    unassessed_export_repair=(s['stage']=='assessment' and c.get('research_result') is not None
+                              and c.get('assessment') is None and c.get('build') is None)
+    if not normal_completion and not unassessed_export_repair:
         raise ValueError('Research can only complete an unstarted selected job')
     if d.get('kind')!='selected_research_result' or d.get('goal')!=c['goal'] or d.get('selection')!=c['selection']:
         raise ValueError('Research result must bind this exact selection and goal')
     if not d.get('evidence'):raise ValueError('Research result requires saved evidence')
     for e in d['evidence']:resolve(e,root)
     if c['build'] is not None or c['assessment'] is not None:raise ValueError('Cannot replace completed stages')
+    replaced_unassessed_export = unassessed_export_repair and c.get('research_result') != r
     c['research_result']=r;save(cp,c)
     s.update(stage='assessment',pending=None);s.pop('update_decision',None);s.pop('error',None)
-    save(run/'state.json',s)
+    if replaced_unassessed_export:
+        s['assessment_attempt']=s.get('assessment_attempt',1)+1
+    save_success_state(run,s)
+
+
+def enrich_research_correction(correction, root):
+    prior_result_data=read(resolve(correction['prior_research_result'],root))
+    package=read(resolve(prior_result_data['assessment_package'],root))
+    return {**correction, 'prior_review':package.get('review'),
+            'prior_status':package.get('status')}
+
+
+def resume_research_correction(run, s):
+    """Reopen the same selected research job from its bound assessment verdict."""
+    root=Path(s['root']);cp=Path(s['cycle']);c=read(cp)
+    selection_preparation=s.get('selection_preparation')
+    if not selection_preparation:
+        raise ValueError('Research correction requires the bound selection preparation')
+    resolve(selection_preparation,root)
+    pending=s.get('pending') or {}
+    if (s['stage']=='build' and pending.get('action')=='prepare_build'
+            and s.get('research_correction')):
+        old=s['research_correction'];path=resolve(old,root)
+        corrected=enrich_research_correction(read(path),root);save(path,corrected)
+        current=ref(path,root);s['research_correction']=current;s['pending']['research_correction']=current
+        s['pending']['selection_preparation']=selection_preparation
+        if c.get('research_corrections') and c['research_corrections'][-1].get('correction')==old:
+            c['research_corrections'][-1]['correction']=current;save(cp,c)
+        save_success_state(run,s);event(run,'research_correction_refreshed',correction=current)
+        return path
+    if s['stage']!='assessment_needs_attention' or pending.get('action')!='assessment_needs_attention':
+        raise ValueError('No research assessment correction is pending')
+    if not c.get('research_result') or not c.get('assessment'):
+        raise ValueError('Research correction requires the saved result and assessment')
+    if pending.get('assessment')!=c['assessment']:
+        raise ValueError('Pending correction names another assessment')
+    assessment=read(resolve(c['assessment'],root))
+    if assessment.get('mode')!='research_assessment' or assessment.get('cycle_id')!=c.get('cycle_id'):
+        raise ValueError('Correction requires this cycle\'s research assessment')
+    completion=assessment.get('assessment',{}).get('selected_work_completion',{})
+    if completion.get('judgment')=='established':
+        raise ValueError('Completed research cannot be reopened for correction')
+    prior_result=c['research_result'];prior_assessment=c['assessment']
+    correction={
+        'schema_version':1,
+        'kind':'selected_research_correction',
+        'goal':c['goal'],
+        'selection':c['selection'],
+        'prior_research_result':prior_result,
+        'assessment':prior_assessment,
+        'reason':completion.get('reason',''),
+        'remaining':assessment.get('assessment',{}).get('remaining',[]),
+        'constraints':[
+            'Correct only the assessment-backed defects in the same selected research job.',
+            'Preserve supported cases and the original selection boundary.',
+            'Do not implement product behavior or choose a different atom.',
+        ],
+        'previous_prepared_execution':s.get('prepared_execution'),
+    }
+    correction=enrich_research_correction(correction,root)
+    if not correction['reason'].strip() or not correction['previous_prepared_execution']:
+        raise ValueError('Correction lacks an assessment reason or reusable execution runtime')
+    path=save_versioned_record(cp.parent/'research-correction.json',correction)
+    correction_ref=ref(path,root)
+    c.setdefault('research_corrections',[]).append({
+        'correction':correction_ref,
+        'research_result':prior_result,
+        'assessment':prior_assessment,
+    })
+    c['assessment']=None
+    save(cp,c)
+    s.update(stage='build',pending={'action':'prepare_build','selection':c['selection'],
+             'selection_preparation':selection_preparation,
+             'research_correction':correction_ref},research_correction=correction_ref,
+             assessment_attempt=s.get('assessment_attempt',1)+1)
+    s.pop('last_assessment',None);s.pop('error',None)
+    save_success_state(run,s)
+    event(run,'research_correction_opened',correction=correction_ref,
+          assessment_attempt=s['assessment_attempt'])
+    return path
 
 
 def advance(run, stop_after=None):
@@ -160,12 +272,12 @@ def advance(run, stop_after=None):
                 args+=['continue','--run',str(dest)]
             else:args+=['start','--previous',str(resolve(s['answers'],root)),'--'+role,str(ap),'--goal',str(resolve(s['goal'],root)),'--run',str(dest)]
             result=call(run,'incremental',args)
-            if result.get('action')!='complete':s['pending']=result;save(run/'state.json',s);return result
+            if result.get('action')!='complete':s['pending']=result;save_success_state(run,s);return result
             updated=ref(result['handoff'],root)
             previous=None
             if s.get('cycle'):
                 previous=ref(s['cycle'],root)
-            new_cycle(run,s,updated,previous);save(run/'state.json',s)
+            new_cycle(run,s,updated,previous);save_success_state(run,s)
         elif stage=='selection':
             cp=Path(s['cycle']);c=read(cp);dest=cp.parent/'selection'
             # Completed export can be recovered after the process returned but before state save.
@@ -179,7 +291,7 @@ def advance(run, stop_after=None):
             c['selection']=ref(result['handoff'],root);save(cp,c)
             s.update(stage='build',pending={'action':'prepare_build','selection':c['selection'],
                 'instruction':'Calling assistant must review the recommendation and use the existing builder admission process. Supply an authorized prepared driver request bound to this selection; do not infer permission from prose.'})
-            save(run/'state.json',s);return s['pending']
+            save_success_state(run,s);return s['pending']
         elif stage=='build':
             cp=Path(s['cycle']);c=read(cp);request=resolve(s['build_request'],root)
             args=tool(s,'build')+[str(request),s.get('build_output',str(cp.parent/'build'))]
@@ -187,7 +299,7 @@ def advance(run, stop_after=None):
             if s.get('delivery_context'):args+=['--delivery-context',str(resolve(s['delivery_context'],root))]
             if s.get('approved_transfer'):args+=['--approved-transfer-sha256',s['approved_transfer']]
             result=call(run,'build',args)
-            if result.get('status')!='complete':s['pending']=result;save(run/'state.json',s);return result
+            if result.get('status')!='complete':s['pending']=result;save_success_state(run,s);return result
             handoff=Path(result['handoff'])
             if not handoff.resolve().is_relative_to(root.resolve()):
                 expected=Path(s['build_output'])/'handoff.json'
@@ -195,9 +307,10 @@ def advance(run, stop_after=None):
                 imported=cp.parent/'build-handoff.json'
                 if imported.exists() and imported.read_bytes()!=handoff.read_bytes():raise ValueError('Saved builder handoff changed')
                 imported.write_bytes(handoff.read_bytes());handoff=imported
-            c['build']=ref(handoff,root);save(cp,c);s.update(stage='assessment',pending=None);save(run/'state.json',s)
+            c['build']=ref(handoff,root);save(cp,c);s.update(stage='assessment',pending=None);save_success_state(run,s)
         elif stage=='assessment':
-            cp=Path(s['cycle']);c=read(cp);dest=cp.parent/'assessment';args=tool(s,'assessment')
+            cp=Path(s['cycle']);c=read(cp);assessment_attempt=s.get('assessment_attempt',1)
+            dest=cp.parent/('assessment' if assessment_attempt==1 else 'assessment-attempt'+str(assessment_attempt));args=tool(s,'assessment')
             if (dest/'manifest.json').exists():args+=['resume','--run',str(dest)]
             else:args+=['start','--root',str(root),'--cycle',str(cp),'--run',str(dest)]
             result=call(run,'assessment',args)
@@ -208,7 +321,7 @@ def advance(run, stop_after=None):
             s.update(last_assessment=c['assessment'],stage=assessment_action(data),incremental_run=str(cp.parent/'incremental'),pending=None)
             s.pop('update_decision',None)
             if s['stage']=='assessment_needs_attention':s['pending']={'action':'assessment_needs_attention','assessment':c['assessment'],'reason':data['assessment'].get('selected_work_completion',data['assessment']['goal_completion'])['reason']}
-            save(run/'state.json',s)
+            save_success_state(run,s)
         else:raise ValueError('Unsupported stage '+stage)
         if stop_after == stage:
             return {'action':'stage_completed','stage':stage,'next':s['stage'],'pending':s.get('pending')}
@@ -217,10 +330,11 @@ def advance(run, stop_after=None):
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='op',required=True)
     start=sub.add_parser('start');start.add_argument('--root',type=Path,required=True);start.add_argument('--goal',type=Path,required=True);start.add_argument('--answers',type=Path,required=True);start.add_argument('--assessment',type=Path);start.add_argument('--incremental-run',type=Path);start.add_argument('--skills',type=Path,default=Path.home()/'.codex/skills');start.add_argument('--prepare-only',action='store_true')
-    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-selection','execute-prepared','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research']:sub.add_parser(name)
+    for name in ['resume','status','user','reply','attach-build','prepare-build','prepare-selection','execute-prepared','prepare-experiments','execute-candidate','review-candidate','prepare-delivery','prepare-completion','approve-transfer','resolve-decision','attach-research','resume-research']:sub.add_parser(name)
     for cmd in sub.choices.values():cmd.add_argument('--run',type=Path,required=True)
     sub.choices['execute-prepared'].add_argument('--php',type=Path)
     sub.choices['execute-prepared'].add_argument('--runtime-config',type=Path)
+    sub.choices['execute-prepared'].add_argument('--external-schema-config',type=Path)
     sub.choices['execute-prepared'].add_argument('--docker-runtime',type=Path)
     sub.choices['execute-prepared'].add_argument('--autoload',type=Path)
     sub.choices['execute-prepared'].add_argument('--prepare-only',action='store_true')
@@ -258,14 +372,15 @@ def main():
                 from prepared_execution import execute
                 if a.attempt < 1: raise ValueError('Execution attempt must be positive')
                 suffix='' if a.attempt==1 else '-attempt'+str(a.attempt)
-                result=execute(s,Path(s['cycle']).parent/('prepared-execution'+suffix),a.php,a.autoload,a.prepare_only,a.docker_runtime,a.runtime_config)
+                result=execute(s,Path(s['cycle']).parent/('prepared-execution'+suffix),a.php,a.autoload,a.prepare_only,a.docker_runtime,a.runtime_config,a.external_schema_config)
                 if result.get('handoff'):
                     s['prepared_execution']=ref(result['handoff'],Path(s['root']))
-                    s['pending']['prepared_execution']=s['prepared_execution']
+                    if isinstance(s.get('pending'),dict):
+                        s['pending']['prepared_execution']=s['prepared_execution']
                     if result.get('research_result'):
                         attach_research(run,s,Path(result['research_result']))
                     else:
-                        save(run/'state.json',s)
+                        save_success_state(run,s)
                 event(run,'prepared_execution_returned',result=result)
                 print(json.dumps(result));return
             if a.op=='prepare-selection':
@@ -277,7 +392,7 @@ def main():
                 if result['action']=='assignment_prepared':
                     s['selection_preparation']=ref(result['handoff'],Path(s['root']))
                     s['pending']['selection_preparation']=s['selection_preparation']
-                    save(run/'state.json',s)
+                    save_success_state(run,s)
                 event(run,'selection_preparation_returned',result=result)
                 print(json.dumps(result));return
             if a.op=='prepare-delivery':
@@ -289,7 +404,7 @@ def main():
                 if request.exists() and read(request)!=value:raise ValueError('Saved delivery request differs')
                 save(request,value)
                 s.update(delivery_preparation=ref(result,Path(s['root'])),build_request=ref(request,Path(s['root'])),build_output=delivery['output'],pending=None)
-                save(run/'state.json',s)
+                save_success_state(run,s)
                 print(json.dumps({'action':'delivery_prepared','preparation':str(result),'product_promoted':False}));return
             if a.op=='review-candidate':
                 from candidate_execution import rereview
@@ -297,7 +412,7 @@ def main():
                 if not a.prepare_only:
                     s['candidate_review']=ref(result,Path(s['root']))
                     s['pending']['candidate_review']=s['candidate_review']
-                    save(run/'state.json',s)
+                    save_success_state(run,s)
                 print(json.dumps({'action':'review_prepared' if a.prepare_only else read(result)['status'],'result':str(result),'product_promoted':False}));return
             if a.op=='execute-candidate':
                 from candidate_execution import execute
@@ -306,7 +421,7 @@ def main():
                 result=read(handoff)
                 s['candidate_execution']=ref(handoff,Path(s['root']))
                 s['pending']['candidate_execution']=s['candidate_execution']
-                save(run/'state.json',s)
+                save_success_state(run,s)
                 print(json.dumps({'action':result['status'],'handoff':str(handoff),'product_promoted':False}));return
             if a.op=='prepare-experiments':
                 from experiment_preparation import finish
@@ -314,7 +429,7 @@ def main():
                 handoff=finish(s,Path(s['cycle']).parent/('execution-preparation'+suffix))
                 s['experiment_preparation']=ref(handoff,Path(s['root']))
                 s['pending']['experiment_and_review_prepared']=s['experiment_preparation']
-                save(run/'state.json',s)
+                save_success_state(run,s)
                 event(run,'experiment_and_review_prepared',handoff=str(handoff),model_calls=0,product_started=False)
                 print(json.dumps({'action':'experiment_and_review_prepared','handoff':str(handoff),'pending':'prepare_build'}));return
             if a.op=='prepare-build':
@@ -330,7 +445,7 @@ def main():
                 s['build_attempt']=a.attempt
                 s['build_preparation']=ref(handoff,Path(s['root']))
                 s['pending']['verification_prepared']=s['build_preparation']
-                save(run/'state.json',s)
+                save_success_state(run,s)
                 event(run,'verification_prepared',handoff=str(handoff),model_calls=0,product_started=False)
                 print(json.dumps({'action':'verification_prepared','handoff':str(handoff),'pending':'prepare_build'}));return
             if a.op=='prepare-completion':
@@ -339,14 +454,18 @@ def main():
                 local=Path(s['cycle']).parent/'completion-request.json'
                 save(local,read(prepared['request']['path']))
                 s.update(build_request=ref(local,Path(s['root'])),build_output=prepared['output'],build_recheck_from=prepared['original'],delivery_context=ref(prepared['config']['path'],Path(s['root'])),pending=None)
-                s.pop('approved_transfer',None);save(run/'state.json',s)
+                s.pop('approved_transfer',None);save_success_state(run,s)
                 print(json.dumps(advance(run,'build')));return
             if a.op=='attach-research':
                 attach_research(run,s,a.result)
                 print(json.dumps({'action':'research_recorded','next':'assessment','run':str(run)}));return
+            if a.op=='resume-research':
+                correction=resume_research_correction(run,s)
+                print(json.dumps({'action':'research_correction_opened','correction':str(correction),
+                                  'next':'execute_prepared','run':str(run)}));return
             if a.op=='resolve-decision':
                 resolve_decision(run,s,a.decision)
-                if a.skills:s['skills']=str(a.skills.resolve());save(run/'state.json',s)
+                if a.skills:s['skills']=str(a.skills.resolve());save_success_state(run,s)
                 print(json.dumps({'action':'decision_recorded','next':'incremental','run':str(run)}));return
             if a.op=='start' and a.prepare_only:result={'action':'prepared'}
             else:
@@ -354,22 +473,22 @@ def main():
                     c=read(s['cycle'])
                     if s['stage']!='build' or a.selection_sha256!=c['selection']['sha256']:raise ValueError('Build must bind the current selection')
                     # Existing driver validates the full admission receipt, approval and edit boundary.
-                    s.update(build_request=ref(a.request,Path(s['root'])),pending=None);save(run/'state.json',s)
+                    s.update(build_request=ref(a.request,Path(s['root'])),pending=None);save_success_state(run,s)
                 elif a.op=='approve-transfer':
                     if s.get('pending',{}).get('status')!='approval-needed' or s['pending']['payload']['sha256']!=a.sha256:raise ValueError('Approval must name the exact pending payload')
-                    s.update(approved_transfer=a.sha256,pending=None);save(run/'state.json',s)
+                    s.update(approved_transfer=a.sha256,pending=None);save_success_state(run,s)
                 elif a.op=='reply':
                     pending=s.get('pending') or {}
                     if pending.get('action') not in ['ask_user','resolve_input']:raise ValueError('No interview question is pending')
                     if pending['request']['id']!=a.request_id:raise ValueError('Reply must name the exact pending request')
                     interview=pending['interview_run']
                     call(run,'reply',tool(s,'interview')+['reply','--run',interview,'--request-id',a.request_id,'--reply',str(a.reply.resolve())])
-                    s['pending']=None;save(run/'state.json',s)
+                    s['pending']=None;save_success_state(run,s)
                 elif a.op=='user':
                     pending=s.get('pending') or {}
                     if pending.get('action') not in ['ask_user','resolve_input']:raise ValueError('No interview question is pending')
                     result=call(run,'user',tool(s,'interview')+['user','--run',pending['interview_run'],'--request-id',pending['request']['id']])
-                    s['pending']={**pending,**result};save(run/'state.json',s)
+                    s['pending']={**pending,**result};save_success_state(run,s)
                 result=advance(run, getattr(a,'stop_after',None))
             print(json.dumps(result),flush=True)
         except Exception as exc:

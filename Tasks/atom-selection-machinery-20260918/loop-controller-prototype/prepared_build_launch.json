@@ -3,7 +3,9 @@
   "run": "live",
   "runtime_config": "../runtime-adapter-extraction-20260920/runtime-config.json",
   "runtime_config_sha256": "b5e24d822d5733d12b9dc25b757a0157b605baf2c25828cff0d1a82df6b5b9db",
-  "builder_model_io_sha256": "9317266ee731c784cb8507a98d4c4a53e8aa7096386b016d27d97edaa0b54f1f",
-  "prepared_execution_sha256": "65db57a51c97e4c4ad91863bf838aa2a77124d39ddcb711fa8369c26eaecfef0",
+  "builder_model_io_sha256": "ea9650785a989a54976fa2e66d66f5b9762a3a11481d9acdc20564214adc8ead",
+  "prepared_execution_sha256": "a844b62c4c3b100f7dcf39e8521ec0961c41cd1a491db0b3d11bbb0f5f58bf35",
+  "external_schema_config": "live/cycles/cycle-0005/external-schema-evidence.json",
+  "external_schema_config_sha256": "5febc7fd6f4c9e60ccd0e3a9185e0ae9a4f35e9dfa6ffa94b83a8d2781634290",
   "model_timeout_seconds": 900
 }

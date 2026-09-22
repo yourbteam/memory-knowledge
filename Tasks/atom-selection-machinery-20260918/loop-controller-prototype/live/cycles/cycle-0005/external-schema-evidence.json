@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "kind": "mysql_schema_export",
+      "path": "/Users/kamenkamenov/Downloads/dbs14218350 (3).sql",
+      "sha256": "31cdae129000097c08adba07f40aec43869bdd01774ee87fac852b8b5e0ddb06",
+      "tables": [
+        "order",
+        "user_selfie_history",
+        "payment",
+        "order_product",
+        "user_product_image",
+        "person_product_image",
+        "user_selfie_face_ids"
+      ],
+      "scope": "Owner-provided production database export generated 2026-09-13; authoritative for these table definitions at that snapshot, not a live database query and not evidence of later schema changes or row contents."
+    }
+  ]
+}
