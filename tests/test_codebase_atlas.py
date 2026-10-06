@@ -73,6 +73,17 @@ class AtlasCliTests(unittest.TestCase):
             "--route-fact-id", route_fact_id, "--max-tokens", str(max_tokens), expect=expect,
         )
 
+    def route_find(self, route_fact_id=None, *, http_method=None, route=None, max_tokens=10000, expect=0):
+        selector = []
+        if route_fact_id is not None:
+            selector.extend(("--route-fact-id", route_fact_id))
+        if http_method is not None:
+            selector.extend(("--http-method", http_method))
+        if route is not None:
+            selector.extend(("--route", route))
+        return self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                        *selector, "--max-tokens", str(max_tokens), expect=expect)
+
     def coverage(self, max_tokens=100000, offset=0, expect=0):
         return self.cli("coverage", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                         "--max-tokens", str(max_tokens), "--offset", str(offset), expect=expect)
@@ -645,14 +656,81 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
 
     def test_route_find_returns_structured_unmapped_evidence_pack_step(self):
         saved, graph, route = self.evidence_fixture()
-        result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
-                          "--route-fact-id", route["id"], "--max-tokens", "10000")
+        result = self.route_find(route["id"])
         document = json.loads(result.stdout)
         self.assertEqual(document["result"], "unmapped")
         self.assertEqual(document["snapshot_id"], saved["snapshot_id"])
         self.assertEqual(document["association_count"], 0)
         self.assertEqual(document["next_step"]["command"], "evidence-pack")
         self.assertEqual(document["next_step"]["arguments"]["--route-fact-id"], route["id"])
+        exact = self.route_find(http_method=route["http_method"], route=route["route_literal"])
+        self.assertEqual(exact.stdout, result.stdout)
+
+    def test_route_find_exact_selector_shape_and_literal_matching(self):
+        _saved, _graph, route = self.evidence_fixture()
+        for selector in (
+            (),
+            ("--http-method", route["http_method"]),
+            ("--route", route["route_literal"]),
+            ("--route-fact-id", route["id"], "--http-method", route["http_method"], "--route", route["route_literal"]),
+            ("--http-method", "", "--route", route["route_literal"]),
+            ("--http-method", route["http_method"], "--route", ""),
+            ("--route-fact-id", ""),
+        ):
+            result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                              *selector, "--max-tokens", "10000", expect=2)
+            self.assertEqual(result.stdout, "")
+            self.assertTrue(result.stderr.strip())
+
+        for method, literal in ((route["http_method"].lower(), route["route_literal"]),
+                                (route["http_method"], f" {route['route_literal']}")):
+            result = self.route_find(http_method=method, route=literal, expect=2)
+            self.assertEqual(result.stdout, "")
+            self.assertIn("no route_action matches the exact saved method and route", result.stderr)
+            if method == route["http_method"].lower():
+                self.assertIn("current coverage output", result.stderr)
+
+    def test_route_find_exact_selector_refuses_malformed_saved_facts(self):
+        saved, _graph, route = self.evidence_fixture()
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (saved["snapshot_id"],)
+            ).fetchone()
+            original = json.loads(row[0])
+            malformed_variants = ("missing", None, {}, [{"kind": "route_action"}, None])
+            for malformed in malformed_variants:
+                snapshot = json.loads(json.dumps(original))
+                if malformed == "missing":
+                    snapshot["source_graph"].pop("facts", None)
+                else:
+                    snapshot["source_graph"]["facts"] = malformed
+                connection.execute(
+                    "UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?",
+                    (json.dumps(snapshot), saved["snapshot_id"]),
+                )
+                connection.commit()
+                result = self.route_find(http_method=route["http_method"], route=route["route_literal"], expect=2)
+                self.assertEqual(result.stdout, "")
+                self.assertIn("saved source graph facts must be a list of objects", result.stderr)
+
+    def test_route_find_exact_selector_refuses_duplicate_saved_method_and_route(self):
+        source = self.repo / "Duplicates.cs"
+        source.write_text('''[Route("api/duplicate")]
+class DuplicateController
+{
+    [HttpGet("same")] void First() {}
+    [HttpGet("same")] void Second() {}
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Duplicates.cs")
+        _saved, graph, _routes = self.coverage_fixture(count=0)
+        duplicate_routes = [fact for fact in graph["facts"] if fact["kind"] == "route_action"]
+        self.assertEqual(len(duplicate_routes), 2)
+        first = duplicate_routes[0]
+        result = self.route_find(http_method=first["http_method"], route=first["route_literal"], expect=2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("2 route_action facts match", result.stderr)
+        self.assertIn("--route-fact-id", result.stderr)
 
     def test_route_binding_is_immutable_and_route_find_returns_complete_fresh_claims(self):
         saved, graph, route = self.evidence_fixture()
@@ -679,6 +757,17 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         self.assertEqual(found["claim_selection"]["omitted_claims"], 0)
         self.assertEqual(found["claim_selection"]["included_claims"], found["claim_selection"]["total_claims"])
         self.assertEqual(len(found["claims"]), 1)
+        exact = self.route_find(http_method=route["http_method"], route=route["route_literal"])
+        exact_document = json.loads(exact.stdout)
+        id_document = json.loads(found_result.stdout)
+        exact_checked_at = exact_document["freshness"].pop("checked_at")
+        id_checked_at = id_document["freshness"].pop("checked_at")
+        self.assertTrue(exact_checked_at)
+        self.assertTrue(id_checked_at)
+        self.assertEqual(exact_document, id_document)
+        self.assertEqual(exact_document["budget"]["stdout_bytes_including_newline"], len(exact.stdout.encode("ascii")))
+        self.assertEqual(id_document["budget"]["stdout_bytes_including_newline"], len(found_result.stdout.encode("ascii")))
+        self.assertEqual(len(exact.stdout.encode("ascii")), len(found_result.stdout.encode("ascii")))
         generous_size = len(found_result.stdout.encode("ascii"))
         self.assertEqual(found["budget"]["stdout_bytes_including_newline"], generous_size)
         # The limit itself is rendered in the document, so changing it can change
@@ -693,6 +782,10 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
                          "--route-fact-id", route["id"], "--max-tokens", str(exact_size - 1), expect=2)
         self.assertEqual(short.stdout, "")
         self.assertIn("complete route-find output requires", short.stderr)
+        exact_short = self.route_find(http_method=route["http_method"], route=route["route_literal"],
+                                      max_tokens=exact_size - 1, expect=2)
+        self.assertEqual(exact_short.stdout, "")
+        self.assertIn("complete route-find output requires", exact_short.stderr)
 
         conflict = dict(association_review, review_basis="A conflicting association review cannot replace the immutable record.")
         path.write_text(json.dumps({"binding": binding, "association_review": conflict}), encoding="utf-8")
@@ -705,6 +798,8 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         stale = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                          "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale.stderr)
+        stale_exact = self.route_find(http_method=route["http_method"], route=route["route_literal"], expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale_exact.stderr)
         stale_coverage = self.coverage(expect=2)
         self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale_coverage.stderr)
 
@@ -743,11 +838,14 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         second_flow, second_receipt = self.reviewed_route_map(saved, graph, route, "Map two")
         second_path, _second_binding, _second_review = self.route_binding_document(saved, graph, route, second_flow, second_receipt, "second")
         self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(second_path))
-        multiple = json.loads(self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
-                                       "--route-fact-id", route["id"], "--max-tokens", "30000").stdout)
+        multiple_result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                                   "--route-fact-id", route["id"], "--max-tokens", "30000")
+        multiple = json.loads(multiple_result.stdout)
         self.assertEqual(multiple["result"], "selection_required")
         self.assertEqual(len(multiple["associations"]), 2)
         self.assertNotIn("claims", multiple)
+        exact_multiple = self.route_find(http_method=route["http_method"], route=route["route_literal"], max_tokens=30000)
+        self.assertEqual(exact_multiple.stdout, multiple_result.stdout)
 
         with sqlite3.connect(self.db) as connection:
             row = connection.execute("SELECT payload_json FROM atlas_route_bindings WHERE overlay_id = ?", (first_flow["overlay_id"],)).fetchone()
@@ -970,6 +1068,8 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                            "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("flow review receipt registry hash", refused.stderr)
+        exact_refused = self.route_find(http_method=route["http_method"], route=route["route_literal"], expect=2)
+        self.assertIn("flow review receipt registry hash", exact_refused.stderr)
         self.assertIn("flow review receipt registry hash", self.coverage(expect=2).stderr)
 
     def test_coverage_pages_all_routes_once_with_global_counts_and_exact_byte_boundary(self):

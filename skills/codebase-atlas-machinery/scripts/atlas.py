@@ -1369,14 +1369,55 @@ def _validated_route_associations(db_arg: str, db_path: Path, snapshot: dict[str
     return associations
 
 
-def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+def route_find(
+    db_arg: str,
+    repo_arg: str,
+    route_fact_id: str | None,
+    max_bytes: int,
+    http_method: str | None = None,
+    route_literal: str | None = None,
+) -> tuple[dict[str, object], bytes, int]:
     if max_bytes < 1:
         raise AtlasError("--max-tokens must be a positive integer")
+    has_id = route_fact_id is not None
+    has_method = http_method is not None
+    has_route = route_literal is not None
+    if has_id and (has_method or has_route):
+        raise AtlasError("choose either --route-fact-id ID or both --http-method METHOD and --route LITERAL; do not mix selectors")
+    if not has_id and not (has_method and has_route):
+        raise AtlasError("route-find requires --route-fact-id ID or both --http-method METHOD and --route LITERAL")
+    if has_id and route_fact_id == "":
+        raise AtlasError("--route-fact-id must not be empty")
+    if has_method and http_method == "":
+        raise AtlasError("--http-method must not be empty")
+    if has_route and route_literal == "":
+        raise AtlasError("--route must not be empty")
     db_path = Path(db_arg).expanduser()
     if not db_path.is_file():
         raise AtlasError(f"database does not exist: {db_path}")
     snapshot, snapshots_by_id, extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
     graph = snapshot["source_graph"]
+    if not has_id:
+        facts = graph.get("facts")
+        if not isinstance(facts, list) or any(not isinstance(fact, dict) for fact in facts):
+            raise AtlasError("saved source graph facts must be a list of objects for exact route selection")
+        exact_matches = [fact for fact in facts
+                         if fact.get("kind") == "route_action"
+                         and fact.get("http_method") == http_method
+                         and fact.get("route_literal") == route_literal]
+        if not exact_matches:
+            raise AtlasError(
+                f"no route_action matches the exact saved method and route: {http_method!r} {route_literal!r}; "
+                "check the current coverage output for saved values"
+            )
+        if len(exact_matches) != 1:
+            raise AtlasError(
+                f"{len(exact_matches)} route_action facts match the exact saved method and route: "
+                f"{http_method!r} {route_literal!r}; use --route-fact-id with a reviewed unique route"
+            )
+        route_fact_id = exact_matches[0].get("id")
+        if not isinstance(route_fact_id, str) or not route_fact_id:
+            raise AtlasError("exact route match has an invalid route fact ID; repair the saved snapshot")
     matching = [fact for fact in graph.get("facts", []) if fact.get("id") == route_fact_id]
     if not matching:
         raise AtlasError(f"unknown route fact ID: {route_fact_id}")
@@ -2771,7 +2812,9 @@ def main(argv: list[str] | None = None) -> int:
     route_find_parser = commands.add_parser("route-find", help="find one fresh reviewed map for a discovered route fact")
     route_find_parser.add_argument("--db", required=True)
     route_find_parser.add_argument("--repo", required=True)
-    route_find_parser.add_argument("--route-fact-id", required=True)
+    route_find_parser.add_argument("--route-fact-id")
+    route_find_parser.add_argument("--http-method")
+    route_find_parser.add_argument("--route")
     route_find_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     coverage_parser = commands.add_parser("coverage", help="page through saved route facts and their reviewed association state")
     coverage_parser.add_argument("--db", required=True)
@@ -2811,7 +2854,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "route-map-publish":
             output = publish_route_map(args.db, args.repo, args.packet_file, args.review_file)
         elif args.command == "route-find":
-            output, encoded_output, exit_code = route_find(args.db, args.repo, args.route_fact_id, args.max_tokens)
+            output, encoded_output, exit_code = route_find(
+                args.db, args.repo, args.route_fact_id, args.max_tokens, args.http_method, args.route,
+            )
         elif args.command == "coverage":
             output, encoded_output, exit_code = route_coverage(args.db, args.repo, args.max_tokens, args.offset)
         elif args.command == "focus":
