@@ -1,0 +1,288 @@
+{
+  "overlay_schema_version": 1,
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "title": "Reviewed flow: POST api/customer/save-user-status",
+  "reviewed_conclusions": [
+    {
+      "claim": "The packet metadata identifies POST api/customer/save-user-status. The saved SaveUserStatus method fact contains the action attribute [HttpPost(\"save-user-status\")], and the controller fact identifies CustomerPhotoFeedController; the route fact citation below is only the saved action-attribute span.",
+      "evidence": [
+        {
+          "fact_id": "1fde3d98599071efddbeadef",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 35,
+              "end_line": 59,
+              "end_offset": 2786,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 59,
+              "start_offset": 2756
+            }
+          }
+        },
+        {
+          "fact_id": "86321d01347bb8c1d3bf62a0",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 48,
+              "end_line": 12,
+              "end_offset": 415,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 15,
+              "start_line": 12,
+              "start_offset": 382
+            }
+          }
+        },
+        {
+          "fact_id": "134582b5c58b52a18409f628",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 6,
+              "end_line": 72,
+              "end_offset": 3301,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 59,
+              "start_offset": 2756
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "CustomerPhotoFeedController carries [Authorize(AuthenticationSchemes = PassportAuthenticationExtensions.SchemeName)]. The saved source establishes the attribute and scheme expression, not the constant value or authorization implementation.",
+      "evidence": [
+        {
+          "fact_id": "434703d349dc049788ca6044",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 81,
+              "end_line": 10,
+              "end_offset": 343,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 1,
+              "start_line": 10,
+              "start_offset": 263
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "SaveUserStatus defaults a null Action to \"update\" and passes Action, Mode, Limit, TimeslotId, and TimeslotDate in that order to SaveCustomerPhotoFeedStatusCommand. It awaits Handle but discards its result; after normal completion it returns Ok(new { success = true }).",
+      "evidence": [
+        {
+          "fact_id": "134582b5c58b52a18409f628",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 6,
+              "end_line": 72,
+              "end_offset": 3301,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 59,
+              "start_offset": 2756
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The handler throws UnauthorizedAccessException when the current user is unauthenticated or has a null user ID. This source does not establish which HTTP status, if any, the exception produces.",
+      "evidence": [
+        {
+          "fact_id": "6eb29ae750748993401710bb",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedStatusCommand.cs",
+            "sha256": "acda8d40ff2970fac74eba3be493d6efb571e6df4f9e44d6720cefd469ca9c77",
+            "span": {
+              "end_column": 6,
+              "end_line": 53,
+              "end_offset": 1706,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 16,
+              "start_offset": 484
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "A case-insensitive Action value of \"forget\" awaits ClearAsync for the current user and returns true. The candidate state-store implementation removes the cache entry addressed by BuildKey(userId), so this path clears the whole feed-state cache entry; it does not show a database or photo deletion or a field-by-field status reset.",
+      "evidence": [
+        {
+          "fact_id": "6eb29ae750748993401710bb",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedStatusCommand.cs",
+            "sha256": "acda8d40ff2970fac74eba3be493d6efb571e6df4f9e44d6720cefd469ca9c77",
+            "span": {
+              "end_column": 6,
+              "end_line": 53,
+              "end_offset": 1706,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 16,
+              "start_offset": 484
+            }
+          }
+        },
+        {
+          "fact_id": "5cba1ed4c00f38951ededff2",
+          "source": {
+            "path": "src/Taggable.Api/Infrastructure/CustomerPhotoFeed/DistributedCustomerPhotoFeedStateStore.cs",
+            "sha256": "cf2c5ab26016d7f2897ff14bfc7c314dfc66889db696fec3483bf800927ccb70",
+            "span": {
+              "end_column": 6,
+              "end_line": 35,
+              "end_offset": 1442,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 32,
+              "start_offset": 1287
+            }
+          }
+        },
+        {
+          "fact_id": "073c0e0794239224a0e9e9cf",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedStatusCommand.cs",
+            "sha256": "acda8d40ff2970fac74eba3be493d6efb571e6df4f9e44d6720cefd469ca9c77",
+            "span": {
+              "end_column": 85,
+              "end_line": 25,
+              "end_offset": 972,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 19,
+              "start_line": 25,
+              "start_offset": 906
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "Every non-forget action loads state and then saves it, even when no field qualifies for assignment. TimeslotId and TimeslotDate update only when HasValue; Mode updates only when it is not null, empty, or whitespace and is assigned without trimming; Limit updates only when it has a value greater than zero.",
+      "evidence": [
+        {
+          "fact_id": "6eb29ae750748993401710bb",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedStatusCommand.cs",
+            "sha256": "acda8d40ff2970fac74eba3be493d6efb571e6df4f9e44d6720cefd469ca9c77",
+            "span": {
+              "end_column": 6,
+              "end_line": 53,
+              "end_offset": 1706,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 16,
+              "start_offset": 484
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The candidate state-store GetAsync reads a cache string, returns a new state for a blank payload, and deserializes a present payload with a new-state fallback if deserialization returns null. SaveAsync serializes the state and writes it with SetStringAsync. The shown GetAsync has no invalid-JSON recovery path.",
+      "evidence": [
+        {
+          "fact_id": "2eccc989f87aa167689a6afc",
+          "source": {
+            "path": "src/Taggable.Api/Infrastructure/CustomerPhotoFeed/DistributedCustomerPhotoFeedStateStore.cs",
+            "sha256": "cf2c5ab26016d7f2897ff14bfc7c314dfc66889db696fec3483bf800927ccb70",
+            "span": {
+              "end_column": 6,
+              "end_line": 24,
+              "end_offset": 991,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 15,
+              "start_offset": 547
+            }
+          }
+        },
+        {
+          "fact_id": "3ddf6ba26c1d80a2c6707019",
+          "source": {
+            "path": "src/Taggable.Api/Infrastructure/CustomerPhotoFeed/DistributedCustomerPhotoFeedStateStore.cs",
+            "sha256": "cf2c5ab26016d7f2897ff14bfc7c314dfc66889db696fec3483bf800927ccb70",
+            "span": {
+              "end_column": 6,
+              "end_line": 30,
+              "end_offset": 1281,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 26,
+              "start_offset": 997
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The handler's constructor declares ICustomerPhotoFeedStateStore, while the saved registrations declare AddScoped for ICommandHandler<SaveCustomerPhotoFeedStatusCommand, bool> and for ICustomerPhotoFeedStateStore with DistributedCustomerPhotoFeedStateStore. These are lexical candidate correspondences: the packet does not resolve constructor injection, registration binding, receiver binding, or runtime execution.",
+      "evidence": [
+        {
+          "fact_id": "cbe26655af1ccdecfa177d79",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedStatusCommand.cs",
+            "sha256": "acda8d40ff2970fac74eba3be493d6efb571e6df4f9e44d6720cefd469ca9c77",
+            "span": {
+              "end_column": 44,
+              "end_line": 14,
+              "end_offset": 416,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 14,
+              "start_offset": 377
+            }
+          }
+        },
+        {
+          "fact_id": "26828842b9203fd73363700f",
+          "source": {
+            "path": "src/Taggable.Api/Application/DependencyInjection.cs",
+            "sha256": "599c136aa389602aaf54c36369b95151caa8aa87a13b07c98224b6349c684934",
+            "span": {
+              "end_column": 130,
+              "end_line": 211,
+              "end_offset": 24041,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 18,
+              "start_line": 211,
+              "start_offset": 23929
+            }
+          }
+        },
+        {
+          "fact_id": "19c7f0349a966195a3ee8908",
+          "source": {
+            "path": "src/Taggable.Api/Program.cs",
+            "sha256": "753d0b118698d2f1d167b67af589cb0496340d8cc310abbb912d4c3187c49c2e",
+            "span": {
+              "end_column": 98,
+              "end_line": 116,
+              "end_offset": 5369,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 18,
+              "start_line": 116,
+              "start_offset": 5289
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

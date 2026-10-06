@@ -1,0 +1,12 @@
+{
+  "decision": "accepted",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "overlay_content_hash": "2cf7a93e7e2cf875a1ceeae79d282ef29b9af3055d7dc7a90e745fdfa53e19b6",
+  "overlay_id": "2cf7a93e7e2cf875a1ceeae79d282ef29b9af3055d7dc7a90e745fdfa53e19b6",
+  "receipt_schema_version": 1,
+  "review_basis": "Independently reviewed all eight exact conclusions against the saved current-extractor graph, a fresh complete evidence packet with no omitted bundles, and live source. All 15 citations equal their saved fact.source and occur in the packet; the route citation uses its saved action-attribute span. The action proves the null Action default, positional arguments, awaited discarded result, and normal-completion success object. Authorization names only the scheme expression. Handler evidence proves the authentication guard, UnauthorizedAccessException, OrdinalIgnoreCase forget/ClearAsync early return, and non-forget GetAsync, conditional assignments, and SaveAsync. Store evidence supports blank and deserialized-null fallbacks, serialization, cache removal, and no local invalid-JSON recovery. Constructor and registration correspondences remain lexical candidates. No compiler or runtime binding, shared or durable cache, photo or database deletion, or exception-to-HTTP-status guarantee is asserted.",
+  "reviewed_at": "2026-10-06T08:08:40Z",
+  "reviewer_identity": "/root/sol_status_draft_validator",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+}

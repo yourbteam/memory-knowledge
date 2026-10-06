@@ -1,0 +1,24 @@
+{
+  "association_review": {
+    "binding_hash": "ff378839c22236a702b9e74a98b152f4a38fc01777bea238d3b8edc4b1cef081",
+    "decision": "accepted",
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "eefa6142332ed26fdbc374aac78b3b77b6e75db28587cadf9bcf97a268256858",
+    "overlay_id": "2cf7a93e7e2cf875a1ceeae79d282ef29b9af3055d7dc7a90e745fdfa53e19b6",
+    "review_basis": "Independently verified route fact 1fde3d98599071efddbeadef in the same snapshot and complete packet: http_method POST, route_literal api/customer/save-user-status, action_id 134582b5c58b52a18409f628, and controller CustomerPhotoFeedController. Live source has [Route(\"api/customer\")] on that controller and [HttpPost(\"save-user-status\")] on SaveUserStatus. The accepted map identifies that exact action and its source-supported candidate continuation. This supports the exact saved route association without asserting runtime route or DI resolution.",
+    "review_schema_version": 1,
+    "reviewed_at": "2026-10-06T08:08:40Z",
+    "reviewer_identity": "/root/sol_status_draft_validator",
+    "reviewer_model": "GPT-6.1 Sol High",
+    "route_fact_id": "1fde3d98599071efddbeadef",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  },
+  "binding": {
+    "binding_schema_version": 1,
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "eefa6142332ed26fdbc374aac78b3b77b6e75db28587cadf9bcf97a268256858",
+    "overlay_id": "2cf7a93e7e2cf875a1ceeae79d282ef29b9af3055d7dc7a90e745fdfa53e19b6",
+    "route_fact_id": "1fde3d98599071efddbeadef",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  }
+}
