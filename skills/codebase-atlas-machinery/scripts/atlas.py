@@ -818,6 +818,296 @@ def discover(db_arg: str, repo_arg: str, raw_terms: list[str], max_bytes: int) -
         )
 
 
+def _source_texts(root: Path, references: list[tuple[str, dict[str, object]]]) -> list[dict[str, object]]:
+    """Read cited source safely and prove each saved Unicode-codepoint span."""
+    root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+    contents: dict[str, tuple[str, str]] = {}
+    snippets: dict[tuple[str, str, int, int, str], dict[str, object]] = {}
+    try:
+        for fact_id, source in references:
+            if not isinstance(source, dict) or not isinstance(source.get("span"), dict):
+                raise AtlasError(f"source fact {fact_id} has no verifiable span")
+            path = source.get("path")
+            expected_hash = source.get("sha256")
+            span = source["span"]
+            if not isinstance(path, str) or not isinstance(expected_hash, str):
+                raise AtlasError(f"source fact {fact_id} has incomplete source identity")
+            if span.get("offset_unit") != "unicode_codepoint":
+                raise AtlasError(f"source fact {fact_id} has unsupported span unit")
+            start, end = span.get("start_offset"), span.get("end_offset")
+            if not isinstance(start, int) or not isinstance(end, int) or start < 0 or end < start:
+                raise AtlasError(f"source fact {fact_id} has invalid span offsets")
+            if path not in contents:
+                evidence = _read_working_file(root_fd, path, collect_source=True)
+                if evidence.get("presence") != "present" or evidence.get("type") != "file":
+                    raise AtlasError(f"cited source is missing or not a regular file: {path}")
+                actual_hash = str(evidence.get("sha256"))
+                if actual_hash != expected_hash:
+                    raise AtlasError(f"cited source hash changed: {path}")
+                raw = evidence.get("_source_bytes")
+                if not isinstance(raw, bytes):
+                    raise AtlasError(f"cited source could not be read: {path}")
+                try:
+                    decoded = raw.decode("utf-8-sig")
+                except UnicodeDecodeError as exc:
+                    raise AtlasError(f"cited source is not UTF-8: {path}") from exc
+                contents[path] = (decoded, actual_hash)
+            decoded, actual_hash = contents[path]
+            if actual_hash != expected_hash:
+                raise AtlasError(f"cited source hash changed: {path}")
+            if end > len(decoded):
+                raise AtlasError(f"source fact {fact_id} span exceeds decoded source")
+            snippet = decoded[start:end]
+            key = (path, actual_hash, start, end, fact_id)
+            snippets[key] = {
+                "fact_id": fact_id,
+                "path": path,
+                "sha256": actual_hash,
+                "span": span,
+                "text": snippet,
+            }
+    finally:
+        os.close(root_fd)
+    return [snippets[key] for key in sorted(snippets, key=lambda item: (os.fsencode(item[0]), item[2], item[3], item[4]))]
+
+
+def _evidence_pack_render(document: dict[str, object], max_bytes: int) -> bytes:
+    reported = int(document["budget"].get("stdout_bytes_including_newline", 0))
+    for _ in range(20):
+        document["budget"]["stdout_bytes_including_newline"] = reported
+        encoded = (json.dumps(document, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
+        actual = len(encoded)
+        if actual == reported:
+            if actual > max_bytes:
+                raise AtlasError(f"complete mandatory evidence pack requires {actual} ASCII stdout bytes including newline; --max-tokens limit is {max_bytes}; stdout withheld")
+            return encoded
+        reported = actual
+    raise AtlasError("evidence pack byte-count field did not stabilize; stdout withheld")
+
+
+def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    """Build a bounded candidate-only source packet for one discovered route fact."""
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    db_path = Path(db_arg).expanduser()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    live = _live_inventory_identity(repo_arg)
+    from csharp_facts import EXTRACTION_METHOD
+    extractor_identity = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
+    uri = db_path.absolute().as_uri() + "?mode=ro"
+    with sqlite3.connect(uri, uri=True) as connection:
+        rows = connection.execute("SELECT snapshot_id, payload_json FROM atlas_snapshots ORDER BY snapshot_id").fetchall()
+    compatible: list[dict[str, object]] = []
+    for _row_id, payload_json in rows:
+        saved = json.loads(payload_json)
+        graph = saved.get("source_graph") or {}
+        if (saved.get("schema_version") == SCHEMA_VERSION and saved.get("inventory_basis") == INVENTORY_BASIS
+                and graph.get("extractor_identity") == extractor_identity):
+            changed, reasons = _focus_source_identity(saved, live)
+            if not changed and not reasons:
+                compatible.append(saved)
+    if len(compatible) != 1:
+        reason = "no_saved_snapshot_matches_current_extractor_and_checkout" if not compatible else "multiple_saved_snapshots_match_current_extractor_and_checkout"
+        raise AtlasError(f"{reason}; compatible matching snapshots={len(compatible)}")
+    snapshot = compatible[0]
+    graph = snapshot["source_graph"]
+    facts = graph.get("facts", [])
+    unresolved = graph.get("unresolved", [])
+    candidates = graph.get("candidates", [])
+    route_facts = [f for f in facts if f.get("id") == route_fact_id and f.get("kind") == "route_action"]
+    if len(route_facts) != 1:
+        all_ids = [f for f in facts if f.get("id") == route_fact_id]
+        if all_ids:
+            raise AtlasError(f"route fact ID has wrong kind: {route_fact_id}")
+        raise AtlasError(f"unknown route fact ID: {route_fact_id}")
+    route = route_facts[0]
+    method_matches = [f for f in facts if f.get("id") == route.get("action_id") and f.get("kind") == "method_declaration"]
+    controller_matches = [f for f in facts if f.get("kind") == "type_declaration" and f.get("type_id") == route.get("controller_type_id")]
+    if len(method_matches) != 1 or len(controller_matches) != 1:
+        raise AtlasError("route root lacks one unambiguous saved action method and controller declaration")
+    root_method, controller = method_matches[0], controller_matches[0]
+
+    mandatory_refs: list[tuple[str, dict[str, object]]] = [
+        (route["id"], route["source"]), (root_method["id"], root_method["source"]),
+        (controller["id"], controller["source"]),
+    ]
+    if isinstance(route.get("controller_route_source"), dict):
+        mandatory_refs.append((route["id"], route["controller_route_source"]))
+    authorization = sorted((f for f in facts if f.get("kind") == "authorization_attribute"
+                            and ((f.get("owner_type_id") == route.get("controller_type_id") and f.get("method_id") is None)
+                                 or f.get("method_id") == root_method["id"])),
+                           key=lambda f: (f.get("source", {}).get("path", ""), f.get("source", {}).get("span", {}).get("start_offset", 0), f["id"]))
+    for fact in authorization:
+        mandatory_refs.append((fact["id"], fact["source"]))
+
+    method_by_id = {f["id"]: f for f in facts if f.get("kind") == "method_declaration"}
+    injection_by_id = {f["id"]: f for f in facts if f.get("kind") == "constructor_injection"}
+    registration_facts = [f for f in facts if f.get("kind") == "dependency_registration"]
+    candidate_by_id = {c["id"]: c for c in candidates}
+    fact_by_id = {fact["id"]: fact for fact in facts}
+    invocation_facts = [f for f in facts if f.get("kind") == "receiver_invocation_syntax"]
+    def invocations(method: dict[str, object], depth: int) -> list[dict[str, object]]:
+        result = []
+        calls = sorted((f for f in invocation_facts if f.get("method_id") == method["id"]),
+                       key=lambda f: (f.get("source", {}).get("path", ""), f.get("source", {}).get("span", {}).get("start_offset", 0), f["id"]))
+        for call in calls:
+            call_candidates = [c for c in candidates if c.get("subject_fact_id") == call["id"] and c.get("expression_side") == "receiver_name"]
+            related_unresolved = [u for u in unresolved if u.get("fact_id") == call["id"] or any(c.get("id") == u.get("candidate_id") for c in call_candidates)]
+            injections = [injection_by_id[item] for candidate in call_candidates for item in candidate.get("candidate_fact_ids", []) if item in injection_by_id]
+            for candidate in call_candidates:
+                for injection_id in candidate.get("candidate_fact_ids", []):
+                    injection = fact_by_id.get(injection_id)
+                    if injection is None or injection.get("kind") != "constructor_injection":
+                        raise AtlasError(f"saved receiver candidate {candidate['id']} contains missing or wrong-kind injection fact ID: {injection_id}")
+            # Candidate injection IDs are retained as a set; no receiver candidate is treated as a binding.
+            injections = sorted({i["id"]: i for i in injections}.values(), key=lambda f: f["id"])
+            injection_evidence = []
+            for injection in injections:
+                regs = sorted((r for r in registration_facts if r.get("service_type_expression") == injection.get("type_expression")), key=lambda f: f["id"])
+                reg_evidence = []
+                for registration in regs:
+                    type_candidates = [c for c in candidates if c.get("subject_fact_id") == registration["id"]
+                                      and c.get("expression_side") == "implementation"]
+                    declarations = []
+                    for candidate in type_candidates:
+                        for declaration_id in candidate.get("candidate_fact_ids", []):
+                            declaration = fact_by_id.get(declaration_id)
+                            if declaration is None or declaration.get("kind") != "type_declaration":
+                                raise AtlasError(f"saved implementation candidate {candidate['id']} contains missing or wrong-kind declaration fact ID: {declaration_id}")
+                            declarations.append((candidate, declaration))
+                    declaration_evidence = []
+                    for candidate, declaration in sorted(declarations, key=lambda pair: (pair[1]["id"], pair[0]["id"])):
+                        methods = sorted((m for m in method_by_id.values() if m.get("owner_type_id") == declaration.get("type_id")
+                                          and m.get("method_name") == call.get("member_name")), key=lambda f: f["id"])
+                        method_evidence = []
+                        for target_method in methods:
+                            if depth < 2:
+                                method_evidence.append({"method_fact_id": target_method["id"], "method_name": target_method["method_name"],
+                                                        "source": target_method["source"], "invocations": invocations(target_method, depth + 1)})
+                            else:
+                                method_evidence.append({"method_fact_id": target_method["id"], "method_name": target_method["method_name"], "source": target_method["source"]})
+                        declaration_evidence.append({"candidate_id": candidate["id"], "candidate_fact_ids": candidate.get("candidate_fact_ids", []),
+                                                     "traversable": candidate.get("traversable"), "declaration_fact_id": declaration["id"],
+                                                     "type_id": declaration.get("type_id"), "methods": method_evidence,
+                                                     "method_match_count": len(methods)})
+                    reg_evidence.append({"registration_fact_id": registration["id"], "source": registration["source"],
+                                         "service_type_expression": registration.get("service_type_expression"),
+                                         "implementation_type_expression": registration.get("implementation_type_expression"),
+                                         "implementation_candidates": declaration_evidence,
+                                         "registration_match_count": len(regs),
+                                         "unresolved": [u for u in unresolved if u.get("fact_id") == registration["id"]
+                                                        or any(c.get("id") == u.get("candidate_id") for c in type_candidates)]})
+                injection_evidence.append({"injection_fact_id": injection["id"], "source": injection["source"],
+                                           "type_expression": injection.get("type_expression"), "registrations": reg_evidence,
+                                           "registration_match_count": len(regs)})
+            result.append({"invocation_fact_id": call["id"], "member_name": call.get("member_name"), "receiver_name": call.get("receiver_name"),
+                           "source": call["source"], "depth": depth, "receiver_candidates": [
+                               {"candidate_id": c["id"], "traversable": c.get("traversable"), "candidate_fact_ids": c.get("candidate_fact_ids", []),
+                                "match_basis": c.get("match_basis"), "unresolved": [u for u in related_unresolved if u.get("candidate_id") == c["id"]]}
+                               for c in call_candidates], "injection_candidates": injection_evidence,
+                           "candidate_bundle_count": len(injections), "unresolved": related_unresolved})
+        return result
+
+    root_calls = invocations(root_method, 1)
+    root_unresolved = [u for u in unresolved if u.get("fact_id") in {route["id"], root_method["id"]}]
+    repo_root = Path(live["repository_root"])
+    mandatory_snippets = _source_texts(repo_root, mandatory_refs)
+    def bundle_fact_ids(value: object) -> set[str]:
+        found: set[str] = set()
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key.endswith("_fact_id") and isinstance(item, str):
+                    found.add(item)
+                elif key == "candidate_fact_ids" and isinstance(item, list):
+                    found.update(x for x in item if isinstance(x, str))
+                found.update(bundle_fact_ids(item))
+        elif isinstance(value, list):
+            for item in value:
+                found.update(bundle_fact_ids(item))
+        return found
+
+    def bundle_snippets(bundle: dict[str, object]) -> list[dict[str, object]]:
+        def validate_candidates(value: object) -> None:
+            if isinstance(value, dict):
+                candidate_id = value.get("candidate_id")
+                if isinstance(candidate_id, str):
+                    if candidate_id not in candidate_by_id:
+                        raise AtlasError(f"candidate references unknown saved candidate ID: {candidate_id}")
+                    saved_candidate = candidate_by_id[candidate_id]
+                    if "candidate_fact_ids" in value:
+                        if value.get("candidate_fact_ids") != saved_candidate.get("candidate_fact_ids", []):
+                            raise AtlasError(f"saved candidate IDs changed while building evidence packet: {candidate_id}")
+                        expected_kind = "constructor_injection" if saved_candidate.get("expression_side") == "receiver_name" else "type_declaration"
+                        for target_id in saved_candidate.get("candidate_fact_ids", []):
+                            target = fact_by_id.get(target_id)
+                            if target is None or target.get("kind") != expected_kind:
+                                raise AtlasError(f"saved candidate {candidate_id} contains missing or wrong-kind fact ID: {target_id}")
+                for item in value.values():
+                    validate_candidates(item)
+            elif isinstance(value, list):
+                for item in value:
+                    validate_candidates(item)
+        validate_candidates(bundle)
+        fact_ids = bundle_fact_ids(bundle)
+        missing = sorted(fact_id for fact_id in fact_ids if fact_id not in fact_by_id)
+        if missing:
+            raise AtlasError(f"candidate references unknown fact IDs: {', '.join(missing)}")
+        refs = []
+        for fact_id in sorted(fact_ids):
+            fact = fact_by_id[fact_id]
+            if not isinstance(fact.get("source"), dict):
+                raise AtlasError(f"candidate fact has no saved source span: {fact_id}")
+            refs.append((fact_id, fact["source"]))
+        return _source_texts(repo_root, refs) if refs else []
+
+    complete_bundles = [call for call in root_calls]
+    selected_bundles: list[dict[str, object]] = []
+    selected_snippets: dict[tuple[str, str, int, int, str], dict[str, object]] = {}
+    document: dict[str, object] = {
+        "result": "evidence_pack", "snapshot_id": snapshot["snapshot_id"], "extractor_identity": extractor_identity,
+        "route": {"fact_id": route["id"], "http_method": route.get("http_method"), "route": route.get("route_literal"),
+                  "action": route.get("action_name"), "controller_type_id": route.get("controller_type_id"),
+                  "action_id": root_method["id"], "controller_fact_id": controller["id"],
+                  "authorization_fact_ids": [f["id"] for f in authorization]},
+        "root": {"action_method_fact_id": root_method["id"], "action_method_name": root_method.get("method_name"),
+                 "controller_route_source": route.get("controller_route_source"), "authorization_fact_ids": [f["id"] for f in authorization],
+                 "invocation_fact_ids": [call["invocation_fact_id"] for call in root_calls]},
+        "source_snippets": mandatory_snippets,
+        "candidate_bundles": selected_bundles,
+        "candidate_snippets": [],
+        "selection": {"included_candidate_bundles": 0, "omitted_candidate_bundles": len(complete_bundles),
+                      "complete": not complete_bundles, "candidate_bundle_count": len(complete_bundles)},
+        "graph_context": {"relevant_unresolved_count": len([u for u in unresolved if u.get("fact_id") == route["id"] or u.get("fact_id") == root_method["id"]]),
+                          "root_unresolved": root_unresolved,
+                          "limitations": graph.get("limitations", []), "traversal_note": "All cross-file relationships are lexical candidates; no receiver, registration, overload, or invocation is resolved."},
+        "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead", "stdout_bytes_including_newline": 0}
+    }
+    encoded = _evidence_pack_render(document, max_bytes)
+    for bundle in complete_bundles:
+        for snippet in bundle_snippets(bundle):
+            key = (snippet["path"], snippet["sha256"], snippet["span"]["start_offset"], snippet["span"]["end_offset"], snippet["fact_id"])
+            selected_snippets[key] = snippet
+        trial_bundles = [*selected_bundles, bundle]
+        trial = dict(document)
+        trial["candidate_bundles"] = trial_bundles
+        trial["candidate_snippets"] = [selected_snippets[key] for key in sorted(selected_snippets, key=lambda item: (os.fsencode(item[0]), item[2], item[3], item[4]))]
+        trial["selection"] = {"included_candidate_bundles": len(trial_bundles), "omitted_candidate_bundles": len(complete_bundles) - len(trial_bundles),
+                              "complete": len(trial_bundles) == len(complete_bundles), "candidate_bundle_count": len(complete_bundles)}
+        try:
+            encoded = _evidence_pack_render(trial, max_bytes)
+        except AtlasError:
+            # Later bundles are deterministic; a bundle is never split or silently dropped.
+            # Rebuild omitted counts from the retained complete prefix.
+            break
+        selected_bundles = trial_bundles
+        document = trial
+    document["selection"] = {"included_candidate_bundles": len(selected_bundles), "omitted_candidate_bundles": len(complete_bundles) - len(selected_bundles),
+                             "complete": len(selected_bundles) == len(complete_bundles), "candidate_bundle_count": len(complete_bundles)}
+    encoded = _evidence_pack_render(document, max_bytes)
+    return document, encoded, 0
+
+
 def _focus_document(snapshot: dict[str, object], flow_result: dict[str, object], freshness: dict[str, object], max_bytes: int) -> tuple[dict[str, object], bytes]:
     overlay = flow_result["overlay"]
     all_claims = overlay["reviewed_conclusions"]
@@ -1069,6 +1359,11 @@ def main(argv: list[str] | None = None) -> int:
     discover_parser.add_argument("--repo", required=True)
     discover_parser.add_argument("--terms", required=True, nargs="+", help="model-chosen lexical terms; no semantic selection is performed")
     discover_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    evidence_parser = commands.add_parser("evidence-pack", help="assemble bounded, source-verified candidate evidence for one route fact")
+    evidence_parser.add_argument("--db", required=True)
+    evidence_parser.add_argument("--repo", required=True)
+    evidence_parser.add_argument("--route-fact-id", required=True)
+    evidence_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     flow_add_parser = commands.add_parser("flow-add", help="attach a reviewed, source-cited flow overlay")
     flow_add_parser.add_argument("--db", required=True)
     flow_add_parser.add_argument("--snapshot", required=True)
@@ -1106,6 +1401,8 @@ def main(argv: list[str] | None = None) -> int:
             output = query(args.db, args.snapshot, args.path, args.graph)
         elif args.command == "discover":
             output, encoded_output, exit_code = discover(args.db, args.repo, args.terms, args.max_tokens)
+        elif args.command == "evidence-pack":
+            output, encoded_output, exit_code = evidence_pack(args.db, args.repo, args.route_fact_id, args.max_tokens)
         elif args.command == "flow-add":
             output = attach_flow(args.db, args.snapshot, args.input)
         elif args.command == "flow-review":

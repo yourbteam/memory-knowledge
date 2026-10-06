@@ -63,6 +63,159 @@ class AtlasCliTests(unittest.TestCase):
             "--terms", *terms, "--max-tokens", str(max_tokens), expect=expect,
         )
 
+    def evidence_pack(self, route_fact_id, max_tokens=100000, expect=0):
+        return self.cli(
+            "evidence-pack", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route_fact_id, "--max-tokens", str(max_tokens), expect=expect,
+        )
+
+    def evidence_fixture(self, extra_registration="", shadow=False):
+        handler_body = "store.SaveAsync(); store.GetAsync();"
+        if shadow:
+            handler_body = "var store = new Store(); store.SaveAsync(); store.GetAsync();"
+        source = self.repo / "Flow.cs"
+        source.write_text(f'''namespace Demo;
+[Route("api/customer")]
+class CustomerController(IHandler handler)
+{{
+    [HttpPost("save")]
+    void Save() {{ handler.Handle(); }}
+}}
+class Handler(IStore store)
+{{
+    void Handle() {{ {handler_body} }}
+}}
+class Store {{ void SaveAsync() {{}} void GetAsync() {{}} }}
+class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); services.AddScoped<IStore, Store>(); {extra_registration} }} }}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Flow.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        route = next(f for f in graph["facts"] if f["kind"] == "route_action")
+        return saved, graph, route
+
+    def test_evidence_pack_cli_includes_root_and_two_candidate_levels(self):
+        saved, graph, route = self.evidence_fixture()
+        result = self.evidence_pack(route["id"])
+        packet = json.loads(result.stdout)
+        self.assertEqual(packet["snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(packet["extractor_identity"], graph["extractor_identity"])
+        self.assertEqual(packet["route"]["http_method"], "POST")
+        self.assertEqual(packet["route"]["route"], "api/customer/save")
+        self.assertEqual(packet["root"]["action_method_name"], "Save")
+        root_text = "\n".join(item["text"] for item in packet["source_snippets"])
+        self.assertIn("handler.Handle()", root_text)
+        methods = {method["method_name"] for bundle in packet["candidate_bundles"]
+                   for injection in bundle["injection_candidates"] for registration in injection["registrations"]
+                   for candidate in registration["implementation_candidates"] for method in candidate["methods"]}
+        nested = {method["method_name"] for bundle in packet["candidate_bundles"]
+                  for injection in bundle["injection_candidates"] for registration in injection["registrations"]
+                  for candidate in registration["implementation_candidates"] for method in candidate["methods"]
+                  for call in method.get("invocations", []) for nested_injection in call["injection_candidates"]
+                  for nested_registration in nested_injection["registrations"] for nested_candidate in nested_registration["implementation_candidates"]
+                  for nested_method in nested_candidate["methods"] for method in [nested_method]}
+        self.assertIn("Handle", methods)
+        self.assertEqual(nested, {"SaveAsync", "GetAsync"})
+        self.assertTrue(packet["selection"]["complete"])
+        self.assertEqual(packet["selection"]["omitted_candidate_bundles"], 0)
+        self.assertTrue(all(item["sha256"] and item["span"]["offset_unit"] == "unicode_codepoint"
+                            for item in packet["source_snippets"] + packet["candidate_snippets"]))
+        cap = len(result.stdout.encode("ascii")) // 2
+        bounded = json.loads(self.evidence_pack(route["id"], cap).stdout)
+        self.assertEqual(bounded["selection"]["included_candidate_bundles"], 0)
+        self.assertEqual(bounded["selection"]["omitted_candidate_bundles"], 1)
+        self.assertFalse(bounded["selection"]["complete"])
+
+    def test_evidence_pack_refuses_stale_unknown_wrong_kind_and_mandatory_over_cap(self):
+        _saved, graph, route = self.evidence_fixture()
+        stale = self.repo / "Flow.cs"
+        stale.write_text(stale.read_text(encoding="utf-8") + "// changed\n", encoding="utf-8")
+        result = self.evidence_pack(route["id"], expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", result.stderr)
+
+        # Restore the saved checkout identity by indexing the new bytes; IDs remain deterministic only for these bytes.
+        git(self.repo, "add", "--", "Flow.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        route = next(f for f in graph["facts"] if f["kind"] == "route_action")
+        unknown = self.evidence_pack("unknown-route-fact", expect=2)
+        self.assertIn("unknown route fact ID", unknown.stderr)
+        wrong = next(f["id"] for f in graph["facts"] if f["kind"] == "type_declaration")
+        wrong_result = self.evidence_pack(wrong, expect=2)
+        self.assertIn("wrong kind", wrong_result.stderr)
+        capped = self.evidence_pack(route["id"], 100, expect=2)
+        self.assertEqual(capped.stdout, "")
+        self.assertIn("complete mandatory evidence pack requires", capped.stderr)
+
+    def test_evidence_pack_preserves_registration_ambiguity_and_shadowing(self):
+        _saved, graph, route = self.evidence_fixture(
+            extra_registration="services.AddTransient<IHandler, OtherHandler>();", shadow=True,
+        )
+        packet = json.loads(self.evidence_pack(route["id"]).stdout)
+        handler_call = packet["candidate_bundles"][0]
+        injection = handler_call["injection_candidates"][0]
+        self.assertEqual(injection["registration_match_count"], 2)
+        self.assertEqual(len(injection["registrations"]), 2)
+        reasons = [item["reason"] for call in handler_call["injection_candidates"][0]["registrations"][0]
+                   ["implementation_candidates"][0]["methods"][0]["invocations"] for item in call["unresolved"]]
+        self.assertTrue(any("shadow" in reason for reason in reasons))
+        self.assertTrue(all(candidate.get("traversable") is False
+                            for registration in injection["registrations"]
+                            for candidate in registration["implementation_candidates"]))
+
+    def test_evidence_pack_excludes_sibling_action_authorization(self):
+        source = self.repo / "Auth.cs"
+        source.write_text('''[Authorize]
+[Route("api/auth")]
+class AuthController
+{
+    [HttpPost("admin/login")]
+    [Authorize(Policy = "Login")]
+    void AdminLogin() {}
+
+    [HttpPost("admin/logout")]
+    [Authorize(Policy = "Logout")]
+    void AdminLogout() {}
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Auth.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        route = next(f for f in graph["facts"] if f.get("kind") == "route_action" and f.get("route_literal") == "api/auth/admin/login")
+        sibling = next(f for f in graph["facts"] if f.get("kind") == "authorization_attribute" and f.get("method_id")
+                       and next(m for m in graph["facts"] if m.get("id") == f["method_id"])["method_name"] == "AdminLogout")
+        packet = json.loads(self.evidence_pack(route["id"]).stdout)
+        included = set(packet["route"]["authorization_fact_ids"])
+        self.assertIn(sibling["owner_type_id"], {route["controller_type_id"]})
+        self.assertNotIn(sibling["id"], included)
+        self.assertEqual(len(included), 2)  # Controller authorization and AdminLogin authorization.
+
+    def test_evidence_pack_fails_closed_on_missing_implementation_candidate_fact(self):
+        saved, graph, route = self.evidence_fixture()
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (saved["snapshot_id"],)).fetchone()
+            payload = json.loads(row[0])
+            candidate = next(c for c in payload["source_graph"]["candidates"]
+                             if c.get("expression_side") == "implementation"
+                             and any(f.get("kind") == "dependency_registration" and f["id"] == c["subject_fact_id"]
+                                     and f.get("implementation_type_expression") == "Handler"
+                                     for f in payload["source_graph"]["facts"]))
+            candidate["candidate_fact_ids"] = ["missing-declaration-fact"]
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(payload), saved["snapshot_id"]))
+        result = self.evidence_pack(route["id"], expect=2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("missing or wrong-kind declaration fact ID", result.stderr)
+
+    def test_evidence_pack_render_stabilizes_byte_count_at_digit_boundary(self):
+        spec = importlib.util.spec_from_file_location("atlas_under_test", SCRIPT)
+        atlas = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(atlas)
+        document = {"budget": {"stdout_bytes_including_newline": 0}, "padding": "x" * 9936}
+        with self.assertRaises(atlas.AtlasError):
+            atlas._evidence_pack_render(document, 10000)
+        rendered = atlas._evidence_pack_render(document, 20000)
+        self.assertEqual(document["budget"]["stdout_bytes_including_newline"], len(rendered))
+
     def test_discover_ranks_multiple_routes_and_respects_exact_output_cap(self):
         routes = self.repo / "Routes.cs"
         routes.write_text('''using Microsoft.AspNetCore.Mvc;

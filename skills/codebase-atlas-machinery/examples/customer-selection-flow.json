@@ -1,0 +1,214 @@
+{
+  "overlay_schema_version": 1,
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "title": "Reviewed flow: POST api/customer/saveselection",
+  "reviewed_conclusions": [
+    {
+      "claim": "The packet identifies this action as POST api/customer/saveselection; the exact controller snippet marks SaveSelection with HttpPost(\"saveselection\"), and the action awaits the handler call before returning Ok(new { success = true }).",
+      "evidence": [
+        {
+          "fact_id": "05904111e7183858482a4279",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 32,
+              "end_line": 46,
+              "end_offset": 2296,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 46,
+              "start_offset": 2269
+            }
+          }
+        },
+        {
+          "fact_id": "5e6a47fcae48124597113912",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 6,
+              "end_line": 57,
+              "end_offset": 2750,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 46,
+              "start_offset": 2269
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "CustomerPhotoFeedController carries an authorization attribute declaring PassportAuthenticationExtensions.SchemeName as its authentication scheme; the packet does not establish the constant value or authorization implementation.",
+      "evidence": [
+        {
+          "fact_id": "434703d349dc049788ca6044",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 81,
+              "end_line": 10,
+              "end_offset": 343,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 1,
+              "start_line": 10,
+              "start_offset": 263
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The controller constructor declares ICommandHandler<SaveCustomerPhotoFeedSelectionCommand, bool>, and the application registration uses AddScoped with that service expression and SaveCustomerPhotoFeedSelectionCommandHandler as implementation expression; these are source-based candidate correspondences.",
+      "evidence": [
+        {
+          "fact_id": "bc8276b8beb4971874f80a84",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 110,
+              "end_line": 16,
+              "end_offset": 874,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 16,
+              "start_offset": 769
+            }
+          }
+        },
+        {
+          "fact_id": "b39cffa237d8b8c9f4af87e5",
+          "source": {
+            "path": "src/Taggable.Api/Application/DependencyInjection.cs",
+            "sha256": "599c136aa389602aaf54c36369b95151caa8aa87a13b07c98224b6349c684934",
+            "span": {
+              "end_column": 136,
+              "end_line": 210,
+              "end_offset": 23909,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 18,
+              "start_line": 210,
+              "start_offset": 23791
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "SaveSelection constructs SaveCustomerPhotoFeedSelectionCommand with request.Ids ?? [], request.Stockids ?? [], and request.IsAllSelected as three positional arguments; the packet does not establish their correspondence to command properties.",
+      "evidence": [
+        {
+          "fact_id": "5e6a47fcae48124597113912",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPhotoFeedController.cs",
+            "sha256": "c0a2ac860872b47fa9f986a2435844960f132dc73c5f4cb4f7e7b75df1b8ea1e",
+            "span": {
+              "end_column": 6,
+              "end_line": 57,
+              "end_offset": 2750,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 46,
+              "start_offset": 2269
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The handler rejects an unauthenticated current user or a null user ID, reads state using the current user ID, assigns distinct command.ImageIds and command.StockImageIds lists and command.IsAllSelected to state, saves with that user ID, and returns true.",
+      "evidence": [
+        {
+          "fact_id": "0367205aed51b847c8f3c03d",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedSelectionCommand.cs",
+            "sha256": "af2f8cc248e60a412baea58d2906a7a38bb43402a39b12d5555313523c251a18",
+            "span": {
+              "end_column": 6,
+              "end_line": 27,
+              "end_offset": 1190,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 14,
+              "start_offset": 487
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The handler constructor declares ICustomerPhotoFeedStateStore, and Program.cs registers that service expression with DistributedCustomerPhotoFeedStateStore using AddScoped; the candidate bundle records this source-based correspondence. GetAsync reads a cache string, returns a new state for a blank payload, and for a present payload JSON-deserializes it and returns the resulting state, falling back to a new state if the result is null. SaveAsync serializes state and calls SetStringAsync.",
+      "evidence": [
+        {
+          "fact_id": "162de92893bff47057ba060f",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerPhotoFeed/SaveCustomerPhotoFeedSelectionCommand.cs",
+            "sha256": "af2f8cc248e60a412baea58d2906a7a38bb43402a39b12d5555313523c251a18",
+            "span": {
+              "end_column": 44,
+              "end_line": 12,
+              "end_offset": 416,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 12,
+              "start_offset": 377
+            }
+          }
+        },
+        {
+          "fact_id": "19c7f0349a966195a3ee8908",
+          "source": {
+            "path": "src/Taggable.Api/Program.cs",
+            "sha256": "753d0b118698d2f1d167b67af589cb0496340d8cc310abbb912d4c3187c49c2e",
+            "span": {
+              "end_column": 98,
+              "end_line": 116,
+              "end_offset": 5369,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 18,
+              "start_line": 116,
+              "start_offset": 5289
+            }
+          }
+        },
+        {
+          "fact_id": "2eccc989f87aa167689a6afc",
+          "source": {
+            "path": "src/Taggable.Api/Infrastructure/CustomerPhotoFeed/DistributedCustomerPhotoFeedStateStore.cs",
+            "sha256": "cf2c5ab26016d7f2897ff14bfc7c314dfc66889db696fec3483bf800927ccb70",
+            "span": {
+              "end_column": 6,
+              "end_line": 24,
+              "end_offset": 991,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 15,
+              "start_offset": 547
+            }
+          }
+        },
+        {
+          "fact_id": "3ddf6ba26c1d80a2c6707019",
+          "source": {
+            "path": "src/Taggable.Api/Infrastructure/CustomerPhotoFeed/DistributedCustomerPhotoFeedStateStore.cs",
+            "sha256": "cf2c5ab26016d7f2897ff14bfc7c314dfc66889db696fec3483bf800927ccb70",
+            "span": {
+              "end_column": 6,
+              "end_line": 30,
+              "end_offset": 1281,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 26,
+              "start_offset": 997
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

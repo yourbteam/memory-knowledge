@@ -1,0 +1,12 @@
+{
+  "decision": "accepted",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "overlay_content_hash": "a3b19477c63765a78fdd44a3f1ca45b66b58c447c29480b61022303614cff531",
+  "overlay_id": "a3b19477c63765a78fdd44a3f1ca45b66b58c447c29480b61022303614cff531",
+  "receipt_schema_version": 1,
+  "review_basis": "Independently reviewed every subfact in all six conclusions against the complete source packet, exact current v7 graph facts, and live source bytes. All citations equal their saved fact.source and are present in the packet; the checkout matches the snapshot. Verified POST api/customer/saveselection composition from route metadata and controller/action anchors, awaited handler invocation and success response, controller authorization naming only its scheme constant, matching constructor/registration expressions retained as candidate correspondences, positional arguments without claiming command-property correspondence, handler authentication/user-ID guard, distinct selection lists and flag assignment, user-ID state read/save and true return. Claim 6 now includes the normal JSON cache restoration path, blank-payload and null-result fallback, and serialization/SetStringAsync; it does not claim malformed-JSON recovery. Only claim 6 text changed from the prior review; all other claims and all citations are unchanged. No auxiliary controller_route_source citation, expiry, key format, state defaults, compiler-resolved binding or runtime verification is asserted. Accepted as the bounded source-evidence flow map; the fresh packet-only draft plus correction achieved that outcome.",
+  "reviewed_at": "2026-10-06T05:41:31.070763Z",
+  "reviewer_identity": "Independent validator",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+}
