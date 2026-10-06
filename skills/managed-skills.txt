@@ -1,5 +1,6 @@
 _shared
 atom-building-machinery
+codebase-atlas-machinery
 corpus-add
 critic-foundry
 critique-machinery

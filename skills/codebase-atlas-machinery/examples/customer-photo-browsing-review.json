@@ -1,0 +1,12 @@
+{
+  "receipt_schema_version": 1,
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a",
+  "overlay_id": "5a446a5f31c0a96fa9ff1c37d49092e24b343dc41e5a0b98d3934182c3ad442d",
+  "overlay_content_hash": "5a446a5f31c0a96fa9ff1c37d49092e24b343dc41e5a0b98d3934182c3ad442d",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "reviewer_identity": "Independent validator",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "decision": "accepted",
+  "reviewed_at": "2026-10-05T22:58:42Z",
+  "review_basis": "Independently reviewed all five conclusions and 19 cited source anchors against actual taggable-api source. V7 records invocation syntax and non-traversable candidates; the flow pairings are reviewed source conclusions, not compiler-resolved edges. Program.cs registers AddDistributedMemoryCache, so IDistributedCache wording establishes no shared or durable backend."
+}
