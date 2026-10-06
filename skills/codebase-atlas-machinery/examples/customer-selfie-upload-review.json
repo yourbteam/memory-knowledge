@@ -1,0 +1,12 @@
+{
+  "receipt_schema_version": 1,
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a",
+  "overlay_id": "377a682a4b6df4a9e88984b074c32fb94d63d0c1849c55c9b851b841cd7a443d",
+  "overlay_content_hash": "377a682a4b6df4a9e88984b074c32fb94d63d0c1849c55c9b851b841cd7a443d",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "reviewer_identity": "Independent validator",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "decision": "accepted",
+  "reviewed_at": "2026-10-06T04:48:41Z",
+  "review_basis": "Independently checked all five claims against live taggable-api source. All 28 cited occurrences (26 unique v7 facts) match saved fact path, hash, and span. The empty-ID-list case is conditional on successful storage upload; prior IsMe rows can keep process found above zero. This review is bound to the exact overlay content hash, not an extractor-resolved control-flow edge."
+}

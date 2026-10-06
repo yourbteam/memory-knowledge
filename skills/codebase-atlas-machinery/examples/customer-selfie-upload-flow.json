@@ -1,0 +1,481 @@
+{
+  "overlay_schema_version": 1,
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "title": "Customer selfie upload and face-recognition status flow (source-reviewed conclusions)",
+  "reviewed_conclusions": [
+    {
+      "claim": "Reviewed source: Passport-authorized POST /api/customer/submit-image and /api/customer/submit-image-stream both call the same injected submit handler. Atlas records route and receiver syntax, not binding.",
+      "evidence": [
+        {
+          "fact_id": "19def1a3b4836f394938bd44",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 40,
+              "end_line": 56,
+              "end_offset": 2790,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 56,
+              "start_offset": 2755
+            }
+          }
+        },
+        {
+          "fact_id": "f6aa5964e9e78bf29c476bd3",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 47,
+              "end_line": 65,
+              "end_offset": 3325,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 65,
+              "start_offset": 3283
+            }
+          }
+        },
+        {
+          "fact_id": "cce98bede31d912a51ba3ddd",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 85,
+              "end_line": 55,
+              "end_offset": 2750,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 55,
+              "start_offset": 2670
+            }
+          }
+        },
+        {
+          "fact_id": "f4464ca7e66cb0877ccb1652",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 85,
+              "end_line": 64,
+              "end_offset": 3278,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 64,
+              "start_offset": 3198
+            }
+          }
+        },
+        {
+          "fact_id": "4c6533f5238883b6efaca574",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 31,
+              "end_line": 61,
+              "end_offset": 3185,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 16,
+              "start_line": 59,
+              "start_offset": 2955
+            }
+          }
+        },
+        {
+          "fact_id": "a3e10c5bd340a0fadc037e56",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 31,
+              "end_line": 70,
+              "end_offset": 3726,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 16,
+              "start_line": 68,
+              "start_offset": 3496
+            }
+          }
+        },
+        {
+          "fact_id": "3d60ec7e2a8acd40667b9483",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 151,
+              "end_line": 15,
+              "end_offset": 783,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 15,
+              "start_offset": 637
+            }
+          }
+        },
+        {
+          "fact_id": "38db58977a81b69f3f5af774",
+          "source": {
+            "path": "src/Taggable.Api/Application/DependencyInjection.cs",
+            "sha256": "599c136aa389602aaf54c36369b95151caa8aa87a13b07c98224b6349c684934",
+            "span": {
+              "end_column": 177,
+              "end_line": 214,
+              "end_offset": 24516,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 18,
+              "start_line": 214,
+              "start_offset": 24357
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The handler reads image bytes, awaits selfieStorage.UploadAsync, then awaits SearchAsync with the uploaded key and comparison-photo inputs. Source-reviewed; graph records injected names and call syntax, not binding or await semantics.",
+      "evidence": [
+        {
+          "fact_id": "982873a9af5cc3cdd4ad550a",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 41,
+              "end_line": 13,
+              "end_offset": 473,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 13,
+              "start_offset": 437
+            }
+          }
+        },
+        {
+          "fact_id": "e5deb8f8c9dd1ca01724a669",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 53,
+              "end_line": 14,
+              "end_offset": 527,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 14,
+              "start_offset": 479
+            }
+          }
+        },
+        {
+          "fact_id": "5901c4ee67f543bff4c822b5",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 103,
+              "end_line": 71,
+              "end_offset": 2732,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 28,
+              "start_line": 71,
+              "start_offset": 2657
+            }
+          }
+        },
+        {
+          "fact_id": "2ceadc028de86fe97fbaf74d",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 31,
+              "end_line": 97,
+              "end_offset": 4224,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 37,
+              "start_line": 94,
+              "start_offset": 4029
+            }
+          }
+        },
+        {
+          "fact_id": "f5fb55aae8bb9606919db4e5",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 6,
+              "end_line": 171,
+              "end_offset": 7157,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 19,
+              "start_offset": 768
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "After successful storage upload, an empty matchedImageIds is ambiguous, not proof of no face match: SearchAsync returns [] when SearchPhotosByFaceUrl is missing, comparison photos are absent, HTTP is non-success, or response IDs are absent/unusable; a successful search may also return no matches. On this path the handler sets FaceId=\"false\", stores the upload key and selfie history, adds no UserProductImages or UserSelfieFaceIds for this request, and returns success=1/count=0. These are source-reviewed conclusions; Atlas does not infer this control flow.",
+      "evidence": [
+        {
+          "fact_id": "2ceadc028de86fe97fbaf74d",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 31,
+              "end_line": 97,
+              "end_offset": 4224,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 37,
+              "start_line": 94,
+              "start_offset": 4029
+            }
+          }
+        },
+        {
+          "fact_id": "fe8199560b99f78e49c06589",
+          "source": {
+            "path": "src/Taggable.Api/Infrastructure/CustomerFaceRecognition/CustomerFaceRecognitionServices.cs",
+            "sha256": "7782f5032d830e4f180226e535a13c119c3001fa7bb186d43f3f6d521dee160e",
+            "span": {
+              "end_column": 6,
+              "end_line": 165,
+              "end_offset": 5879,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 130,
+              "start_offset": 4649
+            }
+          }
+        },
+        {
+          "fact_id": "f5fb55aae8bb9606919db4e5",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 6,
+              "end_line": 171,
+              "end_offset": 7157,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 19,
+              "start_offset": 768
+            }
+          }
+        },
+        {
+          "fact_id": "bc17bf487a80dcc6ef20be96",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 60,
+              "end_line": 156,
+              "end_offset": 6668,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 15,
+              "start_line": 156,
+              "start_offset": 6623
+            }
+          }
+        },
+        {
+          "fact_id": "d4a612b85f33dd7cbcfc6f78",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 60,
+              "end_line": 168,
+              "end_offset": 7049,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 15,
+              "start_line": 168,
+              "start_offset": 7004
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The separate Passport-authorized GET /api/customer/face-recognition/{timeslotId:int}/{timeslotDate}/process reports status=\"done\", completed=true, and current-user IsMe image count for the selected timeslot, filtered by group only when a group ID is found. An empty new result does not clear old IsMe rows, so found may remain above zero.",
+      "evidence": [
+        {
+          "fact_id": "447e95dfe5559e849c8d4de2",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 83,
+              "end_line": 81,
+              "end_offset": 4405,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 81,
+              "start_offset": 4327
+            }
+          }
+        },
+        {
+          "fact_id": "a1240868d438ce5000b451c8",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 85,
+              "end_line": 80,
+              "end_offset": 4322,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 80,
+              "start_offset": 4242
+            }
+          }
+        },
+        {
+          "fact_id": "7347682d122b348a32fb6957",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 157,
+              "end_line": 84,
+              "end_offset": 4733,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 16,
+              "start_line": 84,
+              "start_offset": 4592
+            }
+          }
+        },
+        {
+          "fact_id": "1d2f394c696dc02f42336b11",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerPublicExperienceController.cs",
+            "sha256": "1f75f072821178350769f8e164ebe1633e75af73c27e4b84c394619647f1d40e",
+            "span": {
+              "end_column": 150,
+              "end_line": 17,
+              "end_offset": 1091,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 17,
+              "start_offset": 946
+            }
+          }
+        },
+        {
+          "fact_id": "799820b7fa37938498f3b910",
+          "source": {
+            "path": "src/Taggable.Api/Application/DependencyInjection.cs",
+            "sha256": "599c136aa389602aaf54c36369b95151caa8aa87a13b07c98224b6349c684934",
+            "span": {
+              "end_column": 176,
+              "end_line": 216,
+              "end_offset": 24878,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 18,
+              "start_line": 216,
+              "start_offset": 24720
+            }
+          }
+        },
+        {
+          "fact_id": "78ca3dfd7d8883d667d94fea",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerFaceRecognition/CustomerFaceRecognitionHandlers.cs",
+            "sha256": "d59c47edd55c51c8d3a3dfa2dc3747f3d03abbc015cc0688ff1cf24d27e2de37",
+            "span": {
+              "end_column": 6,
+              "end_line": 215,
+              "end_offset": 9640,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 186,
+              "start_offset": 7844
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "If empty-list handling changes, recheck CustomerFaceRecognitionHandlers.cs lines 94–170, then GET /api/user (returns FaceId) and GET /api/customer/account/get (returns the stored value assigned from upload.Key). These are review pointers, not inferred rules.",
+      "evidence": [
+        {
+          "fact_id": "666dd3af82dff14c6c8ff5f5",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerProfileController.cs",
+            "sha256": "e5d34082b5599166ea569f8de778ddc3b35b1bf13ac1ad70593b188ce600b8b2",
+            "span": {
+              "end_column": 14,
+              "end_line": 16,
+              "end_offset": 555,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 16,
+              "start_offset": 546
+            }
+          }
+        },
+        {
+          "fact_id": "c7cdbfdf28a38cb6854b9f15",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerAuth/GetCurrentCustomerProfileQuery.cs",
+            "sha256": "137f06e8333df1fd10a507fa54cdb9ff22c33cb79232dccb2f18d23bf6d63f5f",
+            "span": {
+              "end_column": 6,
+              "end_line": 49,
+              "end_offset": 1978,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 23,
+              "start_offset": 981
+            }
+          }
+        },
+        {
+          "fact_id": "4bad3d925e3da54d7b887eb5",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerCollectionsController.cs",
+            "sha256": "03577a516d9ec0cdf3bb5c117fac107dee00ddbc619226b6c6ddbd4a11f694b0",
+            "span": {
+              "end_column": 29,
+              "end_line": 44,
+              "end_offset": 2562,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 44,
+              "start_offset": 2538
+            }
+          }
+        },
+        {
+          "fact_id": "757c7268b66cc57f32225ed3",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerCollectionsAccount/CustomerCollectionsAccountHandlers.cs",
+            "sha256": "06ffe6fbc8508ca7921ca070501d62e5c5039863852c88278dd43b5de1c269c3",
+            "span": {
+              "end_column": 6,
+              "end_line": 157,
+              "end_offset": 6888,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 141,
+              "start_offset": 6151
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

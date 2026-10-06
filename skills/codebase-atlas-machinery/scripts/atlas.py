@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sqlite3
 import stat
 import subprocess
@@ -613,6 +614,210 @@ def _focus_source_identity(snapshot: dict[str, object], live: dict[str, object])
     return sorted(changed, key=lambda path: os.fsencode(path)), sorted(set(reasons))
 
 
+def _discover_render(document: dict[str, object], max_bytes: int) -> bytes:
+    def render() -> bytes:
+        return (json.dumps(document, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
+
+    encoded = render()
+    actual = len(encoded)
+    for _ in range(4):
+        if document.get("budget"):
+            document["budget"]["stdout_bytes_including_newline"] = actual
+        encoded = render()
+        updated = len(encoded)
+        if updated == actual:
+            break
+        actual = updated
+    if actual > max_bytes:
+        raise AtlasError(
+            f"complete discover output requires {actual} ASCII stdout bytes including newline; "
+            f"--max-tokens limit is {max_bytes}; stdout withheld"
+        )
+    return encoded
+
+
+def _discover_failure(reason: str, max_bytes: int, **details: object) -> tuple[dict[str, object], bytes, int]:
+    document: dict[str, object] = {
+        "result": "refused",
+        "reason": reason,
+        **details,
+        "budget": {
+            "limit": max_bytes,
+            "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead",
+            "stdout_bytes_including_newline": 0,
+        },
+    }
+    encoded = _discover_render(document, max_bytes)
+    return document, encoded, 3
+
+
+def _lexical_words(value: str) -> set[str]:
+    expanded = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", value)
+    expanded = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", expanded)
+    return set(re.findall(r"[a-z0-9]+", expanded.casefold()))
+
+
+def discover(db_arg: str, repo_arg: str, raw_terms: list[str], max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    terms = sorted({word for term in raw_terms for word in _lexical_words(term)})
+    if not terms:
+        raise AtlasError("--terms must contain at least one lexical term")
+
+    try:
+        db_path = Path(db_arg).expanduser()
+        if not db_path.is_file():
+            raise AtlasError(f"database does not exist: {db_path}")
+        live = _live_inventory_identity(repo_arg)
+        from csharp_facts import EXTRACTION_METHOD
+        extractor_identity = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
+        uri = db_path.absolute().as_uri() + "?mode=ro"
+        with sqlite3.connect(uri, uri=True) as connection:
+            rows = connection.execute(
+                "SELECT snapshot_id, payload_json FROM atlas_snapshots ORDER BY snapshot_id"
+            ).fetchall()
+
+        matches: list[dict[str, object]] = []
+        source_mismatches: list[dict[str, object]] = []
+        compatible_count = 0
+        for row_id, payload_json in rows:
+            saved = json.loads(payload_json)
+            graph = saved.get("source_graph") or {}
+            if (
+                saved.get("schema_version") != SCHEMA_VERSION
+                or saved.get("inventory_basis") != INVENTORY_BASIS
+                or graph.get("extractor_identity") != extractor_identity
+            ):
+                continue
+            compatible_count += 1
+            changed_paths, reasons = _focus_source_identity(saved, live)
+            if not changed_paths and not reasons:
+                matches.append(saved)
+            elif saved.get("repository_root") == live["repository_root"]:
+                source_mismatches.append({
+                    "snapshot_id": row_id,
+                    "changed_paths": changed_paths,
+                    "reasons": reasons,
+                })
+
+        if len(matches) != 1:
+            matching_ids = sorted(str(item["snapshot_id"]) for item in matches)
+            reason = "no_saved_snapshot_matches_current_extractor_and_checkout" if not matches else "multiple_saved_snapshots_match_current_extractor_and_checkout"
+            return _discover_failure(
+                reason,
+                max_bytes,
+                repository_root=live["repository_root"],
+                current_extractor_identity=extractor_identity,
+                checked_snapshot_count=len(rows),
+                compatible_snapshot_count=compatible_count,
+                matching_snapshot_ids=matching_ids,
+                source_mismatches=sorted(source_mismatches, key=lambda item: item["snapshot_id"]),
+                candidate_selection={"included_candidates": 0, "omitted_candidates": 0, "total_candidates": 0},
+            )
+
+        snapshot = matches[0]
+        graph = snapshot["source_graph"]
+        type_facts: dict[str, list[dict[str, object]]] = {}
+        for fact in graph.get("facts", []):
+            if fact.get("kind") == "type_declaration":
+                type_facts.setdefault(str(fact.get("type_id")), []).append(fact)
+
+        candidates: list[dict[str, object]] = []
+        unresolved_count = 0
+        unmatched_route_count = 0
+        for fact in graph.get("facts", []):
+            if fact.get("kind") != "route_action":
+                continue
+            controller_types = type_facts.get(str(fact.get("controller_type_id")), [])
+            action_source = fact.get("source")
+            if len(controller_types) != 1 or not isinstance(action_source, dict) or action_source.get("span") is None:
+                unresolved_count += 1
+                continue
+            controller_fact = controller_types[0]
+            controller_source = controller_fact.get("source")
+            if not isinstance(controller_source, dict) or controller_source.get("span") is None:
+                unresolved_count += 1
+                continue
+            lexical_text = " ".join((
+                str(fact.get("action_name", "")),
+                str(fact.get("route_literal", "")),
+                str(fact.get("controller_type_id", "")),
+                str(action_source.get("path", "")),
+            ))
+            matched_terms = sorted(set(terms) & _lexical_words(lexical_text))
+            if not matched_terms:
+                unmatched_route_count += 1
+                continue
+            candidates.append({
+                "fact_id": fact["id"],
+                "http_method": fact.get("http_method"),
+                "route": fact.get("route_literal"),
+                "action": fact.get("action_name"),
+                "controller_type_id": fact.get("controller_type_id"),
+                "lexical_score": len(matched_terms),
+                "matched_terms": matched_terms,
+                "action_source": {"fact_id": fact["id"], **action_source},
+                "controller_source": {"fact_id": controller_fact["id"], **controller_source},
+                "controller_route_source": fact.get("controller_route_source"),
+            })
+
+        candidates.sort(key=lambda item: (
+            -int(item["lexical_score"]),
+            os.fsencode(str(item["action_source"]["path"])),
+            str(item["route"] or "").encode("ascii", "backslashreplace"),
+            str(item["action"] or "").encode("ascii", "backslashreplace"),
+            str(item["fact_id"]),
+        ))
+        base: dict[str, object] = {
+            "result": "candidates" if candidates else "no_lexical_matches",
+            "snapshot_id": snapshot["snapshot_id"],
+            "extractor_identity": extractor_identity,
+            "repository": {
+                "root": live["repository_root"],
+                "head": live["head"],
+                "head_ref": live["head_ref"],
+                "tracked_count": len(live["files"]),
+                "status_entry_count": len(live["status"]),
+            },
+            "terms": terms,
+            "ranking": "one point per distinct exact lexical token in action name, route, controller type, or action source path; ties by source path bytes, route, action, then fact ID",
+            "unresolved_route_count": unresolved_count,
+            "unmatched_route_count": unmatched_route_count,
+            "matched_route_count": len(candidates),
+            "candidate_selection": {"included_candidates": 0, "omitted_candidates": len(candidates), "total_candidates": len(candidates)},
+            "candidates": [],
+            "budget": {
+                "limit": max_bytes,
+                "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead",
+                "stdout_bytes_including_newline": 0,
+            },
+        }
+        encoded = _discover_render(base, max_bytes)
+        for candidate in candidates:
+            selected = base["candidates"] + [candidate]
+            trial = dict(base)
+            trial["candidates"] = selected
+            trial["candidate_selection"] = {
+                "included_candidates": len(selected),
+                "omitted_candidates": len(candidates) - len(selected),
+                "total_candidates": len(candidates),
+            }
+            try:
+                trial_encoded = _discover_render(trial, max_bytes)
+            except AtlasError:
+                break
+            base, encoded = trial, trial_encoded
+        # Re-render once so every count and the self-reported size describe exact stdout.
+        encoded = _discover_render(base, max_bytes)
+        return base, encoded, 0
+    except (AtlasError, OSError, sqlite3.Error, json.JSONDecodeError, KeyError, TypeError) as exc:
+        return _discover_failure(
+            f"discover_error: {exc}",
+            max_bytes,
+            candidate_selection={"included_candidates": 0, "omitted_candidates": 0, "total_candidates": 0},
+        )
+
+
 def _focus_document(snapshot: dict[str, object], flow_result: dict[str, object], freshness: dict[str, object], max_bytes: int) -> tuple[dict[str, object], bytes]:
     overlay = flow_result["overlay"]
     all_claims = overlay["reviewed_conclusions"]
@@ -779,6 +984,11 @@ def main(argv: list[str] | None = None) -> int:
     query_parser.add_argument("--snapshot", required=True)
     query_parser.add_argument("--path", help="return only this exact repository-relative path")
     query_parser.add_argument("--graph", action="store_true", help="include the saved source-fact graph")
+    discover_parser = commands.add_parser("discover", help="rank source-anchored route candidates from a plain question's lexical terms")
+    discover_parser.add_argument("--db", required=True)
+    discover_parser.add_argument("--repo", required=True)
+    discover_parser.add_argument("--terms", required=True, nargs="+", help="model-chosen lexical terms; no semantic selection is performed")
+    discover_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     flow_add_parser = commands.add_parser("flow-add", help="attach a reviewed, source-cited flow overlay")
     flow_add_parser.add_argument("--db", required=True)
     flow_add_parser.add_argument("--snapshot", required=True)
@@ -806,6 +1016,8 @@ def main(argv: list[str] | None = None) -> int:
             output = save(args.db, capture(args.repo))
         elif args.command == "query":
             output = query(args.db, args.snapshot, args.path, args.graph)
+        elif args.command == "discover":
+            output, encoded_output, exit_code = discover(args.db, args.repo, args.terms, args.max_tokens)
         elif args.command == "flow-add":
             output = attach_flow(args.db, args.snapshot, args.input)
         elif args.command == "flow-review":

@@ -55,6 +55,142 @@ class AtlasCliTests(unittest.TestCase):
     def graph(self, snapshot_id):
         return self.query(snapshot_id, "--graph")["source_graph"]
 
+    def discover_routes(self, terms, max_tokens=10000, expect=0):
+        return self.cli(
+            "discover", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--terms", *terms, "--max-tokens", str(max_tokens), expect=expect,
+        )
+
+    def test_discover_ranks_multiple_routes_and_respects_exact_output_cap(self):
+        routes = self.repo / "Routes.cs"
+        routes.write_text('''using Microsoft.AspNetCore.Mvc;
+namespace Demo;
+[ApiController]
+[Route("api/customer")]
+class PhotoController
+{
+    [HttpPost("photo/upload")] void UploadPhoto() {}
+    [HttpPost("photo/submit-image")] void SubmitImage() {}
+}
+[Route("api/admin")]
+class OtherController
+{
+    [HttpPost("photo/upload")] void UploadPhoto() {}
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Routes.cs")
+        saved = self.index()
+        terms = ["customer", "photo", "upload", "image", "selfie"]
+
+        full = self.discover_routes(terms)
+        document = json.loads(full.stdout)
+        exact_size = len(full.stdout.encode("ascii"))
+        self.assertEqual(document["snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(document["result"], "candidates")
+        self.assertEqual(document["budget"]["stdout_bytes_including_newline"], exact_size)
+        self.assertEqual(document["candidate_selection"], {"included_candidates": 3, "omitted_candidates": 0, "total_candidates": 3})
+        self.assertEqual([item["route"] for item in document["candidates"][:2]], ["api/customer/photo/submit-image", "api/customer/photo/upload"])
+        self.assertEqual([item["lexical_score"] for item in document["candidates"]], [3, 3, 2])
+        for item in document["candidates"]:
+            self.assertTrue(item["fact_id"])
+            self.assertEqual(set(item["action_source"]), {"fact_id", "path", "sha256", "span"})
+            self.assertEqual(set(item["controller_source"]), {"fact_id", "path", "sha256", "span"})
+            self.assertTrue(item["action_source"]["span"])
+            self.assertTrue(item["controller_source"]["span"])
+            self.assertEqual(item["action_source"]["sha256"], item["controller_source"]["sha256"])
+
+        exact = None
+        for _ in range(5):
+            exact = self.discover_routes(terms, exact_size)
+            measured = len(exact.stdout.encode("ascii"))
+            if measured == exact_size:
+                break
+            exact_size = measured
+        self.assertIsNotNone(exact)
+        self.assertEqual(len(exact.stdout.encode("ascii")), exact_size)
+        self.assertEqual(json.loads(exact.stdout)["candidate_selection"]["included_candidates"], 3)
+        one_short = self.discover_routes(terms, exact_size - 1)
+        shortened = json.loads(one_short.stdout)
+        self.assertLessEqual(len(one_short.stdout.encode("ascii")), exact_size - 1)
+        self.assertEqual(shortened["candidate_selection"]["omitted_candidates"], 1)
+        self.assertEqual(shortened["candidates"], document["candidates"][:2])
+
+        too_small = self.discover_routes(terms, 1, expect=2)
+        self.assertEqual(too_small.stdout, "")
+        self.assertIn("complete discover output requires", too_small.stderr)
+        self.assertIn("stdout withheld", too_small.stderr)
+
+        unmatched = self.discover_routes(["unrelated-term"], 10000)
+        unmatched_json = json.loads(unmatched.stdout)
+        self.assertEqual(unmatched_json["result"], "no_lexical_matches")
+        self.assertEqual(unmatched_json["candidate_selection"]["total_candidates"], 0)
+        self.assertEqual(unmatched_json["unmatched_route_count"], 3)
+
+    def test_discover_refuses_same_status_changed_bytes_and_caps_stale_diagnostics(self):
+        routes = self.repo / "Routes.cs"
+        routes.write_text('namespace Demo; [Route("api/customer")] class CustomerController { [HttpPost("photo/upload")] void UploadPhoto() {} }\n', encoding="utf-8")
+        git(self.repo, "add", "--", "Routes.cs")
+        self.index()
+
+        routes.write_text('namespace Demo; [Route("api/customer")] class CustomerController { [HttpPost("photo/upload")] void UploadPhoto() { } }\n', encoding="utf-8")
+        first_status = git(self.repo, "status", "--porcelain=v1", "-z")
+        first = self.discover_routes(["customer", "photo", "upload"], 10000, expect=3)
+        stale = json.loads(first.stdout)
+        self.assertEqual(stale["result"], "refused")
+        self.assertEqual(stale["candidate_selection"]["total_candidates"], 0)
+        self.assertTrue(any("content hash changed" in reason for mismatch in stale["source_mismatches"] for reason in mismatch["reasons"]))
+        exact_size = len(first.stdout.encode("ascii"))
+        self.assertEqual(stale["budget"]["stdout_bytes_including_newline"], exact_size)
+
+        routes.write_text('namespace Demo; [Route("api/customer")] class CustomerController { [HttpPost("photo/upload")] void UploadPhoto(){} }\n', encoding="utf-8")
+        self.assertEqual(git(self.repo, "status", "--porcelain=v1", "-z"), first_status)
+        second = self.discover_routes(["customer", "photo", "upload"], exact_size, expect=3)
+        second_json = json.loads(second.stdout)
+        self.assertLessEqual(len(second.stdout.encode("ascii")), exact_size)
+        self.assertEqual(second_json["budget"]["stdout_bytes_including_newline"], len(second.stdout.encode("ascii")))
+        short = self.discover_routes(["customer", "photo", "upload"], 1, expect=2)
+        self.assertEqual(short.stdout, "")
+        self.assertIn("complete discover output requires", short.stderr)
+        self.assertIn("stdout withheld", short.stderr)
+
+    def test_discover_refuses_snapshot_with_old_extractor(self):
+        routes = self.repo / "Routes.cs"
+        routes.write_text('namespace Demo; [Route("api/customer")] class CustomerController { [HttpPost("photo/upload")] void UploadPhoto() {} }\n', encoding="utf-8")
+        git(self.repo, "add", "--", "Routes.cs")
+        saved = self.index()
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (saved["snapshot_id"],)).fetchone()
+            payload = json.loads(row[0])
+            payload["source_graph"]["extractor_identity"] = "csharp-lexical-facts-v6:python-stdlib-lexer"
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(payload), saved["snapshot_id"]))
+        result = self.discover_routes(["customer", "photo", "upload"], 10000, expect=3)
+        document = json.loads(result.stdout)
+        self.assertEqual(document["reason"], "no_saved_snapshot_matches_current_extractor_and_checkout")
+        self.assertEqual(document["compatible_snapshot_count"], 0)
+        self.assertEqual(document["candidate_selection"]["total_candidates"], 0)
+
+    def test_discover_refuses_multiple_current_snapshot_matches(self):
+        routes = self.repo / "Routes.cs"
+        routes.write_text('namespace Demo; [Route("api/customer")] class CustomerController { [HttpPost("photo/upload")] void UploadPhoto() {} }\n', encoding="utf-8")
+        git(self.repo, "add", "--", "Routes.cs")
+        saved = self.index()
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute(
+                "SELECT captured_at, payload_json FROM atlas_snapshots WHERE snapshot_id = ?",
+                (saved["snapshot_id"],),
+            ).fetchone()
+            payload = json.loads(row[1])
+            payload["snapshot_id"] = "atlas-test-duplicate"
+            connection.execute(
+                "INSERT INTO atlas_snapshots(snapshot_id, evidence_fingerprint, captured_at, payload_json) VALUES (?, ?, ?, ?)",
+                (payload["snapshot_id"], "duplicate-evidence-fingerprint", row[0], json.dumps(payload)),
+            )
+        result = self.discover_routes(["customer", "photo", "upload"], 10000, expect=3)
+        document = json.loads(result.stdout)
+        self.assertEqual(document["reason"], "multiple_saved_snapshots_match_current_extractor_and_checkout")
+        self.assertEqual(len(document["matching_snapshot_ids"]), 2)
+        self.assertEqual(document["candidate_selection"]["total_candidates"], 0)
+
     def test_persists_and_queries_in_separate_process_with_nul_safe_paths(self):
         first = self.index()
         self.assertEqual(first["schema_version"], 2)
