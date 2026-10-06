@@ -43,7 +43,8 @@ class AtlasCliTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             text=True,
         )
-        self.assertEqual(result.returncode, expect, result.stderr)
+        if expect is not None:
+            self.assertEqual(result.returncode, expect, result.stderr)
         return result
 
     def index(self):
@@ -68,6 +69,24 @@ class AtlasCliTests(unittest.TestCase):
             "evidence-pack", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
             "--route-fact-id", route_fact_id, "--max-tokens", str(max_tokens), expect=expect,
         )
+
+    def coverage(self, max_tokens=100000, offset=0, expect=0):
+        return self.cli("coverage", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                        "--max-tokens", str(max_tokens), "--offset", str(offset), expect=expect)
+
+    def coverage_fixture(self, count=6):
+        methods = "\n".join(f'    [HttpGet("item-{index}")] void Item{index}() {{}}' for index in range(count))
+        source = self.repo / "Routes.cs"
+        source.write_text(f'''[Route("api/test")]
+class TestController
+{{
+{methods}
+}}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Routes.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        return saved, graph, sorted((fact for fact in graph["facts"] if fact["kind"] == "route_action"), key=lambda fact: fact["id"])
 
     def evidence_fixture(self, extra_registration="", shadow=False):
         handler_body = "store.SaveAsync(); store.GetAsync();"
@@ -272,6 +291,8 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         stale = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                          "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale.stderr)
+        stale_coverage = self.coverage(expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale_coverage.stderr)
 
         git(self.repo, "add", "--", "Flow.cs")
         current = self.index()
@@ -283,6 +304,8 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         old_only = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                             "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", old_only.stderr)
+        old_coverage = self.coverage(expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", old_coverage.stderr)
 
         # Restore one current snapshot and insert a second distinct current row for the same live checkout.
         duplicate_id = current["snapshot_id"] + "-second"
@@ -295,6 +318,8 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         multiple = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                             "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("multiple_saved_snapshots_match_current_extractor_and_checkout", multiple.stderr)
+        multiple_coverage = self.coverage(expect=2)
+        self.assertIn("multiple_saved_snapshots_match_current_extractor_and_checkout", multiple_coverage.stderr)
 
     def test_route_find_requires_valid_bindings_and_requires_selection_for_multiple_maps(self):
         saved, graph, route = self.evidence_fixture()
@@ -319,6 +344,8 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                            "--route-fact-id", route["id"], "--max-tokens", "30000", expect=2)
         self.assertIn("payload does not match its registry key", refused.stderr)
+        coverage_refused = self.coverage(expect=2)
+        self.assertIn("payload does not match its registry key", coverage_refused.stderr)
 
     def test_route_find_refuses_binding_with_tampered_route_registry_key(self):
         saved, graph, route = self.evidence_fixture()
@@ -331,6 +358,7 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                           "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("registry key", result.stderr)
+        self.assertIn("registry key", self.coverage(expect=2).stderr)
 
         with sqlite3.connect(self.db) as connection:
             connection.execute("UPDATE atlas_route_bindings SET route_fact_id = ? WHERE snapshot_id = ?",
@@ -354,6 +382,134 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                            "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("flow review receipt registry hash", refused.stderr)
+        self.assertIn("flow review receipt registry hash", self.coverage(expect=2).stderr)
+
+    def test_coverage_pages_all_routes_once_with_global_counts_and_exact_byte_boundary(self):
+        saved, graph, routes = self.coverage_fixture()
+        self.assertEqual(len(routes), 6)
+        too_small = self.coverage(max_tokens=1, expect=2)
+        self.assertEqual(too_small.stdout, "")
+        required = int(too_small.stderr.split("requires ", 1)[1].split(" ASCII", 1)[0])
+        adjusted = self.coverage(max_tokens=required, expect=2)
+        required = int(adjusted.stderr.split("requires ", 1)[1].split(" ASCII", 1)[0])
+        boundary = self.coverage(max_tokens=required)
+        first = json.loads(boundary.stdout)
+        self.assertEqual(first["snapshot"]["snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(first["snapshot"]["extractor_identity"], graph["extractor_identity"])
+        self.assertEqual(first["current_checkout"]["repository_root"], os.fspath(self.repo.resolve()))
+        self.assertEqual(len(first["routes"]), 1)
+        self.assertEqual(first["included_routes"], 1)
+        self.assertEqual(first["remaining_routes"], 5)
+        self.assertEqual(first["next_offset"], 1)
+        self.assertEqual(first["budget"]["stdout_bytes_including_newline"], len(self.coverage(max_tokens=required).stdout.encode("ascii")))
+        one_short = self.coverage(max_tokens=required - 1, expect=2)
+        self.assertEqual(one_short.stdout, "")
+        self.assertIn(f"requires {required} ASCII stdout bytes", one_short.stderr)
+
+        seen = [row["route_fact_id"] for row in first["routes"]]
+        page = first
+        while page["next_offset"] is not None:
+            page_offset = page["next_offset"]
+            page_result = self.coverage(max_tokens=required + 10, offset=page_offset, expect=None)
+            if page_result.returncode:
+                page_required = int(page_result.stderr.split("requires ", 1)[1].split(" ASCII", 1)[0])
+                page_result = self.coverage(max_tokens=page_required + 10, offset=page_offset)
+            page = json.loads(page_result.stdout)
+            seen.extend(row["route_fact_id"] for row in page["routes"])
+        self.assertEqual(seen, [route["id"] for route in routes])
+        self.assertEqual(len(set(seen)), len(routes))
+        self.assertEqual(first["counts"], {"open": 6, "one_reviewed_link": 0, "selection_required": 0, "total_routes": 6})
+        eof = json.loads(self.coverage(max_tokens=required, offset=len(routes)).stdout)
+        self.assertEqual(eof["routes"], [])
+        self.assertIsNone(eof["next_offset"])
+        self.assertEqual(eof["remaining_routes"], 0)
+        self.assertEqual(self.coverage(max_tokens=required, offset=len(routes) + 1, expect=2).stdout, "")
+        self.assertEqual(self.coverage(max_tokens=required, offset=-1, expect=2).stdout, "")
+
+    def test_coverage_reports_open_single_and_multiple_reviewed_associations(self):
+        saved, graph, routes = self.coverage_fixture(count=3)
+        for route, suffix in ((routes[1], "single"), (routes[2], "multiple-a"), (routes[2], "multiple-b")):
+            attached, receipt = self.reviewed_route_map(saved, graph, route, f"Coverage {suffix}")
+            path, _binding, _review = self.route_binding_document(saved, graph, route, attached, receipt, f"coverage-{suffix}")
+            self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path))
+        document = json.loads(self.coverage().stdout)
+        self.assertEqual(document["counts"], {"open": 1, "one_reviewed_link": 1, "selection_required": 1, "total_routes": 3})
+        by_id = {row["route_fact_id"]: row for row in document["routes"]}
+        self.assertEqual(by_id[routes[0]["id"]]["association_state"], "open")
+        self.assertEqual(by_id[routes[1]["id"]]["reviewed_association_count"], 1)
+        self.assertEqual(by_id[routes[2]["id"]]["association_state"], "selection_required")
+        self.assertEqual(by_id[routes[2]["id"]]["reviewed_association_count"], 2)
+
+    def test_coverage_accepts_missing_binding_table_and_zero_routes(self):
+        self.index()
+        no_routes = json.loads(self.coverage().stdout)
+        self.assertEqual(no_routes["counts"]["total_routes"], 0)
+        self.assertEqual(no_routes["routes"], [])
+        self.assertIsNone(no_routes["next_offset"])
+
+        # A fresh database has no binding registry table; all saved routes remain open.
+        self.db = self.root / "no-bindings.sqlite"
+        _saved, _graph, routes = self.coverage_fixture(count=2)
+        result = json.loads(self.coverage().stdout)
+        self.assertEqual(result["counts"]["open"], len(routes))
+
+    def test_coverage_rejects_corrupt_route_metadata(self):
+        saved, _graph, routes = self.coverage_fixture(count=2)
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (saved["snapshot_id"],)).fetchone()
+            snapshot = json.loads(row[0])
+            route = next(fact for fact in snapshot["source_graph"]["facts"] if fact.get("id") == routes[0]["id"])
+            route["action_name"] = None
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(snapshot), saved["snapshot_id"]))
+        refused = self.coverage(expect=2)
+        self.assertIn("invalid action_name", refused.stderr)
+
+    def test_coverage_rejects_nonstring_and_duplicate_route_ids(self):
+        saved, _graph, routes = self.coverage_fixture(count=2)
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (saved["snapshot_id"],)).fetchone()
+            original = json.loads(row[0])
+        for mutate, expected in (
+            (lambda snapshot: next(fact for fact in snapshot["source_graph"]["facts"] if fact.get("id") == routes[0]["id"]).update({"id": 7}), "non-string or empty id"),
+            (lambda snapshot: next(fact for fact in snapshot["source_graph"]["facts"] if fact.get("id") == routes[1]["id"]).update({"id": routes[0]["id"]}), "ID is duplicated"),
+        ):
+            changed = json.loads(json.dumps(original))
+            mutate(changed)
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(changed), saved["snapshot_id"]))
+            self.assertIn(expected, self.coverage(expect=2).stderr)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(original), saved["snapshot_id"]))
+
+    def test_coverage_rejects_missing_or_malformed_fact_lists_and_cross_kind_id_collisions(self):
+        saved, _graph, routes = self.coverage_fixture(count=2)
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (saved["snapshot_id"],)).fetchone()
+            original = json.loads(row[0])
+        graph_original = original["source_graph"]
+
+        for graph, expected in (
+            ({key: value for key, value in graph_original.items() if key != "facts"}, "facts must be a list of objects"),
+            ({**graph_original, "facts": {}}, "facts must be a list of objects"),
+            ({**graph_original, "facts": [*graph_original["facts"], "not-a-fact"]}, "facts must be a list of objects"),
+        ):
+            changed = json.loads(json.dumps(original))
+            changed["source_graph"] = graph
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(changed), saved["snapshot_id"]))
+            self.assertIn(expected, self.coverage(expect=2).stderr)
+
+        changed = json.loads(json.dumps(original))
+        changed["source_graph"]["facts"].append({"id": routes[0]["id"], "kind": "type_declaration"})
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(changed), saved["snapshot_id"]))
+        self.assertIn("not unique across source graph facts", self.coverage(expect=2).stderr)
+        ambiguous = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                             "--route-fact-id", routes[0]["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("wrong kind or is ambiguous", ambiguous.stderr)
+
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(original), saved["snapshot_id"]))
 
     def test_evidence_pack_preserves_registration_ambiguity_and_shadowing(self):
         _saved, graph, route = self.evidence_fixture(

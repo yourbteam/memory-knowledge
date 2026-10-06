@@ -701,12 +701,7 @@ def _route_find_render(document: dict[str, object], max_bytes: int) -> bytes:
     return encoded
 
 
-def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
-    if max_bytes < 1:
-        raise AtlasError("--max-tokens must be a positive integer")
-    db_path = Path(db_arg).expanduser()
-    if not db_path.is_file():
-        raise AtlasError(f"database does not exist: {db_path}")
+def _current_route_snapshot(db_path: Path, repo_arg: str) -> tuple[dict[str, object], dict[str, dict[str, object]], str, dict[str, object]]:
     live = _live_inventory_identity(repo_arg)
     from csharp_facts import EXTRACTION_METHOD
     extractor_identity = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
@@ -735,14 +730,13 @@ def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -
     if len(compatible) != 1:
         reason = "no_saved_snapshot_matches_current_extractor_and_checkout" if not compatible else "multiple_saved_snapshots_match_current_extractor_and_checkout"
         raise AtlasError(f"{reason}; compatible matching snapshots={len(compatible)}")
-    snapshot = compatible[0]
-    graph = snapshot["source_graph"]
-    matching = [fact for fact in graph.get("facts", []) if fact.get("id") == route_fact_id]
-    if not matching:
-        raise AtlasError(f"unknown route fact ID: {route_fact_id}")
-    if len(matching) != 1 or matching[0].get("kind") != "route_action":
-        raise AtlasError(f"route fact ID has wrong kind or is ambiguous: {route_fact_id}")
+    return compatible[0], snapshots_by_id, extractor_identity, live
 
+
+def _validated_route_associations(db_arg: str, db_path: Path, snapshot: dict[str, object],
+                                  snapshots_by_id: dict[str, dict[str, object]]) -> dict[str, list[dict[str, object]]]:
+    """Validate every registered association exactly as route-find does, grouped by route ID."""
+    uri = db_path.absolute().as_uri() + "?mode=ro"
     table_exists = False
     binding_rows = []
     with sqlite3.connect(uri, uri=True) as connection:
@@ -755,7 +749,7 @@ def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -
                 "ORDER BY snapshot_id, route_fact_id, overlay_id"
             ).fetchall()
 
-    associations = []
+    associations: dict[str, list[dict[str, object]]] = {}
     for row_snapshot_id, row_route_fact_id, row_overlay_id, stored_binding_hash, stored_review_hash, payload_json in binding_rows:
         try:
             payload = json.loads(payload_json)
@@ -800,9 +794,28 @@ def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -
         if receipt_hash != binding.get("flow_review_receipt_hash"):
             raise AtlasError("saved route binding flow receipt is missing or changed")
         _validate_route_association_review(review, binding, binding_hash)
-        if row_snapshot_id == snapshot["snapshot_id"] and row_route_fact_id == route_fact_id:
-            associations.append({"binding": binding, "binding_hash": binding_hash,
-                                 "association_review": review_payload, "association_review_hash": review_hash})
+        if row_snapshot_id == snapshot["snapshot_id"]:
+            associations.setdefault(str(row_route_fact_id), []).append(
+                {"binding": binding, "binding_hash": binding_hash,
+                 "association_review": review_payload, "association_review_hash": review_hash})
+    return associations
+
+
+def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    db_path = Path(db_arg).expanduser()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    snapshot, snapshots_by_id, extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
+    graph = snapshot["source_graph"]
+    matching = [fact for fact in graph.get("facts", []) if fact.get("id") == route_fact_id]
+    if not matching:
+        raise AtlasError(f"unknown route fact ID: {route_fact_id}")
+    if len(matching) != 1 or matching[0].get("kind") != "route_action":
+        raise AtlasError(f"route fact ID has wrong kind or is ambiguous: {route_fact_id}")
+    all_associations = _validated_route_associations(db_arg, db_path, snapshot, snapshots_by_id)
+    associations = all_associations.get(route_fact_id, [])
 
     base = {"snapshot_id": snapshot["snapshot_id"], "extractor_identity": extractor_identity,
             "route_fact_id": route_fact_id, "association_count": len(associations),
@@ -830,6 +843,113 @@ def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -
                 "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead",
                            "stdout_bytes_including_newline": 0}}
     return document, _route_find_render(document, max_bytes), 0
+
+
+def _coverage_render(document: dict[str, object], max_bytes: int) -> bytes:
+    def render() -> bytes:
+        return (json.dumps(document, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
+    encoded = render()
+    actual = len(encoded)
+    for _ in range(4):
+        document["budget"]["stdout_bytes_including_newline"] = actual
+        encoded = render()
+        updated = len(encoded)
+        if updated == actual:
+            break
+        actual = updated
+    if actual > max_bytes:
+        raise AtlasError(f"complete coverage page requires {actual} ASCII stdout bytes including newline; --max-tokens limit is {max_bytes}; stdout withheld")
+    return encoded
+
+
+def route_coverage(db_arg: str, repo_arg: str, max_bytes: int, offset: int = 0) -> tuple[dict[str, object], bytes, int]:
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    if offset < 0:
+        raise AtlasError("--offset must be zero or greater")
+    db_path = Path(db_arg).expanduser()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    snapshot, snapshots_by_id, extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
+    graph = snapshot["source_graph"]
+    facts = graph.get("facts")
+    if not isinstance(facts, list) or any(not isinstance(fact, dict) for fact in facts):
+        raise AtlasError("saved source graph facts must be a list of objects")
+    route_facts = [fact for fact in facts if fact.get("kind") == "route_action"]
+    routes_by_id: dict[str, dict[str, object]] = {}
+    for fact in route_facts:
+        route_id = fact.get("id")
+        if not isinstance(route_id, str) or not route_id.strip():
+            raise AtlasError("saved route_action fact has a non-string or empty id")
+        if route_id in routes_by_id:
+            raise AtlasError(f"saved route_action fact ID is duplicated: {route_id}")
+        for field in ("http_method", "route_literal", "action_name"):
+            value = fact.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise AtlasError(f"saved route_action fact {route_id} has invalid {field}")
+        routes_by_id[route_id] = fact
+    for route_id in routes_by_id:
+        if sum(1 for other in facts if other.get("id") == route_id) != 1:
+            raise AtlasError(f"saved route_action fact ID is not unique across source graph facts: {route_id}")
+    route_ids = sorted(routes_by_id)
+    total = len(route_ids)
+    if offset > total:
+        raise AtlasError(f"--offset {offset} exceeds saved route count {total}")
+
+    associations = _validated_route_associations(db_arg, db_path, snapshot, snapshots_by_id)
+    states: dict[str, tuple[str, int]] = {}
+    counts = {"open": 0, "one_reviewed_link": 0, "selection_required": 0}
+    for route_id in route_ids:
+        association_count = len(associations.get(route_id, []))
+        state = "open" if association_count == 0 else "one_reviewed_link" if association_count == 1 else "selection_required"
+        states[route_id] = (state, association_count)
+        counts[state] += 1
+
+    page_ids = route_ids[offset:]
+    rows: list[dict[str, object]] = []
+    base = {
+        "snapshot": {"snapshot_id": snapshot["snapshot_id"], "extractor_identity": extractor_identity},
+        "current_checkout": {key: live[key] for key in ("repository_root", "head", "head_ref", "status")},
+        "counts": {**counts, "total_routes": total},
+        "offset": offset,
+        "included_routes": 0,
+        "remaining_routes": total - offset,
+        "next_offset": None if offset == total else offset,
+        "routes": rows,
+        "scope": "all saved route_action facts in the one current matching snapshot; does not claim full codebase or runtime coverage",
+        "next_step": {
+            "open_route_command": "atlas.py route-find --db DB --repo PATH --route-fact-id ROUTE_FACT_ID --max-tokens N; when result is unmapped, run atlas.py evidence-pack --db DB --repo PATH --route-fact-id ROUTE_FACT_ID --max-tokens N",
+            "selection_required_command": "atlas.py route-find --db DB --repo PATH --route-fact-id ROUTE_FACT_ID --max-tokens N",
+        },
+        "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes including newline; conservative proxy, not measured model tokens", "stdout_bytes_including_newline": 0},
+    }
+    if not page_ids:
+        encoded = _coverage_render(base, max_bytes)
+        return base, encoded, 0
+
+    for route_id in page_ids:
+        fact = routes_by_id[route_id]
+        state, association_count = states[route_id]
+        rows.append({"route_fact_id": route_id, "http_method": fact["http_method"],
+                     "route_literal": fact["route_literal"], "action_name": fact["action_name"],
+                     "association_state": state, "reviewed_association_count": association_count})
+        included = len(rows)
+        base["included_routes"] = included
+        base["remaining_routes"] = total - offset - included
+        base["next_offset"] = None if base["remaining_routes"] == 0 else offset + included
+        # Test each complete row. If the first row cannot fit, report its exact required page size.
+        try:
+            encoded = _coverage_render(base, max_bytes)
+        except AtlasError:
+            if included == 1:
+                raise
+            rows.pop()
+            base["included_routes"] = len(rows)
+            base["remaining_routes"] = total - offset - len(rows)
+            base["next_offset"] = offset + len(rows)
+            encoded = _coverage_render(base, max_bytes)
+            return base, encoded, 0
+    return base, encoded, 0
 
 
 def _live_inventory_identity(repo_arg: str) -> dict[str, object]:
@@ -1686,6 +1806,11 @@ def main(argv: list[str] | None = None) -> int:
     route_find_parser.add_argument("--repo", required=True)
     route_find_parser.add_argument("--route-fact-id", required=True)
     route_find_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    coverage_parser = commands.add_parser("coverage", help="page through saved route facts and their reviewed association state")
+    coverage_parser.add_argument("--db", required=True)
+    coverage_parser.add_argument("--repo", required=True)
+    coverage_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    coverage_parser.add_argument("--offset", type=int, default=0)
     args = parser.parse_args(argv)
     try:
         exit_code = 0
@@ -1706,6 +1831,8 @@ def main(argv: list[str] | None = None) -> int:
             output = attach_route_binding(args.db, args.snapshot, args.input)
         elif args.command == "route-find":
             output, encoded_output, exit_code = route_find(args.db, args.repo, args.route_fact_id, args.max_tokens)
+        elif args.command == "coverage":
+            output, encoded_output, exit_code = route_coverage(args.db, args.repo, args.max_tokens, args.offset)
         elif args.command == "focus":
             output, encoded_output, exit_code = focus(args.db, args.repo, args.snapshot, args.overlay, args.max_tokens)
         elif args.command == "answer-check":
