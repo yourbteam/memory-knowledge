@@ -1,4 +1,5 @@
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -7,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/atlas.py"
@@ -669,6 +671,122 @@ class Controller { [HttpGet] void Get() {} }
         missing_json = json.loads(missing.stdout)
         self.assertEqual(missing_json["claims"], [])
         self.assertEqual(missing_json["freshness"]["changed_paths"], ["Tracked.cs"])
+
+    def test_answer_check_binds_complete_fresh_packet_and_preserves_exact_accepted_draft(self):
+        source = self.repo / "Answer.cs"
+        source.write_text('namespace Demo; class Widget { bool Success; int MatchedCount; }\n', encoding="utf-8")
+        git(self.repo, "add", "--", "Answer.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        fact = next(item for item in graph["facts"] if item["kind"] == "type_declaration" and item["source"]["path"] == "Answer.cs")
+        overlay = {
+            "overlay_schema_version": 1,
+            "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"],
+            "title": "Answer fixture map",
+            "reviewed_conclusions": [
+                {"claim": "The response has success = false and matched_count = 0.", "evidence": [{"fact_id": fact["id"], "source": fact["source"]}]},
+                {"claim": "The controller is declared as a C# class.", "evidence": [{"fact_id": fact["id"], "source": fact["source"]}]},
+            ],
+        }
+        overlay_file = self.root / "answer-flow.json"
+        overlay_file.write_text(json.dumps(overlay), encoding="utf-8")
+        attached = json.loads(self.cli("flow-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(overlay_file)).stdout)
+        review_receipt = {
+            "receipt_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+            "overlay_id": attached["overlay_id"], "overlay_content_hash": attached["content_hash"],
+            "extractor_identity": graph["extractor_identity"], "reviewer_identity": "independent reviewer",
+            "reviewer_model": "GPT-6.1 Sol High", "decision": "accepted",
+            "reviewed_at": "2026-10-06T12:00:00Z", "review_basis": "The source spans support both map claims.",
+        }
+        receipt_file = self.root / "answer-flow-review.json"
+        receipt_file.write_text(json.dumps(review_receipt), encoding="utf-8")
+        self.cli("flow-review", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--overlay", attached["overlay_id"], "--input", os.fspath(receipt_file))
+        question_file = self.root / "question.txt"
+        draft_file = self.root / "draft.txt"
+        question_file.write_bytes("What does selfie upload return?\n".encode())
+        draft_bytes = "It returns success=false, matched_count=0, history, and no new rows.\n".encode()
+        draft_file.write_bytes(draft_bytes)
+
+        args = ("answer-check", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo), "--snapshot", saved["snapshot_id"], "--overlay", attached["overlay_id"], "--question-file", os.fspath(question_file), "--draft-file", os.fspath(draft_file))
+        prepared = self.cli(*args)
+        packet = json.loads(prepared.stdout)
+        self.assertEqual(packet["result"], "semantic_review_required")
+        self.assertEqual(packet["question"], question_file.read_text())
+        self.assertEqual(packet["draft"], draft_file.read_text())
+        self.assertEqual([claim["claim_number"] for claim in packet["claims"]], [1, 2])
+        self.assertEqual(packet["binding"]["overlay_content_hash"], attached["content_hash"])
+        self.assertEqual(packet["binding"]["question_sha256"], hashlib.sha256(question_file.read_bytes()).hexdigest())
+        packet_hash = hashlib.sha256(prepared.stdout.encode("ascii")).hexdigest()
+
+        review_file = self.root / "answer-review.json"
+        review = {
+            "packet_sha256": packet_hash,
+            "decision": "accepted",
+            "reviewer_identity": "sol-high-review-session",
+            "reviewer_model": "GPT-6.1 Sol High",
+            "claim_reviews": [
+                {"claim_number": 1, "disposition": "covered", "basis": "Both response fields are relevant to the question and appear with their exact values."},
+                {"claim_number": 2, "disposition": "not_relevant", "basis": "The C# declaration form does not answer what the upload operation returns."},
+            ],
+        }
+        review_file.write_text(json.dumps(review), encoding="utf-8")
+        accepted = self.cli(*args, "--review", os.fspath(review_file))
+        self.assertEqual(accepted.stdout.encode(), draft_bytes)
+
+        bare = json.loads(json.dumps(review))
+        bare["claim_reviews"][0]["basis"] = "used"
+        review_file.write_text(json.dumps(bare), encoding="utf-8")
+        self.cli(*args, "--review", os.fspath(review_file), expect=2)
+        invalid_disposition = json.loads(json.dumps(review))
+        invalid_disposition["claim_reviews"][0]["disposition"] = "supported"
+        review_file.write_text(json.dumps(invalid_disposition), encoding="utf-8")
+        self.cli(*args, "--review", os.fspath(review_file), expect=2)
+        duplicate_claim = json.loads(json.dumps(review))
+        duplicate_claim["claim_reviews"][1]["claim_number"] = 1
+        review_file.write_text(json.dumps(duplicate_claim), encoding="utf-8")
+        self.cli(*args, "--review", os.fspath(review_file), expect=2)
+        missing_identity = json.loads(json.dumps(review))
+        del missing_identity["reviewer_model"]
+        review_file.write_text(json.dumps(missing_identity), encoding="utf-8")
+        self.cli(*args, "--review", os.fspath(review_file), expect=2)
+        changed = dict(review, packet_sha256="0" * 64)
+        review_file.write_text(json.dumps(changed), encoding="utf-8")
+        self.cli(*args, "--review", os.fspath(review_file), expect=2)
+
+    def test_answer_check_refuses_unaccepted_or_stale_focus(self):
+        source = self.repo / "Answer.cs"
+        source.write_text("namespace Demo; class Widget {}\n", encoding="utf-8")
+        git(self.repo, "add", "--", "Answer.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        fact = next(item for item in graph["facts"] if item["kind"] == "type_declaration" and item["source"]["path"] == "Answer.cs")
+        overlay = {"overlay_schema_version": 1, "snapshot_id": saved["snapshot_id"], "extractor_identity": graph["extractor_identity"], "title": "Map", "reviewed_conclusions": [{"claim": "Widget exists.", "evidence": [{"fact_id": fact["id"], "source": fact["source"]}]}]}
+        overlay_file = self.root / "unaccepted-flow.json"
+        overlay_file.write_text(json.dumps(overlay), encoding="utf-8")
+        attached = json.loads(self.cli("flow-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(overlay_file)).stdout)
+        question_file, draft_file = self.root / "q.txt", self.root / "d.txt"
+        question_file.write_text("What exists?")
+        draft_file.write_text("Widget exists.")
+        args = ("answer-check", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo), "--snapshot", saved["snapshot_id"], "--overlay", attached["overlay_id"], "--question-file", os.fspath(question_file), "--draft-file", os.fspath(draft_file))
+        self.cli(*args, expect=2)
+
+        receipt = {"receipt_schema_version": 1, "snapshot_id": saved["snapshot_id"], "overlay_id": attached["overlay_id"], "overlay_content_hash": attached["content_hash"], "extractor_identity": graph["extractor_identity"], "reviewer_identity": "reviewer", "reviewer_model": "test", "decision": "accepted", "reviewed_at": "2026-10-06T12:00:00Z", "review_basis": "Widget claim checked against source."}
+        receipt_file = self.root / "review.json"
+        receipt_file.write_text(json.dumps(receipt), encoding="utf-8")
+        self.cli("flow-review", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--overlay", attached["overlay_id"], "--input", os.fspath(receipt_file))
+        source.write_text("namespace Demo; class Widget { int Value; }\n", encoding="utf-8")
+        self.cli(*args, expect=2)
+
+    def test_answer_check_refuses_incomplete_focus(self):
+        spec = importlib.util.spec_from_file_location("atlas_answer_check_test", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        incomplete = {"result": "fresh", "claim_selection": {"included_claims": 1, "total_claims": 2, "omitted_claims": 1}, "claims": []}
+        with mock.patch.object(module, "focus", return_value=(incomplete, b"{}\n", 0)):
+            with self.assertRaisesRegex(module.AtlasError, "requires every reviewed claim"):
+                module.answer_check("unused", "unused", "snapshot", "overlay", "unused", "unused", None)
 
 
 if __name__ == "__main__":

@@ -973,6 +973,86 @@ def focus(db_arg: str, repo_arg: str, snapshot_id: str, overlay_id: str, max_byt
     return value, encoded, 0
 
 
+def answer_check(
+    db_arg: str, repo_arg: str, snapshot_id: str, overlay_id: str,
+    question_path: str, draft_path: str, review_path: str | None,
+) -> tuple[dict[str, object] | None, bytes, int]:
+    """Bind a human-readable answer review to one complete, fresh focus result."""
+    # The saved maps fit well below this fixed safety ceiling. Any future larger map
+    # fails closed through omitted_claims rather than producing a partial review packet.
+    focused, _, status = focus(db_arg, repo_arg, snapshot_id, overlay_id, 1_000_000)
+    if status != 0 or focused.get("result") != "fresh":
+        raise AtlasError("answer-check requires a fresh accepted focus result")
+    selection = focused.get("claim_selection", {})
+    claims = focused.get("claims", [])
+    if selection.get("omitted_claims") != 0 or selection.get("included_claims") != selection.get("total_claims"):
+        raise AtlasError("answer-check requires every reviewed claim; focus omitted claims")
+
+    try:
+        question_bytes = Path(question_path).read_bytes()
+        draft_bytes = Path(draft_path).read_bytes()
+        question = question_bytes.decode("utf-8")
+        draft = draft_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise AtlasError("question and draft files must contain UTF-8 text") from exc
+
+    flow = query_flow(db_arg, snapshot_id, overlay_id)
+    binding = {
+        "snapshot_id": focused["snapshot_id"],
+        "extractor_identity": focused["extractor_identity"],
+        "overlay_id": focused["overlay_id"],
+        "overlay_content_hash": flow["overlay"]["content_hash"],
+        "question_sha256": hashlib.sha256(question_bytes).hexdigest(),
+        "draft_sha256": hashlib.sha256(draft_bytes).hexdigest(),
+    }
+    packet = {
+        "result": "semantic_review_required",
+        "binding": binding,
+        "question": question,
+        "draft": draft,
+        "claims": [
+            {"claim_number": index, "claim": item["claim"], "evidence": item["evidence"]}
+            for index, item in enumerate(claims, start=1)
+        ],
+        "source_anchors": focused["source_anchors"],
+        "review_instructions": (
+            "Independently inspect every relevant subfact in every numbered claim against its cited spans. "
+            "For each claim, decide whether it is relevant to the exact question. Mark relevant claims covered "
+            "only when the draft includes every relevant supported subfact; mark irrelevant claims not_relevant. "
+            "Also check that the draft adds no unsupported assertion. A bare 'used' or equivalent is not evidence "
+            "of completeness."
+        ),
+    }
+    packet_bytes = (json.dumps(packet, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
+    if review_path is None:
+        return packet, packet_bytes, 0
+
+    try:
+        review = json.loads(Path(review_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AtlasError(f"cannot read answer review JSON: {exc}") from exc
+    if not isinstance(review, dict) or review.get("packet_sha256") != hashlib.sha256(packet_bytes).hexdigest():
+        raise AtlasError("answer review is stale or does not match this exact packet")
+    if review.get("decision") != "accepted":
+        raise AtlasError("answer review did not accept the draft")
+    for field in ("reviewer_identity", "reviewer_model"):
+        value = review.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise AtlasError(f"answer review requires nonempty {field} audit provenance")
+    reviews = review.get("claim_reviews")
+    if not isinstance(reviews, list) or len(reviews) != len(claims):
+        raise AtlasError("answer review must contain one disposition for every numbered claim")
+    for index, item in enumerate(reviews, start=1):
+        if not isinstance(item, dict) or item.get("claim_number") != index:
+            raise AtlasError(f"answer review disposition {index} is missing or out of order")
+        if item.get("disposition") not in {"covered", "not_relevant"}:
+            raise AtlasError(f"claim {index} disposition must be covered or not_relevant")
+        basis = item.get("basis")
+        if not isinstance(basis, str) or len(basis.strip()) < 20 or basis.strip().lower() in {"used", "reviewed", "complete", "not relevant"}:
+            raise AtlasError(f"claim {index} needs a concrete review basis; a bare disposition does not establish completeness")
+    return None, draft_bytes, 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -1003,6 +1083,14 @@ def main(argv: list[str] | None = None) -> int:
     focus_parser.add_argument("--snapshot", required=True)
     focus_parser.add_argument("--overlay", required=True)
     focus_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    answer_parser = commands.add_parser("answer-check", help="prepare or verify an independent answer review against a complete fresh map")
+    answer_parser.add_argument("--db", required=True)
+    answer_parser.add_argument("--repo", required=True)
+    answer_parser.add_argument("--snapshot", required=True)
+    answer_parser.add_argument("--overlay", required=True)
+    answer_parser.add_argument("--question-file", required=True)
+    answer_parser.add_argument("--draft-file", required=True)
+    answer_parser.add_argument("--review", help="optional independent review JSON; accepted review prints only the exact draft")
     review_parser = commands.add_parser("flow-review", help="attach one immutable review receipt to an exact overlay")
     review_parser.add_argument("--db", required=True)
     review_parser.add_argument("--snapshot", required=True)
@@ -1024,6 +1112,8 @@ def main(argv: list[str] | None = None) -> int:
             output = attach_review(args.db, args.snapshot, args.overlay, args.input)
         elif args.command == "focus":
             output, encoded_output, exit_code = focus(args.db, args.repo, args.snapshot, args.overlay, args.max_tokens)
+        elif args.command == "answer-check":
+            output, encoded_output, exit_code = answer_check(args.db, args.repo, args.snapshot, args.overlay, args.question_file, args.draft_file, args.review)
         else:
             output = query_flow(args.db, args.snapshot, args.overlay)
     except (AtlasError, sqlite3.Error, OSError, json.JSONDecodeError) as exc:
