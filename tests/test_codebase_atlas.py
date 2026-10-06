@@ -74,6 +74,60 @@ class AtlasCliTests(unittest.TestCase):
         return self.cli("coverage", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                         "--max-tokens", str(max_tokens), "--offset", str(offset), expect=expect)
 
+    def refresh_fixture(self, claim_count=8):
+        (self.repo / "Other.cs").write_text("class Other { int Read() { return 1; } }\n", encoding="utf-8")
+        (self.repo / "Flow.cs").write_text('''namespace Demo;
+[Route("api/customer")]
+class CustomerController(IHandler handler)
+{
+    [HttpPost("save")]
+    void Save() { handler.Handle(); }
+}
+''', encoding="utf-8")
+        (self.repo / "Handler.cs").write_text('''namespace Demo;
+class Handler(IStore store)
+{
+    void Handle() { store.SaveAsync(); store.GetAsync(); }
+}
+class Store { void SaveAsync() {} void GetAsync() {} }
+class Registrations { void Add() { services.AddScoped<IHandler, Handler>(); services.AddScoped<IStore, Store>(); } }
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Other.cs", "Flow.cs", "Handler.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        route = next(f for f in graph["facts"] if f["kind"] == "route_action")
+        flow = {
+            "overlay_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"], "title": "Refresh carry fixture",
+            "reviewed_conclusions": [
+                {"claim": f"Reviewed route claim {index}.",
+                 "evidence": [{"fact_id": route["id"], "source": route["source"]}]}
+                for index in range(claim_count)
+            ],
+        }
+        flow_path = self.root / "refresh.flow.json"
+        flow_path.write_text(json.dumps(flow), encoding="utf-8")
+        attached = json.loads(self.cli("flow-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+                                       "--input", os.fspath(flow_path)).stdout)
+        receipt = {"receipt_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+                   "overlay_id": attached["overlay_id"], "overlay_content_hash": attached["content_hash"],
+                   "extractor_identity": graph["extractor_identity"], "reviewer_identity": "fixture reviewer",
+                   "reviewer_model": "GPT-6.1 Sol High", "decision": "accepted",
+                   "reviewed_at": "2026-10-06T12:00:00Z", "review_basis": "Each route claim cites the saved route source fact."}
+        receipt_path = self.root / "refresh.review.json"
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        reviewed = json.loads(self.cli("flow-review", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+                                       "--overlay", attached["overlay_id"], "--input", os.fspath(receipt_path)).stdout)
+        binding_path, _, _ = self.route_binding_document(saved, graph, route, attached, reviewed, "refresh-binding")
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+                 "--input", os.fspath(binding_path))
+        return saved, graph, route, attached, reviewed
+
+    def route_refresh(self, saved, route, expect=0, max_tokens=100000):
+        return self.cli("route-refresh", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                        "--from-snapshot", saved["snapshot_id"], "--route-fact-id", route["id"],
+                        "--max-tokens", str(max_tokens), expect=expect)
+
     def coverage_fixture(self, count=6):
         methods = "\n".join(f'    [HttpGet("item-{index}")] void Item{index}() {{}}' for index in range(count))
         source = self.repo / "Routes.cs"
@@ -370,6 +424,180 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                           "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
         self.assertIn("registry key", result.stderr)
+
+    def test_route_refresh_carries_complete_route_map_through_all_consumers(self):
+        saved, _graph, route, attached, reviewed = self.refresh_fixture()
+        (self.repo / "Other.cs").write_text("class Other { int Read() { return 2; } }\n", encoding="utf-8")
+        self.index()
+        refreshed = json.loads(self.route_refresh(saved, route).stdout)
+        target = refreshed["snapshot_id"]
+        self.assertEqual(refreshed["result"], "carried")
+        self.assertEqual(refreshed["carry_provenance"]["origin_snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(refreshed["carry_provenance"]["origin_overlay_id"], attached["overlay_id"])
+        self.assertEqual(refreshed["carry_provenance"]["origin_review_receipt_hash"], reviewed["receipt_hash"])
+
+        found = json.loads(self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                                    "--route-fact-id", route["id"], "--max-tokens", "100000").stdout)
+        self.assertEqual(found["snapshot_id"], target)
+        self.assertEqual(found["overlay_id"], attached["overlay_id"])
+        self.assertEqual(found["claim_selection"]["included_claims"], 8)
+        self.assertEqual(found["claim_selection"]["omitted_claims"], 0)
+        self.assertEqual(found["reviewer"]["identity"], "fixture reviewer")
+        self.assertEqual(found["reviewer"]["reviewed_at"], "2026-10-06T12:00:00Z")
+        for field, value in refreshed["carry_provenance"].items():
+            self.assertEqual(found["carry_provenance"][field], value)
+
+        focus = json.loads(self.cli("focus", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                                    "--snapshot", target, "--overlay", attached["overlay_id"],
+                                    "--max-tokens", "100000").stdout)
+        self.assertEqual(focus["snapshot_id"], target)
+        self.assertEqual(focus["claim_selection"]["included_claims"], 8)
+        self.assertEqual(focus["carry_provenance"]["origin_snapshot_id"], saved["snapshot_id"])
+        flow = json.loads(self.cli("flow-query", "--db", os.fspath(self.db), "--snapshot", target,
+                                   "--overlay", attached["overlay_id"]).stdout)
+        self.assertEqual(flow["snapshot_id"], target)
+        self.assertEqual(flow["review_status"], "accepted")
+        self.assertEqual(flow["review_receipt"]["receipt_hash"], reviewed["receipt_hash"])
+        self.assertEqual(flow["carry_provenance"]["origin_snapshot_id"], saved["snapshot_id"])
+
+        question, draft = self.root / "question.txt", self.root / "draft.txt"
+        question.write_text("What does this reviewed route map say?", encoding="utf-8")
+        draft.write_text("The reviewed map contains eight route claims.", encoding="utf-8")
+        answer_args = ("answer-check", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                       "--snapshot", target, "--overlay", attached["overlay_id"],
+                       "--question-file", os.fspath(question), "--draft-file", os.fspath(draft))
+        packet = json.loads(self.cli(*answer_args).stdout)
+        self.assertEqual(packet["binding"]["snapshot_id"], target)
+        self.assertEqual(packet["binding"]["overlay_id"], attached["overlay_id"])
+        self.assertEqual(packet["review_provenance"]["reviewer"]["identity"], "fixture reviewer")
+        self.assertEqual(packet["review_provenance"]["review_receipt_hash"], reviewed["receipt_hash"])
+        self.assertEqual(packet["review_provenance"]["carry_provenance"]["origin_snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(len(packet["claims"]), 8)
+        answer_review = {"packet_sha256": hashlib.sha256(json.dumps(packet, ensure_ascii=True, sort_keys=True,
+                                separators=(",", ":")).encode("ascii") + b"\n").hexdigest(),
+                         "decision": "accepted", "reviewer_identity": "answer reviewer", "reviewer_model": "GPT-6.1 Sol High",
+                         "claim_reviews": [{"claim_number": index, "disposition": "covered",
+                                            "basis": "The draft covers the complete claim set in this fixture."}
+                                           for index in range(1, 9)]}
+        answer_review_path = self.root / "answer.review.json"
+        answer_review_path.write_text(json.dumps(answer_review), encoding="utf-8")
+        accepted = self.cli(*answer_args, "--review", os.fspath(answer_review_path))
+        self.assertEqual(accepted.stdout.encode("utf-8"), draft.read_bytes())
+
+        repeated = json.loads(self.route_refresh(saved, route).stdout)
+        self.assertEqual(repeated, refreshed)
+
+    def test_route_refresh_refuses_changed_route_handler(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        source = self.repo / "Handler.cs"
+        source.write_text(source.read_text(encoding="utf-8").replace("store.SaveAsync(); store.GetAsync();",
+                                                                    "store.GetAsync(); store.SaveAsync();"), encoding="utf-8")
+        current = self.index()
+        target_routes = [fact for fact in self.graph(current["snapshot_id"])["facts"] if fact.get("id") == route["id"]]
+        self.assertEqual(target_routes, [route])
+        refused = self.route_refresh(saved, route, expect=2)
+        self.assertIn("cited source hash changed", refused.stderr)
+        with sqlite3.connect(self.db) as connection:
+            exists = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_route_carries'").fetchone()
+            count = connection.execute("SELECT COUNT(*) FROM atlas_route_carries").fetchone()[0] if exists else 0
+        self.assertEqual(count, 0)
+
+    def test_route_refresh_refuses_unchanged_origin_without_poisoning_review(self):
+        saved, _graph, route, attached, _reviewed = self.refresh_fixture()
+        refused = self.route_refresh(saved, route, expect=2)
+        self.assertIn("target equals the accepted origin", refused.stderr)
+        found = json.loads(self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                                    "--route-fact-id", route["id"], "--max-tokens", "100000").stdout)
+        self.assertEqual(found["overlay_id"], attached["overlay_id"])
+        self.assertEqual(found["claim_selection"]["included_claims"], 8)
+
+    def test_route_refresh_refuses_change_just_before_commit(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        other = self.repo / "Other.cs"
+        other.write_text("class Other { int Read() { return 2; } }\n", encoding="utf-8")
+        handler = self.repo / "Handler.cs"
+        spec = importlib.util.spec_from_file_location("atlas_refresh_race_test", SCRIPT)
+        atlas = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(atlas)
+        original_connect = atlas._connect_for_index
+
+        def change_at_connect(path):
+            handler.write_text(handler.read_text(encoding="utf-8").replace("store.SaveAsync(); store.GetAsync();",
+                                                                              "store.GetAsync(); store.SaveAsync();"), encoding="utf-8")
+            return original_connect(path)
+
+        with mock.patch.object(sys, "path", [os.fspath(SCRIPT.parent), *sys.path]), mock.patch.object(
+                atlas, "_connect_for_index", side_effect=change_at_connect):
+            with self.assertRaisesRegex(atlas.AtlasError, "changed before route refresh commit"):
+                atlas.route_refresh(os.fspath(self.db), os.fspath(self.repo), saved["snapshot_id"], route["id"], 100000)
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM atlas_snapshots").fetchone()[0], 1)
+            exists = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_route_carries'").fetchone()
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM atlas_route_carries").fetchone()[0] if exists else 0, 0)
+
+    def test_route_refresh_refuses_new_candidate_declaration_and_registration(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        extra = self.repo / "ExtraCandidate.cs"
+        extra.write_text("class Handler { void Handle() {} }\n", encoding="utf-8")
+        git(self.repo, "add", "--", "ExtraCandidate.cs")
+        self.index()
+        declaration_refusal = self.route_refresh(saved, route, expect=2)
+        self.assertIn("evidence packet changed", declaration_refusal.stderr)
+
+    def test_route_refresh_refuses_new_matching_registration(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        registration = self.repo / "Other.cs"
+        registration.write_text("class Other { int Read() { return 1; } }\nclass ExtraHandler { void Handle() {} }\n"
+                                "class MoreRegistrations { void Add() { services.AddScoped<IHandler, ExtraHandler>(); } }\n", encoding="utf-8")
+        git(self.repo, "add", "--", "Other.cs")
+        self.index()
+        registration_refusal = self.route_refresh(saved, route, expect=2)
+        self.assertIn("evidence packet changed", registration_refusal.stderr)
+
+    def test_route_refresh_refuses_tampered_origin_review_provenance(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        (self.repo / "Other.cs").write_text("class Other { int Read() { return 2; } }\n", encoding="utf-8")
+        self.index()
+        refreshed = json.loads(self.route_refresh(saved, route).stdout)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_flow_reviews SET receipt_json = replace(receipt_json, 'fixture reviewer', 'tampered reviewer') WHERE snapshot_id=?",
+                               (saved["snapshot_id"],))
+        refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                           "--route-fact-id", route["id"], "--max-tokens", "100000", expect=2)
+        self.assertIn("review receipt content hash is invalid", refused.stderr)
+        self.assertEqual(refreshed["result"], "carried")
+
+    def test_route_refresh_refuses_tampered_carry_overlay_identity(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        (self.repo / "Other.cs").write_text("class Other { int Read() { return 2; } }\n", encoding="utf-8")
+        self.route_refresh(saved, route)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_route_carries SET origin_overlay_id = ?", ("wrong-overlay",))
+        refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                           "--route-fact-id", route["id"], "--max-tokens", "100000", expect=2)
+        self.assertIn("registry identity differs", refused.stderr)
+
+    def test_route_refresh_rolls_back_target_snapshot_when_carry_insert_fails(self):
+        saved, _graph, route, _attached, _reviewed = self.refresh_fixture()
+        (self.repo / "Other.cs").write_text("class Other { int Read() { return 2; } }\n", encoding="utf-8")
+        too_small = self.route_refresh(saved, route, expect=2, max_tokens=1)
+        self.assertIn("complete route-find output requires", too_small.stderr)
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM atlas_snapshots").fetchone()[0], 1)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("""CREATE TABLE atlas_route_carries (
+                target_snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, overlay_id TEXT NOT NULL,
+                origin_snapshot_id TEXT NOT NULL, origin_overlay_id TEXT NOT NULL, origin_receipt_hash TEXT NOT NULL,
+                binding_hash TEXT NOT NULL, association_review_hash TEXT NOT NULL, packet_sha256 TEXT NOT NULL,
+                PRIMARY KEY(target_snapshot_id, route_fact_id))""")
+            connection.execute("CREATE TRIGGER refuse_route_carry BEFORE INSERT ON atlas_route_carries BEGIN SELECT RAISE(ABORT, 'test carry failure'); END")
+        refused = self.route_refresh(saved, route, expect=2)
+        self.assertIn("test carry failure", refused.stderr)
+        with sqlite3.connect(self.db) as connection:
+            snapshots = connection.execute("SELECT snapshot_id FROM atlas_snapshots ORDER BY snapshot_id").fetchall()
+            carries = connection.execute("SELECT COUNT(*) FROM atlas_route_carries").fetchone()[0]
+        self.assertEqual([row[0] for row in snapshots], [saved["snapshot_id"]])
+        self.assertEqual(carries, 0)
 
     def test_route_find_refuses_flow_receipt_column_tampering(self):
         saved, graph, route = self.evidence_fixture()

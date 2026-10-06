@@ -328,6 +328,17 @@ def _canonical_json(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("ascii")
 
 
+def _validate_snapshot_fingerprint(snapshot: dict[str, object], expected_id: str) -> None:
+    identity_fields = ("schema_version", "repository_root", "head", "head_ref", "inventory_basis",
+                       "tracked_count", "status", "files", "source_graph")
+    if snapshot.get("snapshot_id") != expected_id or any(field not in snapshot for field in identity_fields):
+        raise AtlasError(f"saved snapshot identity is incomplete or mismatched: {expected_id}")
+    identity = {field: snapshot[field] for field in identity_fields}
+    fingerprint = hashlib.sha256(_canonical_json(identity)).hexdigest()
+    if snapshot.get("evidence_fingerprint") != fingerprint or expected_id != f"atlas-v{SCHEMA_VERSION}-{fingerprint}":
+        raise AtlasError(f"saved snapshot evidence fingerprint is invalid: {expected_id}")
+
+
 def _validate_reviewed_flow(snapshot: dict[str, object], flow: dict[str, object]) -> None:
     graph = snapshot.get("source_graph")
     if not isinstance(graph, dict):
@@ -433,7 +444,12 @@ def query_flow(db_arg: str, snapshot_id: str, overlay_id: str) -> dict[str, obje
     except sqlite3.Error as exc:
         raise AtlasError(f"cannot query reviewed-flow overlay: {exc}") from exc
     if row is None:
-        raise AtlasError(f"reviewed-flow overlay not found: {overlay_id}")
+        carried = _resolve_route_carry(db_path, snapshot_id, overlay_id)
+        if carried is None:
+            raise AtlasError(f"reviewed-flow overlay not found: {overlay_id}")
+        row, carry, receipt_row = carried
+    else:
+        carry = None
     payload, snapshot = json.loads(row[0]), json.loads(row[1])
     flow = {key: value for key, value in payload.items() if key != "content_hash"}
     if hashlib.sha256(_canonical_json(flow)).hexdigest() != payload.get("content_hash"):
@@ -446,9 +462,11 @@ def query_flow(db_arg: str, snapshot_id: str, overlay_id: str) -> dict[str, obje
         receipt = {key: value for key, value in receipt_payload.items() if key != "receipt_hash"}
         if hashlib.sha256(_canonical_json(receipt)).hexdigest() != receipt_payload.get("receipt_hash"):
             raise AtlasError("saved review receipt content hash is invalid")
-        _validate_review_receipt(receipt, snapshot_id, overlay_id, payload["content_hash"], flow["extractor_identity"])
+        receipt_snapshot_id = carry["origin_snapshot_id"] if carry is not None else snapshot_id
+        receipt_overlay_id = carry["origin_overlay_id"] if carry is not None else overlay_id
+        _validate_review_receipt(receipt, receipt_snapshot_id, receipt_overlay_id, payload["content_hash"], flow["extractor_identity"])
         review_status = receipt["decision"]
-    return {
+    result = {
         "snapshot_id": snapshot_id,
         "overlay_id": overlay_id,
         "content_hash": payload["content_hash"],
@@ -457,6 +475,148 @@ def query_flow(db_arg: str, snapshot_id: str, overlay_id: str) -> dict[str, obje
         "overlay": payload,
         "review_receipt": receipt_payload,
     }
+    if carry is not None:
+        result["carry_provenance"] = carry
+    return result
+
+
+def _resolve_route_carry(db_path: Path, target_snapshot_id: str, overlay_id: str) -> tuple[tuple[str, str], dict[str, object], tuple[str] | None] | None:
+    """Resolve and fully validate one carried overlay through its immutable origin records."""
+    uri = db_path.absolute().as_uri() + "?mode=ro"
+    try:
+        with sqlite3.connect(uri, uri=True) as connection:
+            exists = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_route_carries'"
+            ).fetchone()
+            if exists is None:
+                return None
+            rows = connection.execute(
+                "SELECT target_snapshot_id, route_fact_id, overlay_id, origin_snapshot_id, origin_overlay_id, "
+                "origin_receipt_hash, binding_hash, association_review_hash, packet_sha256 "
+                "FROM atlas_route_carries WHERE target_snapshot_id=? AND overlay_id=?",
+                (target_snapshot_id, overlay_id),
+            ).fetchall()
+            if not rows:
+                return None
+            if len(rows) != 1:
+                raise AtlasError("carried overlay is ambiguous for this target snapshot")
+            values = rows[0]
+            if values[2] != values[4]:
+                raise AtlasError("carried overlay registry identity differs from its accepted origin")
+            target_row = connection.execute(
+                "SELECT payload_json FROM atlas_snapshots WHERE snapshot_id=?", (target_snapshot_id,)
+            ).fetchone()
+            origin_row = connection.execute(
+                "SELECT payload_json FROM atlas_snapshots WHERE snapshot_id=?", (values[3],)
+            ).fetchone()
+            binding_row = connection.execute(
+                "SELECT binding_hash, association_review_hash, payload_json FROM atlas_route_bindings "
+                "WHERE snapshot_id=? AND route_fact_id=? AND overlay_id=?", (values[3], values[1], values[4])
+            ).fetchone()
+    except sqlite3.Error as exc:
+        raise AtlasError(f"cannot resolve carried reviewed flow: {exc}") from exc
+    if target_row is None or origin_row is None or binding_row is None:
+        raise AtlasError("carried route references a missing target, origin, or route association")
+    try:
+        target, origin = json.loads(target_row[0]), json.loads(origin_row[0])
+        binding_document = json.loads(binding_row[2])
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise AtlasError("carried route origin records are corrupt") from exc
+    if not isinstance(target, dict) or not isinstance(origin, dict) or not isinstance(binding_document, dict):
+        raise AtlasError("carried route origin records must be objects")
+    if target.get("snapshot_id") != target_snapshot_id or origin.get("snapshot_id") != values[3]:
+        raise AtlasError("carried route snapshot registry identity is invalid")
+    _validate_snapshot_fingerprint(target, target_snapshot_id)
+    _validate_snapshot_fingerprint(origin, str(values[3]))
+    if values[3] == target_snapshot_id:
+        raise AtlasError("carried route cannot point to itself")
+    from csharp_facts import EXTRACTION_METHOD
+    current_extractor = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
+    for label, saved in (("target", target), ("origin", origin)):
+        graph = saved.get("source_graph")
+        if (saved.get("schema_version") != SCHEMA_VERSION or saved.get("inventory_basis") != INVENTORY_BASIS
+                or not isinstance(graph, dict) or graph.get("extractor_identity") != current_extractor):
+            raise AtlasError(f"carried route {label} snapshot uses an obsolete schema or extractor")
+    association_review_payload = binding_document.get("association_review")
+    if not isinstance(association_review_payload, dict):
+        raise AtlasError("carried route association review payload is corrupt")
+    if (binding_row[0] != values[6] or binding_row[1] != values[7]
+            or binding_document.get("binding_hash") != values[6]
+            or association_review_payload.get("association_review_hash") != values[7]):
+        raise AtlasError("carried route association provenance hash changed")
+    original_flow = query_flow(os.fspath(db_path), str(values[3]), str(values[4]))
+    if (original_flow.get("review_status") != "accepted"
+            or original_flow.get("review_receipt", {}).get("receipt_hash") != values[5]):
+        raise AtlasError("carried route origin review receipt is missing or changed")
+    binding = binding_document.get("binding")
+    review_payload = binding_document.get("association_review")
+    if not isinstance(binding, dict) or not isinstance(review_payload, dict):
+        raise AtlasError("carried route association payload is corrupt")
+    review = {key: value for key, value in review_payload.items() if key != "association_review_hash"}
+    _validate_route_binding(binding, origin, str(values[1]))
+    _validate_route_association_review(review, binding, str(values[6]))
+    if (binding.get("snapshot_id") != values[3] or binding.get("overlay_id") != values[4]
+            or binding.get("flow_review_receipt_hash") != values[5]
+            or hashlib.sha256(_canonical_json(binding)).hexdigest() != values[6]
+            or hashlib.sha256(_canonical_json(review)).hexdigest() != values[7]):
+        raise AtlasError("carried route association does not match its recorded origin hashes")
+    target_graph, origin_graph = target.get("source_graph"), origin.get("source_graph")
+    if not isinstance(target_graph, dict) or not isinstance(origin_graph, dict):
+        raise AtlasError("carried route target or origin has no source graph")
+    target_facts, origin_facts = target_graph.get("facts"), origin_graph.get("facts")
+    if (not isinstance(target_facts, list) or any(not isinstance(fact, dict) for fact in target_facts)
+            or not isinstance(origin_facts, list) or any(not isinstance(fact, dict) for fact in origin_facts)):
+        raise AtlasError("carried route source graph facts are corrupt")
+    target_routes = [fact for fact in target_facts if fact.get("id") == values[1]]
+    origin_routes = [fact for fact in origin_facts if fact.get("id") == values[1]]
+    if len(target_routes) != 1 or len(origin_routes) != 1 or target_routes[0] != origin_routes[0]:
+        raise AtlasError("carried route fact is missing, ambiguous, or changed")
+    target_root = Path(str(target.get("repository_root", "")))
+    if origin.get("repository_root") != target.get("repository_root"):
+        raise AtlasError("carried route repository root changed")
+    old_packet, _, _ = evidence_pack(os.fspath(db_path), os.fspath(target_root), str(values[1]), 2**31 - 1,
+                                      snapshot_override=origin)
+    new_packet, _, _ = evidence_pack(os.fspath(db_path), os.fspath(target_root), str(values[1]), 2**31 - 1,
+                                      snapshot_override=target)
+    if not old_packet["selection"]["complete"] or old_packet["selection"]["omitted_candidate_bundles"] != 0:
+        raise AtlasError("carried route origin evidence packet is incomplete")
+    if not new_packet["selection"]["complete"] or new_packet["selection"]["omitted_candidate_bundles"] != 0:
+        raise AtlasError("carried route target evidence packet is incomplete")
+    old_content = {key: value for key, value in old_packet.items() if key not in {"snapshot_id", "budget"}}
+    new_content = {key: value for key, value in new_packet.items() if key not in {"snapshot_id", "budget"}}
+    packet_sha256 = hashlib.sha256(_canonical_json(old_content)).hexdigest()
+    if old_content != new_content or packet_sha256 != values[8]:
+        raise AtlasError("carried route evidence packet changed or no longer matches its recorded digest")
+    old_flow = original_flow["overlay"]
+    citation_facts = {citation["fact_id"] for claim in old_flow["reviewed_conclusions"] for citation in claim["evidence"]}
+    for fact_id in citation_facts:
+        old_matches = [fact for fact in origin_facts if fact.get("id") == fact_id]
+        new_matches = [fact for fact in target_facts if fact.get("id") == fact_id]
+        if (len(old_matches) != 1 or len(new_matches) != 1 or old_matches[0] != new_matches[0]
+                or not isinstance(old_matches[0].get("source"), dict)):
+            raise AtlasError(f"carried route citation fact is missing, ambiguous, or changed: {fact_id}")
+    packet_fact_ids = {item["fact_id"] for field in ("source_snippets", "candidate_snippets")
+                       for item in old_packet.get(field, [])}
+    if not citation_facts.issubset(packet_fact_ids):
+        raise AtlasError("carried route citations do not all occur in the complete evidence packet")
+    with sqlite3.connect(uri, uri=True) as connection:
+        origin_flow_rows = connection.execute(
+            "SELECT f.payload_json, s.payload_json, r.receipt_json, r.receipt_hash FROM atlas_reviewed_flows f "
+            "JOIN atlas_snapshots s ON s.snapshot_id=f.snapshot_id "
+            "LEFT JOIN atlas_flow_reviews r ON r.snapshot_id=f.snapshot_id AND r.overlay_id=f.content_hash "
+            "WHERE f.snapshot_id=? AND f.content_hash=?", (values[3], values[4])
+        ).fetchall()
+    if len(origin_flow_rows) != 1 or origin_flow_rows[0][2] is None:
+        raise AtlasError("carried route origin overlay is missing or ambiguous")
+    if origin_flow_rows[0][3] != values[5]:
+        raise AtlasError("carried route origin review receipt registry hash changed")
+    carry = {
+        "target_snapshot_id": target_snapshot_id, "route_fact_id": values[1],
+        "origin_snapshot_id": values[3], "origin_overlay_id": values[4],
+        "origin_review_receipt_hash": values[5], "origin_binding_hash": values[6],
+        "origin_association_review_hash": values[7], "packet_sha256": values[8],
+    }
+    return (origin_flow_rows[0][0], origin_flow_rows[0][1]), carry, (origin_flow_rows[0][2],)
 
 
 def _validate_review_receipt(receipt: dict[str, object], snapshot_id: str, overlay_id: str, content_hash: str, extractor_identity: str) -> None:
@@ -798,6 +958,34 @@ def _validated_route_associations(db_arg: str, db_path: Path, snapshot: dict[str
             associations.setdefault(str(row_route_fact_id), []).append(
                 {"binding": binding, "binding_hash": binding_hash,
                  "association_review": review_payload, "association_review_hash": review_hash})
+    try:
+        with sqlite3.connect(uri, uri=True) as connection:
+            carry_rows = connection.execute(
+                "SELECT route_fact_id, overlay_id FROM atlas_route_carries WHERE target_snapshot_id=? "
+                "ORDER BY route_fact_id, overlay_id", (snapshot["snapshot_id"],)
+            ).fetchall()
+    except sqlite3.OperationalError as exc:
+        if "no such table" not in str(exc).lower():
+            raise AtlasError(f"cannot query carried route associations: {exc}") from exc
+        carry_rows = []
+    except sqlite3.Error as exc:
+        raise AtlasError(f"cannot query carried route associations: {exc}") from exc
+    for carried_route_id, carried_overlay_id in carry_rows:
+        resolved = _resolve_route_carry(db_path, str(snapshot["snapshot_id"]), str(carried_overlay_id))
+        if resolved is None:
+            raise AtlasError("carried route association disappeared during validation")
+        origin_row = next((row for row in binding_rows
+                           if row[0] == resolved[1]["origin_snapshot_id"]
+                           and row[1] == carried_route_id and row[2] == resolved[1]["origin_overlay_id"]), None)
+        if origin_row is None:
+            raise AtlasError("carried route origin association is missing")
+        origin_payload = json.loads(origin_row[5])
+        associations.setdefault(str(carried_route_id), []).append({
+            "binding": origin_payload["binding"], "binding_hash": resolved[1]["origin_binding_hash"],
+            "association_review": origin_payload["association_review"],
+            "association_review_hash": resolved[1]["origin_association_review_hash"],
+            "carry_provenance": resolved[1],
+        })
     return associations
 
 
@@ -1291,7 +1479,8 @@ def _evidence_pack_render(document: dict[str, object], max_bytes: int) -> bytes:
     raise AtlasError("evidence pack byte-count field did not stabilize; stdout withheld")
 
 
-def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int,
+                  snapshot_override: dict[str, object] | None = None) -> tuple[dict[str, object], bytes, int]:
     """Build a bounded candidate-only source packet for one discovered route fact."""
     if max_bytes < 1:
         raise AtlasError("--max-tokens must be a positive integer")
@@ -1304,19 +1493,27 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
     uri = db_path.absolute().as_uri() + "?mode=ro"
     with sqlite3.connect(uri, uri=True) as connection:
         rows = connection.execute("SELECT snapshot_id, payload_json FROM atlas_snapshots ORDER BY snapshot_id").fetchall()
-    compatible: list[dict[str, object]] = []
-    for _row_id, payload_json in rows:
-        saved = json.loads(payload_json)
-        graph = saved.get("source_graph") or {}
-        if (saved.get("schema_version") == SCHEMA_VERSION and saved.get("inventory_basis") == INVENTORY_BASIS
-                and graph.get("extractor_identity") == extractor_identity):
-            changed, reasons = _focus_source_identity(saved, live)
-            if not changed and not reasons:
-                compatible.append(saved)
-    if len(compatible) != 1:
-        reason = "no_saved_snapshot_matches_current_extractor_and_checkout" if not compatible else "multiple_saved_snapshots_match_current_extractor_and_checkout"
-        raise AtlasError(f"{reason}; compatible matching snapshots={len(compatible)}")
-    snapshot = compatible[0]
+    if snapshot_override is None:
+        compatible: list[dict[str, object]] = []
+        for _row_id, payload_json in rows:
+            saved = json.loads(payload_json)
+            graph = saved.get("source_graph") or {}
+            if (saved.get("schema_version") == SCHEMA_VERSION and saved.get("inventory_basis") == INVENTORY_BASIS
+                    and graph.get("extractor_identity") == extractor_identity):
+                changed, reasons = _focus_source_identity(saved, live)
+                if not changed and not reasons:
+                    compatible.append(saved)
+        if len(compatible) != 1:
+            reason = "no_saved_snapshot_matches_current_extractor_and_checkout" if not compatible else "multiple_saved_snapshots_match_current_extractor_and_checkout"
+            raise AtlasError(f"{reason}; compatible matching snapshots={len(compatible)}")
+        snapshot = compatible[0]
+    else:
+        snapshot = snapshot_override
+        if (snapshot.get("schema_version") != SCHEMA_VERSION or snapshot.get("inventory_basis") != INVENTORY_BASIS
+                or (snapshot.get("source_graph") or {}).get("extractor_identity") != extractor_identity):
+            raise AtlasError("explicit evidence-pack snapshot has an obsolete schema or extractor")
+        if snapshot.get("repository_root") != live.get("repository_root"):
+            raise AtlasError("explicit evidence-pack snapshot repository root does not match the live checkout")
     graph = snapshot["source_graph"]
     facts = graph.get("facts", [])
     unresolved = graph.get("unresolved", [])
@@ -1514,6 +1711,176 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
     return document, encoded, 0
 
 
+def route_refresh(db_arg: str, repo_arg: str, from_snapshot_id: str, route_fact_id: str,
+                  max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    """Carry one accepted route association onto a fresh same-root snapshot when its packet is unchanged."""
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    db_path = Path(db_arg).expanduser().absolute()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    try:
+        uri = db_path.as_uri() + "?mode=ro"
+        with sqlite3.connect(uri, uri=True) as connection:
+            snapshot_rows = connection.execute(
+                "SELECT snapshot_id, payload_json FROM atlas_snapshots ORDER BY snapshot_id"
+            ).fetchall()
+    except sqlite3.Error as exc:
+        raise AtlasError(f"cannot read route refresh origin: {exc}") from exc
+    snapshots: dict[str, dict[str, object]] = {}
+    for row_id, payload_json in snapshot_rows:
+        try:
+            value = json.loads(payload_json)
+        except json.JSONDecodeError as exc:
+            raise AtlasError(f"saved snapshot JSON is corrupt: {row_id}") from exc
+        if isinstance(value, dict) and value.get("snapshot_id") == row_id:
+            snapshots[str(row_id)] = value
+    origin = snapshots.get(from_snapshot_id)
+    if origin is None:
+        raise AtlasError(f"origin snapshot not found or corrupt: {from_snapshot_id}")
+    _validate_snapshot_fingerprint(origin, from_snapshot_id)
+    from csharp_facts import EXTRACTION_METHOD
+    extractor_identity = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
+    origin_graph = origin.get("source_graph")
+    if (origin.get("schema_version") != SCHEMA_VERSION or origin.get("inventory_basis") != INVENTORY_BASIS
+            or not isinstance(origin_graph, dict) or origin_graph.get("extractor_identity") != extractor_identity):
+        raise AtlasError("route refresh origin does not use the current snapshot schema and extractor")
+    root = _repo_root(repo_arg)
+    if origin.get("repository_root") != os.fspath(root):
+        raise AtlasError("route refresh requires the same canonical repository root as the accepted origin")
+    origin_routes = [fact for fact in origin_graph.get("facts", []) if fact.get("id") == route_fact_id]
+    if len(origin_routes) != 1 or origin_routes[0].get("kind") != "route_action":
+        raise AtlasError("route refresh requires one unique origin route_action fact")
+    origin_associations = _validated_route_associations(db_arg, db_path, origin, snapshots).get(route_fact_id, [])
+    if len(origin_associations) != 1:
+        raise AtlasError(f"route refresh requires exactly one accepted association; found {len(origin_associations)}")
+    association = origin_associations[0]
+    if association.get("carry_provenance") is not None:
+        raise AtlasError("route refresh pilot refuses to carry an already-carried association")
+    binding = association["binding"]
+    overlay_id = str(binding["overlay_id"])
+    flow = query_flow(db_arg, from_snapshot_id, overlay_id)
+    if flow.get("review_status") != "accepted":
+        raise AtlasError("route refresh requires an accepted original flow review")
+
+    target = capture(os.fspath(root))
+    target_graph = target.get("source_graph")
+    if (target.get("schema_version") != SCHEMA_VERSION or not isinstance(target_graph, dict)
+            or target_graph.get("extractor_identity") != extractor_identity):
+        raise AtlasError("captured refresh target does not use the current snapshot schema and extractor")
+    if target.get("repository_root") != origin.get("repository_root"):
+        raise AtlasError("captured refresh target repository root changed")
+    target_routes = [fact for fact in target_graph.get("facts", []) if fact.get("id") == route_fact_id]
+    if len(target_routes) != 1 or target_routes[0] != origin_routes[0]:
+        raise AtlasError("route fact is missing, ambiguous, or changed in the target snapshot")
+
+    old_packet, _, _ = evidence_pack(db_arg, os.fspath(root), route_fact_id, 2**31 - 1, snapshot_override=origin)
+    new_packet, _, _ = evidence_pack(db_arg, os.fspath(root), route_fact_id, 2**31 - 1, snapshot_override=target)
+    for label, packet in (("origin", old_packet), ("target", new_packet)):
+        if (packet.get("selection", {}).get("complete") is not True
+                or packet.get("selection", {}).get("omitted_candidate_bundles") != 0):
+            raise AtlasError(f"route refresh {label} evidence packet is incomplete")
+    old_content = {key: value for key, value in old_packet.items() if key not in {"snapshot_id", "budget"}}
+    new_content = {key: value for key, value in new_packet.items() if key not in {"snapshot_id", "budget"}}
+    if old_content != new_content:
+        raise AtlasError("route refresh evidence packet changed; independent review is required")
+    packet_sha256 = hashlib.sha256(_canonical_json(old_content)).hexdigest()
+
+    origin_graph_facts = origin_graph.get("facts", [])
+    target_graph_facts = target_graph.get("facts", [])
+    citations: dict[str, dict[str, object]] = {}
+    for claim in flow["overlay"].get("reviewed_conclusions", []):
+        for citation in claim.get("evidence", []):
+            fact_id = citation.get("fact_id")
+            if not isinstance(fact_id, str):
+                raise AtlasError("route refresh found a citation without a fact ID")
+            citations[fact_id] = citation
+    for fact_id, citation in citations.items():
+        old_matches = [fact for fact in origin_graph_facts if fact.get("id") == fact_id]
+        new_matches = [fact for fact in target_graph_facts if fact.get("id") == fact_id]
+        if (len(old_matches) != 1 or len(new_matches) != 1 or old_matches[0] != new_matches[0]
+                or citation.get("source") != old_matches[0].get("source")):
+            raise AtlasError(f"route refresh citation fact is missing, ambiguous, or changed: {fact_id}")
+    packet_fact_ids = {item["fact_id"] for packet in (old_packet, new_packet)
+                       for field in ("source_snippets", "candidate_snippets") for item in packet.get(field, [])}
+    if not set(citations).issubset(packet_fact_ids):
+        raise AtlasError("route refresh citations must all occur in both complete evidence packets")
+    if capture(os.fspath(root)).get("evidence_fingerprint") != target.get("evidence_fingerprint"):
+        raise AtlasError("repository changed during route refresh; target capture is stale")
+
+    target_snapshot_id = str(target["snapshot_id"])
+    if target_snapshot_id == from_snapshot_id:
+        raise AtlasError("route refresh requires a changed checkout; target equals the accepted origin")
+    receipt_hash = str(flow["review_receipt"]["receipt_hash"])
+    binding_hash = str(association["binding_hash"])
+    review_hash = str(association["association_review_hash"])
+    carry_values = (target_snapshot_id, route_fact_id, overlay_id, from_snapshot_id, overlay_id,
+                    receipt_hash, binding_hash, review_hash, packet_sha256)
+    target_payload = _canonical_json(target).decode("ascii")
+    result = {
+        "result": "carried", "snapshot_id": target_snapshot_id, "route_fact_id": route_fact_id,
+        "overlay_id": overlay_id, "association": association, "carry_provenance": {
+            "target_snapshot_id": target_snapshot_id, "origin_snapshot_id": from_snapshot_id,
+            "origin_overlay_id": overlay_id, "origin_review_receipt_hash": receipt_hash,
+            "origin_binding_hash": binding_hash, "origin_association_review_hash": review_hash,
+            "packet_sha256": packet_sha256,
+        },
+        "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead",
+                   "stdout_bytes_including_newline": 0},
+    }
+    encoded = _route_find_render(result, max_bytes)
+    connection = _connect_for_index(db_path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS atlas_snapshots (snapshot_id TEXT PRIMARY KEY, evidence_fingerprint TEXT NOT NULL UNIQUE, captured_at TEXT NOT NULL, payload_json TEXT NOT NULL)"
+        )
+        existing = connection.execute(
+            "SELECT evidence_fingerprint, payload_json FROM atlas_snapshots WHERE snapshot_id=?", (target_snapshot_id,)
+        ).fetchone()
+        if existing is not None:
+            saved_target = json.loads(existing[1])
+            if not isinstance(saved_target, dict):
+                raise AtlasError("existing target snapshot payload is corrupt")
+            _validate_snapshot_fingerprint(saved_target, target_snapshot_id)
+            if existing[0] != target.get("evidence_fingerprint") or saved_target.get("evidence_fingerprint") != target.get("evidence_fingerprint"):
+                raise AtlasError("target snapshot ID conflicts with existing evidence")
+            target_payload = existing[1]
+        else:
+            connection.execute(
+                "INSERT INTO atlas_snapshots(snapshot_id,evidence_fingerprint,captured_at,payload_json) VALUES (?,?,?,?)",
+                (target_snapshot_id, target["evidence_fingerprint"], target["captured_at"], target_payload),
+            )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS atlas_route_carries ("
+            "target_snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, overlay_id TEXT NOT NULL, "
+            "origin_snapshot_id TEXT NOT NULL, origin_overlay_id TEXT NOT NULL, origin_receipt_hash TEXT NOT NULL, "
+            "binding_hash TEXT NOT NULL, association_review_hash TEXT NOT NULL, packet_sha256 TEXT NOT NULL, "
+            "PRIMARY KEY(target_snapshot_id,route_fact_id), "
+            "FOREIGN KEY(target_snapshot_id) REFERENCES atlas_snapshots(snapshot_id))"
+        )
+        previous = connection.execute(
+            "SELECT target_snapshot_id,route_fact_id,overlay_id,origin_snapshot_id,origin_overlay_id,origin_receipt_hash,binding_hash,association_review_hash,packet_sha256 "
+            "FROM atlas_route_carries WHERE target_snapshot_id=? AND route_fact_id=?", (target_snapshot_id, route_fact_id)
+        ).fetchone()
+        if previous is not None and tuple(previous) != carry_values:
+            raise AtlasError("route carry is immutable; a different origin already exists for this target route")
+        if previous is None:
+            connection.execute(
+                "INSERT INTO atlas_route_carries(target_snapshot_id,route_fact_id,overlay_id,origin_snapshot_id,origin_overlay_id,origin_receipt_hash,binding_hash,association_review_hash,packet_sha256) "
+                "VALUES (?,?,?,?,?,?,?,?,?)", carry_values,
+            )
+        if capture(os.fspath(root)).get("evidence_fingerprint") != target.get("evidence_fingerprint"):
+            raise AtlasError("repository changed before route refresh commit; target capture is stale")
+        connection.commit()
+    except (sqlite3.Error, AtlasError):
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+    return result, encoded, 0
+
+
 def _focus_document(snapshot: dict[str, object], flow_result: dict[str, object], freshness: dict[str, object], max_bytes: int) -> tuple[dict[str, object], bytes]:
     overlay = flow_result["overlay"]
     all_claims = overlay["reviewed_conclusions"]
@@ -1550,6 +1917,8 @@ def _focus_document(snapshot: dict[str, object], flow_result: dict[str, object],
                 "decision": reviewer["decision"],
                 "reviewed_at": reviewer["reviewed_at"],
             },
+            **({"carry_provenance": flow_result["carry_provenance"]}
+               if flow_result.get("carry_provenance") is not None else {}),
             "freshness": freshness,
             "claim_selection": {
                 "total_claims": len(all_claims),
@@ -1704,6 +2073,11 @@ def answer_check(
     packet = {
         "result": "semantic_review_required",
         "binding": binding,
+        "review_provenance": {
+            "reviewer": focused["reviewer"],
+            "review_receipt_hash": flow["review_receipt"]["receipt_hash"],
+            "carry_provenance": focused.get("carry_provenance"),
+        },
         "question": question,
         "draft": draft,
         "claims": [
@@ -1770,6 +2144,12 @@ def main(argv: list[str] | None = None) -> int:
     evidence_parser.add_argument("--repo", required=True)
     evidence_parser.add_argument("--route-fact-id", required=True)
     evidence_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    refresh_parser = commands.add_parser("route-refresh", help="carry one accepted route review onto a same-root fresh snapshot when its full evidence packet is unchanged")
+    refresh_parser.add_argument("--db", required=True)
+    refresh_parser.add_argument("--repo", required=True)
+    refresh_parser.add_argument("--from-snapshot", required=True)
+    refresh_parser.add_argument("--route-fact-id", required=True)
+    refresh_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     flow_add_parser = commands.add_parser("flow-add", help="attach a reviewed, source-cited flow overlay")
     flow_add_parser.add_argument("--db", required=True)
     flow_add_parser.add_argument("--snapshot", required=True)
@@ -1823,6 +2203,8 @@ def main(argv: list[str] | None = None) -> int:
             output, encoded_output, exit_code = discover(args.db, args.repo, args.terms, args.max_tokens)
         elif args.command == "evidence-pack":
             output, encoded_output, exit_code = evidence_pack(args.db, args.repo, args.route_fact_id, args.max_tokens)
+        elif args.command == "route-refresh":
+            output, encoded_output, exit_code = route_refresh(args.db, args.repo, args.from_snapshot, args.route_fact_id, args.max_tokens)
         elif args.command == "flow-add":
             output = attach_flow(args.db, args.snapshot, args.input)
         elif args.command == "flow-review":
