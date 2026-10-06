@@ -12,6 +12,9 @@ from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/atlas.py"
+ATLAS_SPEC = importlib.util.spec_from_file_location("atlas_test_module", SCRIPT)
+ATLAS = importlib.util.module_from_spec(ATLAS_SPEC)
+ATLAS_SPEC.loader.exec_module(ATLAS)
 
 
 def git(repo: Path, *args: str) -> str:
@@ -73,6 +76,90 @@ class AtlasCliTests(unittest.TestCase):
     def coverage(self, max_tokens=100000, offset=0, expect=0):
         return self.cli("coverage", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                         "--max-tokens", str(max_tokens), "--offset", str(offset), expect=expect)
+
+    def impact(self, method, max_tokens=10000, expect=0):
+        return self.cli("impact", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                        "--method", method, "--max-tokens", str(max_tokens), expect=expect)
+
+    def test_impact_view_returns_verified_definition_and_exact_lexical_calls(self):
+        source = self.repo / "Calls.cs"
+        source.write_text('''namespace Demo;
+class Target
+{
+    static void Work() { }
+}
+class Handler
+{
+    void First() { Target.Work(); /* Target.Work(); */ var text = "Target.Work()"; var value = $"{Target.Work()}"; }
+    void Second() { Target.Work(); }
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Calls.cs")
+        self.index()
+
+        result = self.impact("Target.Work")
+        document = json.loads(result.stdout)
+        self.assertEqual(document["result"], "impact_view")
+        self.assertEqual(document["candidate_count"], 2)
+        self.assertEqual([item["containing_method"] for item in document["invocation_candidates"]], ["Demo.Handler.First", "Demo.Handler.Second"])
+        self.assertTrue(all(item["expression"] == "Target.Work(" for item in document["invocation_candidates"]))
+        self.assertIn("static void Work()", document["definition"]["text"])
+        self.assertEqual(document["budget"]["stdout_bytes_including_newline"], len(result.stdout.encode("ascii")))
+        fully_qualified = json.loads(self.impact("Demo.Target.Work").stdout)
+        self.assertEqual(fully_qualified["candidate_count"], 2)
+        self.assertEqual(fully_qualified["invocation_candidates"], document["invocation_candidates"])
+
+        refused = self.impact("Target.Work", max_tokens=100, expect=2)
+        self.assertEqual(refused.stdout, "")
+        self.assertIn("stdout withheld", refused.stderr)
+
+    def test_impact_view_refuses_ambiguous_method_and_stale_or_unsafe_source(self):
+        source = self.repo / "Calls.cs"
+        source.write_text('''namespace First
+{
+    class Target { static void Work() { } }
+}
+namespace Second
+{
+    class Target { static void Work() { } }
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Calls.cs")
+        self.index()
+        db_before = hashlib.sha256(self.db.read_bytes()).hexdigest()
+        ambiguous = self.impact("Target.Work", expect=2)
+        self.assertEqual(ambiguous.stdout, "")
+        self.assertIn("ambiguous", ambiguous.stderr)
+        selected = json.loads(self.impact("First.Target.Work").stdout)
+        self.assertEqual(selected["candidate_count"], 0)
+        unknown = self.impact("First.Target.Missing", expect=2)
+        self.assertEqual(unknown.stdout, "")
+        self.assertIn("not found", unknown.stderr)
+        self.assertEqual(hashlib.sha256(self.db.read_bytes()).hexdigest(), db_before)
+
+        source.write_text(source.read_text(encoding="utf-8") + "// changed\n", encoding="utf-8")
+        stale = self.impact("First.Target.Work", expect=2)
+        self.assertEqual(stale.stdout, "")
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale.stderr)
+
+        source.unlink()
+        source.symlink_to(self.root / "outside.cs")
+        unsafe = self.impact("First.Target.Work", expect=2)
+        self.assertEqual(unsafe.stdout, "")
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", unsafe.stderr)
+
+    def test_impact_source_reader_does_not_follow_a_tracked_path_symlink(self):
+        outside = self.root / "outside.cs"
+        outside.write_text("class Secret { static void Work() {} }", encoding="utf-8")
+        link = self.repo / "Link.cs"
+        link.symlink_to(outside)
+        root_fd = os.open(self.repo, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            evidence = ATLAS._read_working_file(root_fd, "Link.cs", collect_source=True)
+        finally:
+            os.close(root_fd)
+        self.assertEqual(evidence["type"], "symlink")
+        self.assertNotIn("_source_bytes", evidence)
 
     def refresh_fixture(self, claim_count=8):
         (self.repo / "Other.cs").write_text("class Other { int Read() { return 1; } }\n", encoding="utf-8")
@@ -166,6 +253,279 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         graph = self.graph(saved["snapshot_id"])
         route = next(f for f in graph["facts"] if f["kind"] == "route_action")
         return saved, graph, route
+
+    def route_map_fixture(self, title="Route map test"):
+        saved, graph, route = self.evidence_fixture()
+        draft = {
+            "overlay_schema_version": 1,
+            "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"],
+            "title": title,
+            "reviewed_conclusions": [{
+                "claim": "The selected route invokes its saved action method.",
+                "evidence": [{"fact_id": route["id"], "source": route["source"]}],
+            }],
+        }
+        draft_path = self.root / "luna-draft.json"
+        draft_path.write_bytes(json.dumps(draft, ensure_ascii=True, separators=(",", ":")).encode("utf-8"))
+        prepared = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(draft_path), "--max-tokens", "500000",
+        )
+        packet = json.loads(prepared.stdout)
+        packet_path = self.root / "route-map-review-packet.json"
+        packet_path.write_bytes(prepared.stdout.encode("ascii"))
+        review = {
+            "review_schema_version": 1,
+            "packet_sha256": packet["packet_sha256"],
+            "evidence_sha256": packet["evidence_sha256"],
+            "draft_sha256": packet["draft_sha256"],
+            # This is an explicitly synthetic mechanics fixture in a disposable DB,
+            # not a semantic review or a claim that Sol reviewed this test content.
+            "reviewer_identity": "synthetic CLI mechanics fixture",
+            "reviewer_model": "GPT-6.1 Sol High",
+            "reviewed_at": "2026-10-06T12:00:00Z",
+            "decision": "accepted",
+            "assignment_review": {
+                "decision": "accepted",
+                "basis": "The assignment is limited to this route and this complete evidence packet.",
+            },
+            "conclusion_reviews": [{
+                "conclusion_number": 1,
+                "decision": "accepted",
+                "basis": "The claim matches the cited route action declaration in the supplied packet.",
+            }],
+            "route_association_review": {
+                "decision": "accepted",
+                "basis": "This map describes the exact selected route action shown by its cited fact.",
+            },
+        }
+        review_path = self.root / "route-map-independent-review.json"
+        review_path.write_text(json.dumps(review), encoding="utf-8")
+        return saved, graph, route, draft_path, packet_path, packet, review_path, review
+
+    def route_map_cli(self, command, packet_path, review_path, expect=0):
+        return self.cli(command, "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                        "--packet-file", os.fspath(packet_path), "--review-file", os.fspath(review_path), expect=expect)
+
+    def test_route_map_cli_publish_is_atomic_idempotent_and_reusable(self):
+        saved, _graph, route, _draft, packet_path, packet, review_path, _review = self.route_map_fixture()
+        before_review = self.db.read_bytes()
+        reviewed = json.loads(self.route_map_cli("route-map-review", packet_path, review_path).stdout)
+        self.assertEqual(reviewed["result"], "accepted")
+        self.assertEqual(reviewed["writes"], 0)
+        self.assertEqual(self.db.read_bytes(), before_review)
+
+        published = json.loads(self.route_map_cli("route-map-publish", packet_path, review_path).stdout)
+        self.assertEqual(published["result"], "published")
+        self.assertFalse(published["idempotent"])
+        repeated = json.loads(self.route_map_cli("route-map-publish", packet_path, review_path).stdout)
+        self.assertTrue(repeated["idempotent"])
+        self.assertEqual(repeated["overlay_id"], published["overlay_id"])
+
+        found = json.loads(self.cli(
+            "route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--max-tokens", "100000",
+        ).stdout)
+        self.assertEqual(found["result"], "fresh")
+        self.assertEqual(found["snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(found["association"]["binding"]["overlay_id"], published["overlay_id"])
+        self.assertEqual(found["claim_selection"]["omitted_claims"], 0)
+
+        focused = json.loads(self.cli(
+            "focus", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--snapshot", saved["snapshot_id"], "--overlay", published["overlay_id"], "--max-tokens", "100000",
+        ).stdout)
+        self.assertEqual(focused["result"], "fresh")
+        self.assertEqual(focused["review_status"], "accepted")
+
+        question = self.root / "question.txt"
+        answer = self.root / "answer.txt"
+        question.write_text("Which method handles this route?\n", encoding="utf-8")
+        answer.write_text("The route invokes Save.\n", encoding="utf-8")
+        checked = json.loads(self.cli(
+            "answer-check", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--snapshot", saved["snapshot_id"], "--overlay", published["overlay_id"],
+            "--question-file", os.fspath(question), "--draft-file", os.fspath(answer),
+        ).stdout)
+        self.assertEqual(checked["result"], "semantic_review_required")
+        self.assertEqual(checked["binding"]["overlay_id"], published["overlay_id"])
+        self.assertEqual(packet["evidence_sha256"], published["evidence_sha256"])
+
+        conflict = dict(_review)
+        conflict["route_association_review"] = dict(
+            conflict["route_association_review"],
+            basis="A conflicting review cannot replace the immutable route association.",
+        )
+        conflict_path = self.root / "conflicting-review.json"
+        conflict_path.write_text(json.dumps(conflict), encoding="utf-8")
+        conflict_result = self.route_map_cli("route-map-publish", packet_path, conflict_path, expect=2)
+        self.assertIn("review receipt is immutable", conflict_result.stderr)
+
+    def test_route_map_rejection_and_undersized_packet_do_not_write(self):
+        _saved, _graph, route = self.evidence_fixture()
+        draft = {
+            "overlay_schema_version": 1,
+            "snapshot_id": self.index()["snapshot_id"],
+        }
+        graph = self.graph(draft["snapshot_id"])
+        draft.update({
+            "extractor_identity": graph["extractor_identity"], "title": "Rejected map",
+            "reviewed_conclusions": [{"claim": "This route invokes its saved action.",
+                                      "evidence": [{"fact_id": route["id"], "source": route["source"]}]}],
+        })
+        draft_path = self.root / "rejected-draft.json"
+        draft_path.write_text(json.dumps(draft), encoding="utf-8")
+        evidence_bytes = len(self.evidence_pack(route["id"], 500000).stdout.encode("ascii"))
+        before = self.db.read_bytes()
+        too_small = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(draft_path),
+            "--max-tokens", str(evidence_bytes + 5), expect=2,
+        )
+        self.assertEqual(too_small.stdout, "")
+        self.assertIn("complete route-map review packet requires", too_small.stderr)
+        self.assertEqual(self.db.read_bytes(), before)
+
+        prepared = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(draft_path), "--max-tokens", "500000",
+        )
+        packet = json.loads(prepared.stdout)
+        packet_path = self.root / "rejected-packet.json"
+        packet_path.write_text(prepared.stdout, encoding="ascii")
+        review = {
+            "review_schema_version": 1, "packet_sha256": packet["packet_sha256"],
+            "evidence_sha256": packet["evidence_sha256"], "draft_sha256": packet["draft_sha256"],
+            "reviewer_identity": "synthetic rejection mechanics fixture", "reviewer_model": "GPT-6.1 Sol High",
+            "reviewed_at": "2026-10-06T12:00:00Z", "decision": "rejected",
+            "assignment_review": {"decision": "rejected", "basis": "The assignment packet is rejected by this mechanics fixture."},
+            "conclusion_reviews": [{"conclusion_number": 1, "decision": "rejected",
+                                    "basis": "The claim is rejected by this mechanics fixture for a negative path."}],
+            "route_association_review": {"decision": "rejected", "basis": "The route association is rejected by this mechanics fixture."},
+        }
+        review_path = self.root / "rejected-review.json"
+        review_path.write_text(json.dumps(review), encoding="utf-8")
+        result = json.loads(self.route_map_cli("route-map-review", packet_path, review_path).stdout)
+        self.assertEqual(result["result"], "rejected")
+        self.assertEqual(self.db.read_bytes(), before)
+        rejected = self.route_map_cli("route-map-publish", packet_path, review_path, expect=2)
+        self.assertIn("review was rejected; no atlas records were written", rejected.stderr)
+        self.assertEqual(self.db.read_bytes(), before)
+
+    def test_route_map_publish_rolls_back_all_records_when_binding_insert_fails(self):
+        _saved, _graph, _route, _draft, packet_path, _packet, review_path, _review = self.route_map_fixture()
+        with sqlite3.connect(self.db) as connection:
+            connection.execute(
+                "CREATE TABLE atlas_route_bindings (snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, "
+                "overlay_id TEXT NOT NULL, binding_hash TEXT NOT NULL, association_review_hash TEXT NOT NULL, "
+                "payload_json TEXT NOT NULL, PRIMARY KEY(snapshot_id, route_fact_id, overlay_id))"
+            )
+            connection.execute(
+                "CREATE TRIGGER reject_route_binding BEFORE INSERT ON atlas_route_bindings "
+                "BEGIN SELECT RAISE(ABORT, 'forced binding insert failure'); END"
+            )
+        result = self.route_map_cli("route-map-publish", packet_path, review_path, expect=2)
+        self.assertIn("forced binding insert failure", result.stderr)
+        with sqlite3.connect(self.db) as connection:
+            tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            self.assertNotIn("atlas_reviewed_flows", tables)
+            self.assertNotIn("atlas_flow_reviews", tables)
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM atlas_route_bindings").fetchone()[0], 0)
+
+    def test_route_map_rejects_reserved_content_hash_without_writes(self):
+        _saved, _graph, route, draft_path, packet_path, packet, review_path, review = self.route_map_fixture()
+        before = hashlib.sha256(self.db.read_bytes()).hexdigest()
+
+        draft = json.loads(draft_path.read_text(encoding="utf-8"))
+        draft["content_hash"] = "caller-computed-value"
+        draft_path.write_text(json.dumps(draft, ensure_ascii=True, separators=(",", ":")), encoding="utf-8")
+        prepare = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(draft_path),
+            "--max-tokens", "500000", expect=2,
+        )
+        self.assertIn("must not supply content_hash", prepare.stderr)
+        self.assertEqual(hashlib.sha256(self.db.read_bytes()).hexdigest(), before)
+
+        # Forge every caller-controlled digest so publish reaches packet validation.
+        forged = dict(packet)
+        forged_draft = json.loads(packet["draft"])
+        forged_draft["content_hash"] = "caller-computed-value"
+        forged["draft"] = json.dumps(forged_draft, ensure_ascii=True, separators=(",", ":"))
+        forged["draft_sha256"] = hashlib.sha256(forged["draft"].encode("utf-8")).hexdigest()
+        unsigned = {key: value for key, value in forged.items() if key != "packet_sha256"}
+        forged["packet_sha256"] = hashlib.sha256(json.dumps(
+            unsigned, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+        ).encode("ascii") + b"\n").hexdigest()
+        packet_path.write_text(
+            json.dumps(forged, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n",
+            encoding="ascii",
+        )
+        forged_review = dict(review, packet_sha256=forged["packet_sha256"],
+                             draft_sha256=forged["draft_sha256"])
+        review_path.write_text(json.dumps(forged_review), encoding="utf-8")
+        publish = self.route_map_cli("route-map-publish", packet_path, review_path, expect=2)
+        self.assertIn("must not supply content_hash", publish.stderr)
+        self.assertEqual(hashlib.sha256(self.db.read_bytes()).hexdigest(), before)
+
+    def test_route_map_review_rejects_stale_or_tampered_packet_and_mapped_route(self):
+        _saved, _graph, route, draft_path, packet_path, packet, review_path, _review = self.route_map_fixture()
+        packet_doc = json.loads(packet_path.read_text(encoding="ascii"))
+        packet_doc["draft"] = packet_doc["draft"].replace("selected route", "different route")
+        packet_path.write_text(json.dumps(packet_doc), encoding="ascii")
+        tampered = self.route_map_cli("route-map-review", packet_path, review_path, expect=2)
+        self.assertIn("route-map packet hash is invalid", tampered.stderr)
+
+        included = {item["fact_id"] for field in ("source_snippets", "candidate_snippets")
+                    for item in packet["complete_evidence_packet"][field]}
+        omitted = next(fact for fact in _graph["facts"]
+                       if fact.get("source") and fact["id"] not in included)
+        unsupported_draft = json.loads(packet["draft"])
+        unsupported_draft["reviewed_conclusions"][0]["evidence"].append(
+            {"fact_id": omitted["id"], "source": omitted["source"]},
+        )
+        forged = dict(packet)
+        forged["draft"] = json.dumps(unsupported_draft, ensure_ascii=True, separators=(",", ":"))
+        forged["draft_sha256"] = hashlib.sha256(forged["draft"].encode("utf-8")).hexdigest()
+        forged["claims"] = [{"conclusion_number": 1,
+                              "claim": unsupported_draft["reviewed_conclusions"][0]["claim"],
+                              "evidence": unsupported_draft["reviewed_conclusions"][0]["evidence"]}]
+        unsigned = {key: value for key, value in forged.items() if key != "packet_sha256"}
+        forged["packet_sha256"] = hashlib.sha256(json.dumps(
+            unsigned, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+        ).encode("ascii") + b"\n").hexdigest()
+        packet_path.write_text(json.dumps(forged, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n", encoding="ascii")
+        excluded_citation = self.route_map_cli("route-map-review", packet_path, review_path, expect=2)
+        self.assertIn("citation fact is not included with its exact source", excluded_citation.stderr)
+
+        packet_path.write_text(json.dumps(packet, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n", encoding="ascii")
+        changed = self.repo / "Flow.cs"
+        changed.write_text(changed.read_text(encoding="utf-8") + "// changed after review packet\n", encoding="utf-8")
+        stale = self.route_map_cli("route-map-review", packet_path, review_path, expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale.stderr)
+        git(self.repo, "add", "--", "Flow.cs")
+        self.index()
+        stale_again = self.route_map_cli("route-map-publish", packet_path, review_path, expect=2)
+        self.assertIn("route-map packet is stale", stale_again.stderr)
+
+        # A separate fresh route with one existing accepted link cannot enter this one-open-route path.
+        self.repo = self.repo
+        saved, graph, route = self.evidence_fixture()
+        attached, receipt = self.reviewed_route_map(saved, graph, route, "Pre-mapped route")
+        binding_path, _binding, _association = self.route_binding_document(saved, graph, route, attached, receipt)
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+                 "--input", os.fspath(binding_path))
+        draft = {"overlay_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+                 "extractor_identity": graph["extractor_identity"], "title": "Second map",
+                 "reviewed_conclusions": [{"claim": "This is another route map.",
+                                           "evidence": [{"fact_id": route["id"], "source": route["source"]}]}]}
+        second_draft = self.root / "second-map.json"
+        second_draft.write_text(json.dumps(draft), encoding="utf-8")
+        refused = self.cli("route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                           "--route-fact-id", route["id"], "--draft-file", os.fspath(second_draft),
+                           "--max-tokens", "500000", expect=2)
+        self.assertIn("requires one open route with zero accepted associations", refused.stderr)
 
     def reviewed_route_map(self, saved, graph, route, title="Reviewed route map"):
         overlay = {

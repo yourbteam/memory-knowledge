@@ -1,0 +1,33 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "80f6efb64dbbdcd0b4367696be6d0ec0922e0916110b62308ca7c7c915c840ff",
+  "decision": "accepted",
+  "reviewer_identity": "Independent Sol semantic answer reviewer /root/sol_review_linked_answer",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T18:17:00.818933+00:00",
+  "claim_reviews": [
+    {
+      "claim_number": 1,
+      "disposition": "covered",
+      "basis": "Relevant to the exact question about fields unchanged by the false link branch. Controller cited line 96 marks POST linked. Handler lines 725-729 put both order.UserId and order.Updated assignments solely inside if(command.LinkUser). The draft explicitly names false and both unassigned fields, confined to this branch rather than promising unrelated state effects cannot occur."
+    },
+    {
+      "claim_number": 2,
+      "disposition": "covered",
+      "basis": "Relevant prerequisites and continuing database reads explain when the subsequent effects may occur. Handler lines 715-718 require authentication and a non-null currentUser.UserId before lines 720-723 load the order. After the link conditional, lines 731-732 load that user and call ResolveEventTypeIdAsync for \"payment\". The corrected first sentence now includes authentication, non-null user ID and order loading; the following user/payment sentence includes the remaining relevant subfacts. The v1 coverage omission is fully corrected."
+    },
+    {
+      "claim_number": 3,
+      "disposition": "covered",
+      "basis": "Relevant to possible event-sync additions despite false. Lines 733-749 require a present payment event type ID and no matching EventSync before adding a row. The assignments populate user ID, email, event type ID, command.OrderUuid, order.Total formatted 0.00, and both timestamps from DateTime.UtcNow. The draft includes both guards and every listed payload/timestamp subfact. It uses \"matching\" as the claim does and makes no assertion about exact matching semantics or helper implementation."
+    },
+    {
+      "claim_number": 4,
+      "disposition": "covered",
+      "basis": "Relevant to database effects regardless of whether an EventSync row is added. Cited line 751 awaits SaveChangesAsync after both event-sync conditionals. The draft explicitly states the awaited save occurs whether or not a row was added, describing this reached source path without claiming successful runtime persistence or execution beyond an earlier exception."
+    }
+  ],
+  "unsupported_additions": "None found. The draft remains in the handler-level LinkUser=false scope and does not assert request JSON semantics, unseen helper implementation, successful database persistence, or source-independent runtime behavior.",
+  "static_source_limitations": "Semantic review is of exact hash-verified static source and all bound numbered claims. It is not a runtime request/database test. Loading or helper calls can fail before save; \"then awaits\" describes the handler path that reaches the save line, matching claim 4. Route/request semantics and helper internals are excluded by the frozen assignment.",
+  "review_basis": "All four claims are relevant to the exact handler-level question and all their relevant supported subfacts are included in the corrected draft. Hashes and cited span offsets were verified against the live source; no unsupported additions were found."
+}

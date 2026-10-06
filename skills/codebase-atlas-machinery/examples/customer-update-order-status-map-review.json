@@ -1,0 +1,35 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "2d50b72ec9d2b29404488cfaab8506c2b2098ed6d0d341971ec8230cbbfd0bf8",
+  "evidence_sha256": "63088b9ab28a6f33d354c4668b137d1db2a23cd07b32800c31f4baa8affe07b5",
+  "draft_sha256": "a1f83b7fffccd4cae23727d96aff2f1c0cb3877d1d9f943e3925aa53e028ab5c",
+  "reviewer_identity": "independent Sol status-update v2 semantic review /root/sol_validate_on_demand_assignment",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T18:07:42.208578Z",
+  "decision": "accepted",
+  "assignment_review": {
+    "decision": "accepted",
+    "basis": "The full v2 packet contains the same selected route and complete source evidence as the reviewed first draft. Its sole conclusion change corrects the slash-trimming source expression. The map covers requested status assignment, UTC timestamp, awaited save ordering, event-link conditions and construction, and all three URL constructor values, without adding omitted helper policies or JSON field semantics."
+  },
+  "conclusion_reviews": [
+    {
+      "conclusion_number": 1,
+      "decision": "accepted",
+      "basis": "The exact HttpPost action source matches the selected updateStatus route, and the complete controller method constructs the command from orderId and request.StatusId before calling the named Handle receiver. The cited AddScoped registration and handler declaration agree syntactically; the explicit unresolved-binding caveat accurately prevents a runtime-dispatch claim."
+    },
+    {
+      "conclusion_number": 2,
+      "decision": "accepted",
+      "basis": "The full cited Handle source assigns command.StatusId to order.StatusId and DateTime.UtcNow to order.Updated, then awaits dbContext.SaveChangesAsync(cancellationToken). Only after that await does it initialize eventLink and construct the response, exactly supporting the stated source ordering."
+    },
+    {
+      "conclusion_number": 3,
+      "decision": "accepted",
+      "basis": "The corrected _options.PublicAppBaseUrl.TrimEnd('/') expression now matches the cited source. That body initializes eventLink to null and populates it only for StatusId 6 with both slot id and date present, using the image path and yyyy-MM-dd date. The response passes eventLink, ResolveHomepageLink(tour,_options) return value, and raw tour.HomepageUrl successively. No resolver implementation or response JSON names are inferred."
+    }
+  ],
+  "route_association_review": {
+    "decision": "accepted",
+    "basis": "The actual selected route fact is cited using its HttpPost updateStatus span rather than the duplicated auxiliary controller-prefix snippet. The controller command and matching registration/declaration candidates support association with this route-specific handler map, and the draft preserves lexical-candidate limits rather than asserting compiler or runtime resolution."
+  }
+}

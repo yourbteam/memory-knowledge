@@ -1,0 +1,38 @@
+{
+  "measurement_schema_version": 1,
+  "route_fact_id": "87fdf879555b1bcc2cd01b6c",
+  "question_artifact": "customer-linked-order-question.txt",
+  "source_only_baseline": {
+    "artifact": "customer-linked-order-direct-source-baseline.json",
+    "task_command_count": 8,
+    "raw_task_stdout_bytes": 13343,
+    "elapsed_time": "unavailable",
+    "qualification": "Source answer omitted the 0.00 total formatting retained in the frozen rubric; historic full checkout byte identity was not captured."
+  },
+  "atlas_map_build": {
+    "run_count": 1,
+    "observed_cli_stage_stdout_and_stderr_bytes": 54823,
+    "observed_cli_stage_elapsed_ms": 2926,
+    "stage_count": 7,
+    "scope": "Includes discarded draft runs where present; excludes model prompt/output telemetry and independent reviewer tool output."
+  },
+  "atlas_map_first_answer": {
+    "artifact": "customer-linked-order-answer.txt",
+    "semantic_review_artifact": "customer-linked-order-answer-review.json",
+    "discover_route_find_and_source_stdout_bytes": 17253,
+    "answer_check_packet_stdout_bytes_by_attempt": [
+      4676,
+      4790
+    ],
+    "observed_stdout_bytes_to_accepted_draft": 26719,
+    "repository_source_files_opened": 0,
+    "provider_model_tokens": "unavailable_without_provider_telemetry"
+  },
+  "observed_answer_stdout_difference_vs_source_baseline_bytes": 13376,
+  "comparison_limits": [
+    "Raw UTF-8 stdout bytes are an output-volume proxy, not model tokens or total prompt context.",
+    "Setup instructions, independent reviewer tool output, and model drafting/review time were not measured comparably.",
+    "Direct-source task elapsed time was unavailable, so build/use time cannot be compared end to end.",
+    "Atlas map-build cost is additional to the mapped-answer output; no amortized token-saving claim follows from three questions."
+  ]
+}

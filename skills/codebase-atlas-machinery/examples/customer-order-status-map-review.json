@@ -1,0 +1,41 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "4476852cc064df9625b735c4c269e083596e26e4aa9880f1b7d728db95577c48",
+  "evidence_sha256": "8251c4c08c12cba477f663d46c5179dca20be3409d786231a10a11ec765f63a3",
+  "draft_sha256": "8811000203533d7bc81250ec24404d698a5d7a6e063354f02eaf53cb0d793ea1",
+  "reviewer_identity": "/root/sol_order_status_draft_review",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T15:47:09Z",
+  "provenance_note": "Identity and model are unauthenticated audit labels supplied from the configured subagent; Atlas does not authenticate them.",
+  "assignment_review": {
+    "decision": "accepted",
+    "basis": "The assignment selects exactly route fact fa7a66d829930b90af2b56e8, GET api/customer/{orderId}/status with action CheckOrderStatus, against the matching snapshot and extractor. The complete evidence packet includes one candidate bundle and omits none; current draft bytes and every cited saved source match the packet. Assignment suitability is independent of the per-conclusion decisions below."
+  },
+  "conclusion_reviews": [
+    {
+      "conclusion_number": 1,
+      "decision": "accepted",
+      "basis": "Saved route_action fa7a66d829930b90af2b56e8 records GET api/customer/{orderId}/status and action CheckOrderStatus. Its exact saved source is CustomerCheckoutController.cs line 84, containing [HttpGet(\"{orderId}/status\")]; the full route is recorded metadata, not claimed to be literal text inside that span. The controller route source was not substituted as the citation."
+    },
+    {
+      "conclusion_number": 2,
+      "decision": "accepted",
+      "basis": "Authorization fact 25b6f6861ac758652df672e1 belongs to CustomerCheckoutController and its exact line-11 span contains [Authorize(AuthenticationSchemes = PassportAuthenticationExtensions.SchemeName)]. The conclusion is limited to the observed attribute and expression; it does not infer a scheme value or effective authorization behavior."
+    },
+    {
+      "conclusion_number": 3,
+      "decision": "accepted",
+      "basis": "Method fact 6f1b10da4bb40700d5a2c8ee contains the exact CheckOrderStatus signature and return statement, and invocation fact c01eb1350260d0db6d7e1878 contains the specified receiver, new GetCustomerOrderStatusQuery(orderId), and cancellationToken argument. Receiver candidates are marked non-traversable and do not resolve runtime binding; the conclusion preserves that limitation."
+    },
+    {
+      "conclusion_number": 4,
+      "decision": "accepted",
+      "basis": "Type fact 60dc2378748dd31c39bb82c7 identifies the candidate GetCustomerOrderStatusQueryHandler class. Method fact df0ff9ac1e0740f825583170 contains the await of LoadOwnedOrderAsync with the stated arguments and subsequent response construction with order.StatusId, order.Closed, and the stated ResolveHomepageLink call in order. Neither helper body is included. The packet marks implementation candidates non-traversable, and the conclusion makes no runtime-binding or helper-behavior assertion."
+    }
+  ],
+  "route_association_review": {
+    "decision": "accepted",
+    "basis": "The draft directly cites selected route fact fa7a66d829930b90af2b56e8 and describes its controller authorization, CheckOrderStatus action, and the explicitly qualified handler candidate in the same complete packet. No other route is substituted. The permanent title names the exact GET route. This associates a reviewed lexical map with the route without claiming runtime binding."
+  },
+  "decision": "accepted"
+}

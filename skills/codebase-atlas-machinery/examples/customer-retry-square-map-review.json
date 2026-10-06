@@ -1,0 +1,40 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "3be32a23aeb7b0b759ac51512b5574d5ba3d4914f1a5bc147d0a64c8f3a56e1a",
+  "evidence_sha256": "b2810f8b14ebba246384212cdde5663fe160ae86997d5c2c9297e37d70ea02b1",
+  "draft_sha256": "a15a75b4eeccaab3cac0e18c2a7506dfb011c20b190cecdf7dd6c1234f9e6650",
+  "reviewer_identity": "Independent Sol reviewer /root/sol_review_linked_map, corrected Square packet v2",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T18:12:04.085596+00:00",
+  "decision": "accepted",
+  "assignment_review": {
+    "decision": "accepted",
+    "basis": "The entire replacement packet has one selected GET api/customer/{orderId}/retrySquareTransaction route, complete candidate selection with zero omissions, the complete action and candidate handler method, and four numbered conclusions. Its scope remains direct handler-source behavior: awaited loader call, missing-configuration constructor arguments, payment-link construction, and configured response arguments. It explicitly withholds absent response defaults and resolver fallback. This is an appropriate evidence-limited map of the frozen question, without claims of runtime execution."
+  },
+  "conclusion_reviews": [
+    {
+      "conclusion_number": 1,
+      "decision": "accepted",
+      "basis": "The exact route attribute and complete action at CustomerCheckoutController.cs:78-82 show the selected GET route and the return of Handle(new RetryCustomerSquareTransactionQuery(orderId), cancellationToken). The cited injection and AddScoped registration show the same service/query/response type syntax and candidate handler. The complete packet marks the receiver and implementation relationships unresolved and non-traversable; the conclusion expressly preserves this and therefore does not claim compiler or runtime binding."
+    },
+    {
+      "conclusion_number": 2,
+      "decision": "accepted",
+      "basis": "The corrected wording now states only what the entire cited candidate Handle body at CustomerCheckoutHandlers.cs:659-670 shows: await CustomerCheckoutSupport.LoadOwnedOrderAsync(dbContext, currentUser, query.OrderUuid, cancellationToken), assign its result to order, then check Square configuration. It no longer calls the returned object an owned order or asserts ownership enforcement. The source guard uses IsNullOrWhiteSpace for AppId and CallbackUrl with OR, and the guarded return has exactly 0, null, null, and \"Square is not configured in the new API.\" as arguments. No helper-body behavior is inferred."
+    },
+    {
+      "conclusion_number": 3,
+      "decision": "accepted",
+      "basis": "The cited candidate method explicitly multiplies order.Total by 100, calls Math.Round with MidpointRounding.AwayFromZero, casts the rounded value to int, and formats it with CultureInfo.InvariantCulture. Its interpolated data contains that amount, USD, configured CallbackUrl followed by /customer/callback, configured AppId for client_id, OrderID: followed by order.Uuid, and CREDIT_CARD as the sole supported tender. The return uses square-commerce-v1://payment/create?data= plus Uri.EscapeDataString(data). Every construction subfact is visible; no successful Square processing is asserted."
+    },
+    {
+      "conclusion_number": 4,
+      "decision": "accepted",
+      "basis": "The configured return in the exact cited Handle source constructs CustomerSquareRetryResponse with 1, the payment deep link, and ResolveHomepageLink(order.TourTimeSlot!.Tour!, _options). The complete packet includes neither the response type declaration nor that resolver implementation. Thus the claim correctly identifies the success-branch arguments and explicitly leaves the default error and helper fallback unestablished. It does not infer response JSON field names or an omitted helper result."
+    }
+  ],
+  "route_association_review": {
+    "decision": "accepted",
+    "basis": "The packet's controller route anchor api/customer and selected action attribute {orderId}/retrySquareTransaction identify exactly the GET route in the binding. The action invokes the query handler with RetryCustomerSquareTransactionQuery(orderId), its included constructor-parameter type syntax matches the scoped-registration service syntax, and that registration names the candidate implementation with the included Handle method for the same query. The claims consistently preserve these as lexical source associations, without claiming runtime dependency-injection selection. The correction removes the only unsupported ownership subclaim; this source-level map is associated with the selected route."
+  }
+}

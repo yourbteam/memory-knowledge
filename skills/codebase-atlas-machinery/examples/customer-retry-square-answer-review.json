@@ -1,0 +1,33 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "3df833acdcbef49f79b5caee97a0427330efcb281f83e72ba3b030e0db63607c",
+  "decision": "accepted",
+  "reviewer_identity": "Independent Sol reviewer /root/sol_review_square_answer; corrected Square answer v2 semantic review",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T18:19:06.324275+00:00",
+  "basis": "Every relevant supported configuration, amount, callback, payment-link, and response-construction subfact is covered. The draft reports the helper invocation without asserting ownership behavior, uses positional response construction without JSON member-name assertions, and supplies no inferred default error value. Its explicit three-argument configured constructor establishes no explicit fourth error argument. No unsupported addition was found.",
+  "claim_reviews": [
+    {
+      "claim_number": 1,
+      "disposition": "not_relevant",
+      "basis": "Every cited span was independently checked against the saved snippets and current hashed files: GET attribute, query-construction action body, injection syntax, scoped-registration syntax, receiver invocation, and candidate Handle body all match. The route-delegation and unresolved-binding analysis is not needed to answer the exact question about missing configuration and construction of amount, callback, payment link, and response. The draft nevertheless includes supported delegation syntax and explicitly retains unresolved receiver/cross-file type binding; it makes no compiler/runtime binding assertion."
+    },
+    {
+      "claim_number": 2,
+      "disposition": "covered",
+      "basis": "The cited Handle body establishes awaited CustomerCheckoutSupport.LoadOwnedOrderAsync(dbContext, currentUser, query.OrderUuid, cancellationToken), assignment to order before checking configuration, blank AppId or CallbackUrl via IsNullOrWhiteSpace, and CustomerSquareRetryResponse(0, null, null, the exact configuration error). The draft includes the exact awaited helper invocation and ordering, the either-blank condition, and the four positional constructor arguments with exact error text. The helper name is quoted as invocation syntax, without ownership-enforcement inference from its omitted body."
+    },
+    {
+      "claim_number": 3,
+      "disposition": "covered",
+      "basis": "The cited Handle body and draft both contain every relevant payment-construction subfact: order.Total times 100, midpoint AwayFromZero rounding, int conversion, invariant formatting, the formatted amount in the payment data, USD, CallbackUrl plus /customer/callback, AppId as client_id, OrderID: plus order UUID, CREDIT_CARD, and URI escaping of the complete data string into the square-commerce-v1://payment/create deep link. Invariant formatting supplies the string amount representation; no alternate monetary conversion, callback fallback, or tender is asserted."
+    },
+    {
+      "claim_number": 4,
+      "disposition": "covered",
+      "basis": "The exact cited return call has three supplied arguments: 1, the URI-escaped Square deep link, and CustomerCheckoutSupport.ResolveHomepageLink(order.TourTimeSlot!.Tour!, _options). The draft reproduces those arguments and explicitly says with three arguments, covering the absence of an explicit fourth error argument. It does not assert any default-null error, JSON response names, resolver implementation, or resolver fallback behavior. The map limitations are respected by making no assertion on those omitted definitions."
+    }
+  ],
+  "unsupported_additions": [],
+  "validation_scope": "The separate semantic review determines truth, relevance, coverage, and unsupported additions. Atlas answer-check --review subsequently checks freshness, exact packet binding, and accepted-review shape; it does not independently judge semantic truth or authenticate reviewer labels."
+}

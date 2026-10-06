@@ -1,0 +1,124 @@
+{
+  "overlay_schema_version": 1,
+  "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a",
+  "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+  "title": "Linked order with LinkUser false",
+  "reviewed_conclusions": [
+    {
+      "claim": "For the selected POST action marked [HttpPost(\"linked\")], the handler assigns order.UserId and order.Updated only inside if (command.LinkUser); when LinkUser is false, that branch leaves both fields untouched.",
+      "evidence": [
+        {
+          "fact_id": "87fdf879555b1bcc2cd01b6c",
+          "source": {
+            "path": "src/Taggable.Api/Controllers/CustomerCheckoutController.cs",
+            "sha256": "2a6ec5dc3ffdd72a1547f444f8e8f210919352ebbb963543027388488a66e38d",
+            "span": {
+              "end_column": 25,
+              "end_line": 96,
+              "end_offset": 4978,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 96,
+              "start_offset": 4958
+            }
+          }
+        },
+        {
+          "fact_id": "c868b134c68346d725d13d04",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+            "sha256": "30a73d1b00a54a684d17fccbb39bed00a3d05f668c1b9ddda8bc0d840777bcd4",
+            "span": {
+              "end_column": 6,
+              "end_line": 753,
+              "end_offset": 34435,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 713,
+              "start_offset": 32346
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "On the handler path, authentication and a non-null current user ID are required before the order is loaded; after the link conditional, the handler loads that user and calls ResolveEventTypeIdAsync for the payment event type.",
+      "evidence": [
+        {
+          "fact_id": "c868b134c68346d725d13d04",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+            "sha256": "30a73d1b00a54a684d17fccbb39bed00a3d05f668c1b9ddda8bc0d840777bcd4",
+            "span": {
+              "end_column": 6,
+              "end_line": 753,
+              "end_offset": 34435,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 713,
+              "start_offset": 32346
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "If the payment event type ID is present and no matching event-sync entry is found, the handler adds an EventSync with the user ID, email, and event type ID; its parameters include the order UUID and order total formatted as 0.00, and CreatedAt and UpdatedAt are set to DateTime.UtcNow.",
+      "evidence": [
+        {
+          "fact_id": "c868b134c68346d725d13d04",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+            "sha256": "30a73d1b00a54a684d17fccbb39bed00a3d05f668c1b9ddda8bc0d840777bcd4",
+            "span": {
+              "end_column": 6,
+              "end_line": 753,
+              "end_offset": 34435,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 713,
+              "start_offset": 32346
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claim": "After the event-sync checks, the handler awaits SaveChangesAsync on the path that reaches that line, whether or not an event-sync row was added.",
+      "evidence": [
+        {
+          "fact_id": "c868b134c68346d725d13d04",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+            "sha256": "30a73d1b00a54a684d17fccbb39bed00a3d05f668c1b9ddda8bc0d840777bcd4",
+            "span": {
+              "end_column": 6,
+              "end_line": 753,
+              "end_offset": 34435,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 5,
+              "start_line": 713,
+              "start_offset": 32346
+            }
+          }
+        },
+        {
+          "fact_id": "c27487d2eb7410ef3234027d",
+          "source": {
+            "path": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+            "sha256": "30a73d1b00a54a684d17fccbb39bed00a3d05f668c1b9ddda8bc0d840777bcd4",
+            "span": {
+              "end_column": 60,
+              "end_line": 751,
+              "end_offset": 34236,
+              "offset_unit": "unicode_codepoint",
+              "start_column": 15,
+              "start_line": 751,
+              "start_offset": 34191
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

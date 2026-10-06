@@ -1,0 +1,116 @@
+{
+  "question": "For POST api/customer/{orderId}/updateStatus, what is saved before the response, when is eventLink populated, and which URL values are passed to the response constructor?",
+  "checkout": {
+    "head_start_and_end": "64c55c8fa5112adb650074aa473ac9bffc9266fe",
+    "working_tree_status_start_and_end": " M AGENTS.md",
+    "tracked_agents_index_start_and_end": "100644 e4f53ae1a54935fe84207282242041dda456211d 0\\tAGENTS.md",
+    "agents_working_file": {
+      "start_utf8_bytes": 74528,
+      "end_utf8_bytes": 74528,
+      "end_sha256": "beb39434c7abadcb652587f5b59abbcbe7a58dd37c1fca45b85d426770487c8a",
+      "start_sha256": "not separately captured; read-only inspection throughout and unchanged status/length"
+    }
+  },
+  "answer": {
+    "saved_before_response": "The handler loads the owned order, sets order.StatusId to command.StatusId and order.Updated to DateTime.UtcNow, then awaits dbContext.SaveChangesAsync(cancellationToken). It constructs the response only afterward.",
+    "eventLink_condition": "eventLink starts null and is populated only when command.StatusId == 6 and both order.TourTimeSlotsId and order.TimeSlotDate have values. It is PublicAppBaseUrl with trailing slashes removed, followed by /customer/images/{timeslotId}/{date formatted yyyy-MM-dd}.",
+    "response_constructor_url_values": [
+      {
+        "parameter": "EventLink",
+        "value": "eventLink described above; otherwise null"
+      },
+      {
+        "parameter": "SidLink",
+        "value": "CustomerCheckoutSupport.ResolveHomepageLink(order.TourTimeSlot.Tour, options)"
+      },
+      {
+        "parameter": "HomepageUrl",
+        "value": "order.TourTimeSlot.Tour.HomepageUrl directly"
+      }
+    ],
+    "homepage_link_resolution": "ResolveHomepageLink returns Tour.HomepageUrl when nonblank; otherwise it returns PublicAppBaseUrl.TrimEnd('/') + /customer/collections, using https://app.taggable.com when PublicAppBaseUrl is blank."
+  },
+  "citations": [
+    {
+      "file": "src/Taggable.Api/Controllers/CustomerCheckoutController.cs",
+      "lines": "72-75",
+      "supports": "POST route passes request.StatusId to the update command handler."
+    },
+    {
+      "file": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+      "lines": "601-622",
+      "supports": "Order mutation, SaveChanges call, eventLink condition and construction, then response constructor arguments."
+    },
+    {
+      "file": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs",
+      "lines": "1020-1029",
+      "supports": "SidLink homepage URL fallback behavior."
+    },
+    {
+      "file": "src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutContracts.cs",
+      "lines": "85-93",
+      "supports": "Response fields and their JSON names."
+    }
+  ],
+  "uncertainties": [
+    "This is a static-source finding. SaveChangesAsync is invoked before response construction, but no runtime/database transaction behavior was exercised, per instruction."
+  ],
+  "accounting": {
+    "mandatory_setup_bytes": [
+      {
+        "artifact": "target AGENTS.md working bytes",
+        "utf8_bytes": 74528
+      },
+      {
+        "artifact": "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+        "utf8_bytes": 77208
+      },
+      {
+        "artifact": "git rev-parse HEAD output",
+        "utf8_bytes": 41
+      },
+      {
+        "artifact": "git status --short output",
+        "utf8_bytes": 13
+      },
+      {
+        "artifact": "git ls-files --stage -- AGENTS.md output",
+        "utf8_bytes": 60
+      }
+    ],
+    "task_source_commands": [
+      {
+        "command": "rg --files -g 'AGENTS.md' -g '!node_modules' -g '!vendor' && rg -n --glob '!node_modules/**' --glob '!vendor/**' 'updateStatus|api/customer' .",
+        "exit": 0,
+        "stdout_utf8_bytes": 2147,
+        "stderr_utf8_bytes": 0
+      },
+      {
+        "command": "nl -ba src/Taggable.Api/Controllers/CustomerCheckoutController.cs | sed -n '1,150p'; rg -n 'eventLink|EventLink|UpdateStatus.*Response|new .*Response' src",
+        "exit": 0,
+        "stdout_utf8_bytes": 38397,
+        "stderr_utf8_bytes": 0
+      },
+      {
+        "command": "nl -ba src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs | sed -n '560,635p'; nl -ba src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutContracts.cs | sed -n '78,96p'; rg -n 'class UpdateCustomerOrderStatusCommandHandler|UpdateCustomerOrderStatusCommandHandler|UpdateCustomerOrderStatusCommand|CustomerUpdateOrderStatusResponse' src/Taggable.Api",
+        "exit": 0,
+        "stdout_utf8_bytes": 7244,
+        "stderr_utf8_bytes": 0
+      },
+      {
+        "command": "rg -n 'ResolveHomepageLink' src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs; nl -ba src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs | sed -n '20,80p'; nl -ba src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs | sed -n '594,624p'",
+        "exit": 0,
+        "stdout_utf8_bytes": 6219,
+        "stderr_utf8_bytes": 0
+      },
+      {
+        "command": "nl -ba src/Taggable.Api/Application/CustomerCheckout/CustomerCheckoutHandlers.cs | sed -n '1008,1045p'; git status --short; git rev-parse HEAD; git ls-files --stage -- AGENTS.md; python3 -c 'from pathlib import Path; import hashlib; p=Path(\"AGENTS.md\"); b=p.read_bytes(); print(\"AGENTS.md bytes=%d sha256=%s\"%(len(b),hashlib.sha256(b).hexdigest()))'",
+        "exit": 0,
+        "stdout_utf8_bytes": 1382,
+        "stderr_utf8_bytes": 0
+      }
+    ],
+    "setup_capture": "Initial setup wrapper ran git rev-parse HEAD, git status --short, git ls-files --stage -- AGENTS.md, cat AGENTS.md, and cat /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; each exited 0 with stderr 0 bytes. The wrapper's combined JSON display was truncated by the tool, so its aggregate returned byte count is unavailable. The nested stdout byte counts are recorded above. No command errors occurred.",
+    "limits": "Six task retrieval tool calls total including final end-state check; elapsed time not exposed. No edits to checkout, tests, internet, Atlas inspection, or database access. Report saved under /private/tmp as requested."
+  }
+}

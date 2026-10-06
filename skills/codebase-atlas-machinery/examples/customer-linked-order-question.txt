@@ -1,0 +1,1 @@
+For POST api/customer/linked, when the handler receives command.LinkUser=false, which order fields remain unchanged by the link branch, and which event-sync/database effects may still occur?

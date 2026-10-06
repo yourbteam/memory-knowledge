@@ -843,6 +843,386 @@ def attach_route_binding(db_arg: str, expected_snapshot_id: str, input_path: str
         connection.close()
 
 
+def _read_json_file(path: str, label: str) -> tuple[dict[str, object], bytes]:
+    try:
+        raw = Path(path).read_bytes()
+        value = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AtlasError(f"cannot read {label} JSON {path}: {exc}") from exc
+    if not isinstance(value, dict):
+        raise AtlasError(f"{label} JSON must contain an object")
+    return value, raw
+
+
+def _route_map_packet_digest(packet: dict[str, object]) -> str:
+    unsigned = {key: value for key, value in packet.items() if key != "packet_sha256"}
+    return hashlib.sha256(_canonical_json(unsigned) + b"\n").hexdigest()
+
+
+def _route_map_draft(packet: dict[str, object]) -> tuple[dict[str, object], bytes]:
+    text = packet.get("draft")
+    if not isinstance(text, str):
+        raise AtlasError("route-map packet must contain the exact draft text")
+    raw = text.encode("utf-8")
+    if hashlib.sha256(raw).hexdigest() != packet.get("draft_sha256"):
+        raise AtlasError("route-map draft hash does not match the exact draft text")
+    try:
+        draft = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise AtlasError(f"route-map draft is not valid JSON: {exc}") from exc
+    if not isinstance(draft, dict):
+        raise AtlasError("route-map draft must contain an object")
+    claims = draft.get("reviewed_conclusions")
+    if not isinstance(claims, list) or not claims:
+        raise AtlasError("route-map draft must contain at least one reviewed conclusion")
+    expected_claims = [
+        {"conclusion_number": index, "claim": item.get("claim"), "evidence": item.get("evidence")}
+        for index, item in enumerate(claims, start=1) if isinstance(item, dict)
+    ]
+    if len(expected_claims) != len(claims) or packet.get("claims") != expected_claims:
+        raise AtlasError("route-map packet claim list does not exactly match the complete draft")
+    return draft, raw
+
+
+def _route_map_validate_packet(
+    packet: dict[str, object], db_arg: str, repo_arg: str,
+    allow_existing_overlay_id: str | None = None,
+) -> tuple[dict[str, object], dict[str, object], dict[str, object], bytes]:
+    if packet.get("packet_schema_version") != 1 or packet.get("result") != "route_map_review_required":
+        raise AtlasError("unsupported route-map review packet")
+    if _route_map_packet_digest(packet) != packet.get("packet_sha256"):
+        raise AtlasError("route-map packet hash is invalid or the packet was changed")
+    binding = packet.get("binding")
+    evidence = packet.get("complete_evidence_packet")
+    budget = packet.get("budget")
+    if not isinstance(binding, dict) or not isinstance(evidence, dict) or not isinstance(budget, dict):
+        raise AtlasError("route-map packet is missing its binding, complete evidence, or budget")
+    route_fact_id = binding.get("route_fact_id")
+    max_bytes = budget.get("max_stdout_bytes")
+    if not isinstance(route_fact_id, str) or not route_fact_id or not isinstance(max_bytes, int) or max_bytes < 1:
+        raise AtlasError("route-map packet route or evidence budget is invalid")
+    if evidence.get("selection", {}).get("complete") is not True or evidence.get("selection", {}).get("omitted_candidate_bundles") != 0:
+        raise AtlasError("route-map review requires the complete evidence packet; increase --max-tokens and prepare again")
+    evidence_bytes = _canonical_json(evidence) + b"\n"
+    evidence_hash = hashlib.sha256(evidence_bytes).hexdigest()
+    if (evidence_hash != packet.get("evidence_sha256") or evidence.get("snapshot_id") != binding.get("snapshot_id")
+            or evidence.get("extractor_identity") != binding.get("extractor_identity")
+            or evidence.get("route", {}).get("fact_id") != route_fact_id):
+        raise AtlasError("route-map evidence digest or identity does not match its packet binding")
+    live_evidence, live_bytes, status = evidence_pack(
+        db_arg, repo_arg, route_fact_id, max_bytes,
+    )
+    if status != 0 or live_evidence.get("selection", {}).get("complete") is not True:
+        raise AtlasError("current route evidence is incomplete; no review or publication is allowed")
+    if live_bytes != evidence_bytes:
+        raise AtlasError("route-map packet is stale: current complete route evidence differs from the reviewed packet")
+    snapshot, _snapshots, extractor_identity, _live = _current_route_snapshot(Path(db_arg).expanduser().absolute(), repo_arg)
+    if (snapshot.get("snapshot_id") != binding.get("snapshot_id")
+            or extractor_identity != binding.get("extractor_identity")):
+        raise AtlasError("route-map packet is stale against the current snapshot or extractor")
+    route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
+    if route_status.get("result") != "unmapped":
+        existing_overlay = route_status.get("association", {}).get("binding", {}).get("overlay_id")
+        if not (allow_existing_overlay_id is not None and route_status.get("result") == "fresh"
+                and existing_overlay == allow_existing_overlay_id):
+            raise AtlasError("route-map workflow requires one open route with zero accepted associations")
+    draft, draft_bytes = _route_map_draft(packet)
+    if "content_hash" in draft:
+        raise AtlasError("route-map draft must not supply content_hash; it is computed canonically")
+    if draft.get("snapshot_id") != binding.get("snapshot_id") or draft.get("extractor_identity") != binding.get("extractor_identity"):
+        raise AtlasError("route-map draft snapshot or extractor does not match its packet")
+    _validate_reviewed_flow(snapshot, draft)
+    graph = snapshot.get("source_graph", {})
+    facts = {fact.get("id"): fact for fact in graph.get("facts", []) if isinstance(fact, dict)}
+    route_fact = facts.get(route_fact_id)
+    if not isinstance(route_fact, dict) or route_fact.get("kind") != "route_action":
+        raise AtlasError("route-map packet route_fact_id is not one current route_action fact")
+    packet_sources: dict[str, set[bytes]] = {}
+    for field in ("source_snippets", "candidate_snippets"):
+        snippets = evidence.get(field)
+        if not isinstance(snippets, list):
+            raise AtlasError(f"route-map evidence {field} must be a list")
+        for snippet in snippets:
+            if not isinstance(snippet, dict) or not isinstance(snippet.get("fact_id"), str):
+                raise AtlasError(f"route-map evidence {field} contains a malformed source fact")
+            source = {key: snippet.get(key) for key in ("path", "sha256", "span")}
+            packet_sources.setdefault(snippet["fact_id"], set()).add(_canonical_json(source))
+    graph_facts = graph.get("facts", [])
+    for conclusion in draft.get("reviewed_conclusions", []):
+        for citation in conclusion.get("evidence", []):
+            fact_id = citation.get("fact_id")
+            matches = [fact for fact in graph_facts if fact.get("id") == fact_id]
+            if len(matches) != 1:
+                raise AtlasError(f"route-map citation fact must resolve to one saved fact: {fact_id}")
+            source = matches[0].get("source")
+            if not isinstance(source, dict) or citation.get("source") != source:
+                raise AtlasError(f"route-map citation source does not exactly match saved fact {fact_id}")
+            if _canonical_json(source) not in packet_sources.get(str(fact_id), set()):
+                raise AtlasError(f"route-map citation fact is not included with its exact source in the complete evidence packet: {fact_id}")
+    if not any(any(citation.get("fact_id") == route_fact_id for citation in conclusion.get("evidence", []))
+               for conclusion in draft.get("reviewed_conclusions", []) if isinstance(conclusion, dict)):
+        raise AtlasError("route-map draft must cite the selected route fact in at least one conclusion")
+    return snapshot, draft, route_fact, draft_bytes
+
+
+def _validate_route_map_review(review: dict[str, object], packet: dict[str, object]) -> dict[str, object]:
+    if review.get("review_schema_version") != 1:
+        raise AtlasError("unsupported route-map independent review schema version")
+    if review.get("packet_sha256") != packet.get("packet_sha256"):
+        raise AtlasError("route-map review does not match the exact complete-evidence/draft packet")
+    if review.get("evidence_sha256") != packet.get("evidence_sha256"):
+        raise AtlasError("route-map review evidence_sha256 does not match the complete evidence packet")
+    if review.get("draft_sha256") != packet.get("draft_sha256"):
+        raise AtlasError("route-map review draft_sha256 does not match the exact Luna draft")
+    for field in ("reviewer_identity", "reviewer_model"):
+        value = review.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise AtlasError(f"route-map review requires nonempty {field} provenance label")
+    if review.get("reviewer_model") != "GPT-6.1 Sol High":
+        raise AtlasError("route-map review reviewer_model label must be exactly 'GPT-6.1 Sol High'")
+    timestamp = review.get("reviewed_at")
+    if not isinstance(timestamp, str):
+        raise AtlasError("route-map review reviewed_at must be an ISO timestamp with timezone")
+    try:
+        parsed = dt.datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise AtlasError("route-map review reviewed_at must be an ISO timestamp with timezone") from exc
+    if parsed.tzinfo is None:
+        raise AtlasError("route-map review reviewed_at must include a timezone")
+    assignment = review.get("assignment_review")
+    association = review.get("route_association_review")
+    if not isinstance(assignment, dict) or not isinstance(association, dict):
+        raise AtlasError("route-map review must include independent assignment and route-association decisions")
+    if assignment.get("decision") not in {"accepted", "rejected"}:
+        raise AtlasError("assignment_review decision must be accepted or rejected")
+    if association.get("decision") not in {"accepted", "rejected"}:
+        raise AtlasError("route_association_review decision must be accepted or rejected")
+    for label, value in (("assignment_review", assignment), ("route_association_review", association)):
+        basis = value.get("basis")
+        if not isinstance(basis, str) or len(basis.strip()) < 20 or len(basis) > 2000:
+            raise AtlasError(f"{label} basis must explain the decision in 20 to 2000 characters")
+    claims = packet.get("claims")
+    reviews = review.get("conclusion_reviews")
+    if not isinstance(claims, list) or not isinstance(reviews, list) or len(reviews) != len(claims):
+        raise AtlasError("route-map review must contain one ordered decision for every draft conclusion")
+    accepted_claim_reviews = True
+    for index, value in enumerate(reviews, start=1):
+        if not isinstance(value, dict) or value.get("conclusion_number") != index:
+            raise AtlasError(f"conclusion review {index} is missing or out of order")
+        if value.get("decision") not in {"accepted", "rejected"}:
+            raise AtlasError(f"conclusion {index} decision must be accepted or rejected")
+        basis = value.get("basis")
+        if not isinstance(basis, str) or len(basis.strip()) < 20 or len(basis) > 2000:
+            raise AtlasError(f"conclusion {index} basis must explain the decision in 20 to 2000 characters")
+        accepted_claim_reviews = accepted_claim_reviews and value["decision"] == "accepted"
+    expected_decision = "accepted" if (
+        assignment["decision"] == "accepted" and association["decision"] == "accepted" and accepted_claim_reviews
+    ) else "rejected"
+    if review.get("decision") != expected_decision:
+        raise AtlasError(f"route-map review decision must be {expected_decision} based on all independent decisions")
+    return review
+
+
+def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
+    if route_status.get("result") != "unmapped":
+        raise AtlasError("route-map prepare requires one open route with zero accepted associations")
+    evidence, evidence_bytes, _status = evidence_pack(db_arg, repo_arg, route_fact_id, max_bytes)
+    selection = evidence.get("selection", {})
+    if selection.get("complete") is not True or selection.get("omitted_candidate_bundles") != 0:
+        raise AtlasError("complete route-map evidence does not fit; increase --max-tokens and prepare again")
+    try:
+        draft_bytes = Path(draft_path).read_bytes()
+        draft_text = draft_bytes.decode("utf-8")
+        draft = json.loads(draft_text)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AtlasError(f"cannot read Luna route-map draft {draft_path}: {exc}") from exc
+    if not isinstance(draft, dict):
+        raise AtlasError("Luna route-map draft must contain an object")
+    if "content_hash" in draft:
+        raise AtlasError("route-map draft must not supply content_hash; it is computed canonically")
+    snapshot_id = evidence["snapshot_id"]
+    extractor_identity = evidence["extractor_identity"]
+    if draft.get("snapshot_id") != snapshot_id or draft.get("extractor_identity") != extractor_identity:
+        raise AtlasError("Luna route-map draft snapshot_id and extractor_identity must match the current evidence")
+    snapshot, _snapshots, _extractor, _live = _current_route_snapshot(Path(db_arg).expanduser().absolute(), repo_arg)
+    _validate_reviewed_flow(snapshot, draft)
+    fact_ids = {item.get("fact_id") for item in evidence.get("source_snippets", []) + evidence.get("candidate_snippets", [])}
+    fact_ids.add(route_fact_id)
+    citations = [citation for conclusion in draft.get("reviewed_conclusions", [])
+                 for citation in conclusion.get("evidence", [])]
+    if any(citation.get("fact_id") not in fact_ids for citation in citations):
+        raise AtlasError("Luna draft cites a fact outside the exact complete evidence packet")
+    if not any(citation.get("fact_id") == route_fact_id for citation in citations):
+        raise AtlasError("Luna draft must cite the selected route fact in at least one conclusion")
+    evidence_hash = hashlib.sha256(evidence_bytes).hexdigest()
+    claims = [
+        {"conclusion_number": index, "claim": item["claim"], "evidence": item["evidence"]}
+        for index, item in enumerate(draft["reviewed_conclusions"], start=1)
+    ]
+    packet: dict[str, object] = {
+        "packet_schema_version": 1,
+        "result": "route_map_review_required",
+        "binding": {"snapshot_id": snapshot_id, "extractor_identity": extractor_identity,
+                    "route_fact_id": route_fact_id},
+        "budget": {"max_stdout_bytes": max_bytes, "unit": "ASCII stdout bytes including newline; not model tokens"},
+        "evidence_sha256": evidence_hash,
+        "complete_evidence_packet": evidence,
+        "draft_sha256": hashlib.sha256(draft_bytes).hexdigest(),
+        "draft": draft_text,
+        "claims": claims,
+        "review_instructions": (
+            "Independently review this assignment and every conclusion against its exact cited source spans. "
+            "Confirm the Luna draft stays within the one selected route and makes no inference about helper bodies "
+            "or runtime behavior omitted from this packet. Give one accepted/rejected decision and concrete basis "
+            "for every conclusion. Separately decide whether this complete map is correctly associated with the "
+            "selected route. Accept only when the assignment, every conclusion, and route association are accepted. "
+            "Reviewer identity and model are audit labels supplied by the caller and are not authenticated by Atlas."
+        ),
+    }
+    packet["packet_sha256"] = _route_map_packet_digest(packet)
+    encoded = _canonical_json(packet) + b"\n"
+    if len(encoded) > max_bytes:
+        raise AtlasError(f"complete route-map review packet requires {len(encoded)} ASCII stdout bytes including newline; --max-tokens limit is {max_bytes}; stdout withheld")
+    return packet, encoded, 0
+
+
+def route_map_review(db_arg: str, repo_arg: str, packet_path: str, review_path: str) -> tuple[dict[str, object], bytes, int]:
+    packet, _packet_bytes = _read_json_file(packet_path, "route-map packet")
+    review, _review_bytes = _read_json_file(review_path, "route-map independent review")
+    _route_map_validate_packet(packet, db_arg, repo_arg)
+    _validate_route_map_review(review, packet)
+    result = {"result": review["decision"], "packet_sha256": packet["packet_sha256"],
+              "evidence_sha256": packet["evidence_sha256"], "draft_sha256": packet["draft_sha256"],
+              "review": review, "writes": 0}
+    return result, _canonical_json(result) + b"\n", 0
+
+
+def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path: str) -> dict[str, object]:
+    packet, _packet_bytes = _read_json_file(packet_path, "route-map packet")
+    review, _review_bytes = _read_json_file(review_path, "route-map independent review")
+    if review.get("decision") != "accepted":
+        raise AtlasError("route-map review was rejected; no atlas records were written")
+    _validate_route_map_review(review, packet)
+    db_path = Path(db_arg).expanduser().absolute()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    connection = _connect_for_index(db_path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        preview_draft, _preview_bytes = _route_map_draft(packet)
+        expected_overlay_id = hashlib.sha256(_canonical_json(preview_draft)).hexdigest()
+        snapshot, draft, route_fact, _draft_bytes = _route_map_validate_packet(
+            packet, db_arg, repo_arg, allow_existing_overlay_id=expected_overlay_id,
+        )
+        binding_info = packet["binding"]
+        snapshot_id = str(binding_info["snapshot_id"])
+        extractor_identity = str(binding_info["extractor_identity"])
+        route_fact_id = str(binding_info["route_fact_id"])
+        overlay_id = hashlib.sha256(_canonical_json(draft)).hexdigest()
+        overlay_payload = {**draft, "content_hash": overlay_id}
+        overlay_json = _canonical_json(overlay_payload).decode("ascii")
+        receipt = {
+            "receipt_schema_version": 1, "snapshot_id": snapshot_id, "overlay_id": overlay_id,
+            "overlay_content_hash": overlay_id, "extractor_identity": extractor_identity,
+            "reviewer_identity": review["reviewer_identity"], "reviewer_model": review["reviewer_model"],
+            "decision": "accepted", "reviewed_at": review["reviewed_at"],
+            "review_basis": review["assignment_review"]["basis"],
+            "packet_sha256": packet["packet_sha256"], "evidence_sha256": packet["evidence_sha256"],
+            "draft_sha256": packet["draft_sha256"],
+            "conclusion_reviews": review["conclusion_reviews"],
+            "route_association_review": review["route_association_review"],
+        }
+        _validate_reviewed_flow(snapshot, draft)
+        _validate_review_receipt(receipt, snapshot_id, overlay_id, overlay_id, extractor_identity)
+        receipt_hash = hashlib.sha256(_canonical_json(receipt)).hexdigest()
+        receipt_payload = {**receipt, "receipt_hash": receipt_hash}
+        receipt_json = _canonical_json(receipt_payload).decode("ascii")
+        binding = {"binding_schema_version": 1, "snapshot_id": snapshot_id,
+                   "extractor_identity": extractor_identity, "route_fact_id": route_fact_id,
+                   "overlay_id": overlay_id, "flow_review_receipt_hash": receipt_hash}
+        binding_hash = hashlib.sha256(_canonical_json(binding)).hexdigest()
+        association_review = {
+            "review_schema_version": 1, "binding_hash": binding_hash, **binding,
+            "reviewer_identity": review["reviewer_identity"], "reviewer_model": review["reviewer_model"],
+            "decision": "accepted", "reviewed_at": review["reviewed_at"],
+            "review_basis": review["route_association_review"]["basis"],
+        }
+        _validate_route_binding(binding, snapshot, route_fact_id)
+        _validate_route_association_review(association_review, binding, binding_hash)
+        association_hash = hashlib.sha256(_canonical_json(association_review)).hexdigest()
+        association_payload = {"binding": binding, "binding_hash": binding_hash,
+                               "association_review": {**association_review, "association_review_hash": association_hash}}
+        association_json = _canonical_json(association_payload).decode("ascii")
+
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS atlas_reviewed_flows ("
+            "snapshot_id TEXT NOT NULL, content_hash TEXT NOT NULL, payload_json TEXT NOT NULL, "
+            "PRIMARY KEY(snapshot_id, content_hash), FOREIGN KEY(snapshot_id) REFERENCES atlas_snapshots(snapshot_id))"
+        )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS atlas_flow_reviews ("
+            "snapshot_id TEXT NOT NULL, overlay_id TEXT NOT NULL, receipt_hash TEXT NOT NULL, receipt_json TEXT NOT NULL, "
+            "PRIMARY KEY(snapshot_id, overlay_id), "
+            "FOREIGN KEY(snapshot_id, overlay_id) REFERENCES atlas_reviewed_flows(snapshot_id, content_hash))"
+        )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS atlas_route_bindings ("
+            "snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, overlay_id TEXT NOT NULL, "
+            "binding_hash TEXT NOT NULL, association_review_hash TEXT NOT NULL, payload_json TEXT NOT NULL, "
+            "PRIMARY KEY(snapshot_id, route_fact_id, overlay_id), "
+            "FOREIGN KEY(snapshot_id, overlay_id) REFERENCES atlas_reviewed_flows(snapshot_id, content_hash))"
+        )
+        previous_overlay = connection.execute(
+            "SELECT payload_json FROM atlas_reviewed_flows WHERE snapshot_id=? AND content_hash=?",
+            (snapshot_id, overlay_id),
+        ).fetchone()
+        previous_receipt = connection.execute(
+            "SELECT receipt_hash, receipt_json FROM atlas_flow_reviews WHERE snapshot_id=? AND overlay_id=?",
+            (snapshot_id, overlay_id),
+        ).fetchone()
+        previous_binding = connection.execute(
+            "SELECT binding_hash, association_review_hash, payload_json FROM atlas_route_bindings "
+            "WHERE snapshot_id=? AND route_fact_id=? AND overlay_id=?",
+            (snapshot_id, route_fact_id, overlay_id),
+        ).fetchone()
+        expected_binding_row = (binding_hash, association_hash, association_json)
+        if previous_overlay is not None and previous_overlay[0] != overlay_json:
+            raise AtlasError("reviewed-flow overlay is immutable; conflicting bytes already exist")
+        if previous_receipt is not None and previous_receipt != (receipt_hash, receipt_json):
+            raise AtlasError("review receipt is immutable; a conflicting decision already exists")
+        if previous_binding is not None and previous_binding != expected_binding_row:
+            raise AtlasError("route binding is immutable; a conflicting association review already exists")
+        if previous_overlay is None:
+            connection.execute("INSERT INTO atlas_reviewed_flows(snapshot_id,content_hash,payload_json) VALUES (?,?,?)",
+                               (snapshot_id, overlay_id, overlay_json))
+        if previous_receipt is None:
+            connection.execute("INSERT INTO atlas_flow_reviews(snapshot_id,overlay_id,receipt_hash,receipt_json) VALUES (?,?,?,?)",
+                               (snapshot_id, overlay_id, receipt_hash, receipt_json))
+        if previous_binding is None:
+            connection.execute(
+                "INSERT INTO atlas_route_bindings(snapshot_id,route_fact_id,overlay_id,binding_hash,association_review_hash,payload_json) "
+                "VALUES (?,?,?,?,?,?)",
+                (snapshot_id, route_fact_id, overlay_id, binding_hash, association_hash, association_json),
+            )
+        # Recheck after all writes, immediately before commit. The SQLite transaction
+        # rolls back if the checkout or evidence changed while records were assembled.
+        _route_map_validate_packet(packet, db_arg, repo_arg, allow_existing_overlay_id=overlay_id)
+        connection.commit()
+        return {"result": "published", "snapshot_id": snapshot_id, "route_fact_id": route_fact_id,
+                "overlay_id": overlay_id, "receipt_hash": receipt_hash, "binding_hash": binding_hash,
+                "association_review_hash": association_hash, "packet_sha256": packet["packet_sha256"],
+                "evidence_sha256": packet["evidence_sha256"], "idempotent": all(
+                    row is not None for row in (previous_overlay, previous_receipt, previous_binding))}
+    except (sqlite3.Error, AtlasError):
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
 def _route_find_render(document: dict[str, object], max_bytes: int) -> bytes:
     def render() -> bytes:
         return (json.dumps(document, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
@@ -1463,6 +1843,192 @@ def _source_texts(root: Path, references: list[tuple[str, dict[str, object]]]) -
     finally:
         os.close(root_fd)
     return [snippets[key] for key in sorted(snippets, key=lambda item: (os.fsencode(item[0]), item[2], item[3], item[4]))]
+
+
+def _impact_render(document: dict[str, object], max_bytes: int) -> bytes:
+    budget = document["budget"]
+    assert isinstance(budget, dict)
+    size = 0
+    for _ in range(8):
+        budget["stdout_bytes_including_newline"] = size
+        encoded = (json.dumps(document, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
+        actual = len(encoded)
+        if actual == size:
+            if actual > max_bytes:
+                raise AtlasError(
+                    f"complete impact view requires {actual} ASCII stdout bytes including newline; "
+                    f"--max-tokens limit is {max_bytes}; stdout withheld"
+                )
+            return encoded
+        size = actual
+    raise AtlasError("impact view byte-count field did not stabilize; stdout withheld")
+
+
+def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    """Show one saved method and exact class-qualified lexical call candidates."""
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    parts = qualified_method_name.split(".")
+    if len(parts) < 2 or any(not re.fullmatch(r"@?[A-Za-z_][A-Za-z0-9_]*", part) for part in parts):
+        raise AtlasError("--method must be a qualified Type.Member or Namespace.Type.Member name")
+    method_name = parts[-1].removeprefix("@").strip()
+    requested_type = ".".join(part.removeprefix("@") for part in parts[:-1])
+    db_path = Path(db_arg).expanduser().absolute()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+
+    snapshot, _snapshots, extractor_identity, _live = _current_route_snapshot(db_path, repo_arg)
+    _validate_snapshot_fingerprint(snapshot, str(snapshot.get("snapshot_id")))
+    graph = snapshot.get("source_graph")
+    if not isinstance(graph, dict) or graph.get("extractor_identity") != extractor_identity:
+        raise AtlasError("current saved snapshot has no matching source graph")
+    facts = graph.get("facts")
+    if not isinstance(facts, list):
+        raise AtlasError("current saved source graph has invalid facts")
+
+    types_by_id: dict[str, list[dict[str, object]]] = {}
+    for fact in facts:
+        if isinstance(fact, dict) and fact.get("kind") == "type_declaration":
+            type_id = fact.get("type_id")
+            if isinstance(type_id, str):
+                types_by_id.setdefault(type_id, []).append(fact)
+    method_matches = []
+    for fact in facts:
+        if not isinstance(fact, dict) or fact.get("kind") != "method_declaration" or fact.get("method_name") != method_name:
+            continue
+        owners = types_by_id.get(str(fact.get("owner_type_id")), [])
+        if len(owners) != 1:
+            continue
+        owner = owners[0]
+        full_type = ".".join(part for part in (owner.get("namespace"), owner.get("name")) if isinstance(part, str) and part)
+        if requested_type in {owner.get("name"), full_type}:
+            method_matches.append((fact, owner))
+    if len(method_matches) != 1:
+        if method_matches:
+            raise AtlasError(f"method name is ambiguous in the saved graph: {qualified_method_name} ({len(method_matches)} declarations)")
+        raise AtlasError(f"unique method declaration not found in the current saved graph: {qualified_method_name}")
+    method, owner = method_matches[0]
+    method_source = method.get("source")
+    if not isinstance(method_source, dict):
+        raise AtlasError("saved method declaration has no source anchor")
+
+    root = _repo_root(repo_arg)
+    files = snapshot.get("files")
+    if not isinstance(files, list):
+        raise AtlasError("current saved snapshot has invalid tracked-file inventory")
+    file_texts: dict[str, tuple[str, str]] = {}
+    root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for entry in files:
+            if not isinstance(entry, dict):
+                raise AtlasError("current saved snapshot contains an invalid tracked-file entry")
+            path = entry.get("path")
+            if not isinstance(path, str) or not path.lower().endswith(".cs"):
+                continue
+            if entry.get("presence") != "present" or entry.get("type") != "file" or not isinstance(entry.get("sha256"), str):
+                raise AtlasError(f"tracked C# source is missing or not a regular file: {path}")
+            evidence = _read_working_file(root_fd, path, collect_source=True)
+            if evidence.get("presence") != "present" or evidence.get("type") != "file":
+                raise AtlasError(f"tracked C# source is missing or unsafe: {path}")
+            if evidence.get("sha256") != entry["sha256"]:
+                raise AtlasError(f"tracked C# source hash changed: {path}")
+            raw = evidence.get("_source_bytes")
+            if not isinstance(raw, bytes):
+                raise AtlasError(f"tracked C# source could not be read: {path}")
+            try:
+                file_texts[path] = (raw.decode("utf-8-sig"), str(entry["sha256"]))
+            except UnicodeDecodeError as exc:
+                raise AtlasError(f"tracked C# source is not UTF-8: {path}") from exc
+    finally:
+        os.close(root_fd)
+
+    definition_path = method_source.get("path")
+    if definition_path not in file_texts:
+        raise AtlasError("saved method source is not present among verified tracked C# files")
+    definition_span = method_source.get("span")
+    if not isinstance(definition_span, dict):
+        raise AtlasError("saved method declaration has no source span")
+    definition_text, definition_hash = file_texts[str(definition_path)]
+    start, end = definition_span.get("start_offset"), definition_span.get("end_offset")
+    if not isinstance(start, int) or not isinstance(end, int) or start < 0 or end < start or end > len(definition_text):
+        raise AtlasError("saved method declaration span is invalid for its verified source")
+    definition = {
+        "fact_id": method.get("id"), "path": definition_path, "sha256": definition_hash,
+        "span": definition_span, "text": definition_text[start:end],
+    }
+
+    from csharp_facts import lex
+    # The input may name the declaring namespace, while C# calls commonly use
+    # only the simple type name. Selection is declaration-aware; occurrence
+    # matching remains explicitly lexical and therefore uses that simple name.
+    type_parts = [str(owner.get("name"))]
+    expected_values: list[str] = []
+    for index, part in enumerate(type_parts):
+        if index:
+            expected_values.append(".")
+        expected_values.append(part)
+    expected_values.extend((".", method_name, "("))
+    methods_by_path: dict[str, list[dict[str, object]]] = {}
+    for fact in facts:
+        if isinstance(fact, dict) and fact.get("kind") == "method_declaration":
+            source = fact.get("source")
+            if isinstance(source, dict) and isinstance(source.get("path"), str):
+                methods_by_path.setdefault(source["path"], []).append(fact)
+    candidates: list[dict[str, object]] = []
+    for path, (text, source_hash) in file_texts.items():
+        tokens, _directives = lex(text)
+        for token_index in range(0, len(tokens) - len(expected_values) + 1):
+            sequence = tokens[token_index:token_index + len(expected_values)]
+            actual_values = [token.value.removeprefix("@") if expected_values[index] not in {".", "("} else token.value
+                             for index, token in enumerate(sequence)]
+            if actual_values != expected_values or any(token.kind != "identifier" for index, token in enumerate(sequence)
+                                                       if expected_values[index] not in {".", "("}):
+                continue
+            first, opening = sequence[0], sequence[-1]
+            containing = []
+            for method_fact in methods_by_path.get(path, []):
+                source = method_fact.get("source")
+                span = source.get("span") if isinstance(source, dict) else None
+                if isinstance(span, dict) and isinstance(span.get("start_offset"), int) and isinstance(span.get("end_offset"), int):
+                    if span["start_offset"] <= first.start < span["end_offset"]:
+                        containing.append(method_fact)
+            containing_method = None
+            if len(containing) == 1:
+                containing_fact = containing[0]
+                containing_owners = types_by_id.get(str(containing_fact.get("owner_type_id")), [])
+                if len(containing_owners) == 1 and isinstance(containing_fact.get("method_name"), str):
+                    containing_owner = containing_owners[0]
+                    containing_type = ".".join(
+                        part for part in (containing_owner.get("namespace"), containing_owner.get("name"))
+                        if isinstance(part, str) and part
+                    )
+                    containing_method = f"{containing_type}.{containing_fact['method_name']}"
+            candidates.append({
+                "path": path, "sha256": source_hash,
+                "span": {"start_offset": first.start, "end_offset": opening.end,
+                         "offset_unit": "unicode_codepoint", "start_line": first.line,
+                         "start_column": first.column, "end_line": opening.end_line,
+                         "end_column": opening.end_column},
+                "expression": f"{'.'.join(type_parts)}.{method_name}(",
+                "containing_method": containing_method,
+            })
+    candidates.sort(key=lambda item: (os.fsencode(str(item["path"])), item["span"]["start_offset"]))
+    document: dict[str, object] = {
+        "result": "impact_view", "snapshot_id": snapshot["snapshot_id"],
+        "extractor_identity": extractor_identity,
+        "qualified_method_name": qualified_method_name,
+        "scope": "Complete for the exact class-qualified Type.Member( lexical token pattern in verified tracked C# files; candidates are not compiler-resolved calls.",
+        "limitations": ["Aliases, unqualified calls, and calls with another receiver spelling are not included.",
+                        "A same-named type in another namespace may produce a lexical candidate.",
+                        "Interpolated-string expressions are opaque to the current lexer and are not included.",
+                        "Runtime binding, overload selection, reflection, and generated calls are not resolved.",
+                        "Containing method is null when the saved method spans do not identify exactly one enclosing method."],
+        "definition": definition, "candidate_count": len(candidates), "invocation_candidates": candidates,
+        "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes including newline; conservative byte proxy, not model tokens",
+                   "stdout_bytes_including_newline": 0},
+    }
+    encoded = _impact_render(document, max_bytes)
+    return document, encoded, 0
 
 
 def _evidence_pack_render(document: dict[str, object], max_bytes: int) -> bytes:
@@ -2144,6 +2710,11 @@ def main(argv: list[str] | None = None) -> int:
     evidence_parser.add_argument("--repo", required=True)
     evidence_parser.add_argument("--route-fact-id", required=True)
     evidence_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    impact_parser = commands.add_parser("impact", help="show one saved method and exact class-qualified lexical invocation candidates")
+    impact_parser.add_argument("--db", required=True)
+    impact_parser.add_argument("--repo", required=True)
+    impact_parser.add_argument("--method", required=True, help="saved method name as Type.Member or Namespace.Type.Member")
+    impact_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     refresh_parser = commands.add_parser("route-refresh", help="carry one accepted route review onto a same-root fresh snapshot when its full evidence packet is unchanged")
     refresh_parser.add_argument("--db", required=True)
     refresh_parser.add_argument("--repo", required=True)
@@ -2181,6 +2752,22 @@ def main(argv: list[str] | None = None) -> int:
     route_bind_parser.add_argument("--db", required=True)
     route_bind_parser.add_argument("--snapshot", required=True)
     route_bind_parser.add_argument("--input", required=True)
+    map_prepare_parser = commands.add_parser("route-map-prepare", help="bind a Luna route-map draft to one complete current evidence packet for independent review")
+    map_prepare_parser.add_argument("--db", required=True)
+    map_prepare_parser.add_argument("--repo", required=True)
+    map_prepare_parser.add_argument("--route-fact-id", required=True)
+    map_prepare_parser.add_argument("--draft-file", required=True)
+    map_prepare_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    map_review_parser = commands.add_parser("route-map-review", help="validate an independent route-map review without writing atlas records")
+    map_review_parser.add_argument("--db", required=True)
+    map_review_parser.add_argument("--repo", required=True)
+    map_review_parser.add_argument("--packet-file", required=True)
+    map_review_parser.add_argument("--review-file", required=True)
+    map_publish_parser = commands.add_parser("route-map-publish", help="atomically publish an accepted one-route map, receipt, and route association")
+    map_publish_parser.add_argument("--db", required=True)
+    map_publish_parser.add_argument("--repo", required=True)
+    map_publish_parser.add_argument("--packet-file", required=True)
+    map_publish_parser.add_argument("--review-file", required=True)
     route_find_parser = commands.add_parser("route-find", help="find one fresh reviewed map for a discovered route fact")
     route_find_parser.add_argument("--db", required=True)
     route_find_parser.add_argument("--repo", required=True)
@@ -2203,6 +2790,8 @@ def main(argv: list[str] | None = None) -> int:
             output, encoded_output, exit_code = discover(args.db, args.repo, args.terms, args.max_tokens)
         elif args.command == "evidence-pack":
             output, encoded_output, exit_code = evidence_pack(args.db, args.repo, args.route_fact_id, args.max_tokens)
+        elif args.command == "impact":
+            output, encoded_output, exit_code = impact_view(args.db, args.repo, args.method, args.max_tokens)
         elif args.command == "route-refresh":
             output, encoded_output, exit_code = route_refresh(args.db, args.repo, args.from_snapshot, args.route_fact_id, args.max_tokens)
         elif args.command == "flow-add":
@@ -2211,6 +2800,16 @@ def main(argv: list[str] | None = None) -> int:
             output = attach_review(args.db, args.snapshot, args.overlay, args.input)
         elif args.command == "route-bind-add":
             output = attach_route_binding(args.db, args.snapshot, args.input)
+        elif args.command == "route-map-prepare":
+            output, encoded_output, exit_code = route_map_prepare(
+                args.db, args.repo, args.route_fact_id, args.draft_file, args.max_tokens,
+            )
+        elif args.command == "route-map-review":
+            output, encoded_output, exit_code = route_map_review(
+                args.db, args.repo, args.packet_file, args.review_file,
+            )
+        elif args.command == "route-map-publish":
+            output = publish_route_map(args.db, args.repo, args.packet_file, args.review_file)
         elif args.command == "route-find":
             output, encoded_output, exit_code = route_find(args.db, args.repo, args.route_fact_id, args.max_tokens)
         elif args.command == "coverage":

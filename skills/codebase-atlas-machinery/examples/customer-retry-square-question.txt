@@ -1,0 +1,1 @@
+For GET api/customer/{orderId}/retrySquareTransaction, what happens when Square configuration is missing, and, when configured, how are amount, callback, payment link, and response constructed?

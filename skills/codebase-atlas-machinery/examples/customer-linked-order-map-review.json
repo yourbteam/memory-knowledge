@@ -1,0 +1,40 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "7dafae4fb8a539c6208939afc6dbded58d7463295bf8c45a569f33c2e7dbe45c",
+  "evidence_sha256": "8be620f008a59dcd7d1c36aaccf3ab1e4975ef9a2c01d00b9cc9f9d2f423d922",
+  "draft_sha256": "ebb470794389b37ddde19a492a63912fdef22abe1590a764b53b64aca53c18ee",
+  "reviewer_identity": "Independent Sol reviewer /root/sol_review_linked_map",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T18:08:49.468319+00:00",
+  "decision": "accepted",
+  "assignment_review": {
+    "decision": "accepted",
+    "basis": "The packet supplies the entire selected Linked action and entire candidate LinkCustomerOrderCommandHandler.Handle body, with complete=true and zero omitted candidate bundles. All four conclusions answer the frozen LinkUser=false handler question: skipped order assignments, prerequisite reads and payment-event lookup call, conditional EventSync addition, and awaited save. They do not describe omitted helper bodies, request JSON binding, or observed runtime execution."
+  },
+  "conclusion_reviews": [
+    {
+      "conclusion_number": 1,
+      "decision": "accepted",
+      "basis": "The exact route-action citation is [HttpPost(\"linked\")] at CustomerCheckoutController.cs:96. The complete cited Handle body at CustomerCheckoutHandlers.cs:713-753 places the only direct order.UserId and order.Updated assignments inside if (command.LinkUser). With the question's explicit premise that this handler receives false, that block is skipped and neither assignment occurs. This is a statement about the shown branch, not a guarantee about unshown helpers, database hooks, or runtime route dispatch."
+    },
+    {
+      "conclusion_number": 2,
+      "decision": "accepted",
+      "basis": "The cited entire Handle body first tests !currentUser.IsAuthenticated || currentUser.UserId is null and throws before the Orders query when either is true. It then awaits the order lookup, passes the LinkUser block, awaits Users.SingleAsync for currentUser.UserId.Value, and calls ResolveEventTypeIdAsync(dbContext, \"payment\", cancellationToken). The conclusion faithfully describes this visible order and call argument without inventing the resolver's internal behavior."
+    },
+    {
+      "conclusion_number": 3,
+      "decision": "accepted",
+      "basis": "The cited Handle source nests EventSyncEntries.Add(new EventSync ...) under paymentEventTypeId.HasValue and !exists. The preceding AnyAsync predicate checks user.Id, paymentEventTypeId.Value, non-null Params, and Params.Contains(command.OrderUuid). The initializer visibly uses user.Id, user.Email, the event ID, command.OrderUuid, order.Total with format 0.00, and DateTime.UtcNow separately for CreatedAt and UpdatedAt. These checks are outside LinkUser, so false does not itself suppress this conditional addition. The claim does not assert successful persistence or downstream synchronization."
+    },
+    {
+      "conclusion_number": 4,
+      "decision": "accepted",
+      "basis": "Both the full Handle citation and the exact SaveChangesAsync invocation citation verify an awaited dbContext.SaveChangesAsync(cancellationToken) after the entire paymentEventTypeId/exists conditional, not inside either addition branch. Thus execution that reaches this line awaits the call whether no payment type exists, a matching entry exists, or a new entry was added. The explicit reaches-that-line qualification correctly avoids guaranteeing completion after an earlier throw or failed await."
+    }
+  ],
+  "route_association_review": {
+    "decision": "accepted",
+    "basis": "The complete source packet identifies POST api/customer/linked from the api/customer controller route and linked action attribute, and shows Linked invoking linkCustomerOrderCommandHandler.Handle(new LinkCustomerOrderCommand(request.OrderId, request.ShouldLink), cancellationToken). Included injection syntax has ICommandHandler<LinkCustomerOrderCommand, CustomerLinkedOrderResponse>; the matching AddScoped syntax names LinkCustomerOrderCommandHandler; the candidate declaration and its complete Handle body use LinkCustomerOrderCommand. These exact source observations justify associating this conditional handler-source map with the selected route. All cross-file relationships remain lexical, non-traversable candidates as the packet states: acceptance does not establish compiler binding, runtime dependency-injection selection, payload-to-command binding, or a live request result."
+  }
+}

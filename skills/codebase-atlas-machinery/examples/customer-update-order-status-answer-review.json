@@ -1,0 +1,28 @@
+{
+  "review_schema_version": 1,
+  "packet_sha256": "b955228d92596a26907b11df81a9687b03fc937117f02dcb106d63168347919a",
+  "decision": "accepted",
+  "reviewer_identity": "independent Sol answer semantic review /root/sol_review_status_answer",
+  "reviewer_model": "GPT-6.1 Sol High",
+  "reviewed_at": "2026-10-06T18:13:49.781230+00:00",
+  "claim_reviews": [
+    {
+      "claim_number": 1,
+      "disposition": "not_relevant",
+      "basis": "The exact question already selects POST api/customer/{orderId}/updateStatus and asks for the saved fields, eventLink condition, and URL constructor arguments. The cited controller action forwards orderId and request.StatusId, the registration names the command handler, and the declaration names that handler. These route/delegation/registration observations are supported but are not an additional persistence or URL requirement of this question. The draft describes command.StatusId directly, does not assert resolved cross-file dispatch, and does not need to reproduce the routing or DI observations or their binding limitation to answer the requested handler behavior."
+    },
+    {
+      "claim_number": 2,
+      "disposition": "covered",
+      "basis": "The verified handler span at lines 601-623 assigns order.StatusId = command.StatusId, assigns order.Updated = DateTime.UtcNow, and awaits dbContext.SaveChangesAsync(cancellationToken) before eventLink initialization and response construction. The first draft sentence explicitly includes both assigned values and the await ordering. It describes the handler source and does not assert a live database write or successful runtime invocation."
+    },
+    {
+      "claim_number": 3,
+      "disposition": "covered",
+      "basis": "The same verified span initializes eventLink to null; its sole assignment requires command.StatusId == 6, TourTimeSlotsId.HasValue, and TimeSlotDate.HasValue, then uses PublicAppBaseUrl.TrimEnd('/') plus /customer/images/{slot id}/{date:yyyy-MM-dd}. The draft explicitly includes initial null, all three conjuncts, base trimming, slot id, and date format. The response call then passes eventLink, CustomerCheckoutSupport.ResolveHomepageLink(order.TourTimeSlot!.Tour!, _options), and raw order.TourTimeSlot.Tour!.HomepageUrl successively; the last draft sentence includes all three in order. No omitted relevant URL subfact or unsupported helper-fallback/JSON-name assertion was found."
+    }
+  ],
+  "unsupported_additions": [],
+  "source_limitations": "All three source-anchor full-file SHA-256 values and every cited Unicode span boundary matched the current source. The saved question and draft bytes match the packet binding hashes. This is a source-level semantic review, not proof of resolved receiver/DI dispatch, successful database execution, runtime response serialization, or the resolver implementation. The draft makes no claim about those unverified behaviors.",
+  "review_basis": "Accepted against the frozen question and rubric: status command value and UTC timestamp are saved before the response; the awaited save precedes response construction; eventLink null/default, all population guards and URL shape, and all three URL-related constructor inputs are fully covered. The review independently examined every numbered claim and every relevant subfact. The Atlas CLI validation checks binding and shape only, not semantic truth."
+}
