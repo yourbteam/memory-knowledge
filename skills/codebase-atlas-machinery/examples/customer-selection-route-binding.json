@@ -1,0 +1,25 @@
+{
+  "association_review": {
+    "binding_hash": "12939ef514a7b96d63a772c4fcb2820ba86e963edbdabc18164a3b9469809aab",
+    "binding_schema_version": 1,
+    "decision": "accepted",
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "0e5b9b1d7a93c8a7cd249ec5b356b9963f928c4ca486cf058e4be9dde0f50c08",
+    "overlay_id": "a3b19477c63765a78fdd44a3f1ca45b66b58c447c29480b61022303614cff531",
+    "review_basis": "Claim 1 identifies this exact route and action. Live SaveSelection constructs the selection command and awaits its injected handler. The remaining claims cover source-reviewed authorization, candidate registration, positional inputs, authentication guard, distinct selection lists and flag updates, and state restoration/save. This association is useful for following selection-saving behavior; the map does not establish compiler binding, cache expiry or key format, malformed-JSON recovery, shared/durable storage, or runtime success.",
+    "review_schema_version": 1,
+    "reviewed_at": "2026-10-06T07:12:25Z",
+    "reviewer_identity": "Independent route association validator",
+    "reviewer_model": "GPT-6.1 Sol High",
+    "route_fact_id": "05904111e7183858482a4279",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  },
+  "binding": {
+    "binding_schema_version": 1,
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "0e5b9b1d7a93c8a7cd249ec5b356b9963f928c4ca486cf058e4be9dde0f50c08",
+    "overlay_id": "a3b19477c63765a78fdd44a3f1ca45b66b58c447c29480b61022303614cff531",
+    "route_fact_id": "05904111e7183858482a4279",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  }
+}

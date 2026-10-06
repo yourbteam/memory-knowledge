@@ -1,0 +1,25 @@
+{
+  "association_review": {
+    "binding_hash": "96a163d5ed5ddef015bbe2c06f0ba50c71d9c46171c0e745e7eb8d940a66631d",
+    "binding_schema_version": 1,
+    "decision": "accepted",
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "73f9c3619e8642c16a7207f8edf3f3c2131ef3121913f63194728e99bb56af39",
+    "overlay_id": "5a446a5f31c0a96fa9ff1c37d49092e24b343dc41e5a0b98d3934182c3ad442d",
+    "review_basis": "Claim 1 identifies this exact route and GetImages action, which constructs the photo-feed query from timeslot/date and paging inputs. Remaining claims cover authorization, reviewed query-handler correspondence, user guard, feed state, orders, purchases, image reads, paginated response, and cache-store correspondence. This is useful for following photo browsing; the handler claim summarizes rather than enumerates every filter, ordering rule and response field. Cache naming supplies no shared/durable guarantee; reviewed correspondences are not compiler-resolved edges or runtime proof.",
+    "review_schema_version": 1,
+    "reviewed_at": "2026-10-06T07:12:25Z",
+    "reviewer_identity": "Independent route association validator",
+    "reviewer_model": "GPT-6.1 Sol High",
+    "route_fact_id": "4d984d6d3295a63caba63480",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  },
+  "binding": {
+    "binding_schema_version": 1,
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "73f9c3619e8642c16a7207f8edf3f3c2131ef3121913f63194728e99bb56af39",
+    "overlay_id": "5a446a5f31c0a96fa9ff1c37d49092e24b343dc41e5a0b98d3934182c3ad442d",
+    "route_fact_id": "4d984d6d3295a63caba63480",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "association_review": {
+    "binding_hash": "85de272d2e246763f32192753cbe2ef95c5bf86feb9788aefa04631fb2eb07ba",
+    "binding_schema_version": 1,
+    "decision": "accepted",
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "f6da4f5fe59fead45dd16409dfd55134a4f417b39e542a8e0d23f6b6707a0a39",
+    "overlay_id": "377a682a4b6df4a9e88984b074c32fb94d63d0c1849c55c9b851b841cd7a443d",
+    "review_basis": "Claim 1 identifies this exact route, Passport authorization, and submit-handler invocation. Remaining claims follow successful upload into search, ambiguous empty results, persisted user/history effects, response counts, and related readers. This map also mentions submit-image-stream and the separate process endpoint; neither becomes the selected route. Empty-result conclusions require successful upload and do not cover all validation, exception, storage-failure, or nonempty-match behavior. No compiler-resolved edge or runtime verification is claimed.",
+    "review_schema_version": 1,
+    "reviewed_at": "2026-10-06T07:12:25Z",
+    "reviewer_identity": "Independent route association validator",
+    "reviewer_model": "GPT-6.1 Sol High",
+    "route_fact_id": "19def1a3b4836f394938bd44",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  },
+  "binding": {
+    "binding_schema_version": 1,
+    "extractor_identity": "csharp-lexical-facts-v7:python-stdlib-lexer",
+    "flow_review_receipt_hash": "f6da4f5fe59fead45dd16409dfd55134a4f417b39e542a8e0d23f6b6707a0a39",
+    "overlay_id": "377a682a4b6df4a9e88984b074c32fb94d63d0c1849c55c9b851b841cd7a443d",
+    "route_fact_id": "19def1a3b4836f394938bd44",
+    "snapshot_id": "atlas-v2-d2a9ff9517c6cd0f7aa3f5484d34193a6b829ca951ad15b7b648f5eb01ce703a"
+  }
+}

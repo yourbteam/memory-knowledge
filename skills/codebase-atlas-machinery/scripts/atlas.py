@@ -546,6 +546,292 @@ def attach_review(db_arg: str, snapshot_id: str, overlay_id: str, input_path: st
         connection.close()
 
 
+def _validate_route_binding(binding: dict[str, object], snapshot: dict[str, object], route_fact_id: str) -> None:
+    graph = snapshot.get("source_graph")
+    if not isinstance(graph, dict):
+        raise AtlasError("route binding snapshot has no source graph")
+    if binding.get("snapshot_id") != snapshot.get("snapshot_id"):
+        raise AtlasError("route binding snapshot_id does not match the selected snapshot")
+    if binding.get("binding_schema_version") != 1:
+        raise AtlasError("unsupported route binding schema version")
+    if binding.get("extractor_identity") != graph.get("extractor_identity"):
+        raise AtlasError("route binding extractor_identity does not match the selected snapshot")
+    if binding.get("route_fact_id") != route_fact_id:
+        raise AtlasError("route binding route_fact_id does not match the registry key")
+    if "binding_hash" in binding or "association_review_hash" in binding:
+        raise AtlasError("computed hashes must not be supplied inside route binding")
+    route_facts = [fact for fact in graph.get("facts", [])
+                   if fact.get("id") == route_fact_id and fact.get("kind") == "route_action"]
+    if len(route_facts) != 1:
+        raise AtlasError(f"route binding requires one route_action fact: {route_fact_id}")
+
+
+def _validate_route_association_review(
+    review: dict[str, object], binding: dict[str, object], binding_hash: str,
+) -> None:
+    if review.get("review_schema_version") != 1:
+        raise AtlasError("unsupported route association review schema version")
+    if review.get("binding_hash") != binding_hash:
+        raise AtlasError("route association review does not match the exact binding hash")
+    for field in ("snapshot_id", "extractor_identity", "route_fact_id", "overlay_id", "flow_review_receipt_hash"):
+        if review.get(field) != binding.get(field):
+            raise AtlasError(f"route association review {field} does not match the binding")
+    if review.get("decision") != "accepted":
+        raise AtlasError("route association review decision must be accepted")
+    for field in ("reviewer_identity", "reviewer_model"):
+        value = review.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise AtlasError(f"route association review {field} must be non-empty")
+    basis = review.get("review_basis")
+    if not isinstance(basis, str) or not basis.strip() or len(basis) > 2000:
+        raise AtlasError("route association review review_basis must contain 1 to 2000 characters")
+    timestamp = review.get("reviewed_at")
+    if not isinstance(timestamp, str):
+        raise AtlasError("route association review reviewed_at must be an ISO timestamp with timezone")
+    try:
+        parsed = dt.datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise AtlasError("route association review reviewed_at must be an ISO timestamp with timezone") from exc
+    if parsed.tzinfo is None:
+        raise AtlasError("route association review reviewed_at must include a timezone")
+    if "association_review_hash" in review:
+        raise AtlasError("association_review_hash is computed by Atlas and must not be supplied")
+
+
+def attach_route_binding(db_arg: str, expected_snapshot_id: str, input_path: str) -> dict[str, object]:
+    db_path = Path(db_arg).expanduser().absolute()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    try:
+        document = json.loads(Path(input_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AtlasError(f"cannot read route binding JSON {input_path}: {exc}") from exc
+    if not isinstance(document, dict) or not isinstance(document.get("binding"), dict) or not isinstance(document.get("association_review"), dict):
+        raise AtlasError("route binding JSON must contain binding and association_review objects")
+    binding = document["binding"]
+    review = document["association_review"]
+    if binding.get("snapshot_id") != expected_snapshot_id:
+        raise AtlasError("route binding snapshot_id does not match --snapshot")
+    if "binding_hash" in document or "association_review_hash" in document:
+        raise AtlasError("computed hashes must not be supplied in route binding input")
+    required = ("snapshot_id", "extractor_identity", "route_fact_id", "overlay_id", "flow_review_receipt_hash")
+    if any(not isinstance(binding.get(field), str) or not binding[field].strip() for field in required):
+        raise AtlasError("route binding requires non-empty snapshot_id, extractor_identity, route_fact_id, overlay_id, and flow_review_receipt_hash")
+
+    connection = _connect_for_index(db_path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        snapshot_row = connection.execute(
+            "SELECT payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (binding["snapshot_id"],)
+        ).fetchone()
+        if snapshot_row is None:
+            raise AtlasError(f"snapshot not found: {binding['snapshot_id']}")
+        snapshot = json.loads(snapshot_row[0])
+        graph = snapshot.get("source_graph") if isinstance(snapshot, dict) else None
+        from csharp_facts import EXTRACTION_METHOD
+        current_extractor = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
+        if (snapshot.get("schema_version") != SCHEMA_VERSION or snapshot.get("inventory_basis") != INVENTORY_BASIS
+                or not isinstance(graph, dict) or graph.get("extractor_identity") != current_extractor):
+            raise AtlasError("route binding requires the current snapshot schema and extractor")
+        live = _live_inventory_identity(str(snapshot.get("repository_root", "")))
+        changed, reasons = _focus_source_identity(snapshot, live)
+        if changed or reasons:
+            raise AtlasError("route binding snapshot is not current against its recorded checkout: " + "; ".join(reasons))
+        _validate_route_binding(binding, snapshot, str(binding["route_fact_id"]))
+        flow = query_flow(db_arg, str(binding["snapshot_id"]), str(binding["overlay_id"]))
+        if flow["review_status"] != "accepted":
+            raise AtlasError("route binding requires an accepted reviewed-flow receipt")
+        if flow["review_receipt"].get("receipt_hash") != binding["flow_review_receipt_hash"]:
+            raise AtlasError("route binding flow_review_receipt_hash does not match the exact accepted receipt")
+        if flow["overlay"].get("content_hash") != binding["overlay_id"]:
+            raise AtlasError("route binding overlay_id does not match the overlay content hash")
+        binding_hash = hashlib.sha256(_canonical_json(binding)).hexdigest()
+        _validate_route_association_review(review, binding, binding_hash)
+        review_hash = hashlib.sha256(_canonical_json(review)).hexdigest()
+        binding_payload = {"binding": binding, "binding_hash": binding_hash}
+        review_payload = {**review, "association_review_hash": review_hash}
+        payload_json = _canonical_json({**binding_payload, "association_review": review_payload}).decode("ascii")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS atlas_route_bindings ("
+            "snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, overlay_id TEXT NOT NULL, "
+            "binding_hash TEXT NOT NULL, association_review_hash TEXT NOT NULL, payload_json TEXT NOT NULL, "
+            "PRIMARY KEY(snapshot_id, route_fact_id, overlay_id), "
+            "FOREIGN KEY(snapshot_id, overlay_id) REFERENCES atlas_reviewed_flows(snapshot_id, content_hash))"
+        )
+        previous = connection.execute(
+            "SELECT binding_hash, association_review_hash, payload_json FROM atlas_route_bindings "
+            "WHERE snapshot_id = ? AND route_fact_id = ? AND overlay_id = ?",
+            (binding["snapshot_id"], binding["route_fact_id"], binding["overlay_id"]),
+        ).fetchone()
+        if previous is not None and previous != (binding_hash, review_hash, payload_json):
+            raise AtlasError("route binding is immutable; a different association review already exists for this key")
+        if previous is None:
+            connection.execute(
+                "INSERT INTO atlas_route_bindings(snapshot_id, route_fact_id, overlay_id, binding_hash, association_review_hash, payload_json) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (binding["snapshot_id"], binding["route_fact_id"], binding["overlay_id"], binding_hash, review_hash, payload_json),
+            )
+        connection.commit()
+        return {"snapshot_id": binding["snapshot_id"], "route_fact_id": binding["route_fact_id"],
+                "overlay_id": binding["overlay_id"], "binding_hash": binding_hash,
+                "association_review_hash": review_hash, "binding": binding_payload["binding"],
+                "association_review": review_payload}
+    except (sqlite3.Error, AtlasError):
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def _route_find_render(document: dict[str, object], max_bytes: int) -> bytes:
+    def render() -> bytes:
+        return (json.dumps(document, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
+    encoded = render()
+    actual = len(encoded)
+    for _ in range(4):
+        if isinstance(document.get("budget"), dict):
+            document["budget"]["stdout_bytes_including_newline"] = actual
+        encoded = render()
+        updated = len(encoded)
+        if updated == actual:
+            break
+        actual = updated
+    if actual > max_bytes:
+        raise AtlasError(f"complete route-find output requires {actual} ASCII stdout bytes including newline; --max-tokens limit is {max_bytes}; stdout withheld")
+    return encoded
+
+
+def route_find(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    db_path = Path(db_arg).expanduser()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    live = _live_inventory_identity(repo_arg)
+    from csharp_facts import EXTRACTION_METHOD
+    extractor_identity = f"{EXTRACTION_METHOD}:python-stdlib-lexer"
+    uri = db_path.absolute().as_uri() + "?mode=ro"
+    try:
+        with sqlite3.connect(uri, uri=True) as connection:
+            rows = connection.execute("SELECT snapshot_id, payload_json FROM atlas_snapshots ORDER BY snapshot_id").fetchall()
+    except sqlite3.Error as exc:
+        raise AtlasError(f"cannot query snapshots for route lookup: {exc}") from exc
+    compatible = []
+    snapshots_by_id: dict[str, dict[str, object]] = {}
+    for row_id, payload_json in rows:
+        try:
+            saved = json.loads(payload_json)
+        except json.JSONDecodeError as exc:
+            raise AtlasError(f"saved snapshot JSON is corrupt: {row_id}") from exc
+        graph = saved.get("source_graph") if isinstance(saved, dict) else None
+        if isinstance(saved, dict) and saved.get("snapshot_id") == row_id:
+            snapshots_by_id[row_id] = saved
+        if (isinstance(saved, dict) and saved.get("snapshot_id") == row_id
+                and saved.get("schema_version") == SCHEMA_VERSION and saved.get("inventory_basis") == INVENTORY_BASIS
+                and isinstance(graph, dict) and graph.get("extractor_identity") == extractor_identity):
+            changed, reasons = _focus_source_identity(saved, live)
+            if not changed and not reasons:
+                compatible.append(saved)
+    if len(compatible) != 1:
+        reason = "no_saved_snapshot_matches_current_extractor_and_checkout" if not compatible else "multiple_saved_snapshots_match_current_extractor_and_checkout"
+        raise AtlasError(f"{reason}; compatible matching snapshots={len(compatible)}")
+    snapshot = compatible[0]
+    graph = snapshot["source_graph"]
+    matching = [fact for fact in graph.get("facts", []) if fact.get("id") == route_fact_id]
+    if not matching:
+        raise AtlasError(f"unknown route fact ID: {route_fact_id}")
+    if len(matching) != 1 or matching[0].get("kind") != "route_action":
+        raise AtlasError(f"route fact ID has wrong kind or is ambiguous: {route_fact_id}")
+
+    table_exists = False
+    binding_rows = []
+    with sqlite3.connect(uri, uri=True) as connection:
+        table_exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'atlas_route_bindings'"
+        ).fetchone() is not None
+        if table_exists:
+            binding_rows = connection.execute(
+                "SELECT snapshot_id, route_fact_id, overlay_id, binding_hash, association_review_hash, payload_json FROM atlas_route_bindings "
+                "ORDER BY snapshot_id, route_fact_id, overlay_id"
+            ).fetchall()
+
+    associations = []
+    for row_snapshot_id, row_route_fact_id, row_overlay_id, stored_binding_hash, stored_review_hash, payload_json in binding_rows:
+        try:
+            payload = json.loads(payload_json)
+            binding = payload["binding"]
+            review_payload = payload["association_review"]
+            if not isinstance(binding, dict) or not isinstance(review_payload, dict):
+                raise AtlasError("saved route binding and association review must be objects")
+            review = {key: value for key, value in review_payload.items() if key != "association_review_hash"}
+        except AtlasError:
+            raise
+        except (json.JSONDecodeError, KeyError, TypeError, AttributeError) as exc:
+            raise AtlasError("saved route binding is corrupt") from exc
+        bound_snapshot = snapshots_by_id.get(str(binding.get("snapshot_id")))
+        if bound_snapshot is None:
+            raise AtlasError("saved route binding references a missing or corrupt snapshot")
+        bound_route_id = binding.get("route_fact_id")
+        if not isinstance(bound_route_id, str):
+            raise AtlasError("saved route binding route_fact_id is invalid")
+        _validate_route_binding(binding, bound_snapshot, bound_route_id)
+        if (binding.get("snapshot_id") != row_snapshot_id or binding.get("route_fact_id") != row_route_fact_id
+                or binding.get("overlay_id") != row_overlay_id):
+            raise AtlasError("saved route binding payload does not match its registry key")
+        binding_hash = hashlib.sha256(_canonical_json(binding)).hexdigest()
+        review_hash = hashlib.sha256(_canonical_json(review)).hexdigest()
+        if (binding_hash != stored_binding_hash or payload.get("binding_hash") != stored_binding_hash
+                or review_hash != stored_review_hash or review_payload.get("association_review_hash") != stored_review_hash):
+            raise AtlasError("saved route binding or association-review integrity hash is invalid")
+        flow = query_flow(db_arg, str(binding["snapshot_id"]), str(binding.get("overlay_id")))
+        if flow["review_status"] != "accepted":
+            raise AtlasError("saved route binding points to a flow without an accepted review receipt")
+        receipt_hash = flow["review_receipt"].get("receipt_hash")
+        try:
+            with sqlite3.connect(uri, uri=True) as connection:
+                receipt_hash_row = connection.execute(
+                    "SELECT receipt_hash FROM atlas_flow_reviews WHERE snapshot_id = ? AND overlay_id = ?",
+                    (binding["snapshot_id"], binding["overlay_id"]),
+                ).fetchone()
+        except sqlite3.Error as exc:
+            raise AtlasError(f"cannot verify flow review receipt registry hash: {exc}") from exc
+        if receipt_hash_row is None or receipt_hash_row[0] != receipt_hash:
+            raise AtlasError("flow review receipt registry hash does not match its validated receipt payload")
+        if receipt_hash != binding.get("flow_review_receipt_hash"):
+            raise AtlasError("saved route binding flow receipt is missing or changed")
+        _validate_route_association_review(review, binding, binding_hash)
+        if row_snapshot_id == snapshot["snapshot_id"] and row_route_fact_id == route_fact_id:
+            associations.append({"binding": binding, "binding_hash": binding_hash,
+                                 "association_review": review_payload, "association_review_hash": review_hash})
+
+    base = {"snapshot_id": snapshot["snapshot_id"], "extractor_identity": extractor_identity,
+            "route_fact_id": route_fact_id, "association_count": len(associations),
+            "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead",
+                       "stdout_bytes_including_newline": 0}}
+    if not associations:
+        document = {"result": "unmapped", **base,
+                    "next_step": {"command": "evidence-pack", "arguments": {
+                        "--db": os.fspath(db_path.absolute()), "--repo": os.fspath(Path(live["repository_root"])),
+                        "--route-fact-id": route_fact_id, "--max-tokens": max_bytes}}}
+        return document, _route_find_render(document, max_bytes), 0
+    if len(associations) > 1:
+        document = {"result": "selection_required", **base, "associations": associations}
+        return document, _route_find_render(document, max_bytes), 0
+
+    association = associations[0]
+    focused, _, status = focus(db_arg, repo_arg, snapshot["snapshot_id"], association["binding"]["overlay_id"], 2**31 - 1)
+    if status != 0 or focused.get("result") != "fresh":
+        raise AtlasError("route-find requires a fresh accepted focus result")
+    selection = focused.get("claim_selection", {})
+    if selection.get("omitted_claims") != 0 or selection.get("included_claims") != selection.get("total_claims"):
+        raise AtlasError("route-find requires every reviewed map claim; focus omitted claims")
+    document = {**focused, "route_fact_id": route_fact_id, "association": association,
+                "association_count": 1,
+                "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead",
+                           "stdout_bytes_including_newline": 0}}
+    return document, _route_find_render(document, max_bytes), 0
+
+
 def _live_inventory_identity(repo_arg: str) -> dict[str, object]:
     root = _repo_root(repo_arg)
     head_bytes = _git_optional(root, "rev-parse", "--verify", "HEAD")
@@ -1391,6 +1677,15 @@ def main(argv: list[str] | None = None) -> int:
     review_parser.add_argument("--snapshot", required=True)
     review_parser.add_argument("--overlay", required=True)
     review_parser.add_argument("--input", required=True)
+    route_bind_parser = commands.add_parser("route-bind-add", help="attach an independently reviewed route-to-map association")
+    route_bind_parser.add_argument("--db", required=True)
+    route_bind_parser.add_argument("--snapshot", required=True)
+    route_bind_parser.add_argument("--input", required=True)
+    route_find_parser = commands.add_parser("route-find", help="find one fresh reviewed map for a discovered route fact")
+    route_find_parser.add_argument("--db", required=True)
+    route_find_parser.add_argument("--repo", required=True)
+    route_find_parser.add_argument("--route-fact-id", required=True)
+    route_find_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     args = parser.parse_args(argv)
     try:
         exit_code = 0
@@ -1407,6 +1702,10 @@ def main(argv: list[str] | None = None) -> int:
             output = attach_flow(args.db, args.snapshot, args.input)
         elif args.command == "flow-review":
             output = attach_review(args.db, args.snapshot, args.overlay, args.input)
+        elif args.command == "route-bind-add":
+            output = attach_route_binding(args.db, args.snapshot, args.input)
+        elif args.command == "route-find":
+            output, encoded_output, exit_code = route_find(args.db, args.repo, args.route_fact_id, args.max_tokens)
         elif args.command == "focus":
             output, encoded_output, exit_code = focus(args.db, args.repo, args.snapshot, args.overlay, args.max_tokens)
         elif args.command == "answer-check":

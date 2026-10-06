@@ -94,6 +94,69 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         route = next(f for f in graph["facts"] if f["kind"] == "route_action")
         return saved, graph, route
 
+    def reviewed_route_map(self, saved, graph, route, title="Reviewed route map"):
+        overlay = {
+            "overlay_schema_version": 1,
+            "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"],
+            "title": title,
+            "reviewed_conclusions": [{
+                "claim": "The reviewed map describes the route action.",
+                "evidence": [{"fact_id": route["id"], "source": route["source"]}],
+            }],
+        }
+        overlay_path = self.root / f"{title.replace(' ', '-')}.flow.json"
+        overlay_path.write_text(json.dumps(overlay), encoding="utf-8")
+        attached = json.loads(self.cli(
+            "flow-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+            "--input", os.fspath(overlay_path),
+        ).stdout)
+        receipt = {
+            "receipt_schema_version": 1,
+            "snapshot_id": saved["snapshot_id"],
+            "overlay_id": attached["overlay_id"],
+            "overlay_content_hash": attached["content_hash"],
+            "extractor_identity": graph["extractor_identity"],
+            "reviewer_identity": "independent fixture review",
+            "reviewer_model": "GPT-6.1 Sol High",
+            "decision": "accepted",
+            "reviewed_at": "2026-10-06T12:00:00Z",
+            "review_basis": "The route action citation and reviewed map wording were checked for this fixture.",
+        }
+        receipt_path = self.root / f"{title.replace(' ', '-')}.review.json"
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        saved_receipt = json.loads(self.cli(
+            "flow-review", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+            "--overlay", attached["overlay_id"], "--input", os.fspath(receipt_path),
+        ).stdout)
+        return attached, saved_receipt
+
+    def route_binding_document(self, saved, graph, route, attached, flow_receipt, title="route-binding"):
+        binding = {
+            "binding_schema_version": 1,
+            "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"],
+            "route_fact_id": route["id"],
+            "overlay_id": attached["overlay_id"],
+            "flow_review_receipt_hash": flow_receipt["receipt_hash"],
+        }
+        binding_hash = hashlib.sha256(json.dumps(
+            binding, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+        ).encode("ascii")).hexdigest()
+        association_review = {
+            "review_schema_version": 1,
+            "binding_hash": binding_hash,
+            **binding,
+            "reviewer_identity": "independent route association reviewer",
+            "reviewer_model": "GPT-6.1 Sol High",
+            "decision": "accepted",
+            "reviewed_at": "2026-10-06T12:30:00Z",
+            "review_basis": "The route identity and selected flow purpose were checked against the cited evidence.",
+        }
+        path = self.root / f"{title}.binding.json"
+        path.write_text(json.dumps({"binding": binding, "association_review": association_review}), encoding="utf-8")
+        return path, binding, association_review
+
     def test_evidence_pack_cli_includes_root_and_two_candidate_levels(self):
         saved, graph, route = self.evidence_fixture()
         result = self.evidence_pack(route["id"])
@@ -146,6 +209,151 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         capped = self.evidence_pack(route["id"], 100, expect=2)
         self.assertEqual(capped.stdout, "")
         self.assertIn("complete mandatory evidence pack requires", capped.stderr)
+
+    def test_route_find_returns_structured_unmapped_evidence_pack_step(self):
+        saved, graph, route = self.evidence_fixture()
+        result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                          "--route-fact-id", route["id"], "--max-tokens", "10000")
+        document = json.loads(result.stdout)
+        self.assertEqual(document["result"], "unmapped")
+        self.assertEqual(document["snapshot_id"], saved["snapshot_id"])
+        self.assertEqual(document["association_count"], 0)
+        self.assertEqual(document["next_step"]["command"], "evidence-pack")
+        self.assertEqual(document["next_step"]["arguments"]["--route-fact-id"], route["id"])
+
+    def test_route_binding_is_immutable_and_route_find_returns_complete_fresh_claims(self):
+        saved, graph, route = self.evidence_fixture()
+        attached, flow_receipt = self.reviewed_route_map(saved, graph, route)
+        path, binding, association_review = self.route_binding_document(saved, graph, route, attached, flow_receipt)
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", "wrong-snapshot", "--input", os.fspath(path), expect=2)
+        path.write_text(json.dumps({"binding": {**binding, "binding_hash": association_review["binding_hash"]},
+                                   "association_review": association_review}), encoding="utf-8")
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path), expect=2)
+        path.write_text(json.dumps({"binding": binding, "association_review": association_review}), encoding="utf-8")
+        first = json.loads(self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path)).stdout)
+        repeated = json.loads(self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path)).stdout)
+        self.assertEqual(first, repeated)
+        self.assertEqual(first["binding"]["route_fact_id"], route["id"])
+        self.assertNotIn("binding_hash", first["binding"])
+
+        found_result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                                "--route-fact-id", route["id"], "--max-tokens", "10000")
+        found = json.loads(found_result.stdout)
+        self.assertEqual(found["result"], "fresh")
+        self.assertEqual(found["association_count"], 1)
+        self.assertEqual(found["association"]["binding"], binding)
+        self.assertEqual(found["association"]["association_review"]["binding_hash"], association_review["binding_hash"])
+        self.assertEqual(found["claim_selection"]["omitted_claims"], 0)
+        self.assertEqual(found["claim_selection"]["included_claims"], found["claim_selection"]["total_claims"])
+        self.assertEqual(len(found["claims"]), 1)
+        generous_size = len(found_result.stdout.encode("ascii"))
+        self.assertEqual(found["budget"]["stdout_bytes_including_newline"], generous_size)
+        # The limit itself is rendered in the document, so changing it can change
+        # the output length by a digit. Compute the exact boundary for its own cap.
+        exact_size = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                              "--route-fact-id", route["id"], "--max-tokens", str(generous_size)).stdout
+        exact_size = len(exact_size.encode("ascii"))
+        exact = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                         "--route-fact-id", route["id"], "--max-tokens", str(exact_size))
+        self.assertEqual(len(exact.stdout.encode("ascii")), exact_size)
+        short = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                         "--route-fact-id", route["id"], "--max-tokens", str(exact_size - 1), expect=2)
+        self.assertEqual(short.stdout, "")
+        self.assertIn("complete route-find output requires", short.stderr)
+
+        conflict = dict(association_review, review_basis="A conflicting association review cannot replace the immutable record.")
+        path.write_text(json.dumps({"binding": binding, "association_review": conflict}), encoding="utf-8")
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path), expect=2)
+
+    def test_route_find_requires_unique_current_snapshot_and_refuses_stale_sources(self):
+        saved, graph, route = self.evidence_fixture()
+        routes = self.repo / "Flow.cs"
+        routes.write_text(routes.read_text(encoding="utf-8") + "// changed after capture\n", encoding="utf-8")
+        stale = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                         "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", stale.stderr)
+
+        git(self.repo, "add", "--", "Flow.cs")
+        current = self.index()
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT snapshot_id, payload_json FROM atlas_snapshots WHERE snapshot_id = ?", (current["snapshot_id"],)).fetchone()
+            snapshot = json.loads(row[1])
+            snapshot["source_graph"]["extractor_identity"] = "obsolete-extractor"
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(snapshot), row[0]))
+        old_only = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                            "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("no_saved_snapshot_matches_current_extractor_and_checkout", old_only.stderr)
+
+        # Restore one current snapshot and insert a second distinct current row for the same live checkout.
+        duplicate_id = current["snapshot_id"] + "-second"
+        with sqlite3.connect(self.db) as connection:
+            snapshot["source_graph"]["extractor_identity"] = graph["extractor_identity"]
+            connection.execute("UPDATE atlas_snapshots SET payload_json = ? WHERE snapshot_id = ?", (json.dumps(snapshot), current["snapshot_id"]))
+            duplicate = dict(snapshot, snapshot_id=duplicate_id)
+            connection.execute("INSERT INTO atlas_snapshots(snapshot_id, evidence_fingerprint, captured_at, payload_json) VALUES (?, ?, ?, ?)",
+                               (duplicate_id, duplicate["evidence_fingerprint"] + "-second", duplicate["captured_at"], json.dumps(duplicate)))
+        multiple = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                            "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("multiple_saved_snapshots_match_current_extractor_and_checkout", multiple.stderr)
+
+    def test_route_find_requires_valid_bindings_and_requires_selection_for_multiple_maps(self):
+        saved, graph, route = self.evidence_fixture()
+        first_flow, first_receipt = self.reviewed_route_map(saved, graph, route, "Map one")
+        first_path, _first_binding, _first_review = self.route_binding_document(saved, graph, route, first_flow, first_receipt, "first")
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(first_path))
+        second_flow, second_receipt = self.reviewed_route_map(saved, graph, route, "Map two")
+        second_path, _second_binding, _second_review = self.route_binding_document(saved, graph, route, second_flow, second_receipt, "second")
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(second_path))
+        multiple = json.loads(self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                                       "--route-fact-id", route["id"], "--max-tokens", "30000").stdout)
+        self.assertEqual(multiple["result"], "selection_required")
+        self.assertEqual(len(multiple["associations"]), 2)
+        self.assertNotIn("claims", multiple)
+
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_route_bindings WHERE overlay_id = ?", (first_flow["overlay_id"],)).fetchone()
+            tampered = json.loads(row[0])
+            tampered["binding"]["overlay_id"] = second_flow["overlay_id"]
+            connection.execute("UPDATE atlas_route_bindings SET payload_json = ? WHERE overlay_id = ?",
+                               (json.dumps(tampered), first_flow["overlay_id"]))
+        refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                           "--route-fact-id", route["id"], "--max-tokens", "30000", expect=2)
+        self.assertIn("payload does not match its registry key", refused.stderr)
+
+    def test_route_find_refuses_binding_with_tampered_route_registry_key(self):
+        saved, graph, route = self.evidence_fixture()
+        attached, flow_receipt = self.reviewed_route_map(saved, graph, route)
+        path, _binding, _review = self.route_binding_document(saved, graph, route, attached, flow_receipt)
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path))
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_route_bindings SET route_fact_id = ? WHERE snapshot_id = ? AND route_fact_id = ?",
+                               ("tampered-route-key", saved["snapshot_id"], route["id"]))
+        result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                          "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("registry key", result.stderr)
+
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_route_bindings SET route_fact_id = ? WHERE snapshot_id = ?",
+                               (route["id"], saved["snapshot_id"]))
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("PRAGMA foreign_keys = OFF")
+            connection.execute("UPDATE atlas_route_bindings SET snapshot_id = ? WHERE route_fact_id = ?",
+                               ("tampered-snapshot-key", route["id"]))
+        result = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                          "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("registry key", result.stderr)
+
+    def test_route_find_refuses_flow_receipt_column_tampering(self):
+        saved, graph, route = self.evidence_fixture()
+        attached, flow_receipt = self.reviewed_route_map(saved, graph, route)
+        path, _binding, _review = self.route_binding_document(saved, graph, route, attached, flow_receipt)
+        self.cli("route-bind-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(path))
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_flow_reviews SET receipt_hash = ? WHERE snapshot_id = ? AND overlay_id = ?",
+                               ("0" * 64, saved["snapshot_id"], attached["overlay_id"]))
+        refused = self.cli("route-find", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                           "--route-fact-id", route["id"], "--max-tokens", "10000", expect=2)
+        self.assertIn("flow review receipt registry hash", refused.stderr)
 
     def test_evidence_pack_preserves_registration_ambiguity_and_shadowing(self):
         _saved, graph, route = self.evidence_fixture(
