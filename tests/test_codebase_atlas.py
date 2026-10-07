@@ -330,6 +330,13 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         published = json.loads(self.route_map_cli("route-map-publish", packet_path, review_path).stdout)
         self.assertEqual(published["result"], "published")
         self.assertFalse(published["idempotent"])
+        with sqlite3.connect(self.db) as connection:
+            receipt_json = connection.execute(
+                "SELECT receipt_json FROM atlas_flow_reviews WHERE snapshot_id=? AND overlay_id=?",
+                (saved["snapshot_id"], published["overlay_id"]),
+            ).fetchone()[0]
+        self.assertNotIn("route_map_review_sha256", json.loads(receipt_json))
+        self.assertNotIn("revision", json.loads(receipt_json))
         repeated = json.loads(self.route_map_cli("route-map-publish", packet_path, review_path).stdout)
         self.assertTrue(repeated["idempotent"])
         self.assertEqual(repeated["overlay_id"], published["overlay_id"])
@@ -537,6 +544,226 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
                            "--route-fact-id", route["id"], "--draft-file", os.fspath(second_draft),
                            "--max-tokens", "500000", expect=2)
         self.assertIn("requires one open route with zero accepted associations", refused.stderr)
+
+    def test_route_map_revision_preserves_predecessor_and_publishes_one_current_successor(self):
+        saved, graph, route, _draft, _packet_path, _packet, _review_path, _review = self.route_map_fixture("Original route map")
+        first = json.loads(self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(_draft), "--max-tokens", "500000",
+        ).stdout)
+        # The fixture helper returned a prepared packet; publish that exact map first.
+        first_packet_path = self.root / "first-route-map-packet.json"
+        first_review_path = self.root / "first-route-map-review.json"
+        first_packet_path.write_text(json.dumps(first), encoding="utf-8")
+        first_review = dict(_review, packet_sha256=first["packet_sha256"], evidence_sha256=first["evidence_sha256"],
+                            draft_sha256=first["draft_sha256"])
+        first_review_path.write_text(json.dumps(first_review), encoding="utf-8")
+        first_published = json.loads(self.route_map_cli("route-map-publish", first_packet_path, first_review_path).stdout)
+
+        successor_draft = {
+            "overlay_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"], "title": "Corrected route map",
+            "reviewed_conclusions": [{
+                "claim": "The corrected map keeps the selected action identity in view.",
+                "evidence": [{"fact_id": route["id"], "source": route["source"]}],
+            }],
+        }
+        successor_draft_path = self.root / "successor-route-map.json"
+        successor_draft_path.write_text(json.dumps(successor_draft), encoding="utf-8")
+        prepared = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(successor_draft_path),
+            "--max-tokens", "500000", "--revise",
+        )
+        packet = json.loads(prepared.stdout)
+        self.assertEqual(packet["revision"]["predecessor"]["overlay_id"], first_published["overlay_id"])
+        self.assertEqual(packet["revision"]["predecessor"]["review_receipt"]["receipt_hash"], first_published["receipt_hash"])
+        self.assertEqual(packet["revision"]["predecessor"]["binding"]["route_fact_id"], route["id"])
+        successor_packet_path = self.root / "successor-route-map-packet.json"
+        successor_packet_path.write_bytes(prepared.stdout.encode("ascii"))
+        review = {
+            "review_schema_version": 1, "packet_sha256": packet["packet_sha256"],
+            "evidence_sha256": packet["evidence_sha256"], "draft_sha256": packet["draft_sha256"],
+            "reviewer_identity": "independent revision reviewer", "reviewer_model": "GPT-6.1 Sol High",
+            "reviewed_at": "2026-10-07T12:00:00Z", "decision": "accepted",
+            "assignment_review": {"decision": "accepted", "basis": "The revised assignment remains bounded to the selected route and current evidence."},
+            "conclusion_reviews": [{"conclusion_number": 1, "decision": "accepted",
+                                    "basis": "The revised wording is supported by the exact route source span provided."}],
+            "route_association_review": {"decision": "accepted",
+                                         "basis": "The successor continues to identify the exact selected route action."},
+        }
+        review_path = self.root / "successor-route-map-review.json"
+        review_path.write_text(json.dumps(review), encoding="utf-8")
+        stale_draft = dict(successor_draft, title="Different successor from stale predecessor")
+        stale_path = self.root / "stale-successor.json"
+        stale_path.write_text(json.dumps(stale_draft), encoding="utf-8")
+        stale_prepared = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(stale_path),
+            "--max-tokens", "500000", "--revise",
+        )
+        stale_packet = json.loads(stale_prepared.stdout)
+        stale_packet_path = self.root / "stale-successor-packet.json"
+        stale_packet_path.write_bytes(stale_prepared.stdout.encode("ascii"))
+        stale_review = dict(review, packet_sha256=stale_packet["packet_sha256"],
+                            evidence_sha256=stale_packet["evidence_sha256"],
+                            draft_sha256=stale_packet["draft_sha256"])
+        stale_review_path = self.root / "stale-successor-review.json"
+        stale_review_path.write_text(json.dumps(stale_review), encoding="utf-8")
+        published = json.loads(self.route_map_cli("route-map-publish", successor_packet_path, review_path).stdout)
+        self.assertNotEqual(published["overlay_id"], first_published["overlay_id"])
+        self.assertFalse(published["idempotent"])
+        repeated = json.loads(self.route_map_cli("route-map-publish", successor_packet_path, review_path).stdout)
+        self.assertTrue(repeated["idempotent"])
+        self.assertEqual(repeated["overlay_id"], published["overlay_id"])
+
+        found = json.loads(self.route_find(route["id"], max_tokens=30000).stdout)
+        self.assertEqual(found["result"], "fresh")
+        self.assertEqual(found["association_count"], 1)
+        self.assertEqual(found["association"]["binding"]["overlay_id"], published["overlay_id"])
+        self.assertEqual(found["association"]["binding"]["flow_review_receipt_hash"], published["receipt_hash"])
+        old_flow = json.loads(self.cli("flow-query", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+                                      "--overlay", first_published["overlay_id"]).stdout)
+        self.assertEqual(old_flow["review_status"], "accepted")
+        self.assertEqual(old_flow["review_receipt"]["receipt_hash"], first_published["receipt_hash"])
+        with sqlite3.connect(self.db) as connection:
+            edge_count = connection.execute("SELECT COUNT(*) FROM atlas_route_supersessions").fetchone()[0]
+            map_count = connection.execute("SELECT COUNT(*) FROM atlas_reviewed_flows WHERE snapshot_id=?",
+                                            (saved["snapshot_id"],)).fetchone()[0]
+        self.assertEqual(edge_count, 1)
+        self.assertEqual(map_count, 2)
+        successor_flow = json.loads(self.cli("flow-query", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"],
+                                             "--overlay", published["overlay_id"]).stdout)
+        self.assertEqual(successor_flow["review_receipt"]["revision"]["predecessor_overlay_id"], first_published["overlay_id"])
+        self.assertEqual(successor_flow["review_receipt"]["revision"]["predecessor_binding_hash"],
+                         packet["revision"]["predecessor"]["binding_hash"])
+        coverage = json.loads(self.coverage().stdout)
+        self.assertEqual(coverage["counts"]["one_reviewed_link"], 1)
+
+        stale = self.route_map_cli("route-map-publish", stale_packet_path, stale_review_path, expect=2)
+        self.assertIn("route-map revision is stale", stale.stderr)
+
+        third_draft = dict(successor_draft, title="Third map in revision chain")
+        third_draft_path = self.root / "third-route-map.json"
+        third_draft_path.write_text(json.dumps(third_draft), encoding="utf-8")
+        third_prepared = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(third_draft_path),
+            "--max-tokens", "500000", "--revise",
+        )
+        third_packet = json.loads(third_prepared.stdout)
+        third_packet_path = self.root / "third-route-map-packet.json"
+        third_packet_path.write_bytes(third_prepared.stdout.encode("ascii"))
+        third_review = dict(review, packet_sha256=third_packet["packet_sha256"],
+                            evidence_sha256=third_packet["evidence_sha256"],
+                            draft_sha256=third_packet["draft_sha256"],
+                            reviewer_identity="independent third revision reviewer")
+        third_review_path = self.root / "third-route-map-review.json"
+        third_review_path.write_text(json.dumps(third_review), encoding="utf-8")
+        third = json.loads(self.route_map_cli("route-map-publish", third_packet_path, third_review_path).stdout)
+        self.assertFalse(third["idempotent"])
+
+        historical_retry = json.loads(self.route_map_cli("route-map-publish", successor_packet_path, review_path).stdout)
+        self.assertTrue(historical_retry["idempotent"])
+        self.assertEqual(historical_retry["overlay_id"], published["overlay_id"])
+        stale_after_chain = self.route_map_cli("route-map-publish", stale_packet_path, stale_review_path, expect=2)
+        self.assertIn("route-map revision is stale", stale_after_chain.stderr)
+        changed_old_review = dict(review, reviewer_identity="different reviewer for old edge")
+        changed_old_review_path = self.root / "changed-old-successor-review.json"
+        changed_old_review_path.write_text(json.dumps(changed_old_review), encoding="utf-8")
+        changed_review_retry = self.route_map_cli(
+            "route-map-publish", successor_packet_path, changed_old_review_path, expect=2,
+        )
+        self.assertIn("route-map revision is stale", changed_review_retry.stderr)
+        current_after_retries = json.loads(self.route_find(route["id"], max_tokens=30000).stdout)
+        self.assertEqual(current_after_retries["association"]["binding"]["overlay_id"], third["overlay_id"])
+
+        (self.repo / "Unrelated.txt").write_text("unrelated snapshot change\n", encoding="utf-8")
+        git(self.repo, "add", "--", "Unrelated.txt")
+        refreshed = json.loads(self.cli(
+            "route-refresh", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--from-snapshot", saved["snapshot_id"], "--route-fact-id", route["id"], "--max-tokens", "500000",
+        ).stdout)
+        carried = json.loads(self.route_find(route["id"], max_tokens=30000).stdout)
+        self.assertEqual(carried["snapshot_id"], refreshed["snapshot_id"])
+        self.assertEqual(carried["result"], "fresh")
+        self.assertEqual(carried["association"]["carry_provenance"]["origin_overlay_id"], third["overlay_id"])
+        carry_revision_draft = {
+            "overlay_schema_version": 1, "snapshot_id": refreshed["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"], "title": "Forbidden carried revision",
+            "reviewed_conclusions": [{"claim": "The route remains selected.",
+                                      "evidence": [{"fact_id": route["id"], "source": route["source"]}]}],
+        }
+        carry_revision_path = self.root / "carried-revision.json"
+        carry_revision_path.write_text(json.dumps(carry_revision_draft), encoding="utf-8")
+        carry_refused = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(carry_revision_path),
+            "--max-tokens", "500000", "--revise", expect=2,
+        )
+        self.assertIn("carried maps cannot be revised", carry_refused.stderr)
+        with sqlite3.connect(self.db) as connection:
+            row_id, payload_json = connection.execute(
+                "SELECT rowid,payload_json FROM atlas_route_supersessions ORDER BY predecessor_overlay_id LIMIT 1"
+            ).fetchone()
+            tampered_edge = json.loads(payload_json)
+            tampered_edge["packet_sha256"] = "0" * 64
+            connection.execute("UPDATE atlas_route_supersessions SET payload_json=? WHERE rowid=?",
+                               (json.dumps(tampered_edge), row_id))
+        tampered_lookup = self.route_find(route["id"], max_tokens=30000, expect=2)
+        self.assertIn("supersession integrity hash is invalid", tampered_lookup.stderr)
+        self.assertIn("supersession integrity hash is invalid", self.coverage(expect=2).stderr)
+
+    def test_route_map_revision_rolls_back_successor_records_when_edge_write_fails(self):
+        saved, graph, route, draft_path, packet_path, packet, review_path, review = self.route_map_fixture("Original before rollback")
+        first = json.loads(self.route_map_cli("route-map-publish", packet_path, review_path).stdout)
+        successor_draft = {
+            "overlay_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"], "title": "Must roll back",
+            "reviewed_conclusions": [{
+                "claim": "The route identity is retained in this attempted revision.",
+                "evidence": [{"fact_id": route["id"], "source": route["source"]}],
+            }],
+        }
+        successor_draft_path = self.root / "rollback-successor.json"
+        successor_draft_path.write_text(json.dumps(successor_draft), encoding="utf-8")
+        prepared = self.cli(
+            "route-map-prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+            "--route-fact-id", route["id"], "--draft-file", os.fspath(successor_draft_path),
+            "--max-tokens", "500000", "--revise",
+        )
+        successor_packet = json.loads(prepared.stdout)
+        successor_packet_path = self.root / "rollback-successor-packet.json"
+        successor_packet_path.write_bytes(prepared.stdout.encode("ascii"))
+        successor_review = dict(review, packet_sha256=successor_packet["packet_sha256"],
+                                evidence_sha256=successor_packet["evidence_sha256"],
+                                draft_sha256=successor_packet["draft_sha256"])
+        successor_review_path = self.root / "rollback-successor-review.json"
+        successor_review_path.write_text(json.dumps(successor_review), encoding="utf-8")
+        with sqlite3.connect(self.db) as connection:
+            before = tuple(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                           for table in ("atlas_reviewed_flows", "atlas_flow_reviews", "atlas_route_bindings"))
+            connection.execute(
+                "CREATE TABLE atlas_route_supersessions ("
+                "snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, predecessor_overlay_id TEXT NOT NULL, "
+                "successor_overlay_id TEXT NOT NULL, edge_hash TEXT NOT NULL, payload_json TEXT NOT NULL, "
+                "PRIMARY KEY(snapshot_id, route_fact_id, predecessor_overlay_id), "
+                "UNIQUE(snapshot_id, route_fact_id, successor_overlay_id))"
+            )
+            connection.execute(
+                "CREATE TRIGGER force_supersession_insert_failure BEFORE INSERT ON atlas_route_supersessions "
+                "BEGIN SELECT RAISE(ABORT, 'forced supersession write failure'); END"
+            )
+        refused = self.route_map_cli("route-map-publish", successor_packet_path, successor_review_path, expect=2)
+        self.assertIn("forced supersession write failure", refused.stderr)
+        with sqlite3.connect(self.db) as connection:
+            after = tuple(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                          for table in ("atlas_reviewed_flows", "atlas_flow_reviews", "atlas_route_bindings"))
+            edges = connection.execute("SELECT COUNT(*) FROM atlas_route_supersessions").fetchone()[0]
+        self.assertEqual(after, before)
+        self.assertEqual(edges, 0)
+        current = json.loads(self.route_find(route["id"], max_tokens=30000).stdout)
+        self.assertEqual(current["association"]["binding"]["overlay_id"], first["overlay_id"])
 
     def reviewed_route_map(self, saved, graph, route, title="Reviewed route map"):
         overlay = {

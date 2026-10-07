@@ -887,6 +887,7 @@ def _route_map_draft(packet: dict[str, object]) -> tuple[dict[str, object], byte
 def _route_map_validate_packet(
     packet: dict[str, object], db_arg: str, repo_arg: str,
     allow_existing_overlay_id: str | None = None,
+    review_sha256: str | None = None,
 ) -> tuple[dict[str, object], dict[str, object], dict[str, object], bytes]:
     if packet.get("packet_schema_version") != 1 or packet.get("result") != "route_map_review_required":
         raise AtlasError("unsupported route-map review packet")
@@ -920,13 +921,76 @@ def _route_map_validate_packet(
     if (snapshot.get("snapshot_id") != binding.get("snapshot_id")
             or extractor_identity != binding.get("extractor_identity")):
         raise AtlasError("route-map packet is stale against the current snapshot or extractor")
-    route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
-    if route_status.get("result") != "unmapped":
-        existing_overlay = route_status.get("association", {}).get("binding", {}).get("overlay_id")
-        if not (allow_existing_overlay_id is not None and route_status.get("result") == "fresh"
-                and existing_overlay == allow_existing_overlay_id):
-            raise AtlasError("route-map workflow requires one open route with zero accepted associations")
     draft, draft_bytes = _route_map_draft(packet)
+    expected_overlay_id = hashlib.sha256(_canonical_json(draft)).hexdigest()
+    route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
+    revision = packet.get("revision")
+    if revision is None:
+        if route_status.get("result") != "unmapped":
+            existing_overlay = route_status.get("association", {}).get("binding", {}).get("overlay_id")
+            if not (allow_existing_overlay_id is not None and route_status.get("result") == "fresh"
+                    and existing_overlay == allow_existing_overlay_id):
+                raise AtlasError("route-map workflow requires one open route with zero accepted associations")
+    else:
+        if not isinstance(revision, dict) or revision.get("revision_schema_version") != 1:
+            raise AtlasError("route-map revision packet is malformed")
+        predecessor = revision.get("predecessor")
+        if not isinstance(predecessor, dict):
+            raise AtlasError("route-map revision packet is missing its exact predecessor")
+        required_predecessor = (
+            "snapshot_id", "route_fact_id", "overlay_id", "flow_review_receipt_hash",
+            "binding_hash", "association_review_hash", "binding", "association_review",
+            "overlay", "review_receipt",
+        )
+        if any(field not in predecessor for field in required_predecessor):
+            raise AtlasError("route-map revision predecessor is incomplete")
+        if (predecessor.get("snapshot_id") != binding.get("snapshot_id")
+                or predecessor.get("route_fact_id") != route_fact_id):
+            raise AtlasError("route-map revision predecessor must be a direct association on this exact snapshot and route")
+        prior_binding = predecessor.get("binding")
+        prior_review = predecessor.get("association_review")
+        if not isinstance(prior_binding, dict) or not isinstance(prior_review, dict):
+            raise AtlasError("route-map revision predecessor binding and association review must be objects")
+        prior_review_body = {key: value for key, value in prior_review.items()
+                             if key != "association_review_hash"}
+        if (hashlib.sha256(_canonical_json(prior_binding)).hexdigest() != predecessor.get("binding_hash")
+                or hashlib.sha256(_canonical_json(prior_review_body)).hexdigest() != predecessor.get("association_review_hash")
+                or prior_binding.get("snapshot_id") != predecessor.get("snapshot_id")
+                or prior_binding.get("route_fact_id") != predecessor.get("route_fact_id")
+                or prior_binding.get("overlay_id") != predecessor.get("overlay_id")
+                or prior_binding.get("flow_review_receipt_hash") != predecessor.get("flow_review_receipt_hash")
+                or prior_review.get("association_review_hash") != predecessor.get("association_review_hash")):
+            raise AtlasError("route-map revision predecessor hashes do not match its exact binding and review")
+        prior_flow = query_flow(db_arg, str(predecessor["snapshot_id"]), str(predecessor["overlay_id"]))
+        if (prior_flow.get("review_status") != "accepted"
+                or prior_flow.get("review_receipt", {}).get("receipt_hash") != predecessor.get("flow_review_receipt_hash")
+                or prior_flow.get("overlay") != predecessor.get("overlay")
+                or prior_flow.get("review_receipt") != predecessor.get("review_receipt")):
+            raise AtlasError("route-map revision predecessor's accepted map or review changed")
+        _validate_route_binding(prior_binding, snapshot, route_fact_id)
+        _validate_route_association_review(prior_review_body, prior_binding, str(predecessor.get("binding_hash")))
+        current_association = route_status.get("association") if route_status.get("result") == "fresh" else None
+        predecessor_matches = (isinstance(current_association, dict)
+            and "carry_provenance" not in current_association
+            and current_association.get("binding", {}).get("snapshot_id") == predecessor.get("snapshot_id")
+            and current_association.get("binding", {}).get("route_fact_id") == predecessor.get("route_fact_id")
+            and current_association.get("binding", {}).get("overlay_id") == predecessor.get("overlay_id")
+            and current_association.get("binding_hash") == predecessor.get("binding_hash")
+            and current_association.get("association_review_hash") == predecessor.get("association_review_hash"))
+        retry_matches = (allow_existing_overlay_id == expected_overlay_id
+                         and route_status.get("result") == "fresh"
+                         and route_status.get("association_count") == 1
+                         and review_sha256 is not None
+                         and _route_map_exact_supersession_exists(
+                             Path(db_arg).expanduser().absolute(), revision, expected_overlay_id,
+                             packet.get("packet_sha256"), review_sha256,
+                         ))
+        if not predecessor_matches and not retry_matches:
+            raise AtlasError("route-map revision is stale: its exact predecessor is no longer the current direct route map")
+        if predecessor_matches:
+            if (current_association.get("binding") != predecessor.get("binding")
+                    or current_association.get("association_review") != predecessor.get("association_review")):
+                raise AtlasError("route-map revision predecessor binding or association review changed")
     if "content_hash" in draft:
         raise AtlasError("route-map draft must not supply content_hash; it is computed canonically")
     if draft.get("snapshot_id") != binding.get("snapshot_id") or draft.get("extractor_identity") != binding.get("extractor_identity"):
@@ -963,6 +1027,35 @@ def _route_map_validate_packet(
                for conclusion in draft.get("reviewed_conclusions", []) if isinstance(conclusion, dict)):
         raise AtlasError("route-map draft must cite the selected route fact in at least one conclusion")
     return snapshot, draft, route_fact, draft_bytes
+
+
+def _route_map_exact_supersession_exists(
+    db_path: Path, revision: dict[str, object], successor_overlay_id: str,
+    packet_sha256: object, review_sha256: object,
+) -> bool:
+    predecessor = revision.get("predecessor")
+    if not isinstance(predecessor, dict):
+        return False
+    try:
+        with sqlite3.connect(db_path.absolute().as_uri() + "?mode=ro", uri=True) as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? "
+                "AND predecessor_overlay_id=? AND successor_overlay_id=?",
+                (predecessor.get("snapshot_id"), predecessor.get("route_fact_id"),
+                 predecessor.get("overlay_id"), successor_overlay_id),
+            ).fetchone()
+    except sqlite3.Error:
+        return False
+    if row is None:
+        return False
+    try:
+        payload = json.loads(row[0])
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return (payload.get("packet_sha256") == packet_sha256
+            and payload.get("review_sha256") == review_sha256
+            and payload.get("predecessor_binding_hash") == predecessor.get("binding_hash")
+            and payload.get("predecessor_association_review_hash") == predecessor.get("association_review_hash"))
 
 
 def _validate_route_map_review(review: dict[str, object], packet: dict[str, object]) -> dict[str, object]:
@@ -1023,12 +1116,39 @@ def _validate_route_map_review(review: dict[str, object], packet: dict[str, obje
     return review
 
 
-def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path: str, max_bytes: int,
+                      revise: bool = False) -> tuple[dict[str, object], bytes, int]:
     if max_bytes < 1:
         raise AtlasError("--max-tokens must be a positive integer")
     route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
-    if route_status.get("result") != "unmapped":
+    if revise:
+        if route_status.get("result") != "fresh":
+            raise AtlasError("route-map revision requires exactly one current reviewed route map")
+        current = route_status.get("association")
+        if not isinstance(current, dict) or "carry_provenance" in current:
+            raise AtlasError("route-map revision requires a same-snapshot direct predecessor; carried maps cannot be revised")
+        binding = current.get("binding")
+        if not isinstance(binding, dict) or binding.get("snapshot_id") != route_status.get("snapshot_id"):
+            raise AtlasError("route-map revision requires a same-snapshot direct predecessor")
+        flow = query_flow(db_arg, str(binding["snapshot_id"]), str(binding["overlay_id"]))
+        if flow.get("review_status") != "accepted":
+            raise AtlasError("route-map revision predecessor must have an accepted flow review")
+        revision = {
+            "revision_schema_version": 1,
+            "predecessor": {
+                "snapshot_id": binding["snapshot_id"], "route_fact_id": route_fact_id,
+                "overlay_id": binding["overlay_id"],
+                "flow_review_receipt_hash": binding["flow_review_receipt_hash"],
+                "binding_hash": current["binding_hash"],
+                "association_review_hash": current["association_review_hash"],
+                "binding": binding, "association_review": current["association_review"],
+                "overlay": flow["overlay"], "review_receipt": flow["review_receipt"],
+            },
+        }
+    elif route_status.get("result") != "unmapped":
         raise AtlasError("route-map prepare requires one open route with zero accepted associations")
+    else:
+        revision = None
     evidence, evidence_bytes, _status = evidence_pack(db_arg, repo_arg, route_fact_id, max_bytes)
     selection = evidence.get("selection", {})
     if selection.get("complete") is not True or selection.get("omitted_candidate_bundles") != 0:
@@ -1082,6 +1202,13 @@ def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path
             "Reviewer identity and model are audit labels supplied by the caller and are not authenticated by Atlas."
         ),
     }
+    if revision is not None:
+        packet["revision"] = revision
+        packet["review_instructions"] += (
+            " This is a revision of the exact predecessor included above. Review that predecessor's map, "
+            "flow receipt, route binding, and association review as immutable context; assess the successor "
+            "against the new complete evidence and do not imply that the predecessor record was replaced."
+        )
     packet["packet_sha256"] = _route_map_packet_digest(packet)
     encoded = _canonical_json(packet) + b"\n"
     if len(encoded) > max_bytes:
@@ -1092,7 +1219,10 @@ def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path
 def route_map_review(db_arg: str, repo_arg: str, packet_path: str, review_path: str) -> tuple[dict[str, object], bytes, int]:
     packet, _packet_bytes = _read_json_file(packet_path, "route-map packet")
     review, _review_bytes = _read_json_file(review_path, "route-map independent review")
-    _route_map_validate_packet(packet, db_arg, repo_arg)
+    _route_map_validate_packet(
+        packet, db_arg, repo_arg,
+        review_sha256=hashlib.sha256(_canonical_json(review)).hexdigest(),
+    )
     _validate_route_map_review(review, packet)
     result = {"result": review["decision"], "packet_sha256": packet["packet_sha256"],
               "evidence_sha256": packet["evidence_sha256"], "draft_sha256": packet["draft_sha256"],
@@ -1116,6 +1246,7 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
         expected_overlay_id = hashlib.sha256(_canonical_json(preview_draft)).hexdigest()
         snapshot, draft, route_fact, _draft_bytes = _route_map_validate_packet(
             packet, db_arg, repo_arg, allow_existing_overlay_id=expected_overlay_id,
+            review_sha256=hashlib.sha256(_canonical_json(review)).hexdigest(),
         )
         binding_info = packet["binding"]
         snapshot_id = str(binding_info["snapshot_id"])
@@ -1124,6 +1255,7 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
         overlay_id = hashlib.sha256(_canonical_json(draft)).hexdigest()
         overlay_payload = {**draft, "content_hash": overlay_id}
         overlay_json = _canonical_json(overlay_payload).decode("ascii")
+        route_map_review_sha256 = hashlib.sha256(_canonical_json(review)).hexdigest()
         receipt = {
             "receipt_schema_version": 1, "snapshot_id": snapshot_id, "overlay_id": overlay_id,
             "overlay_content_hash": overlay_id, "extractor_identity": extractor_identity,
@@ -1135,6 +1267,22 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
             "conclusion_reviews": review["conclusion_reviews"],
             "route_association_review": review["route_association_review"],
         }
+        revision = packet.get("revision")
+        if revision is not None:
+            predecessor = revision.get("predecessor") if isinstance(revision, dict) else None
+            if not isinstance(predecessor, dict):
+                raise AtlasError("route-map revision packet is missing its exact predecessor")
+            receipt["route_map_review_sha256"] = route_map_review_sha256
+            receipt["revision"] = {
+                "revision_schema_version": 1,
+                "predecessor_snapshot_id": predecessor["snapshot_id"],
+                "predecessor_route_fact_id": predecessor["route_fact_id"],
+                "predecessor_overlay_id": predecessor["overlay_id"],
+                "predecessor_flow_review_receipt_hash": predecessor["flow_review_receipt_hash"],
+                "predecessor_binding_hash": predecessor["binding_hash"],
+                "predecessor_association_review_hash": predecessor["association_review_hash"],
+                "packet_sha256": packet["packet_sha256"],
+            }
         _validate_reviewed_flow(snapshot, draft)
         _validate_review_receipt(receipt, snapshot_id, overlay_id, overlay_id, extractor_identity)
         receipt_hash = hashlib.sha256(_canonical_json(receipt)).hexdigest()
@@ -1156,6 +1304,29 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
         association_payload = {"binding": binding, "binding_hash": binding_hash,
                                "association_review": {**association_review, "association_review_hash": association_hash}}
         association_json = _canonical_json(association_payload).decode("ascii")
+        supersession = None
+        supersession_json = None
+        supersession_hash = None
+        if revision is not None:
+            predecessor = revision.get("predecessor") if isinstance(revision, dict) else None
+            if not isinstance(predecessor, dict):
+                raise AtlasError("route-map revision packet is missing its exact predecessor")
+            supersession = {
+                "supersession_schema_version": 1, "snapshot_id": snapshot_id,
+                "route_fact_id": route_fact_id,
+                "predecessor_overlay_id": predecessor["overlay_id"],
+                "successor_overlay_id": overlay_id,
+                "predecessor_binding_hash": predecessor["binding_hash"],
+                "predecessor_association_review_hash": predecessor["association_review_hash"],
+                "predecessor_flow_review_receipt_hash": predecessor["flow_review_receipt_hash"],
+                "successor_binding_hash": binding_hash,
+                "successor_association_review_hash": association_hash,
+                "successor_flow_review_receipt_hash": receipt_hash,
+                "packet_sha256": packet["packet_sha256"],
+                "review_sha256": route_map_review_sha256,
+            }
+            supersession_hash = hashlib.sha256(_canonical_json(supersession)).hexdigest()
+            supersession_json = _canonical_json(supersession).decode("ascii")
 
         connection.execute(
             "CREATE TABLE IF NOT EXISTS atlas_reviewed_flows ("
@@ -1175,6 +1346,14 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
             "PRIMARY KEY(snapshot_id, route_fact_id, overlay_id), "
             "FOREIGN KEY(snapshot_id, overlay_id) REFERENCES atlas_reviewed_flows(snapshot_id, content_hash))"
         )
+        if supersession is not None:
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS atlas_route_supersessions ("
+                "snapshot_id TEXT NOT NULL, route_fact_id TEXT NOT NULL, predecessor_overlay_id TEXT NOT NULL, "
+                "successor_overlay_id TEXT NOT NULL, edge_hash TEXT NOT NULL, payload_json TEXT NOT NULL, "
+                "PRIMARY KEY(snapshot_id, route_fact_id, predecessor_overlay_id), "
+                "UNIQUE(snapshot_id, route_fact_id, successor_overlay_id))"
+            )
         previous_overlay = connection.execute(
             "SELECT payload_json FROM atlas_reviewed_flows WHERE snapshot_id=? AND content_hash=?",
             (snapshot_id, overlay_id),
@@ -1188,6 +1367,13 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
             "WHERE snapshot_id=? AND route_fact_id=? AND overlay_id=?",
             (snapshot_id, route_fact_id, overlay_id),
         ).fetchone()
+        previous_supersession = None
+        if supersession is not None:
+            previous_supersession = connection.execute(
+                "SELECT edge_hash,payload_json FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? "
+                "AND predecessor_overlay_id=?",
+                (snapshot_id, route_fact_id, supersession["predecessor_overlay_id"]),
+            ).fetchone()
         expected_binding_row = (binding_hash, association_hash, association_json)
         if previous_overlay is not None and previous_overlay[0] != overlay_json:
             raise AtlasError("reviewed-flow overlay is immutable; conflicting bytes already exist")
@@ -1195,6 +1381,19 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
             raise AtlasError("review receipt is immutable; a conflicting decision already exists")
         if previous_binding is not None and previous_binding != expected_binding_row:
             raise AtlasError("route binding is immutable; a conflicting association review already exists")
+        if previous_supersession is not None and previous_supersession != (supersession_hash, supersession_json):
+            raise AtlasError("route-map predecessor was already revised by a different packet or review")
+        if supersession is not None and previous_supersession is None:
+            existing_source = connection.execute(
+                "SELECT 1 FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? AND predecessor_overlay_id=?",
+                (snapshot_id, route_fact_id, supersession["predecessor_overlay_id"]),
+            ).fetchone()
+            existing_target = connection.execute(
+                "SELECT 1 FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? AND successor_overlay_id=?",
+                (snapshot_id, route_fact_id, overlay_id),
+            ).fetchone()
+            if existing_source is not None or existing_target is not None:
+                raise AtlasError("route-map revision would fork or merge immutable supersession history")
         if previous_overlay is None:
             connection.execute("INSERT INTO atlas_reviewed_flows(snapshot_id,content_hash,payload_json) VALUES (?,?,?)",
                                (snapshot_id, overlay_id, overlay_json))
@@ -1207,15 +1406,80 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
                 "VALUES (?,?,?,?,?,?)",
                 (snapshot_id, route_fact_id, overlay_id, binding_hash, association_hash, association_json),
             )
+        if supersession is not None and previous_supersession is None:
+            connection.execute(
+                "INSERT INTO atlas_route_supersessions(snapshot_id,route_fact_id,predecessor_overlay_id,successor_overlay_id,edge_hash,payload_json) "
+                "VALUES (?,?,?,?,?,?)",
+                (snapshot_id, route_fact_id, supersession["predecessor_overlay_id"], overlay_id,
+                 supersession_hash, supersession_json),
+            )
         # Recheck after all writes, immediately before commit. The SQLite transaction
         # rolls back if the checkout or evidence changed while records were assembled.
-        _route_map_validate_packet(packet, db_arg, repo_arg, allow_existing_overlay_id=overlay_id)
+        _route_map_validate_packet(
+            packet, db_arg, repo_arg, allow_existing_overlay_id=overlay_id,
+            review_sha256=route_map_review_sha256,
+        )
+        if supersession is not None:
+            successor_flow_row = connection.execute(
+                "SELECT payload_json FROM atlas_reviewed_flows WHERE snapshot_id=? AND content_hash=?",
+                (snapshot_id, overlay_id),
+            ).fetchone()
+            successor_receipt_row = connection.execute(
+                "SELECT receipt_hash,receipt_json FROM atlas_flow_reviews WHERE snapshot_id=? AND overlay_id=?",
+                (snapshot_id, overlay_id),
+            ).fetchone()
+            successor_binding_row = connection.execute(
+                "SELECT binding_hash,association_review_hash,payload_json FROM atlas_route_bindings "
+                "WHERE snapshot_id=? AND route_fact_id=? AND overlay_id=?",
+                (snapshot_id, route_fact_id, overlay_id),
+            ).fetchone()
+            predecessor = revision["predecessor"]
+            predecessor_binding_row = connection.execute(
+                "SELECT binding_hash,association_review_hash,payload_json FROM atlas_route_bindings "
+                "WHERE snapshot_id=? AND route_fact_id=? AND overlay_id=?",
+                (snapshot_id, route_fact_id, predecessor["overlay_id"]),
+            ).fetchone()
+            predecessor_receipt_row = connection.execute(
+                "SELECT receipt_hash,receipt_json FROM atlas_flow_reviews WHERE snapshot_id=? AND overlay_id=?",
+                (snapshot_id, predecessor["overlay_id"]),
+            ).fetchone()
+            edge_row = connection.execute(
+                "SELECT edge_hash,payload_json FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? "
+                "AND predecessor_overlay_id=? AND successor_overlay_id=?",
+                (snapshot_id, route_fact_id, supersession["predecessor_overlay_id"], overlay_id),
+            ).fetchone()
+            source_edge = connection.execute(
+                "SELECT COUNT(*) FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? AND predecessor_overlay_id=?",
+                (snapshot_id, route_fact_id, supersession["predecessor_overlay_id"]),
+            ).fetchone()[0]
+            target_edge = connection.execute(
+                "SELECT COUNT(*) FROM atlas_route_supersessions WHERE snapshot_id=? AND route_fact_id=? AND successor_overlay_id=?",
+                (snapshot_id, route_fact_id, overlay_id),
+            ).fetchone()[0]
+            if (successor_flow_row != (overlay_json,)
+                    or successor_receipt_row != (receipt_hash, receipt_json)
+                    or successor_binding_row != expected_binding_row
+                    or predecessor_binding_row is None
+                    or predecessor_binding_row[0] != predecessor["binding_hash"]
+                    or predecessor_binding_row[1] != predecessor["association_review_hash"]
+                    or predecessor_binding_row[2] != _canonical_json({
+                        "binding": predecessor["binding"],
+                        "binding_hash": predecessor["binding_hash"],
+                        "association_review": predecessor["association_review"],
+                    }).decode("ascii")
+                    or predecessor_receipt_row is None
+                    or predecessor_receipt_row[0] != predecessor["flow_review_receipt_hash"]
+                    or predecessor_receipt_row[1] != _canonical_json(predecessor["review_receipt"]).decode("ascii")
+                    or edge_row != (supersession_hash, supersession_json)
+                    or source_edge != 1 or target_edge != 1):
+                raise AtlasError("prospective route-map revision is not one validated leaf on the writer connection")
         connection.commit()
         return {"result": "published", "snapshot_id": snapshot_id, "route_fact_id": route_fact_id,
                 "overlay_id": overlay_id, "receipt_hash": receipt_hash, "binding_hash": binding_hash,
                 "association_review_hash": association_hash, "packet_sha256": packet["packet_sha256"],
                 "evidence_sha256": packet["evidence_sha256"], "idempotent": all(
-                    row is not None for row in (previous_overlay, previous_receipt, previous_binding))}
+                    row is not None for row in (previous_overlay, previous_receipt, previous_binding))
+                and (supersession is None or previous_supersession is not None)}
     except (sqlite3.Error, AtlasError):
         connection.rollback()
         raise
@@ -1290,6 +1554,8 @@ def _validated_route_associations(db_arg: str, db_path: Path, snapshot: dict[str
             ).fetchall()
 
     associations: dict[str, list[dict[str, object]]] = {}
+    direct_by_key: dict[tuple[str, str, str], dict[str, object]] = {}
+    direct_receipts: dict[tuple[str, str, str], dict[str, object]] = {}
     for row_snapshot_id, row_route_fact_id, row_overlay_id, stored_binding_hash, stored_review_hash, payload_json in binding_rows:
         try:
             payload = json.loads(payload_json)
@@ -1334,10 +1600,98 @@ def _validated_route_associations(db_arg: str, db_path: Path, snapshot: dict[str
         if receipt_hash != binding.get("flow_review_receipt_hash"):
             raise AtlasError("saved route binding flow receipt is missing or changed")
         _validate_route_association_review(review, binding, binding_hash)
+        validated = {"binding": binding, "binding_hash": binding_hash,
+                     "association_review": review_payload, "association_review_hash": review_hash}
+        direct_by_key[(str(row_snapshot_id), str(row_route_fact_id), str(row_overlay_id))] = validated
+        direct_receipts[(str(row_snapshot_id), str(row_route_fact_id), str(row_overlay_id))] = flow["review_receipt"]
         if row_snapshot_id == snapshot["snapshot_id"]:
-            associations.setdefault(str(row_route_fact_id), []).append(
-                {"binding": binding, "binding_hash": binding_hash,
-                 "association_review": review_payload, "association_review_hash": review_hash})
+            associations.setdefault(str(row_route_fact_id), []).append(validated)
+
+    # A supersession row is accepted only when it links two fully validated direct
+    # associations and its own immutable payload agrees with every registry key.
+    superseded: set[tuple[str, str, str]] = set()
+    try:
+        with sqlite3.connect(uri, uri=True) as connection:
+            exists = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_route_supersessions'"
+            ).fetchone()
+            edge_rows = [] if exists is None else connection.execute(
+                "SELECT snapshot_id, route_fact_id, predecessor_overlay_id, successor_overlay_id, "
+                "edge_hash, payload_json FROM atlas_route_supersessions "
+                "ORDER BY snapshot_id, route_fact_id, predecessor_overlay_id"
+            ).fetchall()
+    except sqlite3.Error as exc:
+        raise AtlasError(f"cannot query route-map supersession history: {exc}") from exc
+    outgoing: dict[tuple[str, str, str], tuple[str, str, str]] = {}
+    incoming: dict[tuple[str, str, str], tuple[str, str, str]] = {}
+    edges_by_route: dict[tuple[str, str], list[tuple[tuple[str, str, str], tuple[str, str, str]]]] = {}
+    for row_snapshot, row_route, predecessor, successor, edge_hash, payload_json in edge_rows:
+        try:
+            payload = json.loads(payload_json)
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise AtlasError("saved route-map supersession payload is corrupt") from exc
+        key_fields = {"snapshot_id": row_snapshot, "route_fact_id": row_route,
+                      "predecessor_overlay_id": predecessor, "successor_overlay_id": successor}
+        if (not isinstance(payload, dict) or any(payload.get(key) != value for key, value in key_fields.items())
+                or payload.get("supersession_schema_version") != 1 or "edge_hash" in payload):
+            raise AtlasError("saved route-map supersession payload does not match its registry key")
+        computed_edge_hash = hashlib.sha256(_canonical_json(payload)).hexdigest()
+        if computed_edge_hash != edge_hash:
+            raise AtlasError("saved route-map supersession integrity hash is invalid")
+        source_key = (str(row_snapshot), str(row_route), str(predecessor))
+        target_key = (str(row_snapshot), str(row_route), str(successor))
+        if source_key == target_key:
+            raise AtlasError("route-map supersession cannot point to itself")
+        source = direct_by_key.get(source_key)
+        target = direct_by_key.get(target_key)
+        predecessor_receipt = direct_receipts.get(source_key)
+        successor_receipt = direct_receipts.get(target_key)
+        if source is None or target is None:
+            raise AtlasError("route-map supersession has a dangling predecessor or successor")
+        if not isinstance(predecessor_receipt, dict) or not isinstance(successor_receipt, dict):
+            raise AtlasError("route-map supersession accepted receipt is missing")
+        for edge_field, assoc, hash_field in (
+            ("predecessor_binding_hash", source, "binding_hash"),
+            ("predecessor_association_review_hash", source, "association_review_hash"),
+            ("successor_binding_hash", target, "binding_hash"),
+            ("successor_association_review_hash", target, "association_review_hash"),
+        ):
+            if payload.get(edge_field) != assoc.get(hash_field):
+                raise AtlasError(f"route-map supersession {edge_field} does not match its association")
+        if (payload.get("predecessor_flow_review_receipt_hash") != predecessor_receipt.get("receipt_hash")
+                or payload.get("successor_flow_review_receipt_hash") != successor_receipt.get("receipt_hash")
+                or payload.get("packet_sha256") != successor_receipt.get("packet_sha256")
+                or payload.get("review_sha256") != successor_receipt.get("route_map_review_sha256")):
+            raise AtlasError("route-map supersession packet or accepted receipt provenance does not match its endpoints")
+        expected_revision_identity = {
+            "revision_schema_version": 1,
+            "predecessor_snapshot_id": row_snapshot,
+            "predecessor_route_fact_id": row_route,
+            "predecessor_overlay_id": predecessor,
+            "predecessor_flow_review_receipt_hash": predecessor_receipt.get("receipt_hash"),
+            "predecessor_binding_hash": source.get("binding_hash"),
+            "predecessor_association_review_hash": source.get("association_review_hash"),
+            "packet_sha256": payload.get("packet_sha256"),
+        }
+        if successor_receipt.get("revision") != expected_revision_identity:
+            raise AtlasError("successor accepted review receipt does not preserve its exact revision identity")
+        if source_key in outgoing:
+            raise AtlasError("route-map supersession history forks from one predecessor")
+        if target_key in incoming:
+            raise AtlasError("route-map supersession history merges into one successor")
+        outgoing[source_key] = target_key
+        incoming[target_key] = source_key
+        superseded.add(source_key)
+        edges_by_route.setdefault((str(row_snapshot), str(row_route)), []).append((source_key, target_key))
+    for route_edges in edges_by_route.values():
+        for start, _target in route_edges:
+            visited: set[tuple[str, str, str]] = set()
+            node = start
+            while node in outgoing:
+                if node in visited:
+                    raise AtlasError("route-map supersession history contains a cycle")
+                visited.add(node)
+                node = outgoing[node]
     try:
         with sqlite3.connect(uri, uri=True) as connection:
             carry_rows = connection.execute(
@@ -1366,7 +1720,11 @@ def _validated_route_associations(db_arg: str, db_path: Path, snapshot: dict[str
             "association_review_hash": resolved[1]["origin_association_review_hash"],
             "carry_provenance": resolved[1],
         })
-    return associations
+    return {route_id: [association for association in values
+                       if ("carry_provenance" in association
+                           or (str(association["binding"]["snapshot_id"]), route_id,
+                               str(association["binding"]["overlay_id"])) not in superseded)]
+            for route_id, values in associations.items()}
 
 
 def route_find(
@@ -2799,6 +3157,7 @@ def main(argv: list[str] | None = None) -> int:
     map_prepare_parser.add_argument("--route-fact-id", required=True)
     map_prepare_parser.add_argument("--draft-file", required=True)
     map_prepare_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
+    map_prepare_parser.add_argument("--revise", action="store_true", help="revise the one current same-snapshot direct reviewed map")
     map_review_parser = commands.add_parser("route-map-review", help="validate an independent route-map review without writing atlas records")
     map_review_parser.add_argument("--db", required=True)
     map_review_parser.add_argument("--repo", required=True)
@@ -2845,7 +3204,7 @@ def main(argv: list[str] | None = None) -> int:
             output = attach_route_binding(args.db, args.snapshot, args.input)
         elif args.command == "route-map-prepare":
             output, encoded_output, exit_code = route_map_prepare(
-                args.db, args.repo, args.route_fact_id, args.draft_file, args.max_tokens,
+                args.db, args.repo, args.route_fact_id, args.draft_file, args.max_tokens, args.revise,
             )
         elif args.command == "route-map-review":
             output, encoded_output, exit_code = route_map_review(
