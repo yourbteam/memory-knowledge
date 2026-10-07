@@ -860,6 +860,66 @@ class Registrations {{ void Add() {{ services.AddScoped<IHandler, Handler>(); se
         self.assertEqual(bounded["selection"]["omitted_candidate_bundles"], 1)
         self.assertFalse(bounded["selection"]["complete"])
 
+    def test_evidence_pack_adds_source_backed_bare_same_owner_helpers_once(self):
+        source = self.repo / "Flow.cs"
+        source.write_text('''namespace Demo;
+[Route("api/customer")]
+class CustomerController(IHandler handler)
+{
+    [HttpPost("payment")] void Payment() { handler.Handle(); }
+}
+class Handler(IStore store, DbContext dbContext)
+{
+    void Handle() { ApplyDiscountForPaymentAsync(); Other.OnlyDecoy(); new OnlyDecoy(); var text = "OnlyDecoy()"; // OnlyDecoy()
+    }
+    void ApplyDiscountForPaymentAsync() { if (true) dbContext.SaveChangesAsync(); }
+    void ApplyDiscountForPaymentAsync(int amount) { dbContext.SaveChangesAsync(); }
+    void OnlyDecoy() { }
+}
+class Store { void Ping() { } }
+class Registrations { void Add() { services.AddScoped<IHandler, Handler>(); services.AddScoped<IStore, Store>(); } }
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Flow.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        route = next(f for f in graph["facts"] if f.get("kind") == "route_action")
+        packet = json.loads(self.evidence_pack(route["id"]).stdout)
+        method = next(method for bundle in packet["candidate_bundles"] for injection in bundle["injection_candidates"]
+                      for registration in injection["registrations"] for candidate in registration["implementation_candidates"]
+                      for method in candidate["methods"] if method["method_name"] == "Handle")
+        helpers = method["local_helper_candidates"]
+        self.assertEqual([helper["call_name"] for helper in helpers], ["ApplyDiscountForPaymentAsync"])
+        self.assertFalse(helpers[0]["traversable"])
+        self.assertFalse(helpers[0]["bound"])
+        self.assertFalse(helpers[0]["reachable"])
+        helper_methods = method["local_helper_methods"]
+        self.assertEqual(len(helper_methods), 2)  # Both same-owner overloads remain candidates.
+        snippet_by_id = {snippet["fact_id"]: snippet for snippet in packet["candidate_snippets"]}
+        for helper in helper_methods:
+            self.assertIn(helper["method_fact_id"], snippet_by_id)
+            self.assertIn("SaveChangesAsync", snippet_by_id[helper["method_fact_id"]]["text"])
+            save_calls = [call for call in helper["invocations"] if call["member_name"] == "SaveChangesAsync"]
+            self.assertEqual(len(save_calls), 1)
+            self.assertIn(save_calls[0]["invocation_fact_id"], snippet_by_id)
+            self.assertEqual(snippet_by_id[save_calls[0]["invocation_fact_id"]]["text"], "dbContext.SaveChangesAsync()")
+        self.assertNotIn("OnlyDecoy", {helper["call_name"] for helper in helpers})
+        full_size = len(self.evidence_pack(route["id"]).stdout.encode("ascii"))
+        capped = json.loads(self.evidence_pack(route["id"], full_size // 2).stdout)
+        self.assertFalse(capped["selection"]["complete"])
+        self.assertEqual(capped["candidate_bundles"], [])
+        self.assertEqual(capped["candidate_snippets"], [])
+
+    def test_evidence_pack_no_helper_packet_has_no_new_helper_fields(self):
+        _saved, _graph, route = self.evidence_fixture()
+        packet = json.loads(self.evidence_pack(route["id"]).stdout)
+        for bundle in packet["candidate_bundles"]:
+            for injection in bundle["injection_candidates"]:
+                for registration in injection["registrations"]:
+                    for candidate in registration["implementation_candidates"]:
+                        for method in candidate["methods"]:
+                            self.assertNotIn("local_helper_candidates", method)
+                            self.assertNotIn("local_helper_methods", method)
+
     def test_evidence_pack_refuses_stale_unknown_wrong_kind_and_mandatory_over_cap(self):
         _saved, graph, route = self.evidence_fixture()
         stale = self.repo / "Flow.cs"

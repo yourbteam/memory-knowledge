@@ -2510,11 +2510,45 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
         mandatory_refs.append((fact["id"], fact["source"]))
 
     method_by_id = {f["id"]: f for f in facts if f.get("kind") == "method_declaration"}
+    repo_root = Path(live["repository_root"])
     injection_by_id = {f["id"]: f for f in facts if f.get("kind") == "constructor_injection"}
     registration_facts = [f for f in facts if f.get("kind") == "dependency_registration"]
     candidate_by_id = {c["id"]: c for c in candidates}
     fact_by_id = {fact["id"]: fact for fact in facts}
     invocation_facts = [f for f in facts if f.get("kind") == "receiver_invocation_syntax"]
+    from csharp_facts import lex
+
+    def local_helpers(method: dict[str, object]) -> list[dict[str, object]]:
+        """Find bare same-owner calls in a verified saved method body; never resolve them."""
+        snippets = _source_texts(repo_root, [(method["id"], method["source"])])
+        text = snippets[0]["text"] if snippets else ""
+        tokens, _directives = lex(text)
+        name = str(method.get("method_name", ""))
+        name_index = next((i for i, token in enumerate(tokens)
+                           if token.kind == "identifier" and token.value.removeprefix("@") == name), None)
+        if name_index is None:
+            return []
+        # Skip the declaration header, then inspect only its body.
+        open_index = next((i for i in range(name_index + 1, len(tokens)) if tokens[i].value in {"{", "=>"}), None)
+        if open_index is None:
+            return []
+        body = tokens[open_index + 1:]
+        calls: dict[str, dict[str, object]] = {}
+        for i in range(len(body) - 1):
+            token = body[i]
+            if token.kind != "identifier" or body[i + 1].value != "(":
+                continue
+            if i and body[i - 1].value in {".", "?.", "::", "new"}:
+                continue
+            call_name = token.value.removeprefix("@")
+            targets = sorted((candidate for candidate in method_by_id.values()
+                              if candidate.get("owner_type_id") == method.get("owner_type_id")
+                              and candidate.get("method_name") == call_name), key=lambda candidate: candidate["id"])
+            if targets:
+                calls[call_name] = {"call_name": call_name, "candidate_method_fact_ids": [target["id"] for target in targets],
+                                    "traversable": False, "bound": False, "reachable": False}
+        return [calls[key] for key in sorted(calls)]
+
     def invocations(method: dict[str, object], depth: int) -> list[dict[str, object]]:
         result = []
         calls = sorted((f for f in invocation_facts if f.get("method_id") == method["id"]),
@@ -2551,8 +2585,22 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
                         method_evidence = []
                         for target_method in methods:
                             if depth < 2:
-                                method_evidence.append({"method_fact_id": target_method["id"], "method_name": target_method["method_name"],
-                                                        "source": target_method["source"], "invocations": invocations(target_method, depth + 1)})
+                                method_record = {"method_fact_id": target_method["id"], "method_name": target_method["method_name"],
+                                                 "source": target_method["source"], "invocations": invocations(target_method, depth + 1)}
+                                helpers = local_helpers(target_method)
+                                if helpers:
+                                    method_record["local_helper_candidates"] = helpers
+                                    helper_ids = sorted({fact_id for helper in helpers for fact_id in helper["candidate_method_fact_ids"]})
+                                    method_record["local_helper_methods"] = [
+                                        {"method_fact_id": helper_id, "method_name": method_by_id[helper_id]["method_name"],
+                                         "source": method_by_id[helper_id]["source"], "invocations": [
+                                             {"invocation_fact_id": call["id"], "member_name": call.get("member_name"),
+                                              "receiver_name": call.get("receiver_name"), "source": call["source"]}
+                                             for call in sorted(invocation_facts, key=lambda f: (f.get("source", {}).get("path", ""),
+                                                 f.get("source", {}).get("span", {}).get("start_offset", 0), f["id"]))
+                                             if call.get("method_id") == helper_id]}
+                                        for helper_id in helper_ids]
+                                method_evidence.append(method_record)
                             else:
                                 method_evidence.append({"method_fact_id": target_method["id"], "method_name": target_method["method_name"], "source": target_method["source"]})
                         declaration_evidence.append({"candidate_id": candidate["id"], "candidate_fact_ids": candidate.get("candidate_fact_ids", []),
@@ -2579,7 +2627,6 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
 
     root_calls = invocations(root_method, 1)
     root_unresolved = [u for u in unresolved if u.get("fact_id") in {route["id"], root_method["id"]}]
-    repo_root = Path(live["repository_root"])
     mandatory_snippets = _source_texts(repo_root, mandatory_refs)
     def bundle_fact_ids(value: object) -> set[str]:
         found: set[str] = set()
@@ -2588,6 +2635,8 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
                 if key.endswith("_fact_id") and isinstance(item, str):
                     found.add(item)
                 elif key == "candidate_fact_ids" and isinstance(item, list):
+                    found.update(x for x in item if isinstance(x, str))
+                elif key == "candidate_method_fact_ids" and isinstance(item, list):
                     found.update(x for x in item if isinstance(x, str))
                 found.update(bundle_fact_ids(item))
         elif isinstance(value, list):
@@ -2653,13 +2702,14 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
     }
     encoded = _evidence_pack_render(document, max_bytes)
     for bundle in complete_bundles:
+        staged_snippets = dict(selected_snippets)
         for snippet in bundle_snippets(bundle):
             key = (snippet["path"], snippet["sha256"], snippet["span"]["start_offset"], snippet["span"]["end_offset"], snippet["fact_id"])
-            selected_snippets[key] = snippet
+            staged_snippets[key] = snippet
         trial_bundles = [*selected_bundles, bundle]
         trial = dict(document)
         trial["candidate_bundles"] = trial_bundles
-        trial["candidate_snippets"] = [selected_snippets[key] for key in sorted(selected_snippets, key=lambda item: (os.fsencode(item[0]), item[2], item[3], item[4]))]
+        trial["candidate_snippets"] = [staged_snippets[key] for key in sorted(staged_snippets, key=lambda item: (os.fsencode(item[0]), item[2], item[3], item[4]))]
         trial["selection"] = {"included_candidate_bundles": len(trial_bundles), "omitted_candidate_bundles": len(complete_bundles) - len(trial_bundles),
                               "complete": len(trial_bundles) == len(complete_bundles), "candidate_bundle_count": len(complete_bundles)}
         try:
@@ -2669,6 +2719,7 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
             # Rebuild omitted counts from the retained complete prefix.
             break
         selected_bundles = trial_bundles
+        selected_snippets = staged_snippets
         document = trial
     document["selection"] = {"included_candidate_bundles": len(selected_bundles), "omitted_candidate_bundles": len(complete_bundles) - len(selected_bundles),
                              "complete": len(selected_bundles) == len(complete_bundles), "candidate_bundle_count": len(complete_bundles)}
