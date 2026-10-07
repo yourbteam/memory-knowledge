@@ -1,0 +1,119 @@
+{
+  "benchmark_schema_version": 1,
+  "benchmark_id": "atlas-unseen-benchmark-20261007",
+  "purpose": "Compare answers from existing reviewed Atlas maps with direct source investigation on three practical maintenance questions whose exact wording and routes are absent from the three prior saved answer trials. This does not claim the routes were never used while constructing maps or elsewhere.",
+  "frozen_inputs": {
+    "source_head": "64c55c8fa5112adb650074aa473ac9bffc9266fe",
+    "atlas_database_sha256": "fff1db158fbdf050f243b85624465b74407ae1395fd0b74c9f3c902e949563d9",
+    "private_scoring_spec_sha256": "557f15e4310e78252b13eb7061589c949abf3160be9960ee17d65d0eda9b84e3",
+    "public_questions_sha256": "d3a40bc5293580fb8b3cff4acf091c7fc810fdca812d2418ec2347ccad0a4613",
+    "assignment_review_sha256": "ad8f628e7ac6df6b595bdcc28e8febea4a22bed4ae506bd45bd0711d8a76e9fc"
+  },
+  "questions": [
+    {
+      "question_id": "unseen-discount-guards",
+      "question": "For GET api/customer/checkout/{orderId}/{discount}/{numberOfSelectedPhotos:int}, explain the shown discount-handler branches for an empty or literal-null discount, a nonpositive selected-photo count, zero customer photos, an unresolved discount, and an exhausted use limit. What response constructor values result, and what read/helper sequence runs after those guards? Limit the answer to the shown controller and handler bodies; do not infer helper internals.",
+      "http_method": "GET",
+      "route_literal": "api/customer/checkout/{orderId}/{discount}/{numberOfSelectedPhotos:int}",
+      "route_fact_id": "0d1faa5c82e4c19c9dc742c5",
+      "gold_facts": 13
+    },
+    {
+      "question_id": "unseen-forgot-ordering",
+      "question": "For POST api/forgot, explain email normalization and the invalid-email and missing-user branches, then the code-update, save, mail, and response order. In the shown SMTP candidate, what happens when required mail configuration is missing, and how does the controller handle InvalidOperationException? State whether the shown handler clears a prior verification marker or assigns code expiry, and distinguish source order from proven delivery or runtime binding.",
+      "http_method": "POST",
+      "route_literal": "api/forgot",
+      "route_fact_id": "1057e2a6068844debf52d643",
+      "gold_facts": 12
+    },
+    {
+      "question_id": "unseen-closed-order",
+      "question": "For POST api/customer/{orderId}/updateClosedOrder, what does the shown controller forward, what happens for Closed=true versus Closed=false, and in what order are the timestamp, save, and response produced? Does the shown handler make closing irreversible or skip saving when the requested value equals the current value? Limit the answer to this controller and handler; do not infer the ownership helper internals.",
+      "http_method": "POST",
+      "route_literal": "api/customer/{orderId}/updateClosedOrder",
+      "route_fact_id": "cbc54fd194464102d6adb04a",
+      "gold_facts": 6
+    }
+  ],
+  "execution": {
+    "answer_model": "GPT-6 Luna High",
+    "arms": ["atlas", "direct_source"],
+    "fresh_context_and_matching_model_settings": "Parent dispatch and worker attestation; no independent provider receipt was retained.",
+    "atlas_source_fallback": false,
+    "independent_judge": "GPT-6.1 Sol High"
+  },
+  "frozen_scoring": {
+    "accuracy": "Micro-average supported material assertions divided by all material assertions. Contradicted and unsupported assertions are not supported.",
+    "completeness": "Each of 31 equally weighted gold facts receives credit only when every material qualifier and an accurate supporting citation are present; no partial credit.",
+    "citation_rule": "A gold fact requires an accurate source citation or an exact Atlas map-claim citation whose verified span supports it.",
+    "pass_thresholds": {
+      "atlas_accuracy_max_shortfall_percentage_points": 5,
+      "atlas_completeness_max_shortfall_percentage_points": 5,
+      "atlas_unsupported_material_claims_max": 0,
+      "minimum_evidence_stdout_byte_reduction_fraction": 0.3
+    },
+    "formula": "Atlas accuracy >= direct-source accuracy - 5 AND Atlas completeness >= direct-source completeness - 5 AND Atlas unsupported material claims == 0 AND (direct-source evidence stdout bytes - Atlas evidence stdout bytes) / direct-source evidence stdout bytes >= 0.30."
+  },
+  "scores": {
+    "atlas": {
+      "supported_assertions": 99,
+      "unsupported_assertions": 0,
+      "contradicted_assertions": 2,
+      "total_assertions": 101,
+      "accuracy_ratio": "99/101",
+      "accuracy_percentage": 98.01980198019803,
+      "credited_gold_facts": 14,
+      "gold_fact_count": 31,
+      "completeness_ratio": "14/31",
+      "completeness_percentage": 45.16129032258065,
+      "evidence_stdout_bytes": 22007
+    },
+    "direct_source": {
+      "supported_assertions": 102,
+      "unsupported_assertions": 4,
+      "contradicted_assertions": 0,
+      "total_assertions": 106,
+      "accuracy_ratio": "51/53",
+      "accuracy_percentage": 96.22641509433963,
+      "credited_gold_facts": 10,
+      "gold_fact_count": 31,
+      "completeness_ratio": "10/31",
+      "completeness_percentage": 32.25806451612903,
+      "evidence_stdout_bytes": 386333
+    }
+  },
+  "result": {
+    "frozen_formula_verdict": "PASS",
+    "pass_predicates": {
+      "direct_bytes_positive": true,
+      "accuracy_within_5_points": true,
+      "completeness_within_5_points": true,
+      "atlas_zero_unsupported": true,
+      "evidence_reduction_at_least_30_percent": true
+    },
+    "accuracy_delta_atlas_minus_direct_percentage_points": 1.7933868858583972,
+    "completeness_delta_atlas_minus_direct_percentage_points": 12.903225806451612,
+    "evidence_stdout_bytes_saved": 364326,
+    "evidence_stdout_reduction_percentage": 94.30361889872209,
+    "sensitivity_excluding_malformed_direct_search": {
+      "direct_source_bytes": 236950,
+      "atlas_bytes": 22007,
+      "reduction_percentage": 90.71238657944714
+    }
+  },
+  "limitations": [
+    "Evidence stdout bytes are a context-volume proxy, not provider token telemetry.",
+    "The direct arm made a malformed broad search whose 149383 stdout bytes remain counted by the frozen rule; the sensitivity result excludes it.",
+    "Atlas worker wall time omitted its first command; five direct command timings were unavailable, so timing is descriptive only.",
+    "One direct command recorded exit 0 although read-only replay returns exit 2 with the same stdout content and bytes.",
+    "Runtime blindness and identical worker settings were attested but not independently sandbox-enforced or provider-verified.",
+    "The retained record is compact; source-bearing raw outputs and the full 664378-byte audit were not copied into this repository. Their hashes are retained below."
+  ],
+  "largest_atlas_limitation": "Stored reviewed claims omit exact response-constructor values, formatting, and helper/read arguments needed by detailed maintenance questions; the discount answer credited 2 of 13 full gold facts.",
+  "audit_artifact_hashes": {
+    "atlas_worker_results_sha256": "828257c9ea1ca4e41495309268f1cde62a00d15b88dbe794cabc5a748d5f3bde",
+    "direct_worker_results_sha256": "200d5be57c56cc21fdc532d3f5187a710b7f87e1075a88964bb6d1c855d77fae",
+    "outcome_review_sha256": "ada229166aa4e01743d3ed689ec22fd51b45f0d96fcfd8f26e3f888c3884b2d0",
+    "outcome_summary_sha256": "761e06728127e54d7e09dce87855b7d61d47d31e37ea0d66000ee54d125ff193"
+  }
+}
