@@ -2046,6 +2046,16 @@ class Controller { [HttpGet] void Get() {} }
         self.assertEqual(accepted["review_receipt"]["receipt_hash"], receipt_result["receipt_hash"])
         large = self.cli("focus", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo), "--snapshot", saved["snapshot_id"], "--overlay", overlay_id, "--max-tokens", "5000")
         large_json = json.loads(large.stdout)
+        snippet_by_id = {item["snippet_id"]: item for item in large_json["source_snippets"]}
+        anchor_by_id = {item["source_id"]: item for item in large_json["source_anchors"]}
+        self.assertTrue(all(set(item) == {"snippet_id", "source_id", "span", "text"} for item in large_json["source_snippets"]))
+        self.assertEqual(len(snippet_by_id), len(large_json["source_snippets"]))
+        self.assertTrue(all(snippet["source_id"] in anchor_by_id for snippet in large_json["source_snippets"]))
+        referenced_snippets = {item["snippet_id"] for claim in large_json["claims"] for item in claim["evidence"]}
+        referenced_sources = {item["source_id"] for claim in large_json["claims"] for item in claim["evidence"]}
+        self.assertEqual(referenced_snippets, set(snippet_by_id))
+        self.assertEqual(referenced_sources, set(anchor_by_id))
+        self.assertTrue(all(item["snippet_id"] in snippet_by_id for claim in large_json["claims"] for item in claim["evidence"]))
         exact_size = large_json["budget"]["stdout_bytes_including_newline"]
         self.assertEqual(len(large.stdout.encode("ascii")), exact_size)
         exact = self.cli("focus", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo), "--snapshot", saved["snapshot_id"], "--overlay", overlay_id, "--max-tokens", str(exact_size))
@@ -2058,6 +2068,12 @@ class Controller { [HttpGet] void Get() {} }
         repeated_json = json.loads(repeated_short.stdout)
         self.assertEqual(repeated_json["claims"], short_json["claims"])
         self.assertEqual(repeated_json["claim_selection"], short_json["claim_selection"])
+        short_snippets = {item["snippet_id"] for item in short_json["source_snippets"]}
+        self.assertTrue(short_snippets.issubset(snippet_by_id))
+        self.assertEqual(
+            {item["snippet_id"] for claim in short_json["claims"] for item in claim["evidence"]},
+            short_snippets,
+        )
         replaced_receipt = dict(receipt, decision="rejected", review_basis="Attempted conflicting receipt.")
         receipt_path.write_text(json.dumps(replaced_receipt), encoding="utf-8")
         self.cli("flow-review", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--overlay", overlay_id, "--input", os.fspath(receipt_path), expect=2)
@@ -2166,18 +2182,33 @@ class Controller { [HttpGet] void Get() {} }
 
     def test_answer_check_binds_complete_fresh_packet_and_preserves_exact_accepted_draft(self):
         source = self.repo / "Answer.cs"
-        source.write_text('namespace Demo; class Widget { bool Success; int MatchedCount; }\n', encoding="utf-8")
+        source.write_text('''namespace Demo;
+class Widget
+{
+    private readonly int _id;
+    Widget(int id) { _id = id; }
+    object Create(int id) => Build(new Widget(id), mode: Mode.Exact);
+    object Build(Widget value, Mode mode) => new Result(false, 0, value, mode);
+    bool Success;
+    int MatchedCount;
+}
+''', encoding="utf-8")
         git(self.repo, "add", "--", "Answer.cs")
         saved = self.index()
         graph = self.graph(saved["snapshot_id"])
-        fact = next(item for item in graph["facts"] if item["kind"] == "type_declaration" and item["source"]["path"] == "Answer.cs")
+        create_fact = next(item for item in graph["facts"] if item.get("method_name") == "Create" and item["source"]["path"] == "Answer.cs")
+        build_fact = next(item for item in graph["facts"] if item.get("method_name") == "Build" and item["source"]["path"] == "Answer.cs")
+        fact = create_fact
         overlay = {
             "overlay_schema_version": 1,
             "snapshot_id": saved["snapshot_id"],
             "extractor_identity": graph["extractor_identity"],
             "title": "Answer fixture map",
             "reviewed_conclusions": [
-                {"claim": "The response has success = false and matched_count = 0.", "evidence": [{"fact_id": fact["id"], "source": fact["source"]}]},
+                {"claim": "The response has success = false and matched_count = 0.", "evidence": [
+                    {"fact_id": fact["id"], "source": fact["source"]},
+                    {"fact_id": build_fact["id"], "source": build_fact["source"]},
+                ]},
                 {"claim": "The controller is declared as a C# class.", "evidence": [{"fact_id": fact["id"], "source": fact["source"]}]},
             ],
         }
@@ -2209,6 +2240,14 @@ class Controller { [HttpGet] void Get() {} }
         self.assertEqual([claim["claim_number"] for claim in packet["claims"]], [1, 2])
         self.assertEqual(packet["binding"]["overlay_content_hash"], attached["content_hash"])
         self.assertEqual(packet["binding"]["question_sha256"], hashlib.sha256(question_file.read_bytes()).hexdigest())
+        cited_text = "\n".join(item["text"] for item in packet["source_snippets"])
+        self.assertIn("object Create(int id) => Build(new Widget(id), mode: Mode.Exact)", cited_text)
+        self.assertIn("object Build(Widget value, Mode mode) => new Result(false, 0, value, mode)", cited_text)
+        self.assertIn("may be accepted even when the map claim paraphrase omits them", packet["review_instructions"])
+        self.assertIn("complete relevant coverage", packet["review_instructions"])
+        self.assertIn("contradictions", packet["review_instructions"])
+        self.assertIn("candidate bindings", packet["review_instructions"])
+        self.assertTrue(all("snippet_id" in item for claim in packet["claims"] for item in claim["evidence"]))
         packet_hash = hashlib.sha256(prepared.stdout.encode("ascii")).hexdigest()
 
         review_file = self.root / "answer-review.json"
@@ -2225,6 +2264,10 @@ class Controller { [HttpGet] void Get() {} }
         review_file.write_text(json.dumps(review), encoding="utf-8")
         accepted = self.cli(*args, "--review", os.fspath(review_file))
         self.assertEqual(accepted.stdout.encode(), draft_bytes)
+
+        question_file.write_text("What exact value does selfie upload return?\n", encoding="utf-8")
+        self.cli(*args, "--review", os.fspath(review_file), expect=2)
+        question_file.write_bytes(b"What does selfie upload return?\n")
 
         bare = json.loads(json.dumps(review))
         bare["claim_reviews"][0]["basis"] = "used"
@@ -2245,6 +2288,63 @@ class Controller { [HttpGet] void Get() {} }
         changed = dict(review, packet_sha256="0" * 64)
         review_file.write_text(json.dumps(changed), encoding="utf-8")
         self.cli(*args, "--review", os.fspath(review_file), expect=2)
+
+    def test_focus_exact_snippet_identity_unicode_and_fail_closed_source_checks(self):
+        source = self.repo / "Exact.cs"
+        raw = "\ufeffΩ\r\nreturn x;\r\nreturn x;\n".encode("utf-8")
+        source.write_bytes(raw)
+        decoded = raw.decode("utf-8-sig")
+        first_start = decoded.index("return x;")
+        second_start = decoded.index("return x;", first_start + 1)
+
+        def citation(fact_id, start):
+            end = start + len("return x;")
+            return {
+                "fact_id": fact_id,
+                "source": {
+                    "path": "Exact.cs",
+                    "sha256": hashlib.sha256(raw).hexdigest(),
+                    "span": {"offset_unit": "unicode_codepoint", "start_offset": start, "end_offset": end},
+                },
+            }
+
+        first, repeated, other_span = citation("fact-a", first_start), citation("fact-b", first_start), citation("fact-c", second_start)
+        claims = [
+            {"claim": "first", "evidence": [first]},
+            {"claim": "same span, another fact", "evidence": [repeated]},
+            {"claim": "same text, another span", "evidence": [other_span]},
+        ]
+        verified = ATLAS._source_texts(self.repo, [(item["fact_id"], item["source"]) for claim in claims for item in claim["evidence"]])
+        common = {
+            "snapshot_id": "snapshot",
+            "extractor_identity": "extractor",
+            "review_status": "accepted",
+            "reviewer": {"identity": "reviewer", "model": "model", "decision": "accepted", "reviewed_at": "now"},
+        }
+        flow = {"overlay": {"reviewed_conclusions": claims, "extractor_identity": "extractor"}, "overlay_id": "overlay", "review_status": "accepted", "review_receipt": {"reviewer_identity": "reviewer", "reviewer_model": "model", "decision": "accepted", "reviewed_at": "now"}}
+        freshness = {"repository_root": os.fspath(self.repo)}
+        document, encoded = ATLAS._focus_document(common, flow, freshness, 100000, verified)
+        self.assertEqual(document["budget"]["stdout_bytes_including_newline"], len(encoded))
+        self.assertEqual([item["text"] for item in document["source_snippets"]], ["return x;", "return x;"])
+        self.assertNotEqual(document["source_snippets"][0]["snippet_id"], document["source_snippets"][1]["snippet_id"])
+        self.assertEqual(document["claims"][0]["evidence"][0]["snippet_id"], document["claims"][1]["evidence"][0]["snippet_id"])
+        self.assertNotEqual(document["claims"][0]["evidence"][0]["snippet_id"], document["claims"][2]["evidence"][0]["snippet_id"])
+        self.assertEqual([item["fact_id"] for claim in document["claims"] for item in claim["evidence"]], ["fact-a", "fact-b", "fact-c"])
+        reordered, _ = ATLAS._focus_document(common, {**flow, "overlay": {**flow["overlay"], "reviewed_conclusions": [claims[2], claims[0]]}}, freshness, 100000, verified)
+        original_ids = {item["text"] + str(item["span"]["start_offset"]): item["snippet_id"] for item in document["source_snippets"]}
+        reordered_ids = {item["text"] + str(item["span"]["start_offset"]): item["snippet_id"] for item in reordered["source_snippets"]}
+        self.assertEqual(reordered_ids, original_ids)
+        self.assertEqual(decoded[first_start:first_start + len("return x;")], "return x;")
+
+        wrong_hash = dict(first["source"], sha256="0" * 64)
+        with self.assertRaisesRegex(ATLAS.AtlasError, "source hash changed"):
+            ATLAS._source_texts(self.repo, [("fact-a", wrong_hash)])
+        outside = self.root / "outside.cs"
+        outside.write_bytes(raw)
+        (self.repo / "unsafe.cs").symlink_to(outside)
+        unsafe = {"path": "unsafe.cs", "sha256": hashlib.sha256(raw).hexdigest(), "span": first["source"]["span"]}
+        with self.assertRaisesRegex(ATLAS.AtlasError, "missing or not a regular file"):
+            ATLAS._source_texts(self.repo, [("unsafe-fact", unsafe)])
 
     def test_answer_check_refuses_unaccepted_or_stale_focus(self):
         source = self.repo / "Answer.cs"

@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "record_id": "atlas-unseen-exact-snippets-20261007",
+  "predecessor": {
+    "benchmark_id": "atlas-unseen-benchmark-20261007",
+    "record": "unseen-maintenance-benchmark-20261007.json",
+    "question_route_pairs_unchanged": [
+      {
+        "question_id": "unseen-discount-guards",
+        "route_fact_id": "0d1faa5c82e4c19c9dc742c5"
+      },
+      {
+        "question_id": "unseen-forgot-ordering",
+        "route_fact_id": "1057e2a6068844debf52d643"
+      },
+      {
+        "question_id": "unseen-closed-order",
+        "route_fact_id": "cbc54fd194464102d6adb04a"
+      }
+    ]
+  },
+  "frozen_artifacts": {
+    "inputs_and_implementation": [
+      {
+        "basename": "atlas.py",
+        "sha256": "1d6ec5d8d1114c96cd7526d4813ba629ed72da56b39286113ad21555e064f90f"
+      },
+      {
+        "basename": "taggable-api.atlas.sqlite",
+        "sha256": "fff1db158fbdf050f243b85624465b74407ae1395fd0b74c9f3c902e949563d9"
+      },
+      {
+        "basename": "benchmark-public-questions.json",
+        "sha256": "d3a40bc5293580fb8b3cff4acf091c7fc810fdca812d2418ec2347ccad0a4613"
+      },
+      {
+        "basename": "atlas-worker-assignment.md",
+        "sha256": "5eaa7823e50aa9c909959d777d8b20c5f7a13dd118b4cab5f72d23e473dff4b0"
+      }
+    ],
+    "raw_route_find_outputs": [
+      {
+        "basename": "0d1faa5c82e4c19c9dc742c5.stdout",
+        "sha256": "539aaff0c57fdd955bafdfb506b4252d1e5c2d8907ffcebfb7c006f25c2f0f1a",
+        "bytes": 12076
+      },
+      {
+        "basename": "1057e2a6068844debf52d643.stdout",
+        "sha256": "67e8a8f89a33f750315939ddce9da2243b254d1e91f4530289ff162cb0fbfa70",
+        "bytes": 16642
+      },
+      {
+        "basename": "cbc54fd194464102d6adb04a.stdout",
+        "sha256": "096c3039c8deaef8412e69f07f38cf3838336652ca32d62b156e9ef365fa0ffa",
+        "bytes": 9797
+      }
+    ],
+    "result_and_audit_records": [
+      {
+        "basename": "input-manifest.json",
+        "sha256": "b743d59c6905cef38d659f273783a837324834aecdb579fd8bb5d907794a8920"
+      },
+      {
+        "basename": "atlas-worker-results.json",
+        "sha256": "9e756e548a84593b4167ee12e5be4a3a417bf5d0800cdc91d2c2187da674a624"
+      },
+      {
+        "basename": "outcome-review.json",
+        "sha256": "d4765d38f243bcdad232667a518a1b69a05264cfb6c1773b399ca6592be2c654"
+      },
+      {
+        "basename": "outcome-review-errata.json",
+        "sha256": "2c6aeff1679892bd86a63e2cbc0f9943d392eb2d9f7292f1aa32edffcc7b8a49"
+      },
+      {
+        "basename": "corrected-worker-results.json",
+        "sha256": "771d32218770d453173c630005bcdb0f03a9612a10e81573a7431b0c53b3d22d"
+      },
+      {
+        "basename": "corrected-outcome-review.json",
+        "sha256": "ac08fde25258685490aa99639eebb02a4d2e6871ac9c3dfa5b3c9bb257a660d1"
+      }
+    ],
+    "answer_check_packets": [
+      {
+        "basename": "unseen-discount-guards.answer-packet.json",
+        "sha256": "e7d37e7699e83e20f95273b9d1ce23469e9bb42d9656c271c5b5d229f1eb74fc"
+      },
+      {
+        "basename": "unseen-forgot-ordering.answer-packet.json",
+        "sha256": "1d0180a4f57cd11b5be2f3e010f4e3af198fe7d8ab7b0d9a20f50ff124d05fd8"
+      },
+      {
+        "basename": "unseen-closed-order.answer-packet.json",
+        "sha256": "a58bbc218dac07d35662995f2304063b14a0a49f8c97c428794b6d6224009fd6"
+      },
+      {
+        "basename": "corrected-unseen-discount-guards.answer-packet.json",
+        "sha256": "529f0abaf7a20bc38143a7302630f82b690712c5472857db1ea4183ec7aa3534"
+      },
+      {
+        "basename": "corrected-unseen-forgot-ordering.answer-packet.json",
+        "sha256": "5b2799c6c1b0be82dc40f01b14852ad06f74f34a31c1a262943c8bf58a4295c2"
+      },
+      {
+        "basename": "corrected-unseen-closed-order.answer-packet.json",
+        "sha256": "a58bbc218dac07d35662995f2304063b14a0a49f8c97c428794b6d6224009fd6"
+      }
+    ],
+    "answer_check_reviews": [
+      {
+        "basename": "unseen-discount-guards.answer-review.json",
+        "sha256": "b17736db2becf1dd70d86b984cc2c61ccb9609eaad61952065c0c87f79b689c6",
+        "decision": "rejected"
+      },
+      {
+        "basename": "unseen-forgot-ordering.answer-review.json",
+        "sha256": "19977a75c9f6c954bb6d9db8993886107061bb9a8be0cac0e55f8d64a473d175",
+        "decision": "rejected"
+      },
+      {
+        "basename": "unseen-closed-order.answer-review.json",
+        "sha256": "bcdb3681bdf82437f3f0efc0894cc29841aa88fbbf31369a4f4460672daf6a4e",
+        "decision": "accepted"
+      },
+      {
+        "basename": "corrected-unseen-discount-guards.answer-review.json",
+        "sha256": "62dae900ef485978b3dd3399c27ec32f267125983de3f544f6f5293569084de3",
+        "decision": "accepted"
+      },
+      {
+        "basename": "corrected-unseen-forgot-ordering.answer-review.json",
+        "sha256": "c8e446c7bfe1f32badf4de1daf67be1ceebcf226a697f179a0bc566431fe7e4a",
+        "decision": "accepted"
+      },
+      {
+        "basename": "corrected-unseen-closed-order.answer-review.json",
+        "sha256": "5046386c021bc523287d6af081f0404f8305415ce7b703727e369ad0cc22c598",
+        "decision": "accepted"
+      }
+    ]
+  },
+  "reproducible_command_shapes": [
+    "python3 ATLAS_PY route-find --db DB --repo REPO --route-fact-id ROUTE_FACT_ID --max-tokens 30000",
+    "python3 ATLAS_PY answer-check --db DB --repo REPO --snapshot SNAPSHOT --overlay OVERLAY --question-file QUESTION --draft-file DRAFT [--review REVIEW]"
+  ],
+  "fresh_one_shot_raw_atlas": {
+    "supported_assertions": 94,
+    "unsupported_assertions": 0,
+    "contradicted_assertions": 0,
+    "total_assertions": 94,
+    "credited_gold_facts": 15,
+    "gold_fact_count": 31,
+    "discount_gold_facts": "2/13",
+    "route_find_only_bytes": 38515,
+    "answer_checks": {
+      "unseen-discount-guards": "rejected",
+      "unseen-forgot-ordering": "rejected",
+      "unseen-closed-order": "accepted"
+    },
+    "frozen_aggregate_formula": "PASS",
+    "approved_stopping_condition": "FAIL: discount coverage must be greater than 2/13"
+  },
+  "conservative_evidence_accounting": {
+    "route_find_bytes": 38515,
+    "repeated_evidence_display_bytes": 38515,
+    "conservative_atlas_evidence_bytes": 77030,
+    "basis": "Luna displayed the same evidence again. The extra 38,515-byte display has no independently captured argv, stdout artifact, or elapsed-time receipt; capture is incomplete.",
+    "retained_direct_comparator_bytes": 386333,
+    "saved_bytes": 309303,
+    "saved_fraction": "309303/386333",
+    "saved_percent": 80.06124250322908,
+    "scope": "Frozen retrieval-evidence savings only; this is not total workflow savings.",
+    "excluded": [
+      "96,570 first-plus-corrected packet and review artifact bytes",
+      "prompt overhead",
+      "provider-token costs"
+    ]
+  },
+  "unchanged_retained_direct_comparator": {
+    "supported_assertions": 102,
+    "unsupported_assertions": 4,
+    "contradicted_assertions": 0,
+    "total_assertions": 106,
+    "credited_gold_facts": 10,
+    "gold_fact_count": 31,
+    "evidence_bytes": 386333,
+    "status": "Historical comparator; not rerun in this trial."
+  },
+  "one_correction_operator_package": {
+    "correction_rounds": 1,
+    "source_grounded_correction_documented": true,
+    "actual_answer_check_reviews": "all three accepted",
+    "supported_assertions": 104,
+    "unsupported_assertions": 0,
+    "contradicted_assertions": 0,
+    "total_assertions": 104,
+    "credited_gold_facts": 29,
+    "gold_fact_count": 31,
+    "gold_by_question": {
+      "D": 13,
+      "F": 12,
+      "C": 4
+    },
+    "missed_gold_ids": [
+      "C02",
+      "C05"
+    ],
+    "frozen_aggregate_formula": "PASS",
+    "approved_stopping_conditions": "PASS"
+  },
+  "review_and_trial_limitations": [
+    "The answer-review schema has no dedicated disposition for relevant-but-incomplete claims; that state is represented only by top-level rejection reasons. No private rejection reasons are reproduced here.",
+    "The corrected worker package is not in the exact public worker-schema form: it omits material_claims, limitations, and evidence_measurement.",
+    "The extra repeated-evidence display lacks an independent argv/stdout/elapsed receipt, so evidence capture is incomplete.",
+    "This is a fresh Atlas implementation-and-assignment rerun against a retained historical direct comparator, not a fresh paired trial or an implementation-only causal estimate."
+  ],
+  "outcome": {
+    "raw_one_shot": "Frozen formula passed; requested stopping condition failed because discount coverage remained 2/13. Outcome review rejected stopping.",
+    "corrected_package": "After one source-grounded correction, all three answers passed actual answer-check; corrected package satisfies the approved stopping conditions and frozen formula, while retaining the schema and trial-design limitations above."
+  }
+}

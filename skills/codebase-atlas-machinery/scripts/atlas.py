@@ -2897,28 +2897,68 @@ def route_refresh(db_arg: str, repo_arg: str, from_snapshot_id: str, route_fact_
     return result, encoded, 0
 
 
-def _focus_document(snapshot: dict[str, object], flow_result: dict[str, object], freshness: dict[str, object], max_bytes: int) -> tuple[dict[str, object], bytes]:
+def _focus_span_identity(span: dict[str, object]) -> bytes:
+    return json.dumps(span, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("ascii")
+
+
+def _focus_snippet_identity(path: str, source_hash: str, span: dict[str, object]) -> tuple[str, str, bytes]:
+    return path, source_hash, _focus_span_identity(span)
+
+
+def _focus_snippet_id(identity: tuple[str, str, bytes]) -> str:
+    # Length-prefix every field so concatenation cannot make two identities collide.
+    fields = (identity[0].encode("utf-8"), identity[1].encode("ascii"), identity[2])
+    payload = b"codebase-atlas-source-snippet-v1\0" + b"".join(
+        len(field).to_bytes(8, "big") + field for field in fields
+    )
+    return "snippet-" + hashlib.sha256(payload).hexdigest()
+
+
+def _focus_document(
+    snapshot: dict[str, object], flow_result: dict[str, object], freshness: dict[str, object],
+    max_bytes: int, verified_sources: list[dict[str, object]],
+) -> tuple[dict[str, object], bytes]:
     overlay = flow_result["overlay"]
     all_claims = overlay["reviewed_conclusions"]
+    verified_by_citation: dict[tuple[str, str, str, bytes], dict[str, object]] = {}
+    snippets_by_identity: dict[tuple[str, str, bytes], dict[str, object]] = {}
+    for item in verified_sources:
+        span = item["span"]
+        identity = _focus_snippet_identity(item["path"], item["sha256"], span)
+        verified_by_citation[(item["fact_id"], item["path"], item["sha256"], identity[2])] = item
+        snippets_by_identity.setdefault(identity, {
+            "snippet_id": _focus_snippet_id(identity), "span": span, "text": item["text"],
+        })
+
     def build(claims: list[dict[str, object]], byte_count: int) -> dict[str, object]:
-        keys = sorted(
-            {(citation["source"]["path"], citation["source"]["sha256"])
-             for claim in claims for citation in claim["evidence"]},
-            key=lambda item: (os.fsencode(item[0]), item[1]),
-        )
+        identities = {
+            _focus_snippet_identity(citation["source"]["path"], citation["source"]["sha256"], citation["source"]["span"])
+            for claim in claims for citation in claim["evidence"]
+        }
+        keys = sorted({(identity[0], identity[1]) for identity in identities}, key=lambda item: (os.fsencode(item[0]), item[1]))
         source_ids = {key: f"source-{index + 1}" for index, key in enumerate(keys)}
+        selected_snippets = [
+            {**snippets_by_identity[identity], "source_id": source_ids[(identity[0], identity[1])]}
+            for identity in sorted(identities, key=lambda item: (os.fsencode(item[0]), item[1], item[2]))
+        ]
         selected = []
         for claim in claims:
+            citations = []
+            for citation in claim["evidence"]:
+                source = citation["source"]
+                identity = _focus_snippet_identity(source["path"], source["sha256"], source["span"])
+                verified = verified_by_citation.get((citation["fact_id"], source["path"], source["sha256"], identity[2]))
+                if verified is None:
+                    raise AtlasError(f"source citation could not be matched to verified text: {citation['fact_id']}")
+                citations.append({
+                    "fact_id": citation["fact_id"],
+                    "source_id": source_ids[(identity[0], identity[1])],
+                    "span": source["span"],
+                    "snippet_id": _focus_snippet_id(identity),
+                })
             selected.append({
                 "claim": claim["claim"],
-                "evidence": [
-                    {
-                        "fact_id": citation["fact_id"],
-                        "source_id": source_ids[(citation["source"]["path"], citation["source"]["sha256"])],
-                        "span": citation["source"]["span"],
-                    }
-                    for citation in claim["evidence"]
-                ],
+                "evidence": citations,
             })
         reviewer = flow_result["review_receipt"]
         return {
@@ -2946,6 +2986,7 @@ def _focus_document(snapshot: dict[str, object], flow_result: dict[str, object],
                 {"source_id": source_ids[key], "path": key[0], "sha256": key[1]}
                 for key in keys
             ],
+            "source_snippets": selected_snippets,
             "claims": selected,
             "budget": {
                 "limit": max_bytes,
@@ -3050,7 +3091,15 @@ def focus(db_arg: str, repo_arg: str, snapshot_id: str, overlay_id: str, max_byt
         "head": snapshot_result["head"],
         "head_ref": snapshot_result["head_ref"],
     }
-    value, encoded = _focus_document(snapshot, flow_result, freshness, max_bytes)
+    references = [
+        (citation["fact_id"], citation["source"])
+        for claim in flow_result["overlay"]["reviewed_conclusions"]
+        for citation in claim["evidence"]
+    ]
+    # Read and hash-check all cited files once after receipt and freshness have passed.
+    # The same verified text is reused for every atomic budget trial below.
+    verified_sources = _source_texts(Path(live["repository_root"]), references)
+    value, encoded = _focus_document(snapshot, flow_result, freshness, max_bytes, verified_sources)
     return value, encoded, 0
 
 
@@ -3101,12 +3150,16 @@ def answer_check(
             for index, item in enumerate(claims, start=1)
         ],
         "source_anchors": focused["source_anchors"],
+        "source_snippets": focused["source_snippets"],
         "review_instructions": (
-            "Independently inspect every relevant subfact in every numbered claim against its cited spans. "
-            "For each claim, decide whether it is relevant to the exact question. Mark relevant claims covered "
-            "only when the draft includes every relevant supported subfact; mark irrelevant claims not_relevant. "
-            "Also check that the draft adds no unsupported assertion. A bare 'used' or equivalent is not evidence "
-            "of completeness."
+            "Independently inspect every question-relevant exact detail in each cited source snippet, including "
+            "return values, constructor calls, and arguments. Exact assertions supported by cited snippet text "
+            "may be accepted even when the map claim paraphrase omits them. Check complete relevant coverage, "
+            "contradictions between the draft, map claims, and cited bodies, and every unsupported addition. "
+            "For each numbered claim, decide relevance to the exact question and mark relevant claims covered "
+            "only when the draft includes every question-relevant supported detail; otherwise mark not_relevant "
+            "only when the claim is unrelated. Treat candidate bindings and lexical relationships as limitations, "
+            "not proof of runtime behavior. A bare 'used' or equivalent is not evidence of completeness."
         ),
     }
     packet_bytes = (json.dumps(packet, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
