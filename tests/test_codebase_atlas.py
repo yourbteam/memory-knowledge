@@ -2380,6 +2380,332 @@ class Widget
             with self.assertRaisesRegex(module.AtlasError, "requires every reviewed claim"):
                 module.answer_check("unused", "unused", "snapshot", "overlay", "unused", "unused", None)
 
+    def test_answer_lifecycle_one_rejection_correction_acceptance_and_guards(self):
+        source = self.repo / "Answer.cs"
+        source.write_text('''namespace Demo;
+class Widget
+{
+    object Create(int id) => Build(new Widget(id), mode: Mode.Exact);
+    object Build(Widget value, Mode mode) => new Result(false, 0, value, mode);
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Answer.cs")
+        saved = self.index()
+        graph = self.graph(saved["snapshot_id"])
+        create_fact = next(item for item in graph["facts"] if item.get("method_name") == "Create" and item["source"]["path"] == "Answer.cs")
+        build_fact = next(item for item in graph["facts"] if item.get("method_name") == "Build" and item["source"]["path"] == "Answer.cs")
+        overlay = {
+            "overlay_schema_version": 1, "snapshot_id": saved["snapshot_id"],
+            "extractor_identity": graph["extractor_identity"], "title": "Answer lifecycle map",
+            "reviewed_conclusions": [
+                {"claim": "The returned result has success=false and matched_count=0.", "evidence": [
+                    {"fact_id": create_fact["id"], "source": create_fact["source"]},
+                    {"fact_id": build_fact["id"], "source": build_fact["source"]},
+                ]},
+                {"claim": "Widget is a C# class.", "evidence": [{"fact_id": create_fact["id"], "source": create_fact["source"]}]},
+            ],
+        }
+        overlay_file = self.root / "lifecycle-flow.json"
+        overlay_file.write_text(json.dumps(overlay), encoding="utf-8")
+        attached = json.loads(self.cli("flow-add", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--input", os.fspath(overlay_file)).stdout)
+        receipt = {
+            "receipt_schema_version": 1, "snapshot_id": saved["snapshot_id"], "overlay_id": attached["overlay_id"],
+            "overlay_content_hash": attached["content_hash"], "extractor_identity": graph["extractor_identity"],
+            "reviewer_identity": "independent flow reviewer", "reviewer_model": "GPT-6.1 Sol High",
+            "decision": "accepted", "reviewed_at": "2026-10-06T12:00:00Z",
+            "review_basis": "Both claims are grounded in the exact saved method spans.",
+        }
+        receipt_file = self.root / "lifecycle-flow-review.json"
+        receipt_file.write_text(json.dumps(receipt), encoding="utf-8")
+        self.cli("flow-review", "--db", os.fspath(self.db), "--snapshot", saved["snapshot_id"], "--overlay", attached["overlay_id"], "--input", os.fspath(receipt_file))
+
+        question_file = self.root / "lifecycle-question.txt"
+        draft_file = self.root / "lifecycle-draft.txt"
+        question_file.write_text("What exact result values does the operation return?\n", encoding="utf-8")
+        draft_file.write_text("It returns success=false.\n", encoding="utf-8")
+        base = ("answer-lifecycle", "prepare", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                "--snapshot", saved["snapshot_id"], "--overlay", attached["overlay_id"],
+                "--question-file", os.fspath(question_file), "--draft-file", os.fspath(draft_file))
+        initial_result = self.cli(*base)
+        initial_bytes = initial_result.stdout
+        initial = json.loads(initial_bytes)
+        self.assertEqual(initial["result"], "semantic_review_required")
+        self.assertEqual(initial_bytes, self.cli(*base).stdout)
+        contract = initial["review_contract"]
+        self.assertEqual(contract["required_top_level_fields"], [
+            "review_schema_version", "packet_sha256", "decision", "reviewer_identity", "reviewer_model", "claim_reviews",
+        ])
+        self.assertEqual(contract["optional_top_level_fields"], ["rejection_reasons"])
+        self.assertEqual(contract["claim_reviews"]["required_item_fields"], ["claim_number", "disposition", "basis"])
+        self.assertEqual(contract["claim_reviews"]["allowed_dispositions"], ["covered", "not_relevant", "incomplete"])
+        reason_shapes = contract["rejection_reasons"]["allowed_item_shapes"]
+        self.assertEqual(reason_shapes[0]["required_fields"], ["scope", "claim_number", "reason", "correction"])
+        self.assertEqual(reason_shapes[1]["required_fields"], ["scope", "category", "reason", "correction"])
+        self.assertEqual(reason_shapes[1]["allowed_categories"], ["unsupported_addition", "contradiction"])
+        self.assertEqual(contract["packet_hash_binding"]["value"], "copy packet.packet_sha256 exactly")
+        self.assertEqual(contract["reviewer_fields"]["reviewer_identity"], "nonempty audit label")
+        self.assertNotEqual(hashlib.sha256(initial_bytes.encode("ascii")).hexdigest(), initial["packet_sha256"])
+
+        rejected_review = {
+            "review_schema_version": 1, "packet_sha256": initial["packet_sha256"], "decision": "rejected",
+            "reviewer_identity": "independent answer reviewer", "reviewer_model": "GPT-6.1 Sol High",
+            "claim_reviews": [
+                {"claim_number": 1, "disposition": "incomplete", "basis": "The cited Build span also returns matched_count=0, which the draft omits."},
+                {"claim_number": 2, "disposition": "not_relevant", "basis": "The class declaration does not answer the requested result values."},
+            ],
+            "rejection_reasons": [
+                {"scope": "claim", "claim_number": 1, "reason": "The draft omits the second returned result value.", "correction": "Add matched_count=0 as a separate supported assertion."},
+            ],
+        }
+        rejected_file = self.root / "lifecycle-rejected-review.json"
+        rejected_file.write_text(json.dumps(rejected_review), encoding="utf-8")
+        rejected_call = self.cli(*base, "--review-file", os.fspath(rejected_file))
+        correction = json.loads(rejected_call.stdout)
+        self.assertEqual(correction["result"], "correction_required")
+        self.assertEqual(correction["correction_round"], 1)
+        self.assertEqual(correction["max_corrections"], 1)
+        self.assertEqual(correction["rejected_claim_numbers"], [1])
+        self.assertEqual(correction["claims"], initial["answer_packet"]["claims"])
+
+        packet_claim = correction["claims"][0]
+        answer_packet = correction["original_packet"]["answer_packet"]
+        snippets = {item["snippet_id"]: item for item in answer_packet["source_snippets"]}
+        evidence = next(item for item in packet_claim["evidence"] if "new Result(false, 0" in snippets[item["snippet_id"]]["text"])
+        anchor = next(item for item in answer_packet["source_anchors"] if item["source_id"] == evidence["source_id"])
+        citation = {
+            "claim_number": 1, "fact_id": evidence["fact_id"], "path": anchor["path"],
+            "sha256": anchor["sha256"], "span": evidence["span"], "snippet_id": evidence["snippet_id"],
+        }
+        corrected_draft = self.root / "lifecycle-corrected.txt"
+        corrected_draft.write_text("It returns success=false. It also returns matched_count=0.\n", encoding="utf-8")
+        answer_obj = {
+            "question_id": "answer-values", "answer": corrected_draft.read_text(encoding="utf-8"),
+            "material_claims": [
+                {"assertion": "The result has success=false.", "claim_numbers": [1], "citations": [citation]},
+                {"assertion": "The result has matched_count=0.", "claim_numbers": [1], "citations": [citation]},
+            ],
+            "limitations": ["This source packet establishes syntax-level source behavior only."],
+            "evidence_measurement": {},
+        }
+        answer_file = self.root / "lifecycle-corrected-answer.json"
+        answer_file.write_text(json.dumps(answer_obj), encoding="utf-8")
+        correction_file = self.root / "lifecycle-correction-packet.json"
+        correction_file.write_text(rejected_call.stdout, encoding="utf-8")
+        correct_args = ("answer-lifecycle", "correct", "--correction-packet", os.fspath(correction_file),
+                        "--draft-file", os.fspath(corrected_draft), "--answer-file", os.fspath(answer_file))
+        corrected_call = self.cli(*correct_args)
+        corrected_packet = json.loads(corrected_call.stdout)
+        self.assertEqual(corrected_packet["result"], "semantic_review_required")
+        self.assertEqual(corrected_call.stdout, self.cli(*correct_args).stdout)
+        self.assertTrue(corrected_packet["review_contract"]["corrected_answer_review"])
+        self.assertEqual(corrected_packet["review_contract"]["required_top_level_fields"], contract["required_top_level_fields"])
+
+        # Characterize the old boundary with this real answer's clone: v1 preserves
+        # worker-claimed byte and elapsed-time values without authenticating them.
+        false_measurement = json.loads(json.dumps(answer_obj))
+        false_measurement["evidence_measurement"] = {
+            "canonical_evidence_bytes": 1, "elapsed_wall_seconds": 0.001,
+            "stdout_bytes_including_newlines": 1,
+        }
+        answer_file.write_text(json.dumps(false_measurement), encoding="utf-8")
+        v1_false_measurement = self.cli(*correct_args)
+        self.assertEqual(json.loads(v1_false_measurement.stdout)["structured_answer"]["evidence_measurement"], false_measurement["evidence_measurement"])
+        answer_file.write_text(json.dumps(answer_obj), encoding="utf-8")
+
+        mismatch = dict(answer_obj, answer="different text")
+        answer_file.write_text(json.dumps(mismatch), encoding="utf-8")
+        self.assertEqual(self.cli(*correct_args, expect=2).stdout, "")
+        answer_file.write_text(json.dumps(answer_obj), encoding="utf-8")
+        bad_citation = json.loads(json.dumps(answer_obj))
+        bad_citation["material_claims"][0]["citations"][0]["span"]["start_offset"] += 1
+        answer_file.write_text(json.dumps(bad_citation), encoding="utf-8")
+        self.assertEqual(self.cli(*correct_args, expect=2).stdout, "")
+        answer_file.write_text(json.dumps(answer_obj), encoding="utf-8")
+
+        malformed_reviews = []
+        reordered = json.loads(json.dumps(rejected_review))
+        reordered["claim_reviews"].reverse()
+        malformed_reviews.append((reordered, "claim_reviews[0]"))
+        bad_disposition_type = json.loads(json.dumps(rejected_review))
+        bad_disposition_type["claim_reviews"][0]["disposition"] = []
+        malformed_reviews.append((bad_disposition_type, "claim 1 disposition must be covered, not_relevant, or incomplete"))
+        no_reason = json.loads(json.dumps(rejected_review))
+        no_reason["rejection_reasons"] = []
+        malformed_reviews.append((no_reason, "rejected review requires at least one structured rejection reason"))
+        missing_claim_reason = json.loads(json.dumps(rejected_review))
+        missing_claim_reason["rejection_reasons"] = [
+            {"scope": "answer", "category": "contradiction", "reason": "A separate contradiction exists in the answer text.", "correction": "Remove the contradictory statement from the answer."},
+        ]
+        malformed_reviews.append((missing_claim_reason, "incomplete claim 1 requires a structured rejection reason"))
+        bad_category_type = json.loads(json.dumps(rejected_review))
+        bad_category_type["rejection_reasons"] = [
+            {"scope": "answer", "category": {}, "reason": "A separate contradiction exists in the answer text.", "correction": "Remove the contradictory statement from the answer."},
+        ]
+        malformed_reviews.append((bad_category_type, "category must be unsupported_addition or contradiction"))
+        bad_packet_hash = json.loads(json.dumps(rejected_review))
+        bad_packet_hash["packet_sha256"] = "0" * 64
+        malformed_reviews.append((bad_packet_hash, "packet_sha256 does not match"))
+        accepted_incomplete = json.loads(json.dumps(rejected_review))
+        accepted_incomplete["decision"] = "accepted"
+        accepted_incomplete["rejection_reasons"] = []
+        malformed_reviews.append((accepted_incomplete, "accepted review has incomplete claim 1"))
+        for index, (invalid, expected_error) in enumerate(malformed_reviews):
+            invalid_file = self.root / f"invalid-lifecycle-review-{index}.json"
+            invalid_file.write_text(json.dumps(invalid), encoding="utf-8")
+            rejected = self.cli(*base, "--review-file", os.fspath(invalid_file), expect=2)
+            self.assertEqual(rejected.stdout, "")
+            self.assertIn(expected_error, rejected.stderr)
+
+        accepted_review = {
+            "review_schema_version": 1, "packet_sha256": corrected_packet["packet_sha256"], "decision": "accepted",
+            "reviewer_identity": "fresh independent answer reviewer", "reviewer_model": "GPT-6.1 Sol High",
+            "claim_reviews": [
+                {"claim_number": 1, "disposition": "covered", "basis": "The corrected assertions include both exact result values from the cited method body."},
+                {"claim_number": 2, "disposition": "not_relevant", "basis": "The declaration shape is unrelated to the exact result values requested."},
+            ],
+        }
+        accepted_file = self.root / "lifecycle-accepted-review.json"
+        accepted_file.write_text(json.dumps(accepted_review), encoding="utf-8")
+        accept_args = ("answer-lifecycle", "accept", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                       "--packet-file", os.fspath(self.root / "corrected-review-packet.json"),
+                       "--review-file", os.fspath(accepted_file))
+        corrected_packet_file = self.root / "corrected-review-packet.json"
+        corrected_packet_file.write_text(corrected_call.stdout, encoding="utf-8")
+        final = json.loads(self.cli(*accept_args).stdout)
+        self.assertEqual(final["result"], "accepted")
+        self.assertEqual(final["answer"], answer_obj)
+        self.assertEqual(final["answer_sha256"], hashlib.sha256(answer_obj["answer"].encode("utf-8")).hexdigest())
+        self.assertEqual(self.cli(*accept_args).stdout, self.cli(*accept_args).stdout)
+
+        # Version 2 binds Atlas's exact evidence-content measurement to the
+        # original packet and rechecks it after a fresh semantic review.
+        v2_base = (*base, "--lifecycle-version", "2")
+        v2_initial_call = self.cli(*v2_base)
+        v2_initial = json.loads(v2_initial_call.stdout)
+        self.assertEqual(v2_initial["lifecycle_schema_version"], 2)
+        self.assertEqual(v2_initial_call.stdout, self.cli(*v2_base).stdout)
+        self.assertEqual(v2_initial["review_contract"]["review_schema_version"], 1)
+        self.assertEqual(v2_initial["measurement_contract"]["measurement_schema_version"], "integer, exactly 1")
+        direct_review = {
+            "review_schema_version": 1, "packet_sha256": v2_initial["packet_sha256"], "decision": "accepted",
+            "reviewer_identity": "direct initial reviewer", "reviewer_model": "GPT-6.1 Sol High",
+            "claim_reviews": [
+                {"claim_number": claim["claim_number"], "disposition": "covered" if claim["claim_number"] == 1 else "not_relevant",
+                 "basis": "The exact cited snippets were checked for this initial accepted answer review."}
+                for claim in v2_initial["answer_packet"]["claims"]
+            ],
+        }
+        direct_review_file = self.root / "v2-direct-review.json"
+        direct_review_file.write_text(json.dumps(direct_review), encoding="utf-8")
+        direct_accepted = json.loads(self.cli(*v2_base, "--review-file", os.fspath(direct_review_file)).stdout)
+        direct_measurement = ATLAS._canonical_review_evidence_measurement(v2_initial)
+        self.assertEqual(direct_accepted["evidence_measurement"], direct_measurement)
+        self.assertEqual(direct_accepted["lifecycle_schema_version"], 2)
+        # The v1 direct branch remains its original package shape; use a review
+        # bound to the v1 packet for an exact semantic comparison.
+        v1_direct_review = dict(direct_review, packet_sha256=initial["packet_sha256"])
+        v1_direct_review_file = self.root / "v1-direct-review.json"
+        v1_direct_review_file.write_text(json.dumps(v1_direct_review), encoding="utf-8")
+        v1_direct_accepted = json.loads(self.cli(*base, "--review-file", os.fspath(v1_direct_review_file)).stdout)
+        self.assertEqual(v1_direct_accepted["lifecycle_schema_version"], 1)
+        self.assertNotIn("evidence_measurement", v1_direct_accepted)
+        self.assertNotIn("measurement_contract", v1_direct_accepted)
+
+        v2_rejected_review = dict(rejected_review, packet_sha256=v2_initial["packet_sha256"])
+        v2_rejected_file = self.root / "v2-rejected-review.json"
+        v2_rejected_file.write_text(json.dumps(v2_rejected_review), encoding="utf-8")
+        v2_correction_stdout = self.cli(*v2_base, "--review-file", os.fspath(v2_rejected_file)).stdout
+        v2_correction_file = self.root / "v2-correction-packet.json"
+        v2_correction_file.write_text(v2_correction_stdout, encoding="utf-8")
+        v2_correction = json.loads(v2_correction_stdout)
+        self.assertEqual(v2_correction["lifecycle_schema_version"], 2)
+        false_measurement_answer_file = self.root / "v2-false-measurement-answer.json"
+        false_measurement_answer_file.write_text(json.dumps(false_measurement), encoding="utf-8")
+        v2_correct_args = ("answer-lifecycle", "correct", "--correction-packet", os.fspath(v2_correction_file),
+                           "--draft-file", os.fspath(corrected_draft), "--answer-file", os.fspath(false_measurement_answer_file))
+        rejected_measurement = self.cli(*v2_correct_args, expect=2)
+        self.assertEqual(rejected_measurement.stdout, "")
+        self.assertIn("worker evidence_measurement must be exactly {}", rejected_measurement.stderr)
+        false_measurement_answer_file.write_text(json.dumps(answer_obj), encoding="utf-8")
+        v2_corrected_call = self.cli(*v2_correct_args)
+        v2_corrected = json.loads(v2_corrected_call.stdout)
+        expected_measurement = ATLAS._canonical_review_evidence_measurement(v2_initial)
+        self.assertEqual(v2_corrected["structured_answer"]["evidence_measurement"], expected_measurement)
+        self.assertEqual(v2_corrected_call.stdout, self.cli(*v2_correct_args).stdout)
+        v2_accepted_review = dict(accepted_review, packet_sha256=v2_corrected["packet_sha256"])
+        v2_accepted_review_file = self.root / "v2-accepted-review.json"
+        v2_accepted_review_file.write_text(json.dumps(v2_accepted_review), encoding="utf-8")
+        v2_corrected_file = self.root / "v2-corrected-review-packet.json"
+        v2_corrected_file.write_text(v2_corrected_call.stdout, encoding="utf-8")
+        v2_accept_args = ("answer-lifecycle", "accept", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                          "--packet-file", os.fspath(v2_corrected_file), "--review-file", os.fspath(v2_accepted_review_file))
+        v2_final_bytes = self.cli(*v2_accept_args).stdout
+        v2_final = json.loads(v2_final_bytes)
+        self.assertEqual(v2_final["lifecycle_schema_version"], 2)
+        self.assertEqual(v2_final["answer"]["evidence_measurement"], expected_measurement)
+        self.assertEqual(v2_final_bytes, self.cli(*v2_accept_args).stdout)
+
+        # A worker cannot authenticate a different value by rehashing the packet
+        # and refreshing the review binding.
+        for mutation in (
+            {**expected_measurement, "measurement_schema_version": True},
+            {**expected_measurement, "measurement_kind": "elapsed_time"},
+            {**expected_measurement, "canonical_evidence_bytes": expected_measurement["canonical_evidence_bytes"] + 1},
+            {**expected_measurement, "canonical_evidence_bytes": True},
+            {**expected_measurement, "canonical_evidence_sha256": "0" * 64},
+            {**expected_measurement, "unit": "provider tokens"},
+            {**expected_measurement, "excluded_claims": list(reversed(expected_measurement["excluded_claims"]))},
+            {**expected_measurement, "original_packet_sha256": "f" * 64},
+            {**expected_measurement, "extra": "value"},
+        ):
+            tampered_packet = json.loads(v2_corrected_file.read_text(encoding="utf-8"))
+            tampered_packet["structured_answer"]["evidence_measurement"] = mutation
+            tampered_packet["packet_sha256"] = ATLAS._answer_packet_hash(tampered_packet)
+            tampered_file = self.root / "v2-tampered-packet.json"
+            tampered_file.write_text(json.dumps(tampered_packet), encoding="utf-8")
+            updated_review = dict(v2_accepted_review, packet_sha256=tampered_packet["packet_sha256"])
+            v2_accepted_review_file.write_text(json.dumps(updated_review), encoding="utf-8")
+            tampered_accept = ("answer-lifecycle", "accept", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                               "--packet-file", os.fspath(tampered_file), "--review-file", os.fspath(v2_accepted_review_file))
+            refusal = self.cli(*tampered_accept, expect=2)
+            self.assertEqual(refusal.stdout, "")
+            self.assertIn("does not match Atlas's exact measurement", refusal.stderr)
+        v2_accepted_review_file.write_text(json.dumps(v2_accepted_review), encoding="utf-8")
+
+        # Nested lifecycle versions and boolean aliases are refused, including
+        # when the enclosing correction hash is recomputed.
+        bad_lineage = json.loads(v2_correction_stdout)
+        bad_lineage["original_packet"]["lifecycle_schema_version"] = 1
+        bad_lineage["packet_sha256"] = ATLAS._answer_packet_hash(bad_lineage)
+        bad_lineage_file = self.root / "v2-cross-version-correction.json"
+        bad_lineage_file.write_text(json.dumps(bad_lineage), encoding="utf-8")
+        self.assertEqual(self.cli("answer-lifecycle", "correct", "--correction-packet", os.fspath(bad_lineage_file),
+                                  "--draft-file", os.fspath(corrected_draft), "--answer-file", os.fspath(answer_file), expect=2).stdout, "")
+        with self.assertRaisesRegex(ATLAS.AtlasError, "integer 1 or 2"):
+            ATLAS.answer_lifecycle("prepare", lifecycle_version=True)
+        with self.assertRaisesRegex(ATLAS.AtlasError, "integer 1 or 2"):
+            ATLAS.answer_lifecycle("prepare", lifecycle_version=3)
+
+        rejected_corrected = dict(accepted_review, decision="rejected", rejection_reasons=[
+            {"scope": "answer", "category": "unsupported_addition", "reason": "The corrected answer introduces an unsupported extra assertion.", "correction": "Remove the unsupported assertion from the answer."},
+        ])
+        accepted_file.write_text(json.dumps(rejected_corrected), encoding="utf-8")
+        self.assertIn("second correction is not permitted", self.cli(*accept_args, expect=2).stderr)
+        accepted_file.write_text(json.dumps(accepted_review), encoding="utf-8")
+
+        second_correction_args = ("answer-lifecycle", "correct", "--correction-packet", os.fspath(corrected_packet_file),
+                                  "--draft-file", os.fspath(corrected_draft), "--answer-file", os.fspath(answer_file))
+        self.assertIn("versioned answer_correction", self.cli(*second_correction_args, expect=2).stderr)
+        tampered = json.loads(correction_file.read_text())
+        tampered["correction_round"] = 2
+        correction_file.write_text(json.dumps(tampered), encoding="utf-8")
+        self.assertEqual(self.cli(*correct_args, expect=2).stdout, "")
+        correction_file.write_text(rejected_call.stdout, encoding="utf-8")
+
+        source.write_text(source.read_text(encoding="utf-8") + "// changed after review\n", encoding="utf-8")
+        self.assertIn("stale against current map, source, or receipt", self.cli(*accept_args, expect=2).stderr)
+        self.assertIn("stale against current map, source, or receipt", self.cli(*v2_accept_args, expect=2).stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

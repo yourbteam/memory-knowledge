@@ -3192,6 +3192,606 @@ def answer_check(
     return None, draft_bytes, 0
 
 
+ANSWER_LIFECYCLE_VERSION = 1
+SUPPORTED_ANSWER_LIFECYCLE_VERSIONS = {1, 2}
+EVIDENCE_MEASUREMENT_EXCLUDED_CLAIMS = [
+    "historical_retrieval_stdout_bytes",
+    "command_execution",
+    "elapsed_time",
+    "provider_tokens",
+    "total_workflow_cost",
+]
+
+
+def _answer_packet_hash(packet: dict[str, object]) -> str:
+    """Hash canonical ASCII JSON without packet_sha256, including the CLI newline."""
+    unsigned = {key: value for key, value in packet.items() if key != "packet_sha256"}
+    return hashlib.sha256(_canonical_json(unsigned) + b"\n").hexdigest()
+
+
+def _answer_packet_bytes(packet: dict[str, object]) -> bytes:
+    return _canonical_json(packet) + b"\n"
+
+
+def _answer_review_contract(corrected: bool = False) -> dict[str, object]:
+    return {
+        "review_schema_version": ANSWER_LIFECYCLE_VERSION,
+        "required_top_level_fields": [
+            "review_schema_version", "packet_sha256", "decision", "reviewer_identity",
+            "reviewer_model", "claim_reviews",
+        ],
+        "optional_top_level_fields": ["rejection_reasons"],
+        "allowed_top_level_fields": [
+            "review_schema_version", "packet_sha256", "decision", "reviewer_identity",
+            "reviewer_model", "claim_reviews", "rejection_reasons",
+        ],
+        "top_level_field_types": {
+            "review_schema_version": "integer, exactly 1",
+            "packet_sha256": "string, copy the exact embedded packet value",
+            "decision": "string, accepted or rejected",
+            "reviewer_identity": "nonempty string",
+            "reviewer_model": "nonempty string",
+            "claim_reviews": "array",
+            "rejection_reasons": "array when present",
+        },
+        "reviewer_fields": {
+            "reviewer_identity": "nonempty audit label",
+            "reviewer_model": "nonempty audit label",
+            "authentication": "these caller-supplied fields do not authenticate reviewer identity",
+        },
+        "packet_hash_binding": {
+            "field": "packet_sha256",
+            "value": "copy packet.packet_sha256 exactly",
+            "digest": "SHA-256 of canonical ASCII JSON for the packet with packet_sha256 omitted, followed by one newline",
+        },
+        "claim_reviews": {
+            "coverage": "exactly one entry for each numbered packet claim, in packet order, with no omissions or duplicates",
+            "required_item_fields": ["claim_number", "disposition", "basis"],
+            "allowed_item_fields": ["claim_number", "disposition", "basis"],
+            "item_field_types": {
+                "claim_number": "integer equal to one-based packet order",
+                "disposition": "string from allowed_dispositions",
+                "basis": "string at least basis_minimum_characters long",
+            },
+            "allowed_dispositions": ["covered", "not_relevant", "incomplete"],
+            "basis_minimum_characters": 20,
+            "incomplete_meaning": "the claim is relevant, but supported question details in its cited source snippets are absent from the answer",
+        },
+        "decision": {
+            "allowed_values": ["accepted", "rejected"],
+            "accepted": "no claim is incomplete and rejection_reasons is absent or empty",
+            "rejected": "rejection_reasons is nonempty; every incomplete claim has one claim-scoped reason naming its number and correction",
+        },
+        "rejection_reasons": {
+            "required_when": "decision is rejected",
+            "reason_minimum_characters": 20,
+            "correction_minimum_characters": 10,
+            "allowed_item_shapes": [
+                {
+                    "scope": "claim",
+                    "required_fields": ["scope", "claim_number", "reason", "correction"],
+                    "allowed_fields": ["scope", "claim_number", "reason", "correction"],
+                    "claim_number": "an existing packet claim marked incomplete; never infer a number from free text",
+                },
+                {
+                    "scope": "answer",
+                    "required_fields": ["scope", "category", "reason", "correction"],
+                    "allowed_fields": ["scope", "category", "reason", "correction"],
+                    "allowed_categories": ["unsupported_addition", "contradiction"],
+                    "claim_number": "not present; answer-level reason is separately scoped",
+                },
+            ],
+            "uniqueness": "at most one claim-scoped reason per claim; no claim-scoped reason for claims not marked incomplete",
+        },
+        "corrected_answer_review": corrected,
+    }
+
+
+def _measurement_contract() -> dict[str, object]:
+    return {
+        "measurement_schema_version": "integer, exactly 1",
+        "measurement_kind": "string, exactly canonical_review_evidence",
+        "original_packet_sha256": "SHA-256 of the exact original lifecycle packet, canonical ASCII JSON with packet_sha256 omitted plus one newline",
+        "canonical_evidence_sha256": "SHA-256 of canonical evidence bytes defined below",
+        "canonical_evidence_bytes": "integer, not boolean; byte length of canonical evidence bytes defined below",
+        "unit": "string, exactly ASCII bytes including one trailing newline",
+        "excluded_claims": list(EVIDENCE_MEASUREMENT_EXCLUDED_CLAIMS),
+        "canonical_evidence": {
+            "value": "{claims: original.answer_packet.claims, source_anchors: original.answer_packet.source_anchors, source_snippets: original.answer_packet.source_snippets}",
+            "encoding": "ASCII JSON with ensure_ascii=true, sorted keys, separators=(',', ':'), and one trailing newline",
+            "excludes": ["question", "draft", "checked_at", "full packet", "prompts", "double copies"],
+        },
+        "meaning": "evidence-content size only; it does not prove model consumption or measure retrieval stdout",
+        "recheck": "Atlas recomputes the complete object at accept from the exact original packet using the same helper",
+    }
+
+
+def _canonical_review_evidence_measurement(original_packet: dict[str, object]) -> dict[str, object]:
+    answer_packet = original_packet.get("answer_packet")
+    if not isinstance(answer_packet, dict):
+        raise AtlasError("original lifecycle packet answer_packet must be an object for evidence measurement")
+    evidence = {
+        "claims": answer_packet.get("claims"),
+        "source_anchors": answer_packet.get("source_anchors"),
+        "source_snippets": answer_packet.get("source_snippets"),
+    }
+    evidence_bytes = _canonical_json(evidence) + b"\n"
+    try:
+        evidence_bytes.decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise AtlasError("canonical review evidence is not ASCII encodable") from exc
+    return {
+        "measurement_schema_version": 1,
+        "measurement_kind": "canonical_review_evidence",
+        "original_packet_sha256": _answer_packet_hash(original_packet),
+        "canonical_evidence_sha256": hashlib.sha256(evidence_bytes).hexdigest(),
+        "canonical_evidence_bytes": len(evidence_bytes),
+        "unit": "ASCII bytes including one trailing newline",
+        "excluded_claims": list(EVIDENCE_MEASUREMENT_EXCLUDED_CLAIMS),
+    }
+
+
+def _measurement_matches(actual: object, expected: dict[str, object]) -> bool:
+    if not isinstance(actual, dict) or set(actual) != set(expected):
+        return False
+    return all(type(actual[key]) is type(value) and actual[key] == value for key, value in expected.items())
+
+
+def _answer_lifecycle_packet(
+    db_arg: str, repo_arg: str, snapshot_id: str, overlay_id: str,
+    question_path: str, draft_path: str, lifecycle_version: int = ANSWER_LIFECYCLE_VERSION,
+) -> tuple[dict[str, object], bytes]:
+    original, _, status = answer_check(
+        db_arg, repo_arg, snapshot_id, overlay_id, question_path, draft_path, None,
+    )
+    if status != 0 or not isinstance(original, dict):
+        raise AtlasError("answer lifecycle could not build the complete current answer packet")
+    packet: dict[str, object] = {
+        "lifecycle_schema_version": lifecycle_version,
+        "packet_type": "answer_review",
+        "result": "semantic_review_required",
+        "answer_packet": original,
+        "review_contract": _answer_review_contract(),
+        "hash_contract": {
+            "packet_sha256": "SHA-256 of canonical ASCII JSON for this packet with packet_sha256 omitted, followed by one newline; this binds reviews to the canonical packet payload.",
+            "cli_file_sha256": "SHA-256 of every emitted ASCII CLI byte, including packet_sha256 and the final newline; this verifies byte-for-byte file transfer and is not the review binding.",
+            "question_sha256": "SHA-256 of exact UTF-8 question file bytes, including any final newline.",
+            "draft_sha256": "SHA-256 of exact UTF-8 draft file bytes, including any final newline.",
+        },
+    }
+    if lifecycle_version == 2:
+        packet["measurement_contract"] = _measurement_contract()
+    packet["packet_sha256"] = _answer_packet_hash(packet)
+    return packet, _answer_packet_bytes(packet)
+
+
+def _answer_nonempty(value: object, label: str, minimum: int = 1) -> str:
+    if not isinstance(value, str) or len(value.strip()) < minimum:
+        raise AtlasError(f"{label} must be a nonempty string of at least {minimum} characters")
+    return value
+
+
+def _answer_review_labels(review: dict[str, object], label: str = "answer review") -> None:
+    for field in ("reviewer_identity", "reviewer_model"):
+        _answer_nonempty(review.get(field), f"{label} {field}")
+
+
+def _validate_lifecycle_review(
+    packet: dict[str, object], review: object,
+) -> tuple[dict[str, object], list[dict[str, object]], list[dict[str, object]]]:
+    if not isinstance(review, dict):
+        raise AtlasError("answer review must be a JSON object")
+    if type(review.get("review_schema_version")) is not int or review.get("review_schema_version") != ANSWER_LIFECYCLE_VERSION:
+        raise AtlasError("answer review review_schema_version must be 1")
+    allowed_review_fields = {
+        "review_schema_version", "packet_sha256", "decision", "reviewer_identity",
+        "reviewer_model", "claim_reviews", "rejection_reasons",
+    }
+    required_review_fields = allowed_review_fields - {"rejection_reasons"}
+    if not required_review_fields.issubset(review) or set(review) - allowed_review_fields:
+        raise AtlasError("answer review fields must match the advertised review_contract top-level shape")
+    packet_hash = _answer_packet_hash(packet)
+    if review.get("packet_sha256") != packet_hash:
+        raise AtlasError("answer review packet_sha256 does not match the exact versioned packet")
+    _answer_review_labels(review)
+    answer_packet = packet.get("answer_packet")
+    claims = answer_packet.get("claims") if isinstance(answer_packet, dict) else packet.get("claims")
+    if not isinstance(claims, list):
+        raise AtlasError("versioned packet answer_packet.claims must be an ordered list")
+    reviews = review.get("claim_reviews")
+    if not isinstance(reviews, list) or len(reviews) != len(claims):
+        raise AtlasError("claim_reviews must contain one ordered entry for every packet claim")
+    incomplete: list[dict[str, object]] = []
+    for index, item in enumerate(reviews, start=1):
+        if not isinstance(item, dict) or set(item) != {"claim_number", "disposition", "basis"}:
+            raise AtlasError(f"claim_reviews[{index - 1}] must contain only claim_number, disposition, and basis")
+        if type(item.get("claim_number")) is not int or item.get("claim_number") != index:
+            raise AtlasError(f"claim_reviews[{index - 1}] must name claim {index} in packet order")
+        disposition = item.get("disposition")
+        if not isinstance(disposition, str) or disposition not in {"covered", "not_relevant", "incomplete"}:
+            raise AtlasError(f"claim {index} disposition must be covered, not_relevant, or incomplete")
+        _answer_nonempty(item.get("basis"), f"claim {index} basis", 20)
+        if disposition == "incomplete":
+            incomplete.append(item)
+    reasons = review.get("rejection_reasons", [])
+    if not isinstance(reasons, list):
+        raise AtlasError("rejection_reasons must be a structured list")
+    for index, reason in enumerate(reasons):
+        if not isinstance(reason, dict):
+            raise AtlasError(f"rejection_reasons[{index}] must be an object")
+        scope = reason.get("scope")
+        if scope == "claim":
+            if set(reason) != {"scope", "claim_number", "reason", "correction"}:
+                raise AtlasError(f"rejection_reasons[{index}] claim reason must contain scope, claim_number, reason, and correction")
+            number = reason.get("claim_number")
+            if not isinstance(number, int) or isinstance(number, bool) or not 1 <= number <= len(claims):
+                raise AtlasError(f"rejection_reasons[{index}].claim_number must identify a packet claim")
+        elif scope == "answer":
+            if set(reason) != {"scope", "category", "reason", "correction"}:
+                raise AtlasError(f"rejection_reasons[{index}] answer-level reason must contain scope, category, reason, and correction")
+            category = reason.get("category")
+            if not isinstance(category, str) or category not in {"unsupported_addition", "contradiction"}:
+                raise AtlasError(f"rejection_reasons[{index}].category must be unsupported_addition or contradiction")
+        else:
+            raise AtlasError(f"rejection_reasons[{index}].scope must be claim or answer")
+        _answer_nonempty(reason.get("reason"), f"rejection_reasons[{index}].reason", 20)
+        _answer_nonempty(reason.get("correction"), f"rejection_reasons[{index}].correction", 10)
+    decision = review.get("decision")
+    reasoned_claims = [r["claim_number"] for r in reasons if r.get("scope") == "claim"]
+    if len(set(reasoned_claims)) != len(reasoned_claims):
+        raise AtlasError("rejection_reasons contains duplicate claim numbers")
+    incomplete_numbers = {item["claim_number"] for item in incomplete}
+    if any(number not in incomplete_numbers for number in reasoned_claims):
+        raise AtlasError("claim-level rejection reasons may name only claims marked incomplete")
+    if decision == "accepted":
+        if incomplete:
+            raise AtlasError(f"accepted review has incomplete claim {incomplete[0]['claim_number']}")
+        if reasons:
+            raise AtlasError("accepted review must not contain rejection_reasons")
+    elif decision == "rejected":
+        if not reasons:
+            raise AtlasError("rejected review requires at least one structured rejection reason")
+        reasoned_claims = set(reasoned_claims)
+        for item in incomplete:
+            number = item["claim_number"]
+            if number not in reasoned_claims:
+                raise AtlasError(f"incomplete claim {number} requires a structured rejection reason naming its correction")
+    else:
+        raise AtlasError("answer review decision must be accepted or rejected")
+    return review, claims, reasons
+
+
+def _lifecycle_review_result(packet: dict[str, object], review: object) -> tuple[dict[str, object], bytes]:
+    checked, claims, reasons = _validate_lifecycle_review(packet, review)
+    review_hash = hashlib.sha256(_canonical_json(checked) + b"\n").hexdigest()
+    answer_packet = packet["answer_packet"]
+    lifecycle_version = packet.get("lifecycle_schema_version")
+    if checked["decision"] == "accepted":
+        result: dict[str, object] = {
+            "lifecycle_schema_version": lifecycle_version,
+            "result": "accepted",
+            "answer": answer_packet["draft"],
+            "answer_sha256": answer_packet["binding"]["draft_sha256"],
+            "question_sha256": answer_packet["binding"]["question_sha256"],
+            "packet_sha256": _answer_packet_hash(packet),
+            "review_sha256": review_hash,
+            "reviewer_identity": checked["reviewer_identity"],
+            "reviewer_model": checked["reviewer_model"],
+        }
+        if lifecycle_version == 2:
+            result["evidence_measurement"] = _canonical_review_evidence_measurement(packet)
+            result["measurement_contract"] = _measurement_contract()
+        return result, _answer_packet_bytes(result)
+    correction: dict[str, object] = {
+        "lifecycle_schema_version": lifecycle_version,
+        "packet_type": "answer_correction",
+        "result": "correction_required",
+        "original_packet": packet,
+        "original_packet_sha256": _answer_packet_hash(packet),
+        "question_sha256": answer_packet["binding"]["question_sha256"],
+        "draft_sha256": answer_packet["binding"]["draft_sha256"],
+        "rejected_review": checked,
+        "rejected_review_sha256": review_hash,
+        "reviewer_identity": checked["reviewer_identity"],
+        "reviewer_model": checked["reviewer_model"],
+        "rejected_claim_numbers": sorted({r["claim_number"] for r in reasons if r.get("scope") == "claim"}),
+        "rejection_reasons": reasons,
+        "claims": claims,
+        "evidence": {
+            "source_anchors": answer_packet["source_anchors"],
+            "source_snippets": answer_packet["source_snippets"],
+            "review_provenance": answer_packet["review_provenance"],
+            "binding": answer_packet["binding"],
+        },
+        "correction_round": 1,
+        "max_corrections": 1,
+        "hash_contract": {
+            "packet_sha256": "SHA-256 of canonical ASCII JSON for this object with packet_sha256 omitted, followed by one newline",
+            "cli_file_sha256": "SHA-256 of every emitted ASCII CLI byte, including packet_sha256 and the final newline; transport integrity only, not the review binding",
+            "review_sha256": "SHA-256 of canonical ASCII JSON review bytes followed by one newline",
+            "answer_sha256": "SHA-256 of exact UTF-8 answer bytes, including any final newline",
+            "question_sha256": "SHA-256 of exact UTF-8 question bytes, including any final newline",
+        },
+    }
+    if lifecycle_version == 2:
+        correction["measurement_contract"] = _measurement_contract()
+    correction["packet_sha256"] = _answer_packet_hash(correction)
+    return correction, _answer_packet_bytes(correction)
+
+
+def _validate_correction_packet(packet: object) -> dict[str, object]:
+    if not isinstance(packet, dict) or packet.get("packet_type") != "answer_correction":
+        raise AtlasError("correction packet must be a versioned answer_correction object")
+    version = packet.get("lifecycle_schema_version")
+    if type(version) is not int or version not in SUPPORTED_ANSWER_LIFECYCLE_VERSIONS:
+        raise AtlasError("correction packet lifecycle_schema_version must be integer 1 or 2")
+    if packet.get("result") != "correction_required" or packet.get("correction_round") != 1 or packet.get("max_corrections") != 1:
+        raise AtlasError("only an original round-zero rejection can prepare correction round 1")
+    if packet.get("packet_sha256") != _answer_packet_hash(packet):
+        raise AtlasError("correction packet packet_sha256 does not match its canonical contents")
+    original = packet.get("original_packet")
+    if not isinstance(original, dict) or original.get("packet_type") != "answer_review":
+        raise AtlasError("correction packet original_packet must be the exact versioned answer review packet")
+    if (type(original.get("lifecycle_schema_version")) is not int
+            or original.get("lifecycle_schema_version") != version
+            or original.get("result") != "semantic_review_required"
+            or not isinstance(original.get("answer_packet"), dict)):
+        raise AtlasError("correction packet original_packet has an invalid lifecycle version or answer_packet shape")
+    if original.get("packet_sha256") != _answer_packet_hash(original):
+        raise AtlasError("original lifecycle packet hash is invalid")
+    if version == 2 and original.get("measurement_contract") != _measurement_contract():
+        raise AtlasError("original lifecycle packet measurement_contract is invalid")
+    if version == 2 and packet.get("measurement_contract") != _measurement_contract():
+        raise AtlasError("correction packet measurement_contract is invalid")
+    _validate_lifecycle_review(original, packet.get("rejected_review"))
+    review = packet["rejected_review"]
+    if review.get("decision") != "rejected" or packet.get("rejected_review_sha256") != hashlib.sha256(_canonical_json(review) + b"\n").hexdigest():
+        raise AtlasError("correction packet rejected review binding is invalid")
+    answer = original["answer_packet"]
+    binding = answer.get("binding")
+    if not isinstance(binding, dict):
+        raise AtlasError("original answer packet binding must be an object")
+    for field in ("question_sha256", "draft_sha256"):
+        if packet.get(field) != binding.get(field):
+            raise AtlasError(f"correction packet {field} does not match the original answer packet")
+    expected_claims = answer.get("claims")
+    if not isinstance(expected_claims, list):
+        raise AtlasError("original answer packet claims must be an ordered list")
+    if packet.get("claims") != expected_claims:
+        raise AtlasError("correction packet claims differ from the original complete claim list")
+    evidence = packet.get("evidence")
+    if not isinstance(evidence, dict):
+        raise AtlasError("correction packet evidence must be an object")
+    if evidence.get("source_snippets") != answer.get("source_snippets") or evidence.get("source_anchors") != answer.get("source_anchors"):
+        raise AtlasError("correction packet evidence differs from the original preserved source anchors and snippets")
+    rebuilt, _ = _lifecycle_review_result(original, review)
+    if _answer_packet_bytes(rebuilt) != _answer_packet_bytes(packet):
+        raise AtlasError("correction packet does not reconstruct from its original rejected review")
+    return packet
+
+
+def _validate_structured_answer(
+    answer: object, draft_bytes: bytes, correction: dict[str, object], *, allow_atlas_measurement: bool = False,
+) -> dict[str, object]:
+    if not isinstance(answer, dict):
+        raise AtlasError("structured answer JSON must be an object")
+    required = {"question_id", "answer", "material_claims", "limitations", "evidence_measurement"}
+    if set(answer) != required:
+        raise AtlasError("structured answer must contain exactly question_id, answer, material_claims, limitations, evidence_measurement")
+    _answer_nonempty(answer.get("question_id"), "question_id")
+    answer_text = _answer_nonempty(answer.get("answer"), "answer")
+    try:
+        draft = draft_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise AtlasError("corrected draft must contain UTF-8 text") from exc
+    if answer_text != draft:
+        raise AtlasError("structured answer.answer must exactly equal the corrected UTF-8 draft")
+    claims = answer.get("material_claims")
+    if not isinstance(claims, list) or not claims:
+        raise AtlasError("material_claims must be a nonempty list of atomic cited assertions")
+    packet_claims = correction["claims"]
+    packet_answer = correction["original_packet"]["answer_packet"]
+    anchor_by_source = {item["source_id"]: item for item in packet_answer["source_anchors"]}
+    snippet_ids = {item["snippet_id"] for item in packet_answer["source_snippets"]}
+    claim_by_number = {item["claim_number"]: item for item in packet_claims}
+    for index, item in enumerate(claims):
+        if not isinstance(item, dict) or set(item) != {"assertion", "claim_numbers", "citations"}:
+            raise AtlasError(f"material_claims[{index}] must contain assertion, claim_numbers, and citations")
+        assertion = _answer_nonempty(item.get("assertion"), f"material_claims[{index}].assertion", 8)
+        if "\n" in assertion or ";" in assertion or len(assertion.split(". ")) > 1:
+            raise AtlasError(f"material_claims[{index}].assertion must be one atomic sentence")
+        numbers = item.get("claim_numbers")
+        if not isinstance(numbers, list) or not numbers or any(not isinstance(n, int) or isinstance(n, bool) or n not in claim_by_number for n in numbers):
+            raise AtlasError(f"material_claims[{index}].claim_numbers must name existing packet claims")
+        if len(set(numbers)) != len(numbers):
+            raise AtlasError(f"material_claims[{index}].claim_numbers contains duplicates")
+        citations = item.get("citations")
+        if not isinstance(citations, list) or not citations:
+            raise AtlasError(f"material_claims[{index}] requires at least one citation")
+        cited_numbers: set[int] = set()
+        for ci, citation in enumerate(citations):
+            required_citation = {"claim_number", "fact_id", "path", "sha256", "span", "snippet_id"}
+            if not isinstance(citation, dict) or set(citation) != required_citation:
+                raise AtlasError(f"material_claims[{index}].citations[{ci}] must contain exact claim, fact, path, hash, span, and snippet fields")
+            number = citation["claim_number"]
+            if not isinstance(number, int) or isinstance(number, bool) or number not in numbers:
+                raise AtlasError(f"material_claims[{index}].citations[{ci}].claim_number must match claim_numbers")
+            claim = claim_by_number[number]
+            matches = []
+            for evidence in claim["evidence"]:
+                anchor = anchor_by_source.get(evidence["source_id"])
+                if anchor and (citation["fact_id"] == evidence["fact_id"] and citation["path"] == anchor["path"] and citation["sha256"] == anchor["sha256"] and citation["span"] == evidence["span"] and citation["snippet_id"] == evidence["snippet_id"]):
+                    matches.append(evidence)
+            if not matches or citation["snippet_id"] not in snippet_ids:
+                raise AtlasError(f"material_claims[{index}].citations[{ci}] does not resolve to a preserved packet source anchor and evidence span")
+            cited_numbers.add(number)
+        if cited_numbers != set(numbers):
+            raise AtlasError(f"material_claims[{index}] claim_numbers do not match its cited map claims")
+    limitations = answer.get("limitations")
+    if not isinstance(limitations, list) or any(not isinstance(v, str) or not v.strip() for v in limitations):
+        raise AtlasError("limitations must be a list of nonempty strings")
+    measurement = answer.get("evidence_measurement")
+    if not isinstance(measurement, dict):
+        raise AtlasError("evidence_measurement must be a JSON object")
+    if correction.get("lifecycle_schema_version") == 2:
+        if allow_atlas_measurement:
+            original_packet = correction["original_packet"]
+            expected = _canonical_review_evidence_measurement(original_packet)
+            if not _measurement_matches(measurement, expected):
+                raise AtlasError("evidence_measurement does not match Atlas's exact measurement of the original review evidence")
+        elif measurement:
+            raise AtlasError("lifecycle version 2 worker evidence_measurement must be exactly {}; Atlas supplies the recomputed measurement")
+    return answer
+
+
+def _corrected_review_packet(correction: dict[str, object], answer: dict[str, object]) -> dict[str, object]:
+    if correction.get("lifecycle_schema_version") == 2:
+        answer = dict(answer)
+        answer["evidence_measurement"] = _canonical_review_evidence_measurement(correction["original_packet"])
+    packet: dict[str, object] = {
+        "lifecycle_schema_version": correction["lifecycle_schema_version"],
+        "packet_type": "corrected_answer_review",
+        "result": "semantic_review_required",
+        "correction_packet": correction,
+        "correction_packet_sha256": correction["packet_sha256"],
+        "correction_lineage": {
+            "original_packet_sha256": correction["original_packet_sha256"],
+            "rejected_review_sha256": correction["rejected_review_sha256"],
+            "correction_round": correction["correction_round"],
+            "max_corrections": correction["max_corrections"],
+        },
+        "structured_answer": answer,
+        "question": correction["original_packet"]["answer_packet"]["question"],
+        "claims": correction["claims"],
+        "source_anchors": correction["evidence"]["source_anchors"],
+        "source_snippets": correction["evidence"]["source_snippets"],
+        "review_contract": {
+            **_answer_review_contract(corrected=True),
+            "instructions": "Re-review the final structured answer against every exact source snippet and citation. Judge truth, completeness, assertion-to-citation correspondence, candidate-binding limitations, unsupported additions, and contradictions.",
+        },
+        "hash_contract": {
+            "packet_sha256": "SHA-256 of canonical ASCII JSON for this packet with packet_sha256 omitted, followed by one newline; this binds the accepted review.",
+            "cli_file_sha256": "SHA-256 of every emitted ASCII CLI byte, including packet_sha256 and the final newline; this verifies byte-for-byte file transfer and is not the review binding.",
+            "answer_sha256": "SHA-256 of exact UTF-8 structured answer bytes, including any final newline in answer.",
+            "question_sha256": "SHA-256 of exact UTF-8 question bytes, including any final newline.",
+        },
+    }
+    if correction.get("lifecycle_schema_version") == 2:
+        packet["measurement_contract"] = _measurement_contract()
+    packet["packet_sha256"] = _answer_packet_hash(packet)
+    return packet
+
+
+def answer_lifecycle(
+    stage: str, db_arg: str | None = None, repo_arg: str | None = None,
+    snapshot_id: str | None = None, overlay_id: str | None = None,
+    question_path: str | None = None, draft_path: str | None = None,
+    review_path: str | None = None, correction_path: str | None = None,
+    answer_path: str | None = None, packet_path: str | None = None,
+    lifecycle_version: int = ANSWER_LIFECYCLE_VERSION,
+) -> tuple[dict[str, object], bytes, int]:
+    if stage == "prepare":
+        if type(lifecycle_version) is not int or lifecycle_version not in SUPPORTED_ANSWER_LIFECYCLE_VERSIONS:
+            raise AtlasError("lifecycle version must be integer 1 or 2")
+        packet, _ = _answer_lifecycle_packet(db_arg, repo_arg, snapshot_id, overlay_id, question_path, draft_path, lifecycle_version)
+        if review_path is None:
+            return packet, _answer_packet_bytes(packet), 0
+        review, _ = _read_json_file(review_path, "answer lifecycle review")
+        result, encoded = _lifecycle_review_result(packet, review)
+        return result, encoded, 0
+    if stage == "correct":
+        correction_obj, _ = _read_json_file(correction_path, "correction packet")
+        correction = _validate_correction_packet(correction_obj)
+        try:
+            draft_bytes = Path(draft_path).read_bytes()
+        except OSError as exc:
+            raise AtlasError(f"cannot read corrected draft: {exc}") from exc
+        answer, _ = _read_json_file(answer_path, "structured answer")
+        structured = _validate_structured_answer(answer, draft_bytes, correction)
+        packet = _corrected_review_packet(correction, structured)
+        return packet, _answer_packet_bytes(packet), 0
+    if stage == "accept":
+        packet, _ = _read_json_file(packet_path, "corrected answer review packet")
+        version = packet.get("lifecycle_schema_version") if isinstance(packet, dict) else None
+        if (packet.get("packet_type") != "corrected_answer_review"
+                or type(version) is not int
+                or version not in SUPPORTED_ANSWER_LIFECYCLE_VERSIONS):
+            raise AtlasError("accept requires a corrected_answer_review packet at lifecycle version 1 or 2")
+        if version == 2 and packet.get("measurement_contract") != _measurement_contract():
+            raise AtlasError("corrected review packet measurement_contract is invalid")
+        if packet.get("packet_sha256") != _answer_packet_hash(packet):
+            raise AtlasError("corrected review packet packet_sha256 does not match canonical contents")
+        correction = _validate_correction_packet(packet.get("correction_packet"))
+        structured_answer = packet.get("structured_answer")
+        if not isinstance(structured_answer, dict) or not isinstance(structured_answer.get("answer"), str):
+            raise AtlasError("corrected review packet structured_answer must contain an answer string")
+        answer = _validate_structured_answer(
+            structured_answer, structured_answer["answer"].encode("utf-8"), correction,
+            allow_atlas_measurement=(version == 2),
+        )
+        rebuilt = _corrected_review_packet(correction, answer)
+        if _answer_packet_bytes(rebuilt) != _answer_packet_bytes(packet):
+            raise AtlasError("corrected review packet does not reconstruct from its correction lineage and answer")
+        original = correction["original_packet"]["answer_packet"]
+        binding = original["binding"]
+        fresh, _ = _answer_lifecycle_packet_from_values(db_arg, repo_arg, binding, original["question"], original["draft"], version)
+        if _answer_packet_bytes(fresh) != _answer_packet_bytes(correction["original_packet"]):
+            raise AtlasError("original answer packet is stale against current map, source, or receipt evidence")
+        review, _ = _read_json_file(review_path, "corrected answer review")
+        checked, _claims, _reasons = _validate_lifecycle_review(packet, review)
+        if checked["decision"] != "accepted":
+            raise AtlasError("corrected answer review rejected; a second correction is not permitted")
+        final = {
+            "lifecycle_schema_version": version,
+            "result": "accepted",
+            "question": original["question"],
+            "question_sha256": binding["question_sha256"],
+            "answer": answer,
+            "answer_sha256": hashlib.sha256(answer["answer"].encode("utf-8")).hexdigest(),
+            "provenance": {
+                "snapshot_id": binding["snapshot_id"],
+                "extractor_identity": binding["extractor_identity"],
+                "overlay_id": binding["overlay_id"],
+                "overlay_content_hash": binding["overlay_content_hash"],
+                "review_receipt_hash": original["review_provenance"]["review_receipt_hash"],
+                "carry_provenance": original["review_provenance"].get("carry_provenance"),
+            },
+            "claims": packet["claims"],
+            "source_anchors": packet["source_anchors"],
+            "source_snippets": packet["source_snippets"],
+            "correction_provenance": packet["correction_lineage"],
+            "review": {
+                "packet_sha256": _answer_packet_hash(packet),
+                "review_sha256": hashlib.sha256(_canonical_json(checked) + b"\n").hexdigest(),
+                "reviewer_identity": checked["reviewer_identity"],
+                "reviewer_model": checked["reviewer_model"],
+            },
+        }
+        if version == 2:
+            final["measurement_contract"] = _measurement_contract()
+        return final, _answer_packet_bytes(final), 0
+    raise AtlasError("answer-lifecycle stage must be prepare, correct, or accept")
+
+
+def _answer_lifecycle_packet_from_values(
+    db_arg: str, repo_arg: str, binding: dict[str, object], question: str, draft: str,
+    lifecycle_version: int = ANSWER_LIFECYCLE_VERSION,
+) -> tuple[dict[str, object], bytes]:
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="atlas-answer-lifecycle-") as temporary:
+        question_path = Path(temporary) / "question.txt"
+        draft_path = Path(temporary) / "draft.txt"
+        question_path.write_bytes(question.encode("utf-8"))
+        draft_path.write_bytes(draft.encode("utf-8"))
+        try:
+            return _answer_lifecycle_packet(
+                db_arg, repo_arg, binding["snapshot_id"], binding["overlay_id"],
+                os.fspath(question_path), os.fspath(draft_path), lifecycle_version,
+            )
+        except AtlasError as exc:
+            raise AtlasError(f"original answer packet is stale against current map, source, or receipt evidence: {exc}") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -3246,6 +3846,27 @@ def main(argv: list[str] | None = None) -> int:
     answer_parser.add_argument("--question-file", required=True)
     answer_parser.add_argument("--draft-file", required=True)
     answer_parser.add_argument("--review", help="optional independent review JSON; accepted review prints only the exact draft")
+    lifecycle_parser = commands.add_parser("answer-lifecycle", help="run the explicitly versioned one-correction answer review lifecycle")
+    lifecycle_stages = lifecycle_parser.add_subparsers(dest="lifecycle_stage", required=True)
+    lifecycle_prepare = lifecycle_stages.add_parser("prepare", help="prepare or validate the original versioned answer review")
+    lifecycle_prepare.add_argument("--db", required=True)
+    lifecycle_prepare.add_argument("--repo", required=True)
+    lifecycle_prepare.add_argument("--snapshot", required=True)
+    lifecycle_prepare.add_argument("--overlay", required=True)
+    lifecycle_prepare.add_argument("--question-file", required=True)
+    lifecycle_prepare.add_argument("--draft-file", required=True)
+    lifecycle_prepare.add_argument("--review-file", help="optional independent accepted or rejected lifecycle review JSON")
+    lifecycle_prepare.add_argument("--lifecycle-version", type=int, choices=(1, 2), default=1,
+                                   help="default 1 is legacy/unverified and retained for byte compatibility; use 2 for an Atlas-recomputed, machine-verified evidence measurement")
+    lifecycle_correct = lifecycle_stages.add_parser("correct", help="prepare a corrected answer review from one exact rejection packet")
+    lifecycle_correct.add_argument("--correction-packet", required=True)
+    lifecycle_correct.add_argument("--draft-file", required=True)
+    lifecycle_correct.add_argument("--answer-file", required=True, help="worker-authored structured answer JSON")
+    lifecycle_accept = lifecycle_stages.add_parser("accept", help="validate a fresh accepted review and emit the final answer package")
+    lifecycle_accept.add_argument("--db", required=True)
+    lifecycle_accept.add_argument("--repo", required=True)
+    lifecycle_accept.add_argument("--packet-file", required=True)
+    lifecycle_accept.add_argument("--review-file", required=True)
     review_parser = commands.add_parser("flow-review", help="attach one immutable review receipt to an exact overlay")
     review_parser.add_argument("--db", required=True)
     review_parser.add_argument("--snapshot", required=True)
@@ -3326,6 +3947,16 @@ def main(argv: list[str] | None = None) -> int:
             output, encoded_output, exit_code = focus(args.db, args.repo, args.snapshot, args.overlay, args.max_tokens)
         elif args.command == "answer-check":
             output, encoded_output, exit_code = answer_check(args.db, args.repo, args.snapshot, args.overlay, args.question_file, args.draft_file, args.review)
+        elif args.command == "answer-lifecycle":
+            output, encoded_output, exit_code = answer_lifecycle(
+                args.lifecycle_stage,
+                db_arg=getattr(args, "db", None), repo_arg=getattr(args, "repo", None),
+                snapshot_id=getattr(args, "snapshot", None), overlay_id=getattr(args, "overlay", None),
+                question_path=getattr(args, "question_file", None), draft_path=getattr(args, "draft_file", None),
+                review_path=getattr(args, "review_file", None), correction_path=getattr(args, "correction_packet", None),
+                answer_path=getattr(args, "answer_file", None), packet_path=getattr(args, "packet_file", None),
+                lifecycle_version=getattr(args, "lifecycle_version", ANSWER_LIFECYCLE_VERSION),
+            )
         else:
             output = query_flow(args.db, args.snapshot, args.overlay)
     except (AtlasError, sqlite3.Error, OSError, json.JSONDecodeError) as exc:
