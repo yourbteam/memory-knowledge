@@ -21,6 +21,22 @@ import tempfile
 
 SCHEMA_VERSION = 2
 INVENTORY_BASIS = "git-index-paths+working-tree-bytes"
+SOURCE_CALL_GRAPH_SCHEMA_VERSION = 1
+SOURCE_CALL_GRAPH_CAPS = {
+    "roots": 20_000,
+    "nodes": 50_000,
+    "edges": 250_000,
+    "inspected_invocations": 500_000,
+    "unsupported": 250_000,
+    "nested_body_exclusions": 100_000,
+    "serialized_graph_bytes": 134_217_728,
+    "impact_witness_hops": 2_000_000,
+    "traversal_work": 2_000_000,
+    "compatibility_records": 2_000_000,
+}
+LEXICAL_METHOD_MANIFEST_SCHEMA_VERSION = 1
+LEXICAL_METHOD_MANIFEST_MAX_METHODS = 250000
+LEXICAL_METHOD_MANIFEST_MAX_BYTES = 67108864
 
 
 class AtlasError(Exception):
@@ -2355,6 +2371,44 @@ def _compiler_shipped_tool_inputs() -> list[dict[str, object]]:
     return result
 
 
+def _compiler_lexical_method_manifest(snapshot: dict[str, object], extractor_identity: str) -> dict[str, object]:
+    """Build the bounded canonical declaration allowlist from the saved lexical snapshot."""
+    source_graph = snapshot.get("source_graph")
+    facts = source_graph.get("facts") if isinstance(source_graph, dict) else None
+    if (not isinstance(facts, list) or not isinstance(extractor_identity, str) or not extractor_identity
+            or not isinstance(source_graph, dict) or source_graph.get("extractor_identity") != extractor_identity):
+        raise AtlasError("compiler lexical method manifest has no verified saved source facts")
+    methods = []
+    identities: set[tuple[object, ...]] = set()
+    fact_ids: set[str] = set()
+    for fact in facts:
+        if not isinstance(fact, dict) or fact.get("kind") != "method_declaration":
+            continue
+        fact_id, name, source = fact.get("id"), fact.get("method_name"), fact.get("source")
+        span = _compiler_span(source)
+        if (not isinstance(fact_id, str) or not fact_id or not isinstance(name, str) or not name
+                or span is None or not isinstance(source, dict) or not isinstance(source.get("sha256"), str)
+                or not source.get("sha256")):
+            raise AtlasError("compiler lexical method manifest contains an incomplete saved method fact")
+        identity = (name, span[0], source["sha256"], span[1], span[2])
+        if fact_id in fact_ids or identity in identities:
+            raise AtlasError("compiler lexical method manifest contains duplicate saved method identities")
+        fact_ids.add(fact_id); identities.add(identity)
+        methods.append({"fact_id": fact_id, "method_name": name, "source": {
+            "path": span[0], "sha256": source["sha256"], "span": {
+                "start_offset": span[1], "end_offset": span[2], "offset_unit": "unicode_codepoint"}}})
+        if len(methods) > LEXICAL_METHOD_MANIFEST_MAX_METHODS:
+            raise AtlasError("compiler lexical method manifest method cap exceeded")
+    methods.sort(key=lambda item: (item["source"]["path"], item["source"]["span"]["start_offset"],
+                                  item["source"]["span"]["end_offset"], item["method_name"], item["fact_id"]))
+    manifest = {"schema_version": LEXICAL_METHOD_MANIFEST_SCHEMA_VERSION,
+                "snapshot_id": snapshot.get("snapshot_id"), "extractor_identity": extractor_identity,
+                "methods": methods}
+    if len(_canonical_json(manifest)) > LEXICAL_METHOD_MANIFEST_MAX_BYTES:
+        raise AtlasError("compiler lexical method manifest byte cap exceeded")
+    return manifest
+
+
 def _compiler_copied_tool_files(extractor_output: Path, sdk_path: str) -> list[dict[str, object]]:
     """Map SDK tool files copied beside the extractor back to stable SDK paths."""
     format_root = Path(sdk_path) / "DotnetTools" / "dotnet-format"
@@ -2523,6 +2577,531 @@ def _validate_compiler_source_call_edge_proof(edge: dict[str, object], context: 
         raise AtlasError(f"compiler source-call edge has invalid proof labels; {context}")
 
 
+def _source_call_node_id(source: object) -> str | None:
+    span = _compiler_span(source)
+    if span is None:
+        return None
+    return f"method:{span[0]}:{span[1]}:{span[2]}"
+
+
+def _verify_compiler_source_call_graph(
+    snapshot: dict[str, object], relationships: list[dict[str, object]], raw_graph: object, repo: Path,
+    *, bind: bool, lexical_manifest: dict[str, object],
+) -> tuple[dict[str, object], list[dict[str, object]], list[dict[str, object]]]:
+    """Bind and validate the complete reachable method graph before it can be filtered by a consumer."""
+    if not isinstance(raw_graph, dict):
+        raise AtlasError("compiler source-call graph is missing or malformed; no supplement published")
+    if (not isinstance(raw_graph.get("schema_version"), int) or isinstance(raw_graph.get("schema_version"), bool)
+            or raw_graph.get("schema_version") != SOURCE_CALL_GRAPH_SCHEMA_VERSION or raw_graph.get("status") != "complete"):
+        raise AtlasError("compiler source-call graph version or completion status is invalid; no supplement published")
+    raw_caps = raw_graph.get("caps")
+    if (not isinstance(raw_caps, dict) or set(raw_caps) != set(SOURCE_CALL_GRAPH_CAPS)
+            or any(not isinstance(value, int) or isinstance(value, bool) for value in raw_caps.values())
+            or raw_caps != SOURCE_CALL_GRAPH_CAPS):
+        raise AtlasError("compiler source-call graph caps do not match the code-owned limits; no supplement published")
+    graph = json.loads(json.dumps(raw_graph))
+    facts = (snapshot.get("source_graph") or {}).get("facts")
+    if not isinstance(facts, list):
+        raise AtlasError("compiler source-call graph has no saved lexical graph; no supplement published")
+    method_facts = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "method_declaration"]
+    manifest_methods = lexical_manifest.get("methods") if isinstance(lexical_manifest, dict) else None
+    if (not isinstance(manifest_methods, list) or lexical_manifest.get("schema_version") != LEXICAL_METHOD_MANIFEST_SCHEMA_VERSION
+            or lexical_manifest.get("snapshot_id") != snapshot.get("snapshot_id")):
+        raise AtlasError("compiler lexical method manifest is stale or malformed; no supplement published")
+    expected_manifest = _compiler_lexical_method_manifest(
+        snapshot, lexical_manifest.get("extractor_identity") if isinstance(lexical_manifest, dict) else "")
+    if _canonical_json(lexical_manifest) != _canonical_json(expected_manifest):
+        raise AtlasError("compiler lexical method manifest disagrees with the saved snapshot; no supplement published")
+    manifest_by_identity = {}
+    for entry in manifest_methods:
+        if not isinstance(entry, dict) or not isinstance(entry.get("fact_id"), str):
+            raise AtlasError("compiler lexical method manifest entry is malformed; no supplement published")
+        source = entry.get("source")
+        span = _compiler_span(source)
+        identity = (entry.get("method_name"), *(span or ()), source.get("sha256") if isinstance(source, dict) else None)
+        matches = [fact for fact in method_facts if fact.get("id") == entry["fact_id"]
+                   and fact.get("method_name") == entry.get("method_name")
+                   and _compiler_span(fact.get("source")) == span
+                   and isinstance(source, dict) and isinstance(fact.get("source"), dict)
+                   and fact["source"].get("sha256") == source.get("sha256")]
+        if len(matches) != 1 or identity in manifest_by_identity:
+            raise AtlasError("compiler lexical method manifest does not bind unique saved lexical facts; no supplement published")
+        manifest_by_identity[identity] = matches[0]
+    type_facts = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "type_declaration"]
+    files = {str(entry.get("path")): entry for entry in snapshot.get("files", []) if isinstance(entry, dict)}
+    lexical_type_cache: dict[str, tuple[list[object], dict[int, int], dict[int, int]]] = {}
+
+    def expected_containing_type(method_fact: dict[str, object]) -> str:
+        owner_id = method_fact.get("owner_type_id")
+        owners = [fact for fact in type_facts if fact.get("type_id") == owner_id]
+        if not owners:
+            raise AtlasError("compiler source-call method owner does not identify a lexical type declaration; no supplement published")
+        method_span = _compiler_span(method_fact.get("source"))
+        if method_span is None or not any(_compiler_span(candidate.get("source")) is not None
+                                          and _compiler_span(candidate.get("source"))[0] == method_span[0]
+                                          for candidate in owners):
+            raise AtlasError("compiler source-call lexical owner is outside its declaration file; no supplement published")
+        file_record = files.get(method_span[0])
+        if file_record is None:
+            raise AtlasError("compiler source-call owner file changed or is missing; no supplement published")
+        if method_span[0] not in lexical_type_cache:
+            root_fd = os.open(repo, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                evidence = _read_working_file(root_fd, method_span[0], collect_source=True)
+            finally:
+                os.close(root_fd)
+            raw_source = evidence.get("_source_bytes")
+            if (evidence.get("presence") != "present" or evidence.get("type") != "file"
+                    or evidence.get("sha256") != file_record.get("sha256") or not isinstance(raw_source, bytes)):
+                raise AtlasError("compiler source-call owner file changed or is missing; no supplement published")
+            try:
+                source_text = raw_source.decode("utf-8-sig")
+            except UnicodeDecodeError as exc:
+                raise AtlasError("compiler source-call owner file is not UTF-8; no supplement published") from exc
+            from csharp_facts import lex, _matches, _angle_matches
+            tokens, _directives = lex(source_text)
+            lexical_type_cache[method_span[0]] = (tokens, _matches(tokens), _angle_matches(tokens))
+        tokens, braces, angles = lexical_type_cache[method_span[0]]
+        containing = []
+        for type_fact in type_facts:
+            span = _compiler_span(type_fact.get("source"))
+            if span is None or span[0] != method_span[0] or span[1] >= method_span[1]:
+                continue
+            declaration_indices = [index for index, token in enumerate(tokens)
+                                   if token.start == span[1] and token.value in {"class", "struct", "interface", "record"}]
+            if len(declaration_indices) != 1:
+                continue
+            index = declaration_indices[0]
+            name_index = index + 1
+            if tokens[index].value == "record" and name_index < len(tokens) and tokens[name_index].value in {"class", "struct"}:
+                name_index += 1
+            while name_index < len(tokens) and tokens[name_index].kind != "identifier":
+                name_index += 1
+            if name_index >= len(tokens):
+                continue
+            cursor = name_index + 1
+            if cursor < len(tokens) and tokens[cursor].value == "<" and cursor in angles:
+                cursor = angles[cursor] + 1
+            while cursor < len(tokens) and tokens[cursor].value not in {"{", ";"}:
+                cursor += 1
+            if cursor >= len(tokens) or tokens[cursor].value != "{" or cursor not in braces:
+                continue
+            close_index = braces[cursor]
+            if tokens[cursor].start <= method_span[1] and method_span[2] <= tokens[close_index].end:
+                containing.append((span[1], type_fact, name_index))
+        containing.sort(key=lambda item: item[0])
+        owner_declarations = [item for item in containing if item[1].get("type_id") == owner_id]
+        if len(owner_declarations) != 1 or containing[-1][1].get("type_id") != owner_id:
+            raise AtlasError("compiler source-call lexical owner is not the innermost enclosing type; no supplement published")
+        owner = owner_declarations[0][1]
+        segments = []
+        for _start, type_fact, name_index in containing:
+            name = str(type_fact.get("name"))
+            arity = type_fact.get("arity")
+            if not isinstance(arity, int) or isinstance(arity, bool) or arity < 0:
+                raise AtlasError("compiler source-call lexical type arity is invalid; no supplement published")
+            if arity:
+                open_index = name_index + 1
+                if open_index >= len(tokens) or tokens[open_index].value != "<" or open_index not in angles:
+                    raise AtlasError("compiler source-call generic owner arity is not lexically verifiable; no supplement published")
+                close_index = angles[open_index]
+                names = [tokens[part].value.removeprefix("@").split(":", 1)[0]
+                         for part in range(open_index + 1, close_index) if tokens[part].kind == "identifier"]
+                if len(names) < arity:
+                    raise AtlasError("compiler source-call generic owner parameters are incomplete; no supplement published")
+                segments.append(name + "<" + ", ".join(names[:arity]) + ">")
+            else:
+                segments.append(name)
+        namespace = str(owner.get("namespace") or "")
+        prefix = "global::" + (namespace + "." if namespace else "")
+        return prefix + ".".join(segments)
+
+    collections = {
+        "roots": graph.get("roots"), "nodes": graph.get("nodes"), "edges": graph.get("edges"),
+        "unsupported": graph.get("unsupported"), "nested_body_exclusions": graph.get("nested_body_exclusions"),
+    }
+    if set(graph) != {"schema_version", "status", "caps", "counts", *collections.keys()}:
+        raise AtlasError("compiler source-call graph has unknown or missing fields; no supplement published")
+    item_fields = {
+        "roots": {"route", "http_method", "implementation_type", "implementation_method", "root_method", "root_node_id", "root_source", "route_fact_id", "lexical_implementation_method_fact_id"},
+        "nodes": {"id", "method", "containing_type", "source", "lexical_method_fact_id"},
+        "edges": {"caller_node_id", "callee_node_id", "caller_method", "caller_source", "callee_method", "callee_containing_type", "callee_source", "call_site_source", "dispatch_kind", "compiler_binding_confirmed", "runtime_reachability_proven", "runtime_DI_selection_proven", "caller_lexical_method_fact_id", "callee_lexical_method_fact_id"},
+        "unsupported": {"caller_node_id", "caller_method", "caller_source", "call_site_source", "kind", "reason", "callee_method", "callee_source"},
+        "nested_body_exclusions": {"caller_node_id", "caller_method", "caller_source", "nested_body_kind", "source", "reason"},
+    }
+    if any(not isinstance(items, list) or any(not isinstance(item, dict) for item in items)
+           for items in collections.values()):
+        raise AtlasError("compiler source-call graph collections are malformed; no supplement published")
+    for key, items in collections.items():
+        required = item_fields[key]
+        if bind:
+            if key == "roots": required -= {"route_fact_id", "lexical_implementation_method_fact_id"}
+            if key == "nodes": required -= {"lexical_method_fact_id"}
+            if key == "edges": required -= {"caller_lexical_method_fact_id", "callee_lexical_method_fact_id"}
+        if key == "unsupported":
+            required = required - {"callee_method", "callee_source"}
+        if any(not required <= set(item) or set(item) - item_fields[key] for item in items):
+            raise AtlasError(f"compiler source-call graph {key} entries have unknown or missing fields; no supplement published")
+    for item in collections["unsupported"]:
+        lexical_boundary = item.get("kind") == "unsupported_lexical_source_method"
+        has_callee_method = "callee_method" in item
+        has_callee_source = "callee_source" in item
+        if lexical_boundary != has_callee_method or lexical_boundary != has_callee_source:
+            raise AtlasError("compiler source-call graph lexical boundary fields are incomplete or unexpected; no supplement published")
+    counts = graph.get("counts")
+    count_fields = {"roots", "nodes", "edges", "inspected_invocations", "unsupported", "nested_body_exclusions", "method_bodies_traversed", "serialized_graph_bytes", "traversal_work", "compatibility_records"}
+    if not isinstance(counts, dict) or set(counts) != count_fields:
+        raise AtlasError("compiler source-call graph counts are missing; no supplement published")
+    if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts.values()):
+        raise AtlasError("compiler source-call graph counts must be nonnegative integers; no supplement published")
+    for key, items in collections.items():
+        if counts.get(key) != len(items) or len(items) > int(SOURCE_CALL_GRAPH_CAPS[key]):
+            raise AtlasError(f"compiler source-call graph {key} count exceeds or disagrees with its cap; no supplement published")
+    inspected = counts.get("inspected_invocations")
+    if (not isinstance(inspected, int) or inspected != len(collections["edges"]) + len(collections["unsupported"])
+            or inspected > SOURCE_CALL_GRAPH_CAPS["inspected_invocations"]):
+        raise AtlasError("compiler source-call graph inspected-invocation count is inconsistent; no supplement published")
+    if counts.get("method_bodies_traversed") != len(collections["nodes"]):
+        raise AtlasError("compiler source-call graph method-body traversal count is inconsistent; no supplement published")
+    if (counts.get("traversal_work") != inspected or counts["traversal_work"] > SOURCE_CALL_GRAPH_CAPS["traversal_work"]
+            or counts["compatibility_records"] > SOURCE_CALL_GRAPH_CAPS["compatibility_records"]):
+        raise AtlasError("compiler source-call graph traversal or compatibility work count is inconsistent; no supplement published")
+    if not isinstance(counts.get("serialized_graph_bytes"), int) or counts["serialized_graph_bytes"] < 1:
+        raise AtlasError("compiler source-call graph serialized-byte count is invalid; no supplement published")
+
+    def exact_method(source: object, symbol: object, label: str) -> dict[str, object]:
+        span = _compiler_span(source)
+        if span is None or not isinstance(source, dict) or not isinstance(source.get("sha256"), str):
+            raise AtlasError(f"compiler source-call graph {label} anchor is invalid; no supplement published")
+        file = files.get(span[0])
+        if (file is None or file.get("presence") != "present" or file.get("type") != "file"
+                or file.get("sha256") != source["sha256"]):
+            raise AtlasError(f"compiler source-call graph {label} anchor does not match the tracked snapshot: {span[0]}; no supplement published")
+        name = symbol.rsplit(".", 1)[-1].split("(", 1)[0] if isinstance(symbol, str) else None
+        manifest_matches = [fact for identity, fact in manifest_by_identity.items()
+                            if identity[0] == name and identity[1:4] == span]
+        matches = manifest_matches
+        if len(matches) != 1:
+            location = (f"path={span[0]!r} start_offset={span[1]} end_offset={span[2]}"
+                        if span is not None else "path=<invalid> start_offset=<invalid> end_offset=<invalid>")
+            raise AtlasError(f"compiler source-call graph {label} anchor does not identify one exact lexical method: "
+                             f"symbol={symbol!r} {location} matches={len(matches)}; no supplement published")
+        return matches[0]
+
+    references: list[tuple[str, dict[str, object]]] = []
+
+    def add_reference(label: str, anchor: object) -> None:
+        if not isinstance(anchor, dict):
+            raise AtlasError(f"compiler source-call graph {label} has no source anchor; no supplement published")
+        references.append((label, anchor))
+
+    node_by_id: dict[str, dict[str, object]] = {}
+    for node in collections["nodes"]:
+        node_id = node.get("id")
+        source = node.get("source")
+        expected_id = _source_call_node_id(source)
+        if (not isinstance(node_id, str) or not node_id or node_id != expected_id or node_id in node_by_id
+                or any(not isinstance(node.get(key), str) or not node[key]
+                       for key in ("method", "containing_type"))):
+            raise AtlasError("compiler source-call graph contains a duplicate or invalid lexical method node; no supplement published")
+        method = exact_method(source, node.get("method"), "method-node")
+        if node.get("containing_type") != expected_containing_type(method):
+            raise AtlasError("compiler source-call graph containing type disagrees with its lexical owner declaration; no supplement published")
+        lexical_id = method.get("id")
+        if bind:
+            node["lexical_method_fact_id"] = lexical_id
+        elif node.get("lexical_method_fact_id") != lexical_id:
+            raise AtlasError("compiler source-call graph method node lost its lexical fact binding; impact refused")
+        node_by_id[node_id] = node
+        add_reference(f"node:{node_id}", source)
+
+    if any(not isinstance(relation, dict) for relation in relationships):
+        raise AtlasError("compiler source-call graph relationship list is malformed; no supplement published")
+    roots_by_identity: set[tuple[str, str, str]] = set()
+    root_nodes: list[str] = []
+    for root in collections["roots"]:
+        source = root.get("root_source")
+        method = exact_method(source, root.get("root_method"), "root")
+        root_node_id = root.get("root_node_id")
+        node = node_by_id.get(str(root_node_id))
+        if node is None or node.get("source") != source or node.get("method") != root.get("root_method"):
+            raise AtlasError("compiler source-call graph root does not identify its exact method node; no supplement published")
+        candidates = [relation for relation in relationships
+                      if relation.get("route") == root.get("route")
+                      and relation.get("http_method") == root.get("http_method")
+                      and relation.get("implementation_type") == root.get("implementation_type")
+                      and relation.get("implementation_method") == root.get("implementation_method")
+                      and relation.get("lexical_implementation_fact_id") == method.get("id")]
+        if len(candidates) != 1:
+            raise AtlasError("compiler source-call graph root must join exactly one mapped route/handler relationship; no supplement published")
+        relation = candidates[0]
+        if (any(not isinstance(root.get(key), str) or not root[key] for key in
+                ("route", "http_method", "implementation_type", "implementation_method", "root_method", "root_node_id"))
+                or node.get("containing_type") != relation.get("implementation_method_containing_type")):
+            raise AtlasError("compiler source-call graph root identity or containing type is invalid; no supplement published")
+        identity = (str(relation.get("lexical_route_fact_id")), str(relation.get("lexical_implementation_fact_id")),
+                    str(relation.get("implementation_type")))
+        if identity in roots_by_identity:
+            raise AtlasError("compiler source-call graph contains a duplicate route root; no supplement published")
+        roots_by_identity.add(identity)
+        root_nodes.append(str(root_node_id))
+        if bind:
+            root["route_fact_id"] = relation.get("lexical_route_fact_id")
+            root["lexical_implementation_method_fact_id"] = relation.get("lexical_implementation_fact_id")
+        elif (root.get("route_fact_id") != relation.get("lexical_route_fact_id")
+              or root.get("lexical_implementation_method_fact_id") != relation.get("lexical_implementation_fact_id")):
+            raise AtlasError("compiler source-call graph root lost its route or handler binding; impact refused")
+        add_reference(f"root:{root_node_id}", source)
+    expected_root_identities = {(str(relation.get("lexical_route_fact_id")),
+                                 str(relation.get("lexical_implementation_fact_id")),
+                                 str(relation.get("implementation_type"))) for relation in relationships}
+    if roots_by_identity != expected_root_identities:
+        raise AtlasError("compiler source-call graph omits or invents a mapped route root; no supplement published")
+
+    edge_keys: set[tuple[str, tuple[str, int, int]]] = set()
+    adjacency: dict[str, list[dict[str, object]]] = {}
+    for edge in collections["edges"]:
+        caller_id, callee_id = edge.get("caller_node_id"), edge.get("callee_node_id")
+        caller, callee = node_by_id.get(str(caller_id)), node_by_id.get(str(callee_id))
+        if caller is None or callee is None:
+            raise AtlasError("compiler source-call graph edge has a missing endpoint; no supplement published")
+        if edge.get("caller_method") != caller.get("method") or edge.get("callee_method") != callee.get("method"):
+            raise AtlasError("compiler source-call graph edge method identity disagrees with an endpoint; no supplement published")
+        if (any(not isinstance(edge.get(key), str) or not edge[key] for key in
+                ("caller_node_id", "callee_node_id", "caller_method", "callee_method", "callee_containing_type"))
+                or edge.get("callee_containing_type") != callee.get("containing_type")):
+            raise AtlasError("compiler source-call graph edge identity or callee type is invalid; no supplement published")
+        if (any(not isinstance(edge.get(key), str) or not edge[key] for key in
+                ("caller_node_id", "callee_node_id", "caller_method", "callee_method", "callee_containing_type"))
+                or edge.get("callee_containing_type") != callee.get("containing_type")):
+            raise AtlasError("compiler source-call graph edge identity or callee type is invalid; no supplement published")
+        call_span = _compiler_span(edge.get("call_site_source"))
+        caller_span, callee_span = _compiler_span(caller.get("source")), _compiler_span(callee.get("source"))
+        if (call_span is None or caller_span is None or callee_span is None
+                or call_span[0] != caller_span[0] or not caller_span[1] <= call_span[1] <= call_span[2] <= caller_span[2]):
+            raise AtlasError("compiler source-call graph callsite is outside its exact caller method; no supplement published")
+        if edge.get("caller_source") != caller.get("source") or edge.get("callee_source") != callee.get("source"):
+            raise AtlasError("compiler source-call graph edge source anchor disagrees with its endpoint; no supplement published")
+        _validate_compiler_source_call_edge_proof(edge, "no supplement published")
+        key = (str(caller_id), call_span)
+        if key in edge_keys:
+            raise AtlasError("compiler source-call graph contains a duplicate callsite edge; no supplement published")
+        edge_keys.add(key)
+        caller_fact = node_by_id[str(caller_id)]["lexical_method_fact_id"]
+        callee_fact = node_by_id[str(callee_id)]["lexical_method_fact_id"]
+        if bind:
+            edge["caller_lexical_method_fact_id"] = caller_fact
+            edge["callee_lexical_method_fact_id"] = callee_fact
+        elif (edge.get("caller_lexical_method_fact_id") != caller_fact
+              or edge.get("callee_lexical_method_fact_id") != callee_fact):
+            raise AtlasError("compiler source-call graph edge lost its exact method fact endpoints; impact refused")
+        add_reference(f"edge-caller:{caller_id}:{call_span[1]}", edge.get("caller_source"))
+        add_reference(f"edge-callee:{callee_id}:{call_span[1]}", edge.get("callee_source"))
+        add_reference(f"edge-callsite:{caller_id}:{call_span[1]}", edge.get("call_site_source"))
+        adjacency.setdefault(str(caller_id), []).append(edge)
+
+    def check_contained_anchor(caller_id: object, anchor: object, label: str) -> None:
+        caller = node_by_id.get(str(caller_id))
+        outer, inner = _compiler_span(caller.get("source")) if caller else None, _compiler_span(anchor)
+        if outer is None or inner is None or outer[0] != inner[0] or not outer[1] <= inner[1] <= inner[2] <= outer[2]:
+            raise AtlasError(f"compiler source-call graph {label} is outside its visited caller; no supplement published")
+
+    unsupported_identities = set()
+    for item in collections["unsupported"]:
+        caller_id = item.get("caller_node_id")
+        caller = node_by_id.get(str(caller_id))
+        if (not isinstance(caller_id, str) or caller is None or item.get("caller_method") != caller.get("method")
+                or item.get("caller_source") != caller.get("source")
+                or not isinstance(item.get("kind"), str)
+                or item.get("kind") not in {"unsupported_source_call", "unsupported_source_method_body", "unsupported_lexical_source_method"}
+                or not isinstance(item.get("reason"), str) or not item.get("reason")):
+            raise AtlasError("compiler source-call graph limitation is not bound to its visited caller; no supplement published")
+        unsupported_identity = (caller_id, _compiler_span(item.get("call_site_source")), item.get("kind"))
+        if unsupported_identity in unsupported_identities:
+            raise AtlasError("compiler source-call graph contains a duplicate unsupported boundary; no supplement published")
+        unsupported_identities.add(unsupported_identity)
+        check_contained_anchor(caller_id, item.get("call_site_source"), "unsupported callsite")
+        unsupported_span = _compiler_span(item.get("call_site_source"))
+        add_reference(f"unsupported:{caller_id}:{unsupported_span[1] if unsupported_span else -1}", item.get("call_site_source"))
+        if item["kind"] == "unsupported_lexical_source_method":
+            callee_method, callee_source = item.get("callee_method"), item.get("callee_source")
+            callee_span = _compiler_span(callee_source)
+            callee_name = callee_method.split("(", 1)[0].rsplit(".", 1)[-1] if isinstance(callee_method, str) else ""
+            file_record = files.get(callee_span[0]) if callee_span else None
+            if (not callee_name or not isinstance(callee_method, str) or callee_span is None
+                    or not isinstance(callee_source, dict) or file_record is None
+                    or file_record.get("sha256") != callee_source.get("sha256")):
+                raise AtlasError("compiler lexical boundary lacks an exact tracked callee diagnostic; no supplement published")
+            callee_identity = (callee_name, callee_span[0], callee_span[1], callee_span[2], callee_source.get("sha256"))
+            if callee_identity in manifest_by_identity:
+                raise AtlasError("compiler lexical boundary callee was already admitted; no supplement published")
+            add_reference(f"unsupported-callee:{caller_id}:{unsupported_span[1] if unsupported_span else -1}", callee_source)
+    nested_identities = set()
+    for item in collections["nested_body_exclusions"]:
+        caller_id = item.get("caller_node_id")
+        caller = node_by_id.get(str(caller_id))
+        if (not isinstance(caller_id, str) or caller is None or item.get("caller_method") != caller.get("method")
+                or item.get("caller_source") != caller.get("source")
+                or not isinstance(item.get("reason"), str) or not item.get("reason")):
+            raise AtlasError("compiler source-call graph nested-body boundary is not bound to its visited caller; no supplement published")
+        if not isinstance(item.get("nested_body_kind"), str) or item.get("nested_body_kind") not in {"local_function", "anonymous_function"}:
+            raise AtlasError("compiler source-call graph has an unknown nested-body exclusion; no supplement published")
+        check_contained_anchor(caller_id, item.get("source"), "nested-body exclusion")
+        nested_identity = (caller_id, _compiler_span(item.get("source")), item.get("nested_body_kind"))
+        if nested_identity in nested_identities:
+            raise AtlasError("compiler source-call graph contains a duplicate nested-body boundary; no supplement published")
+        nested_identities.add(nested_identity)
+        nested_span = _compiler_span(item.get("source"))
+        add_reference(f"nested:{caller_id}:{nested_span[1] if nested_span else -1}", item.get("source"))
+
+    # Check callsite token boundaries against actual hashed source text; this catches rehashed span substitutions.
+    snippets = _source_texts(repo, references)
+    snippet_by_id = {str(item["fact_id"]): str(item["text"]) for item in snippets}
+    from csharp_facts import lex
+    for edge in collections["edges"]:
+        key = f"edge-callsite:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}"
+        text = snippet_by_id.get(key, "")
+        tokens, _directives = lex(text)
+        if len(tokens) < 3 or tokens[-1].value != ")":
+            raise AtlasError("compiler source-call graph callsite is not an exact invocation span; no supplement published")
+        depth = 0
+        opening = None
+        for index in range(len(tokens) - 1, -1, -1):
+            if tokens[index].value == ")": depth += 1
+            elif tokens[index].value == "(":
+                depth -= 1
+                if depth == 0:
+                    opening = index
+                    break
+        if opening is None or opening == 0:
+            raise AtlasError("compiler source-call graph callsite has no exact invocation head; no supplement published")
+        called_name = tokens[opening - 1].value.removeprefix("@")
+        expected_name = str(edge.get("callee_method", "")).rsplit(".", 1)[-1].split("(", 1)[0]
+        if called_name != expected_name:
+            raise AtlasError("compiler source-call graph callsite head does not match its callee; impact refused")
+    for item in collections["unsupported"]:
+        if item["kind"] not in {"unsupported_source_call", "unsupported_lexical_source_method"}:
+            continue
+        span = _compiler_span(item["call_site_source"])
+        snippet = snippet_by_id.get(f"unsupported:{item['caller_node_id']}:{span[1] if span else -1}", "")
+        tokens, _directives = lex(snippet)
+        if len(tokens) < 3 or tokens[-1].value != ")":
+            raise AtlasError("compiler source-call graph unsupported boundary is not an exact invocation; no supplement published")
+        if item["kind"] == "unsupported_lexical_source_method":
+            caller_id = item["caller_node_id"]
+            callee_span = _compiler_span(item["callee_source"])
+            callee_key = f"unsupported-callee:{caller_id}:{span[1] if span else -1}"
+            callee_text = snippet_by_id.get(callee_key, "")
+            callee_tokens, _directives = lex(callee_text)
+            callee_name = str(item["callee_method"]).split("(", 1)[0].rsplit(".", 1)[-1]
+            depth = 0
+            opening = None
+            for index in range(len(tokens) - 1, -1, -1):
+                if tokens[index].value == ")": depth += 1
+                elif tokens[index].value == "(":
+                    depth -= 1
+                    if depth == 0:
+                        opening = index
+                        break
+            if opening is None or opening == 0 or tokens[opening - 1].value.removeprefix("@") != callee_name:
+                raise AtlasError("compiler lexical boundary callsite head does not match its callee; no supplement published")
+            names = [index for index, token in enumerate(callee_tokens) if token.value.removeprefix("@") == callee_name]
+            if (callee_span is None or not names or not any(
+                    index + 1 < len(callee_tokens) and callee_tokens[index + 1].value == "(" for index in names)
+                    or not any(token.value in {"=>", "{"} for token in callee_tokens)
+                    or callee_tokens[-1].value not in {";", "}"}):
+                raise AtlasError("compiler lexical boundary callee declaration is not source-verifiable; no supplement published")
+    for item in collections["nested_body_exclusions"]:
+        span = _compiler_span(item["source"])
+        snippet = snippet_by_id.get(f"nested:{item['caller_node_id']}:{span[1] if span else -1}", "")
+        tokens, _directives = lex(snippet)
+        values = [token.value for token in tokens]
+        if item["nested_body_kind"] == "anonymous_function":
+            if "=>" not in values and "delegate" not in values:
+                raise AtlasError("compiler source-call graph anonymous-function boundary is not exact; no supplement published")
+        else:
+            if not any(token.value == "(" and any(value in {"=>", "{"} for value in values[index + 1:])
+                       for index, token in enumerate(tokens)):
+                raise AtlasError("compiler source-call graph local-function boundary is not exact; no supplement published")
+
+    # Validate every node is reachable from at least one mapped route root, including roots with no calls.
+    reachable = set(root_nodes)
+    pending = list(root_nodes)
+    cursor = 0
+    while cursor < len(pending):
+        current = pending[cursor]; cursor += 1
+        for edge in adjacency.get(current, []):
+            target = str(edge["callee_node_id"])
+            if target not in reachable:
+                reachable.add(target); pending.append(target)
+    if reachable != set(node_by_id):
+        raise AtlasError("compiler source-call graph contains a disconnected method node; impact refused")
+
+    graph["nodes"] = sorted(collections["nodes"], key=lambda node: str(node["id"]))
+    graph["roots"] = sorted(collections["roots"], key=lambda root: (
+        str(root["route"]), str(root["http_method"]), str(root["implementation_type"]), str(root["implementation_method"])))
+    graph["edges"] = sorted(collections["edges"], key=lambda edge: (
+        str(edge["call_site_source"]["path"]), int(edge["call_site_source"]["span"]["start_offset"]), str(edge["caller_node_id"])))
+    graph["unsupported"] = sorted(collections["unsupported"], key=lambda item: (
+        str(item["call_site_source"]["path"]), int(item["call_site_source"]["span"]["start_offset"]), str(item["caller_node_id"])))
+    graph["nested_body_exclusions"] = sorted(collections["nested_body_exclusions"], key=lambda item: (
+        str(item["source"]["path"]), int(item["source"]["span"]["start_offset"]), str(item["caller_node_id"])))
+    if bind:
+        for _attempt in range(4):
+            actual_graph_bytes = len(_canonical_json(graph))
+            if counts["serialized_graph_bytes"] == actual_graph_bytes:
+                break
+            counts["serialized_graph_bytes"] = actual_graph_bytes
+        else:
+            raise AtlasError("compiler source-call graph serialized-byte count did not stabilize; no supplement published")
+    else:
+        actual_graph_bytes = len(_canonical_json(graph))
+    if not bind and counts["serialized_graph_bytes"] != actual_graph_bytes:
+        raise AtlasError("compiler source-call graph serialized-byte count disagrees with persisted graph; impact refused")
+    if actual_graph_bytes > SOURCE_CALL_GRAPH_CAPS["serialized_graph_bytes"]:
+        raise AtlasError("compiler source-call graph serialized-output cap exceeded; no supplement published")
+
+    direct_edges: list[dict[str, object]] = []
+    unresolved: list[dict[str, object]] = []
+    edges_by_caller: dict[str, list[dict[str, object]]] = {}
+    unsupported_by_caller: dict[str, list[dict[str, object]]] = {}
+    projected_count = 0
+    for edge in graph["edges"]:
+        edges_by_caller.setdefault(str(edge["caller_node_id"]), []).append(edge)
+    for item in graph["unsupported"]:
+        unsupported_by_caller.setdefault(str(item["caller_node_id"]), []).append(item)
+    for root in graph["roots"]:
+        route_identity = {"route": root["route"], "http_method": root["http_method"],
+                          "implementation_type": root["implementation_type"],
+                          "implementation_method": root["implementation_method"]}
+        root_id = str(root["root_node_id"])
+        for edge in edges_by_caller.get(root_id, []):
+            projected_count += 1
+            if projected_count > SOURCE_CALL_GRAPH_CAPS["compatibility_records"]:
+                raise AtlasError("compiler source-call compatibility projection cap exceeded; no supplement published")
+            direct_edges.append({**route_identity, "caller_method": root["root_method"],
+                                 "caller_source": root["root_source"], "callee_method": edge["callee_method"],
+                                 "callee_containing_type": edge["callee_containing_type"],
+                                 "callee_source": edge["callee_source"], "call_site_source": edge["call_site_source"],
+                                 "dispatch_kind": edge["dispatch_kind"], "compiler_binding_confirmed": True,
+                                 "runtime_reachability_proven": False, "runtime_DI_selection_proven": False})
+        for item in unsupported_by_caller.get(root_id, []):
+            projected_count += 1
+            if projected_count > SOURCE_CALL_GRAPH_CAPS["compatibility_records"]:
+                raise AtlasError("compiler source-call compatibility projection cap exceeded; no supplement published")
+            unresolved.append({**route_identity, "caller_method": item["caller_method"],
+                               "caller_source": item["caller_source"],
+                               "kind": "unsupported_handler_source_call" if item["kind"] == "unsupported_source_call" else item["kind"],
+                               "source": item["call_site_source"], "reason": item["reason"]})
+
+    if counts["compatibility_records"] != projected_count:
+        raise AtlasError("compiler source-call graph compatibility count disagrees with root-expanded projections; no supplement published")
+
+    if bind:
+        return graph, direct_edges, unresolved
+    return graph, direct_edges, unresolved
+
+
 def _verify_compiler_source_call_unresolved(snapshot: dict[str, object], relationships: list[dict[str, object]],
                                             records: object) -> list[dict[str, object]]:
     """Require every unsupported handler call to retain one exact route/handler identity."""
@@ -2600,6 +3179,8 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
         raise AtlasError(f"database does not exist: {db_path}")
     snapshot, _snapshots, extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
     _validate_snapshot_fingerprint(snapshot, str(snapshot.get("snapshot_id")))
+    lexical_manifest = _compiler_lexical_method_manifest(snapshot, extractor_identity)
+    lexical_manifest_hash = hashlib.sha256(_canonical_json(lexical_manifest)).hexdigest()
     files = snapshot.get("files", [])
     files_by_path = {str(entry["path"]): entry for entry in files if isinstance(entry, dict) and isinstance(entry.get("path"), str)}
     projects = [entry for entry in files if isinstance(entry, dict) and entry.get("path") == project_relative
@@ -2630,9 +3211,12 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
             raise AtlasError(f"compiler project is missing from the protected mirror: {project_relative}")
         env = _compiler_temp_env(temp_root, dotnet, package_cache)
         executable = _compiler_build_extractor(temp_root, env, dotnet)
+        lexical_manifest_path = temp_root / "lexical-method-manifest.json"
+        lexical_manifest_path.write_bytes(_canonical_json(lexical_manifest))
         runtime_env = dict(os.environ)
         runtime_env.pop("ATLAS_DOTNET", None)
-        run = subprocess.run([str(dotnet), str(executable), str(mirror_project), str(mirror), str(root), framework],
+        run = subprocess.run([str(dotnet), str(executable), str(mirror_project), str(mirror), str(root), framework,
+                              str(lexical_manifest_path)],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=runtime_env, check=False)
         if run.returncode:
             raise AtlasError(f"Roslyn workspace extraction failed; no supplement published: {(run.stderr or run.stdout).strip()}")
@@ -2679,10 +3263,21 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
                 span = anchor.get("span")
                 if not isinstance(span, dict) or not isinstance(span.get("start_offset"), int) or not isinstance(span.get("end_offset"), int):
                     raise AtlasError(f"compiler relationship anchor has invalid span: {path}; no supplement published")
+        source_call_graph, projected_edges, projected_unresolved = _verify_compiler_source_call_graph(
+            snapshot, relationships, extracted.get("source_call_graph"), root, bind=True,
+            lexical_manifest=lexical_manifest)
         source_call_edges = _verify_compiler_source_call_edges(snapshot, relationships, extracted.get("source_call_edges"))
+        checked_projected_edges = _verify_compiler_source_call_edges(snapshot, relationships, projected_edges)
+        if _canonical_json(source_call_edges) != _canonical_json(checked_projected_edges):
+            raise AtlasError("compiler direct source-call compatibility view disagrees with the complete graph; no supplement published")
         source_call_unresolved = _verify_compiler_source_call_unresolved(
             snapshot, relationships, extracted.get("source_call_unresolved"))
+        checked_projected_unresolved = _verify_compiler_source_call_unresolved(snapshot, relationships, projected_unresolved)
+        if _canonical_json(source_call_unresolved) != _canonical_json(checked_projected_unresolved):
+            raise AtlasError("compiler direct unsupported-call compatibility view disagrees with the complete graph; no supplement published")
         input_identity = {
+            "lexical_method_manifest": lexical_manifest,
+            "lexical_method_manifest_sha256": lexical_manifest_hash,
             "tracked_inputs": tracked_manifest,
             "generated_inputs": generated_manifest,
             "references": refs,
@@ -2711,6 +3306,7 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
             "provenance": {key: extracted.get(key) for key in ("sdk_path", "roslyn_version", "language_version", "target_framework", "source_trees", "compiler_warnings")},
             "relationships": extracted.get("relationships", []),
             "unresolved": extracted.get("unresolved", []),
+            "source_call_graph": source_call_graph,
             "source_call_edges": source_call_edges,
             "source_call_unresolved": source_call_unresolved,
             "runtime_DI_selection_proven": False,
@@ -2776,6 +3372,12 @@ def _current_compiler_supplements(db_path: Path, snapshot: dict[str, object], re
         input_hash = hashlib.sha256(_canonical_json(inputs)).hexdigest()
         if payload.get("input_sha256") != input_hash:
             raise AtlasError(f"compiler supplement input hash mismatch for {project_path}")
+        extractor_identity = binding.get("extractor_identity") if isinstance(binding, dict) else None
+        expected_lexical_manifest = _compiler_lexical_method_manifest(snapshot, extractor_identity)
+        expected_lexical_manifest_hash = hashlib.sha256(_canonical_json(expected_lexical_manifest)).hexdigest()
+        if (inputs.get("lexical_method_manifest") != expected_lexical_manifest
+                or inputs.get("lexical_method_manifest_sha256") != expected_lexical_manifest_hash):
+            raise AtlasError(f"compiler supplement lexical method manifest is stale or corrupt for {project_path}")
         if inputs.get("tracked_inputs") != [{"logical_path": f"tracked/{entry['path']}", "path": entry["path"],
                                                "sha256": entry.get("sha256"), "size_bytes": entry.get("size_bytes"),
                                                "presence": entry.get("presence"), "type": entry.get("type"),
@@ -2845,6 +3447,17 @@ def _current_compiler_supplements(db_path: Path, snapshot: dict[str, object], re
         dotnet_path = Path(dotnet_host["path"])
         if not dotnet_path.is_file() or hashlib.sha256(dotnet_path.read_bytes()).hexdigest() != dotnet_host["sha256"]:
             raise AtlasError(f"compiler supplement dotnet host changed or is missing for {project_path}: {dotnet_path}")
+        relationships = payload.get("relationships")
+        if not isinstance(relationships, list):
+            raise AtlasError(f"compiler supplement relationships are malformed for {project_path}")
+        graph, projected_edges, projected_unresolved = _verify_compiler_source_call_graph(
+            snapshot, relationships, payload.get("source_call_graph"), repo, bind=False,
+            lexical_manifest=expected_lexical_manifest)
+        verified_edges = _verify_compiler_source_call_edges(snapshot, relationships, projected_edges)
+        verified_unresolved = _verify_compiler_source_call_unresolved(snapshot, relationships, projected_unresolved)
+        if (_canonical_json(payload.get("source_call_edges")) != _canonical_json(verified_edges)
+                or _canonical_json(payload.get("source_call_unresolved")) != _canonical_json(verified_unresolved)):
+            raise AtlasError(f"compiler supplement compatibility call views disagree with its complete graph for {project_path}")
         output.append(payload)
     return output
 
@@ -3035,6 +3648,7 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
     if supplements:
         compiler_callers = []
         compiler_route_paths = []
+        graph_scopes = []
         for supplement in supplements:
             relationships = supplement.get("relationships", [])
             if not isinstance(relationships, list):
@@ -3056,54 +3670,113 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                              "registrations": relation.get("registrations", []),
                                              "claim": "compiler_confirmed_interface_caller_associated_with_implementation",
                                              "compiler_binding_confirmed": True, "runtime_DI_selection_proven": False})
-            edges = supplement.get("source_call_edges", [])
-            if not isinstance(edges, list):
-                raise AtlasError("compiler supplement source-call edges are malformed")
-            for edge in edges:
-                if not isinstance(edge, dict):
-                    raise AtlasError("compiler supplement contains a malformed source-call edge")
-                _validate_compiler_source_call_edge_proof(edge, "impact refused")
-                if edge.get("callee_lexical_method_fact_id") != method.get("id"):
+            call_graph = supplement.get("source_call_graph")
+            if not isinstance(call_graph, dict):
+                raise AtlasError("compiler supplement source-call graph is malformed")
+            graph_edges = call_graph.get("edges", [])
+            graph_counts = call_graph.get("counts", {})
+            graph_scopes.append({
+                "project_path": supplement.get("binding", {}).get("project_path"),
+                "coverage": "complete traversal of exactly lexically admitted declarations reachable from compiler-mapped handler roots through supported same-compilation ordinary non-generic static or non-virtual instance calls",
+                "counts": {key: graph_counts.get(key) for key in
+                           ("roots", "nodes", "edges", "unsupported", "nested_body_exclusions")},
+                "unsupported_and_nested_boundaries_are_excluded_from_route_claims": True,
+                "compiler_binding_confirmed": True,
+                "runtime_reachability_proven": False,
+                "runtime_DI_selection_proven": False,
+                "whole_codebase_or_all_runtime_routes_proven": False,
+            })
+            reverse: dict[str, list[dict[str, object]]] = {}
+            for edge in graph_edges:
+                reverse.setdefault(str(edge["callee_node_id"]), []).append(edge)
+            for incoming in reverse.values():
+                incoming.sort(key=lambda edge: (str(edge["caller_node_id"]), str(edge["call_site_source"]["path"]),
+                                                int(edge["call_site_source"]["span"]["start_offset"])))
+            target_nodes = {str(node["id"]): node for node in call_graph["nodes"]
+                            if node.get("lexical_method_fact_id") == method.get("id")}
+            next_edge: dict[str, dict[str, object]] = {}
+            distance: dict[str, int] = {}
+            queue = sorted(target_nodes)
+            for target_id in queue:
+                distance[target_id] = 0
+            cursor = 0
+            while cursor < len(queue):
+                callee_id = queue[cursor]; cursor += 1
+                for edge in reverse.get(callee_id, []):
+                    caller_id = str(edge["caller_node_id"])
+                    if caller_id not in distance:
+                        distance[caller_id] = distance[callee_id] + 1
+                        next_edge[caller_id] = edge
+                        queue.append(caller_id)
+            witnesses = 0
+            for root_record in call_graph["roots"]:
+                root_id = str(root_record["root_node_id"])
+                if root_id not in distance or distance[root_id] == 0:
                     continue
-                identity = (edge.get("route_fact_id"), edge.get("lexical_implementation_fact_id"), edge.get("implementation_type"))
-                matching = relationships_by_identity.get(identity, [])
-                if len(matching) != 1:
-                    raise AtlasError(f"compiler source-call edge does not match exactly one route/handler relationship: matches={len(matching)}")
-                relation = matching[0]
-                compiler_route_paths.append({
+                relation_matches = [relation for relation in relationships
+                                    if relation.get("route") == root_record.get("route")
+                                    and relation.get("http_method") == root_record.get("http_method")
+                                    and relation.get("implementation_type") == root_record.get("implementation_type")
+                                    and relation.get("implementation_method") == root_record.get("implementation_method")]
+                if len(relation_matches) != 1:
+                    raise AtlasError("compiler source-call root does not match exactly one route relationship")
+                relation = relation_matches[0]
+                chain = []
+                current = root_id
+                while current not in target_nodes:
+                    edge = next_edge.get(current)
+                    if edge is None:
+                        raise AtlasError("compiler source-call shortest witness is discontinuous; impact refused")
+                    chain.append(edge); current = str(edge["callee_node_id"])
+                    witnesses += 1
+                    if witnesses > SOURCE_CALL_GRAPH_CAPS["impact_witness_hops"]:
+                        raise AtlasError("compiler source-call impact witness cap exceeded; stdout withheld")
+                witness = {
                     "route": relation.get("route"), "http_method": relation.get("http_method"),
                     "route_fact_id": relation.get("lexical_route_fact_id"),
                     "handler": {"implementation_type": relation.get("implementation_type"),
                                 "implementation_method": relation.get("implementation_method"),
                                 "lexical_method_fact_id": relation.get("lexical_implementation_fact_id")},
-                    "call": {"caller_method": edge.get("caller_method"),
-                             "callee_method": edge.get("callee_method"),
-                             "dispatch_kind": edge.get("dispatch_kind"),
-                             "caller_lexical_method_fact_id": edge.get("caller_lexical_method_fact_id"),
-                             "callee_lexical_method_fact_id": edge.get("callee_lexical_method_fact_id"),
-                             "call_site_source": edge.get("call_site_source"),
-                             "callee_source": edge.get("callee_source")},
-                    "claim": "compiler_confirmed_direct_source_call_associated_with_route_handler",
-                    "compiler_binding_confirmed": True,
-                    "runtime_reachability_proven": edge.get("runtime_reachability_proven"),
-                    "runtime_DI_selection_proven": edge.get("runtime_DI_selection_proven"),
-                })
+                    "hop_count": len(chain),
+                    "call_chain": [{"caller_method": edge["caller_method"], "callee_method": edge["callee_method"],
+                                    "caller_lexical_method_fact_id": edge["caller_lexical_method_fact_id"],
+                                    "callee_lexical_method_fact_id": edge["callee_lexical_method_fact_id"],
+                                    "dispatch_kind": edge["dispatch_kind"], "call_site_source": edge["call_site_source"],
+                                    "callee_source": edge["callee_source"]} for edge in chain],
+                    "claim": "compiler_confirmed_shortest_source_call_chain_associated_with_route_handler",
+                    "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
+                    "runtime_DI_selection_proven": False,
+                }
+                if len(chain) == 1:
+                    edge = chain[0]
+                    witness["call"] = {"caller_method": edge["caller_method"], "callee_method": edge["callee_method"],
+                                       "dispatch_kind": edge["dispatch_kind"],
+                                       "caller_lexical_method_fact_id": edge["caller_lexical_method_fact_id"],
+                                       "callee_lexical_method_fact_id": edge["callee_lexical_method_fact_id"],
+                                       "call_site_source": edge["call_site_source"], "callee_source": edge["callee_source"]}
+                compiler_route_paths.append(witness)
         if compiler_callers:
             document["compiler_confirmed_interface_callers"] = sorted(compiler_callers,
                 key=lambda item: (str(item.get("route")), str(item.get("action_method")), str(item.get("bound_member"))))
+        if graph_scopes:
+            document["compiler_source_call_graph_scope"] = graph_scopes
         if compiler_route_paths:
             unique_paths = {}
             for path in compiler_route_paths:
+                chain = path["call_chain"]
                 key = (path.get("route_fact_id"), path["handler"].get("lexical_method_fact_id"),
-                       path["handler"].get("implementation_type"), path["call"].get("call_site_source", {}).get("span", {}).get("start_offset"),
-                       path["call"].get("callee_lexical_method_fact_id"))
+                       path["handler"].get("implementation_type"), chain[-1].get("callee_lexical_method_fact_id"))
                 unique_paths[key] = path
             document["compiler_associated_route_paths"] = sorted(unique_paths.values(),
                 key=lambda item: (str(item.get("route")), str(item.get("http_method")),
                                   str(item.get("handler", {}).get("implementation_type")),
-                                  int(item.get("call", {}).get("call_site_source", {}).get("span", {}).get("start_offset", 0))))
+                                  int(item["call_chain"][0].get("call_site_source", {}).get("span", {}).get("start_offset", 0))))
+            document["compiler_associated_route_path_counts"] = {
+                "distinct_routes": len({path.get("route_fact_id") for path in unique_paths.values()}),
+                "route_handler_pairs": len(unique_paths),
+            }
             document["compiler_associated_route_paths_scope"] = {
-                "relationship": "one-hop direct source invocation bound by Roslyn and associated with an existing compiler-mapped handler and lexical route fact",
+                "relationship": "deterministic shortest source-call chain bound by Roslyn and associated with an existing compiler-mapped handler and lexical route fact",
                 "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
                 "runtime_DI_selection_proven": False,
             }

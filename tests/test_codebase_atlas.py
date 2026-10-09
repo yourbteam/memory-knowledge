@@ -193,6 +193,11 @@ class AtlasCliTests(unittest.TestCase):
         assets = self.repo / "obj" / "project.assets.json"
         assets.parent.mkdir(parents=True, exist_ok=True)
         assets.write_text("{}", encoding="utf-8")
+        flow_source = self.repo / "Flow.cs"
+        flow_text = flow_source.read_text(encoding="utf-8")
+        flow_source.write_text(flow_text.replace(
+            "store.GetAsync();", "store.GetAsync(); System.Func<int, int> map = x => x + 1;", 1), encoding="utf-8")
+        git(self.repo, "add", "--", "Flow.cs")
         snapshot = self.index()
         graph = self.graph(snapshot["snapshot_id"])
         route = next(fact for fact in graph["facts"] if fact.get("kind") == "route_action"
@@ -220,7 +225,10 @@ class AtlasCliTests(unittest.TestCase):
         host_fixture = build_host / "host.dll"
         host_fixture.write_bytes(b"host fixture")
         toolchain = {"name": "fixture", "path": os.fspath(reference_path), "sha256": reference["sha256"]}
-        inputs = {"tracked_inputs": [{"logical_path": f"tracked/{entry['path']}", "path": entry["path"],
+        lexical_manifest = ATLAS._compiler_lexical_method_manifest(snapshot, graph["extractor_identity"])
+        inputs = {"lexical_method_manifest": lexical_manifest,
+                  "lexical_method_manifest_sha256": hashlib.sha256(ATLAS._canonical_json(lexical_manifest)).hexdigest(),
+                  "tracked_inputs": [{"logical_path": f"tracked/{entry['path']}", "path": entry["path"],
                                       "sha256": entry.get("sha256"), "size_bytes": entry.get("size_bytes"),
                                       "presence": entry.get("presence"), "type": entry.get("type"),
                                       "git_mode": entry.get("git_mode")} for entry in snapshot["files"]],
@@ -241,29 +249,72 @@ class AtlasCliTests(unittest.TestCase):
                                 "end_offset": identifier_start + len("Handle")}}
         relation = {"route": "api/customer/save", "http_method": "POST", "action_method": action["method_name"],
                     "service_type": injection["type_expression"], "bound_member": "IHandler.Handle",
-                    "implementation_method": "Handler.Handle", "action_source": action["source"],
+                    "implementation_method": "global::Demo.Handler.Handle()", "action_source": action["source"],
                     "call_site_source": call_source, "service_parameter_source": injection["source"],
                     "bound_member_source": call_source, "implementation_source": implementation["source"],
                     "lexical_action_fact_id": action["id"], "lexical_implementation_fact_id": implementation["id"],
                     "lexical_route_fact_id": route["id"],
-                    "implementation_type": "Demo.Handler", "implementation_method_containing_type": "Demo.Handler",
+                    "implementation_type": "global::Demo.Handler", "implementation_method_containing_type": "global::Demo.Handler",
                     "compiler_implementation_match": True,
                     "registrations": [{"syntax": "services.AddScoped<IHandler, Handler>()", "source": registration["source"],
                                        "lexical_registration_fact_id": registration["id"],
                                        "runtime_DI_selection_proven": False}],
                     "runtime_DI_selection_proven": False}
+        implementation_text = self.repo.joinpath(implementation["source"]["path"]).read_text(encoding="utf-8")
+        helper = next(fact for fact in methods if fact.get("method_name") == "SaveAsync")
+        root_id = ATLAS._source_call_node_id(implementation["source"])
+        helper_id = ATLAS._source_call_node_id(helper["source"])
+        invocation_start = implementation_text.index("store.SaveAsync()", implementation["source"]["span"]["start_offset"])
+        graph_callsite = {"path": implementation["source"]["path"], "sha256": implementation["source"]["sha256"],
+                          "span": {"start_offset": invocation_start, "end_offset": invocation_start + len("store.SaveAsync()"),
+                                   "offset_unit": "unicode_codepoint"}}
+        nested_start = implementation_text.index("x => x + 1", implementation["source"]["span"]["start_offset"])
+        nested_source = {"path": implementation["source"]["path"], "sha256": implementation["source"]["sha256"],
+                         "span": {"start_offset": nested_start, "end_offset": nested_start + len("x => x + 1"),
+                                  "offset_unit": "unicode_codepoint"}}
         source_call_edge = {
             "route": relation["route"], "http_method": relation["http_method"],
             "route_fact_id": route["id"], "lexical_implementation_fact_id": implementation["id"],
             "implementation_type": relation["implementation_type"],
             "implementation_method": relation["implementation_method"],
-            "caller_method": "Handle", "callee_method": "Handle", "dispatch_kind": "static_source",
-            "caller_lexical_method_fact_id": implementation["id"],
-            "callee_lexical_method_fact_id": implementation["id"],
-            "caller_source": implementation["source"], "callee_source": implementation["source"],
-            "call_site_source": implementation["source"], "compiler_binding_confirmed": True,
+            "caller_method": "global::Demo.Handler.Handle()", "callee_method": "global::Demo.Store.SaveAsync()", "dispatch_kind": "non_virtual_instance_source",
+            "caller_lexical_method_fact_id": implementation["id"], "callee_lexical_method_fact_id": helper["id"],
+            "caller_source": implementation["source"], "callee_source": helper["source"],
+            "callee_containing_type": "global::Demo.Store", "call_site_source": graph_callsite, "compiler_binding_confirmed": True,
             "runtime_reachability_proven": False, "runtime_DI_selection_proven": False,
         }
+        graph_caps = dict(ATLAS.SOURCE_CALL_GRAPH_CAPS)
+        graph_counts = {"roots": 1, "nodes": 2, "edges": 1, "inspected_invocations": 1,
+                        "unsupported": 0, "nested_body_exclusions": 1, "method_bodies_traversed": 2,
+                        "serialized_graph_bytes": 1, "traversal_work": 1, "compatibility_records": 1}
+        graph_payload = {"schema_version": 1, "status": "complete", "caps": graph_caps, "counts": graph_counts,
+                         "roots": [{"route": relation["route"], "http_method": relation["http_method"],
+                                    "implementation_type": relation["implementation_type"],
+                                    "implementation_method": relation["implementation_method"],
+                                    "root_method": "global::Demo.Handler.Handle()", "root_node_id": root_id,
+                                    "root_source": implementation["source"], "route_fact_id": route["id"],
+                                    "lexical_implementation_method_fact_id": implementation["id"]}],
+                         "nodes": [{"id": root_id, "method": "global::Demo.Handler.Handle()", "containing_type": "global::Demo.Handler",
+                                    "source": implementation["source"], "lexical_method_fact_id": implementation["id"]},
+                                   {"id": helper_id, "method": "global::Demo.Store.SaveAsync()", "containing_type": "global::Demo.Store",
+                                    "source": helper["source"], "lexical_method_fact_id": helper["id"]}],
+                         "edges": [{"caller_node_id": root_id, "callee_node_id": helper_id,
+                                    "caller_method": "global::Demo.Handler.Handle()", "caller_source": implementation["source"],
+                                    "callee_method": "global::Demo.Store.SaveAsync()", "callee_containing_type": "global::Demo.Store",
+                                    "callee_source": helper["source"], "call_site_source": graph_callsite,
+                                    "dispatch_kind": "non_virtual_instance_source", "compiler_binding_confirmed": True,
+                                    "runtime_reachability_proven": False, "runtime_DI_selection_proven": False,
+                                    "caller_lexical_method_fact_id": implementation["id"], "callee_lexical_method_fact_id": helper["id"]}],
+                         "unsupported": [],
+                         "nested_body_exclusions": [{"caller_node_id": root_id,
+                             "caller_method": "global::Demo.Handler.Handle()", "caller_source": implementation["source"],
+                             "nested_body_kind": "anonymous_function", "source": nested_source,
+                             "reason": "synthetic verified lambda boundary"}]}
+        for _ in range(4):
+            graph_size = len(ATLAS._canonical_json(graph_payload))
+            if graph_counts["serialized_graph_bytes"] == graph_size:
+                break
+            graph_counts["serialized_graph_bytes"] = graph_size
         payload = {"supplement_schema_version": 1,
                    "binding": {"snapshot_id": snapshot["snapshot_id"], "evidence_fingerprint": snapshot["evidence_fingerprint"],
                                "repository_root": self.repo.resolve().as_posix(), "extractor_identity": graph["extractor_identity"],
@@ -271,7 +322,8 @@ class AtlasCliTests(unittest.TestCase):
                    "input_identity": inputs, "input_sha256": hashlib.sha256(ATLAS._canonical_json(inputs)).hexdigest(),
                    "provenance": {"sdk_path": "/sdk", "roslyn_version": "fixture", "language_version": "CSharp12",
                                   "target_framework": "net10.0", "source_trees": 1, "compiler_warnings": []},
-                   "relationships": [relation], "unresolved": [], "source_call_edges": [source_call_edge],
+                   "relationships": [relation], "unresolved": [], "source_call_graph": graph_payload,
+                   "source_call_edges": [source_call_edge],
                    "source_call_unresolved": [], "runtime_DI_selection_proven": False}
         content_hash = hashlib.sha256(ATLAS._canonical_json(payload)).hexdigest()
         document = {**payload, "content_sha256": content_hash}
@@ -367,6 +419,23 @@ class Handler
             row = connection.execute("SELECT payload_json FROM atlas_compiler_supplements WHERE snapshot_id=?",
                                      (_snapshot["snapshot_id"],)).fetchone()
             original_payload = json.loads(row[0])
+        manifest_tamper = json.loads(json.dumps(original_payload))
+        manifest_tamper["input_identity"]["lexical_method_manifest"]["methods"].pop()
+        manifest_tamper["input_identity"]["lexical_method_manifest_sha256"] = hashlib.sha256(
+            ATLAS._canonical_json(manifest_tamper["input_identity"]["lexical_method_manifest"])).hexdigest()
+        manifest_tamper["input_sha256"] = hashlib.sha256(ATLAS._canonical_json(manifest_tamper["input_identity"])).hexdigest()
+        manifest_stable = {key: value for key, value in manifest_tamper.items() if key != "content_sha256"}
+        manifest_tamper["content_sha256"] = hashlib.sha256(ATLAS._canonical_json(manifest_stable)).hexdigest()
+        manifest_bytes = ATLAS._canonical_json(manifest_tamper).decode("ascii")
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                               (manifest_tamper["content_sha256"], manifest_bytes, _snapshot["snapshot_id"]))
+        manifest_refusal = self.impact("Handler.Handle", expect=2)
+        self.assertEqual(manifest_refusal.stdout, "")
+        self.assertIn("lexical method manifest is stale or corrupt", manifest_refusal.stderr)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                               (original_payload["content_sha256"], row[0], _snapshot["snapshot_id"]))
         mutations = [
             ("missing dispatch_kind", lambda edge: edge.pop("dispatch_kind"), False),
             ("invalid dispatch_kind", lambda edge: edge.update(dispatch_kind="virtual_instance_source"), False),
@@ -390,7 +459,105 @@ class Handler
             db_before_refusal = self.db.read_bytes()
             refused = self.impact("Handler.Handle", expect=2)
             self.assertEqual(refused.stdout, "", label)
-            self.assertIn("compiler source-call edge", refused.stderr, label)
+            self.assertIn("compiler", refused.stderr, label)
+            self.assertEqual(self.db.read_bytes(), db_before_refusal, label)
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                                   (original_payload["content_sha256"], row[0], _snapshot["snapshot_id"]))
+
+        def reseal_graph_payload(tampered):
+            graph_value = tampered["source_call_graph"]
+            for _ in range(4):
+                actual_size = len(ATLAS._canonical_json(graph_value))
+                if graph_value["counts"]["serialized_graph_bytes"] == actual_size:
+                    break
+                graph_value["counts"]["serialized_graph_bytes"] = actual_size
+            stable_value = {key: value for key, value in tampered.items() if key != "content_sha256"}
+            tampered["content_sha256"] = hashlib.sha256(ATLAS._canonical_json(stable_value)).hexdigest()
+            return ATLAS._canonical_json(tampered).decode("ascii")
+
+        disconnected_fact = next(fact for fact in graph["facts"] if fact.get("kind") == "method_declaration"
+                                 and fact.get("method_name") == "GetAsync")
+        graph_node_id = ATLAS._source_call_node_id(disconnected_fact["source"])
+        graph_tampers = [
+            ("boolean version", lambda g: g.update(schema_version=True)),
+            ("float cap", lambda g: g["caps"].update(roots=float(ATLAS.SOURCE_CALL_GRAPH_CAPS["roots"]))),
+            ("invented owner", lambda g: g["nodes"][0].update(containing_type="global::Invented.Owner")),
+            ("invented edge owner", lambda g: g["edges"][0].update(callee_containing_type="global::Invented.Owner")),
+            ("disconnected node", lambda g: (g["nodes"].append({"id": graph_node_id,
+                "method": "global::Demo.Store.GetAsync()", "containing_type": "global::Demo.Store",
+                "source": disconnected_fact["source"], "lexical_method_fact_id": disconnected_fact["id"]}),
+                g["counts"].update(nodes=g["counts"]["nodes"] + 1,
+                                   method_bodies_traversed=g["counts"]["method_bodies_traversed"] + 1))),
+            ("missing endpoint", lambda g: g["edges"][0].update(callee_node_id="missing-node")),
+            ("root identity", lambda g: g["roots"][0].update(route="api/other")),
+            ("traversal cap", lambda g: g["counts"].update(traversal_work=ATLAS.SOURCE_CALL_GRAPH_CAPS["traversal_work"] + 1)),
+            ("unsupported kind and reason", lambda g: (
+                g["unsupported"].append({"caller_node_id": g["roots"][0]["root_node_id"],
+                    "caller_method": g["roots"][0]["root_method"], "caller_source": g["roots"][0]["root_source"],
+                    "call_site_source": g["roots"][0]["root_source"], "kind": [], "reason": {}}),
+                g["counts"].update(unsupported=g["counts"]["unsupported"] + 1,
+                    inspected_invocations=g["counts"]["inspected_invocations"] + 1,
+                    traversal_work=g["counts"]["traversal_work"] + 1,
+                    compatibility_records=g["counts"]["compatibility_records"] + 1))),
+            ("unsupported reason type", lambda g: (
+                g["unsupported"].append({"caller_node_id": g["roots"][0]["root_node_id"],
+                    "caller_method": g["roots"][0]["root_method"], "caller_source": g["roots"][0]["root_source"],
+                    "call_site_source": g["edges"][0]["call_site_source"],
+                    "kind": "unsupported_source_call", "reason": {}}),
+                g["counts"].update(unsupported=g["counts"]["unsupported"] + 1,
+                    inspected_invocations=g["counts"]["inspected_invocations"] + 1,
+                    traversal_work=g["counts"]["traversal_work"] + 1,
+                    compatibility_records=g["counts"]["compatibility_records"] + 1))),
+            ("unexpected callee method only", lambda g: (
+                g["unsupported"].append({"caller_node_id": g["roots"][0]["root_node_id"],
+                    "caller_method": g["roots"][0]["root_method"], "caller_source": g["roots"][0]["root_source"],
+                    "call_site_source": g["edges"][0]["call_site_source"],
+                    "kind": "unsupported_source_call", "reason": "unsupported call", "callee_method": "unexpected"}),
+                g["counts"].update(unsupported=g["counts"]["unsupported"] + 1,
+                    inspected_invocations=g["counts"]["inspected_invocations"] + 1,
+                    traversal_work=g["counts"]["traversal_work"] + 1,
+                    compatibility_records=g["counts"]["compatibility_records"] + 1))),
+            ("unexpected callee source only", lambda g: (
+                g["unsupported"].append({"caller_node_id": g["roots"][0]["root_node_id"],
+                    "caller_method": g["roots"][0]["root_method"], "caller_source": g["roots"][0]["root_source"],
+                    "call_site_source": g["edges"][0]["call_site_source"],
+                    "kind": "unsupported_source_call", "reason": "unsupported call",
+                    "callee_source": g["edges"][0]["callee_source"]}),
+                g["counts"].update(unsupported=g["counts"]["unsupported"] + 1,
+                    inspected_invocations=g["counts"]["inspected_invocations"] + 1,
+                    traversal_work=g["counts"]["traversal_work"] + 1,
+                    compatibility_records=g["counts"]["compatibility_records"] + 1))),
+            ("duplicate unsupported boundary", lambda g: (
+                g["unsupported"].extend([{"caller_node_id": g["roots"][0]["root_node_id"],
+                    "caller_method": g["roots"][0]["root_method"], "caller_source": g["roots"][0]["root_source"],
+                    "call_site_source": g["edges"][0]["call_site_source"],
+                    "kind": "unsupported_source_call", "reason": "unsupported call"}] * 2),
+                g["counts"].update(unsupported=g["counts"]["unsupported"] + 2,
+                    inspected_invocations=g["counts"]["inspected_invocations"] + 2,
+                    traversal_work=g["counts"]["traversal_work"] + 2,
+                    compatibility_records=g["counts"]["compatibility_records"] + 2))),
+            ("nested kind", lambda g: g["nested_body_exclusions"][0].update(nested_body_kind=[])),
+            ("nested reason type", lambda g: g["nested_body_exclusions"][0].update(reason={})),
+            ("duplicate nested boundary", lambda g: (g["nested_body_exclusions"].append(
+                json.loads(json.dumps(g["nested_body_exclusions"][0]))),
+                g["counts"].update(nested_body_exclusions=g["counts"]["nested_body_exclusions"] + 1))),
+            ("callsite token", lambda g: g["edges"][0]["call_site_source"]["span"].update(
+                start_offset=self.repo.joinpath("Flow.cs").read_text(encoding="utf-8").index("store.GetAsync()"),
+                end_offset=self.repo.joinpath("Flow.cs").read_text(encoding="utf-8").index("store.GetAsync()") + len("store.GetAsync()"))),
+        ]
+        for label, mutate in graph_tampers:
+            tampered = json.loads(json.dumps(original_payload))
+            mutate(tampered["source_call_graph"])
+            encoded = reseal_graph_payload(tampered)
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                                   (tampered["content_sha256"], encoded, _snapshot["snapshot_id"]))
+            db_before_refusal = self.db.read_bytes()
+            impact_refused = self.impact("Handler.Handle", expect=2)
+            pack_refused = self.evidence_pack(current_route["id"], expect=2)
+            self.assertEqual(impact_refused.stdout, "", label)
+            self.assertEqual(pack_refused.stdout, "", label)
             self.assertEqual(self.db.read_bytes(), db_before_refusal, label)
             with sqlite3.connect(self.db) as connection:
                 connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
@@ -517,7 +684,18 @@ public static class Support
     public static string Load(string value) => value;
     public static string Convert<T>(T value) => value.ToString()!;
     public static string Deferred(Request value) => value.ToString();
+    public static string DeepStart(Request value) => DeepLeft(value) + DeepRight(value);
+    public static string DeepLeft(Request value) => DeepMiddle(value);
+    public static string DeepRight(Request value) => DeepMiddle(value);
+    public static string DeepMiddle(Request value) => DeepLeaf(value);
+    public static string DeepLeaf(Request value) => DeepMiddle(value) + PartialSupport<string, int>.Touch(value);
+    public static string ProjectTrend(Request value) => Array.Empty<Request>().Select(_ => { decimal Money(decimal amount) => amount; return Money(1m).ToString(); }).FirstOrDefault() ?? value.ToString();
 }
+public static partial class PartialSupport<T, U>
+{
+    public static string Touch(Request value) => value.ToString();
+}
+public static partial class PartialSupport<T, U> { }
 public static class FixtureExtensions { public static string Extend(this Request value) => value.ToString(); }
 public sealed class AccessGate
 {
@@ -531,7 +709,7 @@ public sealed class First(AccessGate gate, IWorker interfaceWorker, VirtualWorke
 {
     public string Handle(Request value)
     {
-        var loaded = Support.Load(value) + Support.Deferred(value);
+        var loaded = Support.Load(value) + Support.Deferred(value) + Support.DeepStart(value) + Support.ProjectTrend(value);
         _ = gate.Check(value);
         _ = interfaceWorker.Run(value);
         _ = virtualWorker.Run(value);
@@ -541,15 +719,19 @@ public sealed class First(AccessGate gate, IWorker interfaceWorker, VirtualWorke
         _ = FixtureExtensions.Extend(value);
         string Local(Request input) => Support.Load(input);
         Func<Request, string> deferred = input => Support.Load(input);
+        Func<Request, string> deferredAgain = input => Support.Deferred(input);
         return loaded;
     }
 }
 public sealed class Second(AuditTrail trail) : IHandler<Request>
 {
-    public string Handle(Request value) => Support.Load(value) + Support.Deferred(value)
+    public string Handle(Request value) => Support.Load(value) + Support.Deferred(value) + Support.DeepStart(value) + Support.ProjectTrend(value)
         + trail.Record(value)
         + ((Func<Request, string>)(input => Support.Load(input)))(value);
 }
+public class BaseHandler : IHandler<Request> { public string Handle(Request value) => Support.DeepStart(value) + Support.ProjectTrend(value); }
+public sealed class Inherited : BaseHandler { }
+public sealed class Idle : IHandler<Request> { public string Handle(Request value) => "idle"; }
 [ApiController]
 [Route("api/items")]
 public sealed class ItemsController(IHandler<Request> handler) : ControllerBase
@@ -568,6 +750,9 @@ public static class Registrations
     {
             services.AddScoped<IHandler<Request>, First>();
             services.AddScoped<IHandler<Request>, Second>();
+            services.AddScoped<IHandler<Request>, BaseHandler>();
+            services.AddScoped<IHandler<Request>, Inherited>();
+            services.AddScoped<IHandler<Request>, Idle>();
             services.AddScoped<IHandler<Request>, First>();
             services.AddScoped<AccessGate>();
             services.AddScoped<AuditTrail>();
@@ -598,7 +783,9 @@ public static class Registrations
         expected = {("GET", "api/items/one"), ("POST", "api/items/two"), ("GET", "absolute"), ("GET", "tilde")}
         self.assertEqual(set(by_route), expected)
         for route_relations in by_route.values():
-            self.assertEqual({relation["implementation_type"] for relation in route_relations}, {"global::Fixture.First", "global::Fixture.Second"})
+            self.assertEqual({relation["implementation_type"] for relation in route_relations},
+                             {"global::Fixture.First", "global::Fixture.Second", "global::Fixture.BaseHandler",
+                              "global::Fixture.Inherited", "global::Fixture.Idle"})
             self.assertEqual(len({relation["lexical_route_fact_id"] for relation in route_relations}), 1)
             for relation in route_relations:
                 self.assertEqual({item["implementation_type"] for item in relation["registrations"]}, {relation["implementation_type"]})
@@ -621,12 +808,12 @@ public static class Registrations
         self.assertEqual(ATLAS._compiler_safe_tree(self.repo, "obj"), generated_before)
         self.assertFalse((self.repo / "bin").exists())
         source_edges = payload["source_call_edges"]
-        self.assertEqual(len(source_edges), 24)
-        self.assertEqual({edge["callee_method"] for edge in source_edges}, {"Load", "Deferred", "Check", "Record"})
+        self.assertEqual(len(source_edges), 40)
+        self.assertEqual({edge["callee_method"] for edge in source_edges}, {"Load", "Deferred", "DeepStart", "Check", "Record"})
         self.assertEqual({edge["dispatch_kind"] for edge in source_edges}, {"static_source", "non_virtual_instance_source"})
         static_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "static_source"]
         instance_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "non_virtual_instance_source"]
-        self.assertEqual(len(static_edges), 16)
+        self.assertEqual(len(static_edges), 32)
         self.assertEqual(len(instance_edges), 8)
         self.assertEqual({edge["callee_containing_type"] for edge in static_edges}, {"global::Fixture.Support"})
         lexical_graph = self.graph(snapshot["snapshot_id"])
@@ -652,6 +839,46 @@ public static class Registrations
         self.assertTrue(all(edge["callee_source"] == deferred_facts[0]["source"] for edge in deferred_edges))
         self.assertTrue(all(edge["compiler_binding_confirmed"] and not edge["runtime_reachability_proven"]
                             and not edge["runtime_DI_selection_proven"] for edge in source_edges))
+        call_graph = payload["source_call_graph"]
+        self.assertEqual(len(call_graph["roots"]), 20)
+        idle_roots = [root for root in call_graph["roots"] if root["implementation_type"] == "global::Fixture.Idle"]
+        self.assertEqual(len(idle_roots), 4)
+        self.assertFalse(any(edge["caller_node_id"] == idle_roots[0]["root_node_id"] for edge in call_graph["edges"]))
+        trend_fact = next(fact for fact in lexical_graph["facts"]
+                          if fact.get("kind") == "method_declaration" and fact.get("method_name") == "ProjectTrend")
+        trend_boundaries = [item for item in call_graph["unsupported"]
+                            if item.get("kind") == "unsupported_lexical_source_method"]
+        self.assertEqual(len(trend_boundaries), 3)
+        self.assertTrue(all(".ProjectTrend(" in item["callee_method"]
+                            and "Request" in item["callee_method"] for item in trend_boundaries),
+                        [item["callee_method"] for item in trend_boundaries])
+        self.assertTrue(all(ATLAS._compiler_span(item["callee_source"]) != ATLAS._compiler_span(trend_fact["source"])
+                            for item in trend_boundaries))
+        self.assertFalse(any(node["method"].endswith("ProjectTrend(Fixture.Request)") for node in call_graph["nodes"]))
+        inherited_relations = [relation for relation in relationships if relation["implementation_type"] == "global::Fixture.Inherited"]
+        self.assertEqual(len(inherited_relations), 4)
+        self.assertTrue(all(relation["implementation_method_containing_type"] == "global::Fixture.BaseHandler"
+                            for relation in inherited_relations))
+        deep_leaf_matches = [node for node in call_graph["nodes"] if node["method"] == "DeepLeaf"]
+        self.assertEqual(len(deep_leaf_matches), 1, [node["method"] for node in call_graph["nodes"]])
+        deep_leaf = deep_leaf_matches[0]
+        partial_type_facts = [fact for fact in lexical_graph["facts"]
+                              if fact.get("kind") == "type_declaration" and fact.get("type_id") == "Fixture.PartialSupport`2"]
+        self.assertEqual(len(partial_type_facts), 2)
+        partial_helper_nodes = [node for node in call_graph["nodes"] if node["method"] == "Touch"]
+        self.assertEqual(len(partial_helper_nodes), 1)
+        self.assertEqual(partial_helper_nodes[0]["containing_type"], "global::Fixture.PartialSupport<T, U>")
+        impact_deep = json.loads(self.impact("Support.DeepLeaf", max_tokens=100000).stdout)
+        deep_paths = impact_deep["compiler_associated_route_paths"]
+        self.assertEqual(len(deep_paths), 16)
+        self.assertTrue(all(len(path["call_chain"]) == 4 for path in deep_paths))
+        for path in deep_paths:
+            chain = path["call_chain"]
+            self.assertEqual(chain[0]["caller_lexical_method_fact_id"], path["handler"]["lexical_method_fact_id"])
+            self.assertTrue(all(left["callee_lexical_method_fact_id"] == right["caller_lexical_method_fact_id"]
+                                for left, right in zip(chain, chain[1:])))
+            self.assertEqual(chain[-1]["callee_lexical_method_fact_id"], deep_leaf["lexical_method_fact_id"])
+        self.assertEqual(call_graph["counts"]["nested_body_exclusions"], 4)
         check_facts = [fact for fact in lexical_graph["facts"]
                        if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Check"
                        and fact["source"]["path"] == "Fixture.cs"]
@@ -709,7 +936,7 @@ public static class Registrations
         self.assertEqual({edge["route"] for edge in source_edges}, {route for _verb, route in expected})
         self.assertTrue(any(item["kind"] == "unsupported_handler_source_call" for item in payload["source_call_unresolved"]))
         impact = json.loads(self.impact("Support.Deferred", max_tokens=32000).stdout)
-        self.assertEqual(impact["candidate_count"], 2)
+        self.assertEqual(impact["candidate_count"], 3)
         self.assertEqual(len(impact["compiler_associated_route_paths"]), 8)
         self.assertFalse(impact["compiler_associated_route_paths_scope"]["runtime_reachability_proven"])
         self.assertLessEqual(impact["budget"]["stdout_bytes_including_newline"], 32000)
