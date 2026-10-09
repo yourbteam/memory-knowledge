@@ -252,6 +252,18 @@ class AtlasCliTests(unittest.TestCase):
                                        "lexical_registration_fact_id": registration["id"],
                                        "runtime_DI_selection_proven": False}],
                     "runtime_DI_selection_proven": False}
+        source_call_edge = {
+            "route": relation["route"], "http_method": relation["http_method"],
+            "route_fact_id": route["id"], "lexical_implementation_fact_id": implementation["id"],
+            "implementation_type": relation["implementation_type"],
+            "implementation_method": relation["implementation_method"],
+            "caller_method": "Handle", "callee_method": "Handle", "dispatch_kind": "static_source",
+            "caller_lexical_method_fact_id": implementation["id"],
+            "callee_lexical_method_fact_id": implementation["id"],
+            "caller_source": implementation["source"], "callee_source": implementation["source"],
+            "call_site_source": implementation["source"], "compiler_binding_confirmed": True,
+            "runtime_reachability_proven": False, "runtime_DI_selection_proven": False,
+        }
         payload = {"supplement_schema_version": 1,
                    "binding": {"snapshot_id": snapshot["snapshot_id"], "evidence_fingerprint": snapshot["evidence_fingerprint"],
                                "repository_root": self.repo.resolve().as_posix(), "extractor_identity": graph["extractor_identity"],
@@ -259,7 +271,8 @@ class AtlasCliTests(unittest.TestCase):
                    "input_identity": inputs, "input_sha256": hashlib.sha256(ATLAS._canonical_json(inputs)).hexdigest(),
                    "provenance": {"sdk_path": "/sdk", "roslyn_version": "fixture", "language_version": "CSharp12",
                                   "target_framework": "net10.0", "source_trees": 1, "compiler_warnings": []},
-                   "relationships": [relation], "unresolved": [], "runtime_DI_selection_proven": False}
+                   "relationships": [relation], "unresolved": [], "source_call_edges": [source_call_edge],
+                   "source_call_unresolved": [], "runtime_DI_selection_proven": False}
         content_hash = hashlib.sha256(ATLAS._canonical_json(payload)).hexdigest()
         document = {**payload, "content_sha256": content_hash}
         with sqlite3.connect(self.db) as connection:
@@ -353,6 +366,39 @@ class Handler
         with sqlite3.connect(self.db) as connection:
             row = connection.execute("SELECT payload_json FROM atlas_compiler_supplements WHERE snapshot_id=?",
                                      (_snapshot["snapshot_id"],)).fetchone()
+            original_payload = json.loads(row[0])
+        mutations = [
+            ("missing dispatch_kind", lambda edge: edge.pop("dispatch_kind"), False),
+            ("invalid dispatch_kind", lambda edge: edge.update(dispatch_kind="virtual_instance_source"), False),
+            ("list dispatch_kind on unrelated edge", lambda edge: edge.update(dispatch_kind=[]), True),
+            ("dict dispatch_kind on unrelated edge", lambda edge: edge.update(dispatch_kind={}), True),
+            ("missing DI label", lambda edge: edge.pop("runtime_DI_selection_proven"), False),
+            ("true DI label", lambda edge: edge.update(runtime_DI_selection_proven=True), False),
+        ]
+        for label, mutate, unrelated in mutations:
+            tampered = json.loads(json.dumps(original_payload))
+            edge = tampered["source_call_edges"][0]
+            mutate(edge)
+            if unrelated:
+                edge["callee_lexical_method_fact_id"] = "unrelated-saved-method-fact"
+            stable = {key: value for key, value in tampered.items() if key != "content_sha256"}
+            tampered["content_sha256"] = hashlib.sha256(ATLAS._canonical_json(stable)).hexdigest()
+            payload_json = ATLAS._canonical_json(tampered).decode("ascii")
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                                   (tampered["content_sha256"], payload_json, _snapshot["snapshot_id"]))
+            db_before_refusal = self.db.read_bytes()
+            refused = self.impact("Handler.Handle", expect=2)
+            self.assertEqual(refused.stdout, "", label)
+            self.assertIn("compiler source-call edge", refused.stderr, label)
+            self.assertEqual(self.db.read_bytes(), db_before_refusal, label)
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                                   (original_payload["content_sha256"], row[0], _snapshot["snapshot_id"]))
+
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_compiler_supplements WHERE snapshot_id=?",
+                                     (_snapshot["snapshot_id"],)).fetchone()
             tampered = json.loads(row[0])
             tampered["content_sha256"] = "0" * 64
             connection.execute("UPDATE atlas_compiler_supplements SET payload_json=? WHERE snapshot_id=?",
@@ -392,7 +438,9 @@ class Handler
             "callee_containing_type": "global::Taggable.Api.Infrastructure.LegacyInterop.LegacyPayloadEncryption",
             "callee_source": anchor(callee_path, callee_hash, 416, 1044),
             "call_site_source": anchor(source_path, source_hash, 11317, 11444),
+            "dispatch_kind": "static_source",
             "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
+            "runtime_DI_selection_proven": False,
         }
         caller_fact = {
             "id": "38d4276fd03752b3943e083b", "kind": "method_declaration",
@@ -416,6 +464,14 @@ class Handler
         }
         with self.assertRaisesRegex(ATLAS.AtlasError, "callee anchor does not identify exactly one saved lexical method fact: matches=0"):
             ATLAS._verify_compiler_source_call_edges(snapshot, [relationship], [edge])
+
+        missing_dispatch = dict(edge)
+        missing_dispatch.pop("dispatch_kind")
+        with self.assertRaisesRegex(ATLAS.AtlasError, "missing or invalid dispatch_kind"):
+            ATLAS._verify_compiler_source_call_edges(snapshot, [relationship], [missing_dispatch])
+        invalid_dispatch = {**edge, "dispatch_kind": "virtual_instance_source"}
+        with self.assertRaisesRegex(ATLAS.AtlasError, "missing or invalid dispatch_kind"):
+            ATLAS._verify_compiler_source_call_edges(snapshot, [relationship], [invalid_dispatch])
 
     def test_source_call_limitations_require_one_exact_handler_relationship(self):
         digest = "a" * 64
@@ -463,15 +519,24 @@ public static class Support
     public static string Deferred(Request value) => value.ToString();
 }
 public static class FixtureExtensions { public static string Extend(this Request value) => value.ToString(); }
-public sealed class Worker { public string Instance(Request value) => value.ToString(); }
-public sealed class First : IHandler<Request>
+public sealed class AccessGate
+{
+    public bool Check(Request value) => true;
+    public bool Check(string value) => true;
+}
+public class AuditTrail { public string Record(Request value) => value.ToString(); }
+public interface IWorker { string Run(Request value); }
+public class VirtualWorker : IWorker { public virtual string Run(Request value) => value.ToString(); }
+public sealed class First(AccessGate gate, IWorker interfaceWorker, VirtualWorker virtualWorker) : IHandler<Request>
 {
     public string Handle(Request value)
     {
         var loaded = Support.Load(value) + Support.Deferred(value);
+        _ = gate.Check(value);
+        _ = interfaceWorker.Run(value);
+        _ = virtualWorker.Run(value);
         _ = Support.Convert(value);
         _ = System.Linq.Enumerable.Empty<Request>();
-        _ = new Worker().Instance(value);
         _ = value.Extend();
         _ = FixtureExtensions.Extend(value);
         string Local(Request input) => Support.Load(input);
@@ -479,9 +544,10 @@ public sealed class First : IHandler<Request>
         return loaded;
     }
 }
-public sealed class Second : IHandler<Request>
+public sealed class Second(AuditTrail trail) : IHandler<Request>
 {
     public string Handle(Request value) => Support.Load(value) + Support.Deferred(value)
+        + trail.Record(value)
         + ((Func<Request, string>)(input => Support.Load(input)))(value);
 }
 [ApiController]
@@ -503,6 +569,9 @@ public static class Registrations
             services.AddScoped<IHandler<Request>, First>();
             services.AddScoped<IHandler<Request>, Second>();
             services.AddScoped<IHandler<Request>, First>();
+            services.AddScoped<AccessGate>();
+            services.AddScoped<AuditTrail>();
+            services.AddScoped<IWorker, VirtualWorker>();
     }
 }
 ''', encoding="utf-8")
@@ -552,9 +621,14 @@ public static class Registrations
         self.assertEqual(ATLAS._compiler_safe_tree(self.repo, "obj"), generated_before)
         self.assertFalse((self.repo / "bin").exists())
         source_edges = payload["source_call_edges"]
-        self.assertEqual(len(source_edges), 16)
-        self.assertEqual({edge["callee_method"] for edge in source_edges}, {"Load", "Deferred"})
-        self.assertEqual({edge["callee_containing_type"] for edge in source_edges}, {"global::Fixture.Support"})
+        self.assertEqual(len(source_edges), 24)
+        self.assertEqual({edge["callee_method"] for edge in source_edges}, {"Load", "Deferred", "Check", "Record"})
+        self.assertEqual({edge["dispatch_kind"] for edge in source_edges}, {"static_source", "non_virtual_instance_source"})
+        static_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "static_source"]
+        instance_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "non_virtual_instance_source"]
+        self.assertEqual(len(static_edges), 16)
+        self.assertEqual(len(instance_edges), 8)
+        self.assertEqual({edge["callee_containing_type"] for edge in static_edges}, {"global::Fixture.Support"})
         lexical_graph = self.graph(snapshot["snapshot_id"])
         load_facts = [fact for fact in lexical_graph["facts"]
                       if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Load"
@@ -576,7 +650,29 @@ public static class Registrations
         self.assertEqual(len(deferred_edges), 8)
         self.assertEqual({edge["callee_lexical_method_fact_id"] for edge in deferred_edges}, {deferred_facts[0]["id"]})
         self.assertTrue(all(edge["callee_source"] == deferred_facts[0]["source"] for edge in deferred_edges))
-        self.assertTrue(all(edge["compiler_binding_confirmed"] and not edge["runtime_reachability_proven"] for edge in source_edges))
+        self.assertTrue(all(edge["compiler_binding_confirmed"] and not edge["runtime_reachability_proven"]
+                            and not edge["runtime_DI_selection_proven"] for edge in source_edges))
+        check_facts = [fact for fact in lexical_graph["facts"]
+                       if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Check"
+                       and fact["source"]["path"] == "Fixture.cs"]
+        self.assertEqual(len(check_facts), 2)
+        request_check = next(fact for fact in check_facts
+                             if "Check(Request value)" in source.read_text(encoding="utf-8")
+                             [fact["source"]["span"]["start_offset"]:fact["source"]["span"]["end_offset"]])
+        check_edges = [edge for edge in instance_edges if edge["callee_method"] == "Check"]
+        self.assertEqual(len(check_edges), 4)
+        self.assertEqual({edge["callee_lexical_method_fact_id"] for edge in check_edges}, {request_check["id"]})
+        self.assertTrue(all(edge["callee_source"] == request_check["source"] for edge in check_edges))
+        self.assertEqual({edge["callee_containing_type"] for edge in check_edges}, {"global::Fixture.AccessGate"})
+        record_facts = [fact for fact in lexical_graph["facts"]
+                        if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Record"
+                        and fact["source"]["path"] == "Fixture.cs"]
+        record_edges = [edge for edge in instance_edges if edge["callee_method"] == "Record"]
+        self.assertEqual(len(record_facts), 1)
+        self.assertEqual(len(record_edges), 4)
+        self.assertEqual({edge["callee_lexical_method_fact_id"] for edge in record_edges}, {record_facts[0]["id"]})
+        self.assertTrue(all(edge["callee_containing_type"] == "global::Fixture.AuditTrail" for edge in record_edges))
+        self.assertTrue(all(edge["dispatch_kind"] == "non_virtual_instance_source" for edge in instance_edges))
         expression_handler_edges = [edge for edge in load_edges if edge["implementation_type"] == "global::Fixture.Second"]
         self.assertEqual(len(expression_handler_edges), 4)
         generic_limitations = [item for item in payload["source_call_unresolved"]
@@ -596,8 +692,20 @@ public static class Registrations
         external_generic_limitations = [item for item in payload["source_call_unresolved"]
                                         if item["source"]["span"]["start_offset"] == external_call_offset]
         self.assertEqual(len(external_generic_limitations), 4)
-        self.assertTrue(all(item["reason"] == "bound call is outside the supported same-compilation static source-method shape"
+        self.assertTrue(all(item["reason"] == "bound call is outside the supported same-compilation static or non-virtual instance source-method shape"
                             for item in external_generic_limitations))
+        virtual_limitations = [item for item in payload["source_call_unresolved"]
+                               if item.get("source", {}).get("span", {}).get("start_offset") ==
+                               source.read_text(encoding="utf-8").index("interfaceWorker.Run") or
+                               item.get("source", {}).get("span", {}).get("start_offset") ==
+                               source.read_text(encoding="utf-8").index("virtualWorker.Run")]
+        self.assertEqual(len(virtual_limitations), 8)
+        self.assertTrue(all(item["kind"] == "unsupported_handler_source_call" for item in virtual_limitations))
+        extension_offsets = {source.read_text(encoding="utf-8").index("value.Extend()"),
+                             source.read_text(encoding="utf-8").index("FixtureExtensions.Extend(value)")}
+        extension_limitations = [item for item in payload["source_call_unresolved"]
+                                 if item.get("source", {}).get("span", {}).get("start_offset") in extension_offsets]
+        self.assertEqual(len(extension_limitations), 8)
         self.assertEqual({edge["route"] for edge in source_edges}, {route for _verb, route in expected})
         self.assertTrue(any(item["kind"] == "unsupported_handler_source_call" for item in payload["source_call_unresolved"]))
         impact = json.loads(self.impact("Support.Deferred", max_tokens=32000).stdout)
@@ -605,6 +713,11 @@ public static class Registrations
         self.assertEqual(len(impact["compiler_associated_route_paths"]), 8)
         self.assertFalse(impact["compiler_associated_route_paths_scope"]["runtime_reachability_proven"])
         self.assertLessEqual(impact["budget"]["stdout_bytes_including_newline"], 32000)
+        instance_impact = json.loads(self.impact("AuditTrail.Record", max_tokens=32000).stdout)
+        self.assertEqual(len(instance_impact["compiler_associated_route_paths"]), 4)
+        self.assertEqual({path["call"]["dispatch_kind"] for path in instance_impact["compiler_associated_route_paths"]},
+                         {"non_virtual_instance_source"})
+        self.assertFalse(instance_impact["compiler_associated_route_paths_scope"]["runtime_reachability_proven"])
         assets = self.repo / "obj" / "project.assets.json"
         assets.write_bytes(assets.read_bytes() + b" ")
         stale = self.impact("Fixture.First.Handle", expect=2)

@@ -158,17 +158,22 @@ foreach(var tree in compilation.SyntaxTrees.OrderBy(t=>t.FilePath,StringComparer
        var calledNode=called is {DeclaringSyntaxReferences.Length:1}
         ? called.DeclaringSyntaxReferences[0].GetSyntax() as MethodDeclarationSyntax
         : null;
-       var supportedStaticSourceShape=called is not null && called.MethodKind==MethodKind.Ordinary && called.IsStatic &&
+       var supportedSourceMethod=called is not null && called.MethodKind==MethodKind.Ordinary &&
         !called.IsExtensionMethod && called.ReducedFrom is null && called.ContainingAssembly==compilation.Assembly &&
         called.DeclaringSyntaxReferences.Length==1 && calledNode is not null &&
         (calledNode.Body is not null || calledNode.ExpressionBody is not null);
-       var unsupportedGenericSourceShape=supportedStaticSourceShape && called!.Arity>0;
-       if (!supportedStaticSourceShape || unsupportedGenericSourceShape) {
+       var supportedStaticSourceShape=supportedSourceMethod && called!.IsStatic && called.Arity==0;
+       var supportedInstanceSourceShape=supportedSourceMethod && !called!.IsStatic && called.Arity==0 &&
+        !called.IsVirtual && !called.IsAbstract && !called.IsOverride;
+       var unsupportedGenericSourceShape=supportedSourceMethod && called!.IsStatic && called.Arity>0;
+       var dispatchKind=supportedStaticSourceShape ? "static_source"
+        : supportedInstanceSourceShape ? "non_virtual_instance_source" : null;
+       if (dispatchKind is null) {
         var reason=sourceInfo.CandidateReason==CandidateReason.Ambiguous
           ? "compiler reported an ambiguous direct call"
-          : sourceInfo.Symbol is null ? "call is not one bound ordinary static source method"
+          : sourceInfo.Symbol is null ? "call is not one bound ordinary same-compilation source method"
           : unsupportedGenericSourceShape ? "generic source method is outside the supported lexical source-call shape"
-          : "bound call is outside the supported same-compilation static source-method shape";
+          : "bound call is outside the supported same-compilation static or non-virtual instance source-method shape";
         if (sourceInfo.CandidateReason==CandidateReason.Ambiguous)
          throw new Exception("ambiguous compiler source call at "+implementationTree.FilePath+":"+sourceInvocation.SpanStart);
         sourceCallUnresolved.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
@@ -190,7 +195,8 @@ foreach(var tree in compilation.SyntaxTrees.OrderBy(t=>t.FilePath,StringComparer
         ["callee_containing_type"]=called.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
         ["callee_source"]=Anchor(calledNode.SyntaxTree.FilePath,calledNode.Span),
         ["call_site_source"]=Anchor(implementationTree.FilePath,sourceInvocation.Span),
-        ["compiler_binding_confirmed"]=true,["runtime_reachability_proven"]=false
+        ["dispatch_kind"]=dispatchKind,
+        ["compiler_binding_confirmed"]=true,["runtime_reachability_proven"]=false,["runtime_DI_selection_proven"]=false
        });
       }
      } else {

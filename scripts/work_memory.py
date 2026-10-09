@@ -125,6 +125,12 @@ BOOTSTRAP_TRUST_ANCHORS = (
     "scripts/work_memory_bootstrap.py",
     "scripts/work_memory_bootstrap_launcher.py",
 )
+# One historical reopen was persisted after its failed verification run had
+# already been closed outside the reopening run's predecessor chain. Keep this
+# replay exception bound to that exact event identity.
+LEGACY_UNLINKED_VERIFICATION_REOPEN_EVENT_IDS = frozenset({
+    "f83c057e-7d00-434e-9a74-27ae58855291",
+})
 SEQUENCE_INTAKE_CONTROL_DEPENDENCIES = (
     "operations/sequences/sequence-intake-contracts.json",
     "scripts/regenerate_intake_contracts.py",
@@ -1623,6 +1629,10 @@ def parse_ledger_bytes(data: bytes) -> list[dict[str, Any]]:
         legacy_post_terminal_event_ids={event["event_id"] for event in events},
         legacy_nonopen_correction_event_ids={event["event_id"] for event in events},
         legacy_unverified_reopen_event_ids={event["event_id"] for event in events},
+        legacy_unlinked_verification_reopen_event_ids=(
+            LEGACY_UNLINKED_VERIFICATION_REOPEN_EVENT_IDS
+            & {event["event_id"] for event in events}
+        ),
     )
     return events
 
@@ -2039,6 +2049,7 @@ def validate_lifecycle(
     legacy_post_terminal_event_ids: set[str] | None = None,
     legacy_nonopen_correction_event_ids: set[str] | None = None,
     legacy_unverified_reopen_event_ids: set[str] | None = None,
+    legacy_unlinked_verification_reopen_event_ids: set[str] | None = None,
 ) -> None:
     event_index = _event_index(events)
     _ownership_snapshot(events)
@@ -2051,6 +2062,9 @@ def validate_lifecycle(
         legacy_nonopen_correction_event_ids or set()
     )
     legacy_unverified_reopen_event_ids = legacy_unverified_reopen_event_ids or set()
+    legacy_unlinked_verification_reopen_event_ids = (
+        legacy_unlinked_verification_reopen_event_ids or set()
+    )
     runs: dict[str, dict[str, Any]] = {}
     blockers: dict[str, str] = {}
     blocker_meta: dict[str, dict[str, Any]] = {}
@@ -2503,9 +2517,26 @@ def validate_lifecycle(
                         and verification_run["terminal"]["result"] == "failed"
                         and verification_run["terminal"]["verification_quality"] == "same-path"
                     )
+                    legacy_unlinked_closed_failure = (
+                        event["event_id"]
+                        in legacy_unlinked_verification_reopen_event_ids
+                        and current_start.get("predecessor_run_id") is None
+                        and verification is not None
+                        and verification_run is not None
+                        and verification_run["terminal"] is not None
+                        and verification_run["terminal"]["event_type"] == "run_closed"
+                        and verification_run["terminal"]["result"] == "failed"
+                        and verification_run["terminal"]["verification_quality"] == "same-path"
+                        and verification["source_bundle_hash"]
+                        == current_start["source_bundle_hash"]
+                    )
                     if (
                         verification is None
-                        or not (current_run_verification or closed_failed_ancestor)
+                        or not (
+                            current_run_verification
+                            or closed_failed_ancestor
+                            or legacy_unlinked_closed_failure
+                        )
                         or verification["subject_id"] != current_start["subject_id"]
                         or verification["lineage_id"] != current_start["lineage_id"]
                         or verification["outcome"] != "failed"
@@ -2650,6 +2681,10 @@ def stage_event_batch(existing: bytes, request: dict[str, Any]) -> tuple[bytes, 
         legacy_post_terminal_event_ids=set(_event_index(current)),
         legacy_nonopen_correction_event_ids=set(_event_index(current)),
         legacy_unverified_reopen_event_ids=set(_event_index(current)),
+        legacy_unlinked_verification_reopen_event_ids=(
+            LEGACY_UNLINKED_VERIFICATION_REOPEN_EVENT_IDS
+            & set(_event_index(current))
+        ),
     )
     ledger_bytes = b"".join(canonical_bytes(event) for event in result_events)
     ledger_hash = sha256_bytes(ledger_bytes)
@@ -6316,6 +6351,10 @@ def cmd_merge_ledger(args: argparse.Namespace) -> dict[str, Any]:
             legacy_post_terminal_event_ids=persisted_event_ids,
             legacy_nonopen_correction_event_ids=persisted_event_ids,
             legacy_unverified_reopen_event_ids=persisted_event_ids,
+            legacy_unlinked_verification_reopen_event_ids=(
+                LEGACY_UNLINKED_VERIFICATION_REOPEN_EVENT_IDS
+                & persisted_event_ids
+            ),
         )
         ledger_bytes = b"".join(canonical_bytes(event) for event in merged)
         ledger_hash = sha256_bytes(ledger_bytes)

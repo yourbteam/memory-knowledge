@@ -2471,8 +2471,7 @@ def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationship
         for key in ("route", "http_method", "implementation_type", "implementation_method", "caller_method", "callee_method"):
             if not isinstance(raw.get(key), str) or not raw[key]:
                 raise AtlasError(f"compiler source-call edge has invalid {key}; no supplement published")
-        if raw.get("compiler_binding_confirmed") is not True or raw.get("runtime_reachability_proven") is not False:
-            raise AtlasError("compiler source-call edge has invalid proof labels; no supplement published")
+        _validate_compiler_source_call_edge_proof(raw, "no supplement published")
         callers = [relation for relation in relationships
                    if relation.get("route") == raw.get("route") and relation.get("http_method") == raw.get("http_method")
                    and relation.get("implementation_type") == raw.get("implementation_type")
@@ -2511,6 +2510,17 @@ def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationship
                                                str(edge.get("call_site_source", {}).get("path")),
                                                int(edge.get("call_site_source", {}).get("span", {}).get("start_offset", 0)),
                                                str(edge.get("callee_method")), str(edge.get("implementation_type"))))
+
+
+def _validate_compiler_source_call_edge_proof(edge: dict[str, object], context: str) -> None:
+    """Enforce the closed dispatch and proof-label contract at every trust boundary."""
+    dispatch_kind = edge.get("dispatch_kind")
+    if not isinstance(dispatch_kind, str) or dispatch_kind not in {"static_source", "non_virtual_instance_source"}:
+        raise AtlasError(f"compiler source-call edge has missing or invalid dispatch_kind; {context}")
+    if (edge.get("compiler_binding_confirmed") is not True
+            or edge.get("runtime_reachability_proven") is not False
+            or edge.get("runtime_DI_selection_proven") is not False):
+        raise AtlasError(f"compiler source-call edge has invalid proof labels; {context}")
 
 
 def _verify_compiler_source_call_unresolved(snapshot: dict[str, object], relationships: list[dict[str, object]],
@@ -3052,10 +3062,9 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
             for edge in edges:
                 if not isinstance(edge, dict):
                     raise AtlasError("compiler supplement contains a malformed source-call edge")
+                _validate_compiler_source_call_edge_proof(edge, "impact refused")
                 if edge.get("callee_lexical_method_fact_id") != method.get("id"):
                     continue
-                if edge.get("compiler_binding_confirmed") is not True or edge.get("runtime_reachability_proven") is not False:
-                    raise AtlasError("compiler source-call edge has invalid proof labels")
                 identity = (edge.get("route_fact_id"), edge.get("lexical_implementation_fact_id"), edge.get("implementation_type"))
                 matching = relationships_by_identity.get(identity, [])
                 if len(matching) != 1:
@@ -3069,13 +3078,15 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                 "lexical_method_fact_id": relation.get("lexical_implementation_fact_id")},
                     "call": {"caller_method": edge.get("caller_method"),
                              "callee_method": edge.get("callee_method"),
+                             "dispatch_kind": edge.get("dispatch_kind"),
                              "caller_lexical_method_fact_id": edge.get("caller_lexical_method_fact_id"),
                              "callee_lexical_method_fact_id": edge.get("callee_lexical_method_fact_id"),
                              "call_site_source": edge.get("call_site_source"),
                              "callee_source": edge.get("callee_source")},
                     "claim": "compiler_confirmed_direct_source_call_associated_with_route_handler",
-                    "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
-                    "runtime_DI_selection_proven": False,
+                    "compiler_binding_confirmed": True,
+                    "runtime_reachability_proven": edge.get("runtime_reachability_proven"),
+                    "runtime_DI_selection_proven": edge.get("runtime_DI_selection_proven"),
                 })
         if compiler_callers:
             document["compiler_confirmed_interface_callers"] = sorted(compiler_callers,
