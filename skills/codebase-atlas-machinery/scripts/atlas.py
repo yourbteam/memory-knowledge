@@ -2440,6 +2440,110 @@ def _verify_compiler_relationship_graph(snapshot: dict[str, object], relationshi
         registration["lexical_registration_fact_id"] = matches[0]["id"]
 
 
+def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationships: list[dict[str, object]],
+                                       edges: object) -> list[dict[str, object]]:
+    """Bind compiler call edges to exact saved handler, helper, and route facts."""
+    graph = snapshot.get("source_graph")
+    facts = graph.get("facts") if isinstance(graph, dict) else None
+    if not isinstance(facts, list) or not isinstance(edges, list):
+        raise AtlasError("compiler source-call graph is malformed; no supplement published")
+    methods = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "method_declaration"]
+    files = {str(entry.get("path")): entry for entry in snapshot.get("files", []) if isinstance(entry, dict)}
+
+    def exact_method(anchor: object, symbol: object, label: str) -> dict[str, object]:
+        span = _compiler_span(anchor)
+        if span is None or not isinstance(anchor, dict) or not isinstance(anchor.get("sha256"), str):
+            raise AtlasError(f"compiler source-call edge has invalid {label} anchor; no supplement published")
+        saved_file = files.get(span[0])
+        if saved_file is None or saved_file.get("presence") != "present" or saved_file.get("type") != "file" or saved_file.get("sha256") != anchor["sha256"]:
+            raise AtlasError(f"compiler source-call {label} anchor does not match tracked lexical snapshot: {span[0]}; no supplement published")
+        matches = [fact for fact in methods if _compiler_span(fact.get("source")) == span
+                   and isinstance(symbol, str) and fact.get("method_name") == symbol.rsplit(".", 1)[-1].split("(", 1)[0]]
+        if len(matches) != 1:
+            raise AtlasError(f"compiler source-call {label} anchor does not identify exactly one saved lexical method fact: matches={len(matches)}; no supplement published")
+        return matches[0]
+
+    verified: list[dict[str, object]] = []
+    seen: set[tuple[object, ...]] = set()
+    for raw in edges:
+        if not isinstance(raw, dict):
+            raise AtlasError("compiler source-call edge is not an object; no supplement published")
+        for key in ("route", "http_method", "implementation_type", "implementation_method", "caller_method", "callee_method"):
+            if not isinstance(raw.get(key), str) or not raw[key]:
+                raise AtlasError(f"compiler source-call edge has invalid {key}; no supplement published")
+        if raw.get("compiler_binding_confirmed") is not True or raw.get("runtime_reachability_proven") is not False:
+            raise AtlasError("compiler source-call edge has invalid proof labels; no supplement published")
+        callers = [relation for relation in relationships
+                   if relation.get("route") == raw.get("route") and relation.get("http_method") == raw.get("http_method")
+                   and relation.get("implementation_type") == raw.get("implementation_type")
+                   and relation.get("implementation_method") == raw.get("implementation_method")]
+        if len(callers) != 1:
+            raise AtlasError(f"compiler source-call edge must bind to exactly one mapped handler relationship: matches={len(callers)} route={raw.get('route')!r}; no supplement published")
+        caller_fact = exact_method(raw.get("caller_source"), raw.get("caller_method"), "caller")
+        callee_fact = exact_method(raw.get("callee_source"), raw.get("callee_method"), "callee")
+        if caller_fact.get("id") != callers[0].get("lexical_implementation_fact_id"):
+            raise AtlasError("compiler source-call caller anchor does not match its mapped handler fact; no supplement published")
+        call_span = _compiler_span(raw.get("call_site_source"))
+        if call_span is None or not isinstance(raw.get("call_site_source"), dict):
+            raise AtlasError("compiler source-call edge has invalid call-site anchor; no supplement published")
+        caller_span = _compiler_span(caller_fact.get("source"))
+        call_anchor = raw["call_site_source"]
+        if (caller_span is None or call_span[0] != caller_span[0] or not isinstance(call_anchor.get("sha256"), str)
+                or call_anchor.get("sha256") != caller_fact.get("source", {}).get("sha256")
+                or not caller_span[1] <= call_span[1] <= call_span[2] <= caller_span[2]):
+            raise AtlasError("compiler source-call site is outside its verified handler method; no supplement published")
+        if not isinstance(call_anchor.get("span"), dict) or not all(isinstance(call_anchor["span"].get(k), int) for k in ("start_offset", "end_offset")):
+            raise AtlasError("compiler source-call site has an invalid span; no supplement published")
+        if not isinstance(raw.get("callee_source"), dict) or raw["callee_source"].get("sha256") != files[_compiler_span(raw["callee_source"])[0]].get("sha256"):
+            raise AtlasError("compiler source-call callee anchor does not match its tracked lexical snapshot; no supplement published")
+        edge = dict(raw)
+        edge.update({"route_fact_id": callers[0].get("lexical_route_fact_id"),
+                     "caller_lexical_method_fact_id": caller_fact.get("id"),
+                     "callee_lexical_method_fact_id": callee_fact.get("id"),
+                     "lexical_implementation_fact_id": callers[0].get("lexical_implementation_fact_id")})
+        identity = (edge.get("route_fact_id"), edge.get("caller_lexical_method_fact_id"),
+                    edge.get("callee_lexical_method_fact_id"), call_span, edge.get("implementation_type"))
+        if identity in seen:
+            raise AtlasError("compiler source-call graph contains a duplicate callsite relationship; no supplement published")
+        seen.add(identity)
+        verified.append(edge)
+    return sorted(verified, key=lambda edge: (str(edge.get("route_fact_id")), str(edge.get("caller_lexical_method_fact_id")),
+                                               str(edge.get("call_site_source", {}).get("path")),
+                                               int(edge.get("call_site_source", {}).get("span", {}).get("start_offset", 0)),
+                                               str(edge.get("callee_method")), str(edge.get("implementation_type"))))
+
+
+def _verify_compiler_source_call_unresolved(snapshot: dict[str, object], relationships: list[dict[str, object]],
+                                            records: object) -> list[dict[str, object]]:
+    """Require every unsupported handler call to retain one exact route/handler identity."""
+    if not isinstance(records, list) or any(not isinstance(item, dict) for item in records):
+        raise AtlasError("Roslyn returned malformed source-call limitations; no supplement published")
+    files = {str(entry.get("path")): entry for entry in snapshot.get("files", []) if isinstance(entry, dict)}
+    verified: list[dict[str, object]] = []
+    for item in records:
+        for key in ("route", "http_method", "implementation_type", "implementation_method"):
+            if not isinstance(item.get(key), str) or not item[key]:
+                raise AtlasError(f"compiler source-call limitation has invalid {key}; no supplement published")
+        matches = [relation for relation in relationships
+                   if all(relation.get(key) == item.get(key) for key in
+                          ("route", "http_method", "implementation_type", "implementation_method"))]
+        if len(matches) != 1:
+            raise AtlasError("compiler source-call limitation must bind to exactly one mapped handler relationship: "
+                             f"matches={len(matches)} route={item.get('route')!r}; no supplement published")
+        anchor = item.get("source")
+        span = _compiler_span(anchor)
+        saved = files.get(span[0]) if span is not None else None
+        if (span is None or not isinstance(anchor, dict) or not isinstance(anchor.get("sha256"), str)
+                or saved is None or saved.get("presence") != "present" or saved.get("type") != "file"
+                or saved.get("sha256") != anchor["sha256"]):
+            raise AtlasError("compiler source-call limitation has an unverified source anchor; no supplement published")
+        verified.append(dict(item))
+    return sorted(verified, key=lambda item: (str(item.get("route")), str(item.get("http_method")),
+                                               str(item.get("implementation_type")), str(item.get("implementation_method")),
+                                               str(item.get("source", {}).get("path")),
+                                               int(item.get("source", {}).get("span", {}).get("start_offset", 0))))
+
+
 def _compiler_build_extractor(temp_root: Path, env: dict[str, str], dotnet: Path) -> Path:
     source = Path(__file__).resolve().parent / "compiler"
     if not (source / "WorkspaceProgram.cs").is_file() or not (source / "extractor.csproj").is_file():
@@ -2487,6 +2591,7 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
     snapshot, _snapshots, extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
     _validate_snapshot_fingerprint(snapshot, str(snapshot.get("snapshot_id")))
     files = snapshot.get("files", [])
+    files_by_path = {str(entry["path"]): entry for entry in files if isinstance(entry, dict) and isinstance(entry.get("path"), str)}
     projects = [entry for entry in files if isinstance(entry, dict) and entry.get("path") == project_relative
                 and entry.get("presence") == "present" and entry.get("type") == "file"]
     if len(projects) != 1:
@@ -2546,7 +2651,10 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
         build_host_files = extracted.get("build_host_files")
         if not isinstance(imports, list) or not isinstance(toolchain, list) or not isinstance(build_host_files, list):
             raise AtlasError("Roslyn import or toolchain manifest is incomplete; no supplement published")
-        for relationship in extracted.get("relationships", []):
+        relationships = extracted.get("relationships")
+        if not isinstance(relationships, list):
+            raise AtlasError("Roslyn returned a malformed relationship list; no supplement published")
+        for relationship in relationships:
             if not isinstance(relationship, dict):
                 raise AtlasError("Roslyn returned a malformed relationship; no supplement published")
             _verify_compiler_relationship_graph(snapshot, relationship)
@@ -2561,6 +2669,9 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
                 span = anchor.get("span")
                 if not isinstance(span, dict) or not isinstance(span.get("start_offset"), int) or not isinstance(span.get("end_offset"), int):
                     raise AtlasError(f"compiler relationship anchor has invalid span: {path}; no supplement published")
+        source_call_edges = _verify_compiler_source_call_edges(snapshot, relationships, extracted.get("source_call_edges"))
+        source_call_unresolved = _verify_compiler_source_call_unresolved(
+            snapshot, relationships, extracted.get("source_call_unresolved"))
         input_identity = {
             "tracked_inputs": tracked_manifest,
             "generated_inputs": generated_manifest,
@@ -2590,6 +2701,8 @@ def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework:
             "provenance": {key: extracted.get(key) for key in ("sdk_path", "roslyn_version", "language_version", "target_framework", "source_trees", "compiler_warnings")},
             "relationships": extracted.get("relationships", []),
             "unresolved": extracted.get("unresolved", []),
+            "source_call_edges": source_call_edges,
+            "source_call_unresolved": source_call_unresolved,
             "runtime_DI_selection_proven": False,
         }
     content_hash = hashlib.sha256(_canonical_json(payload)).hexdigest()
@@ -2911,13 +3024,18 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
     supplements = _current_compiler_supplements(db_path, snapshot, root)
     if supplements:
         compiler_callers = []
+        compiler_route_paths = []
         for supplement in supplements:
             relationships = supplement.get("relationships", [])
             if not isinstance(relationships, list):
                 raise AtlasError("compiler supplement relationships are malformed")
+            relationships_by_identity: dict[tuple[object, object, object], list[dict[str, object]]] = {}
             for relation in relationships:
                 if not isinstance(relation, dict):
                     raise AtlasError("compiler supplement contains a malformed relationship")
+                relationships_by_identity.setdefault((relation.get("lexical_route_fact_id"),
+                                                       relation.get("lexical_implementation_fact_id"),
+                                                       relation.get("implementation_type")), []).append(relation)
                 if relation.get("lexical_implementation_fact_id") == method.get("id"):
                     compiler_callers.append({"route": relation.get("route"), "http_method": relation.get("http_method"),
                                              "action_method": relation.get("action_method"),
@@ -2928,9 +3046,56 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                              "registrations": relation.get("registrations", []),
                                              "claim": "compiler_confirmed_interface_caller_associated_with_implementation",
                                              "compiler_binding_confirmed": True, "runtime_DI_selection_proven": False})
+            edges = supplement.get("source_call_edges", [])
+            if not isinstance(edges, list):
+                raise AtlasError("compiler supplement source-call edges are malformed")
+            for edge in edges:
+                if not isinstance(edge, dict):
+                    raise AtlasError("compiler supplement contains a malformed source-call edge")
+                if edge.get("callee_lexical_method_fact_id") != method.get("id"):
+                    continue
+                if edge.get("compiler_binding_confirmed") is not True or edge.get("runtime_reachability_proven") is not False:
+                    raise AtlasError("compiler source-call edge has invalid proof labels")
+                identity = (edge.get("route_fact_id"), edge.get("lexical_implementation_fact_id"), edge.get("implementation_type"))
+                matching = relationships_by_identity.get(identity, [])
+                if len(matching) != 1:
+                    raise AtlasError(f"compiler source-call edge does not match exactly one route/handler relationship: matches={len(matching)}")
+                relation = matching[0]
+                compiler_route_paths.append({
+                    "route": relation.get("route"), "http_method": relation.get("http_method"),
+                    "route_fact_id": relation.get("lexical_route_fact_id"),
+                    "handler": {"implementation_type": relation.get("implementation_type"),
+                                "implementation_method": relation.get("implementation_method"),
+                                "lexical_method_fact_id": relation.get("lexical_implementation_fact_id")},
+                    "call": {"caller_method": edge.get("caller_method"),
+                             "callee_method": edge.get("callee_method"),
+                             "caller_lexical_method_fact_id": edge.get("caller_lexical_method_fact_id"),
+                             "callee_lexical_method_fact_id": edge.get("callee_lexical_method_fact_id"),
+                             "call_site_source": edge.get("call_site_source"),
+                             "callee_source": edge.get("callee_source")},
+                    "claim": "compiler_confirmed_direct_source_call_associated_with_route_handler",
+                    "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
+                    "runtime_DI_selection_proven": False,
+                })
         if compiler_callers:
             document["compiler_confirmed_interface_callers"] = sorted(compiler_callers,
                 key=lambda item: (str(item.get("route")), str(item.get("action_method")), str(item.get("bound_member"))))
+        if compiler_route_paths:
+            unique_paths = {}
+            for path in compiler_route_paths:
+                key = (path.get("route_fact_id"), path["handler"].get("lexical_method_fact_id"),
+                       path["handler"].get("implementation_type"), path["call"].get("call_site_source", {}).get("span", {}).get("start_offset"),
+                       path["call"].get("callee_lexical_method_fact_id"))
+                unique_paths[key] = path
+            document["compiler_associated_route_paths"] = sorted(unique_paths.values(),
+                key=lambda item: (str(item.get("route")), str(item.get("http_method")),
+                                  str(item.get("handler", {}).get("implementation_type")),
+                                  int(item.get("call", {}).get("call_site_source", {}).get("span", {}).get("start_offset", 0))))
+            document["compiler_associated_route_paths_scope"] = {
+                "relationship": "one-hop direct source invocation bound by Roslyn and associated with an existing compiler-mapped handler and lexical route fact",
+                "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
+                "runtime_DI_selection_proven": False,
+            }
     encoded = _impact_render(document, max_bytes)
     return document, encoded, 0
 

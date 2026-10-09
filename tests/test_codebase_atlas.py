@@ -15,6 +15,10 @@ SCRIPT = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/
 ATLAS_SPEC = importlib.util.spec_from_file_location("atlas_test_module", SCRIPT)
 ATLAS = importlib.util.module_from_spec(ATLAS_SPEC)
 ATLAS_SPEC.loader.exec_module(ATLAS)
+LAUNCHER_PATH = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/compiler_index_launch.py"
+LAUNCHER_SPEC = importlib.util.spec_from_file_location("atlas_compiler_index_launch_test_module", LAUNCHER_PATH)
+LAUNCHER = importlib.util.module_from_spec(LAUNCHER_SPEC)
+LAUNCHER_SPEC.loader.exec_module(LAUNCHER)
 
 
 def git(repo: Path, *args: str) -> str:
@@ -91,6 +95,83 @@ class AtlasCliTests(unittest.TestCase):
     def impact(self, method, max_tokens=10000, expect=0):
         return self.cli("impact", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                         "--method", method, "--max-tokens", str(max_tokens), expect=expect)
+
+    def test_compiler_index_launcher_prompts_in_order_and_preserves_child_exit(self):
+        checkout = self.root / "checkout"
+        (checkout / "src").mkdir(parents=True)
+        (checkout / ".git").mkdir()
+        project = checkout / "src" / "App.csproj"
+        project.write_text("<Project />", encoding="utf-8")
+        database = self.root / "atlas.sqlite"
+        database.write_bytes(b"saved atlas db")
+        dotnet = self.root / "dotnet"
+        dotnet.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        dotnet.chmod(0o755)
+        answers = iter([os.fspath(checkout), os.fspath(database), "src/App.csproj", "net8.0"])
+        prompts = []
+        calls = []
+
+        def ask(prompt):
+            prompts.append(prompt)
+            return next(answers)
+
+        def dispatch(argv, **kwargs):
+            calls.append((argv, kwargs))
+            return subprocess.CompletedProcess(argv, 17)
+
+        result = LAUNCHER.main([], input_fn=ask, runner=dispatch,
+                               environment={"ATLAS_DOTNET": os.fspath(dotnet)},
+                               atlas_script=SCRIPT)
+        self.assertEqual(result, 17)
+        self.assertEqual(prompts, ["Repository checkout path: ", "Atlas database path: ",
+                                   "Repository-relative project path: ", "Target framework moniker: "])
+        self.assertEqual(len(calls), 1)
+        argv, kwargs = calls[0]
+        self.assertEqual(argv[1:], [os.fspath(SCRIPT), "compiler-index", "--repo", checkout.resolve().as_posix(),
+                                    "--db", database.resolve().as_posix(), "--project", "src/App.csproj", "--framework", "net8.0"])
+        self.assertEqual(kwargs["env"]["ATLAS_DOTNET"], dotnet.resolve().as_posix())
+        self.assertIs(kwargs["check"], False)
+
+    def test_compiler_index_launcher_cancellation_at_needed_sdk_prompt_does_not_dispatch(self):
+        checkout = self.root / "checkout"
+        (checkout / "src").mkdir(parents=True)
+        (checkout / ".git").mkdir()
+        (checkout / "src" / "App.csproj").write_text("<Project />", encoding="utf-8")
+        database = self.root / "atlas.sqlite"
+        database.write_bytes(b"unchanged")
+        before = database.read_bytes()
+        answers = iter([os.fspath(checkout), os.fspath(database), "src/App.csproj", "net8.0"])
+        prompts = []
+        calls = []
+
+        def ask(prompt):
+            prompts.append(prompt)
+            if prompt.startswith("Path to executable"):
+                raise EOFError
+            return next(answers)
+
+        result = LAUNCHER.main([], input_fn=ask, runner=lambda *args, **kwargs: calls.append(args),
+                               environment={"PATH": ""}, atlas_script=SCRIPT)
+        self.assertEqual(result, 130)
+        self.assertEqual(prompts[-1], "Path to executable dotnet SDK host: ")
+        self.assertEqual(calls, [])
+        self.assertEqual(database.read_bytes(), before)
+
+    def test_compiler_index_launcher_rejects_invalid_project_without_dispatch(self):
+        checkout = self.root / "checkout"
+        checkout.mkdir()
+        (checkout / ".git").mkdir()
+        database = self.root / "atlas.sqlite"
+        database.write_bytes(b"unchanged")
+        before = database.read_bytes()
+        answers = iter([os.fspath(checkout), os.fspath(database), "../escape.csproj"])
+        calls = []
+        result = LAUNCHER.main([], input_fn=lambda _prompt: next(answers),
+                               runner=lambda *args, **kwargs: calls.append(args),
+                               environment={"PATH": ""}, atlas_script=SCRIPT)
+        self.assertEqual(result, 2)
+        self.assertEqual(calls, [])
+        self.assertEqual(database.read_bytes(), before)
 
     def attach_compiler_fixture(self, snapshot, graph, route):
         """Attach synthetic mechanics evidence; this does not stand in for Roslyn proof."""
@@ -287,6 +368,79 @@ class Handler
         self.assertIn("must match exactly one current tracked file", refused.stderr)
         self.assertEqual(self.db.read_bytes(), before)
 
+    def test_captured_generic_call_edge_is_not_bindable_to_saved_lexical_fact(self):
+        # Exact reduced records from atlas-real-source-call-validator-input.json
+        # (SHA-256 5cd76ef93138f034dea0456135f5424c6c703feacdfc5aa2e382bdb8299e1272),
+        # edge 21. This preserves the actual rejection boundary: the compiler
+        # edge points at EncryptPayload<T>, while the saved lexical graph has no
+        # matching method declaration fact for that generic declaration.
+        source_path = "src/Taggable.Api/Application/AdminTourManagement/AdminTourManagementHandlers.cs"
+        source_hash = "fc55fea4b5547d7513ee259385d3477162ddae209d70a9004b26255f6a5a7225"
+        callee_path = "src/Taggable.Api/Infrastructure/LegacyInterop/LegacyPayloadEncryption.cs"
+        callee_hash = "e04c76c9c19bab4de17d94d4a530f951275c4d0c52a021ded91da4f1faa4888d"
+
+        def anchor(path, digest, start, end):
+            return {"path": path, "sha256": digest,
+                    "span": {"start_offset": start, "end_offset": end}}
+
+        edge = {
+            "route": "api/admin/generateTvSlideshowUrl", "http_method": "POST",
+            "implementation_type": "global::Taggable.Api.Application.AdminTourManagement.GenerateAdminTvSlideshowUrlQueryHandler",
+            "implementation_method": "Handle", "caller_method": "Handle",
+            "caller_source": anchor(source_path, source_hash, 10877, 11770),
+            "callee_method": "EncryptPayload<global::System.Collections.Generic.Dictionary<string, long>>",
+            "callee_containing_type": "global::Taggable.Api.Infrastructure.LegacyInterop.LegacyPayloadEncryption",
+            "callee_source": anchor(callee_path, callee_hash, 416, 1044),
+            "call_site_source": anchor(source_path, source_hash, 11317, 11444),
+            "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
+        }
+        caller_fact = {
+            "id": "38d4276fd03752b3943e083b", "kind": "method_declaration",
+            "method_name": "Handle",
+            "owner_type_id": "Taggable.Api.Application.AdminTourManagement.GenerateAdminTvSlideshowUrlQueryHandler`0",
+            "source": anchor(source_path, source_hash, 10877, 11770),
+        }
+        snapshot = {
+            "files": [
+                {"path": source_path, "presence": "present", "type": "file", "sha256": source_hash},
+                {"path": callee_path, "presence": "present", "type": "file", "sha256": callee_hash},
+            ],
+            "source_graph": {"facts": [caller_fact]},
+        }
+        relationship = {
+            "route": edge["route"], "http_method": edge["http_method"],
+            "implementation_type": edge["implementation_type"],
+            "implementation_method": edge["implementation_method"],
+            "lexical_implementation_fact_id": caller_fact["id"],
+            "lexical_route_fact_id": "a26a4828bf903d02679f0420",
+        }
+        with self.assertRaisesRegex(ATLAS.AtlasError, "callee anchor does not identify exactly one saved lexical method fact: matches=0"):
+            ATLAS._verify_compiler_source_call_edges(snapshot, [relationship], [edge])
+
+    def test_source_call_limitations_require_one_exact_handler_relationship(self):
+        digest = "a" * 64
+        relationship = {"route": "api/items/one", "http_method": "GET",
+                        "implementation_type": "global::Fixture.First", "implementation_method": "Handle"}
+        record = {**relationship, "kind": "unsupported_handler_source_call", "reason": "unsupported shape",
+                  "source": {"path": "Fixture.cs", "sha256": digest,
+                             "span": {"start_offset": 3, "end_offset": 9}}}
+        snapshot = {"files": [{"path": "Fixture.cs", "presence": "present", "type": "file", "sha256": digest}]}
+        verified = ATLAS._verify_compiler_source_call_unresolved(snapshot, [relationship], [record])
+        self.assertEqual(verified[0]["route"], "api/items/one")
+
+        missing_identity = dict(record)
+        missing_identity.pop("route")
+        with self.assertRaisesRegex(ATLAS.AtlasError, "limitation has invalid route"):
+            ATLAS._verify_compiler_source_call_unresolved(snapshot, [relationship], [missing_identity])
+
+        wrong_identity = {**record, "route": "api/items/two"}
+        with self.assertRaisesRegex(ATLAS.AtlasError, "matches=0 route='api/items/two'"):
+            ATLAS._verify_compiler_source_call_unresolved(snapshot, [relationship], [wrong_identity])
+
+        duplicate_relationships = [relationship, dict(relationship)]
+        with self.assertRaisesRegex(ATLAS.AtlasError, "matches=2 route='api/items/one'"):
+            ATLAS._verify_compiler_source_call_unresolved(snapshot, duplicate_relationships, [record])
+
     @unittest.skipUnless(os.environ.get("ATLAS_DOTNET"), "real Roslyn fixture needs the approved local dotnet SDK")
     def test_compiler_index_real_roslyn_routes_and_multiple_implementations(self):
         project = self.repo / "Fixture.csproj"
@@ -301,8 +455,35 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Fixture;
 public sealed record Request;
 public interface IHandler<T> { string Handle(T value); }
-public sealed class First : IHandler<Request> { public string Handle(Request value) => "first"; }
-public sealed class Second : IHandler<Request> { public string Handle(Request value) => "second"; }
+public static class Support
+{
+    public static string Load(Request value) => "loaded";
+    public static string Load(string value) => value;
+    public static string Convert<T>(T value) => value.ToString()!;
+    public static string Deferred(Request value) => value.ToString();
+}
+public static class FixtureExtensions { public static string Extend(this Request value) => value.ToString(); }
+public sealed class Worker { public string Instance(Request value) => value.ToString(); }
+public sealed class First : IHandler<Request>
+{
+    public string Handle(Request value)
+    {
+        var loaded = Support.Load(value) + Support.Deferred(value);
+        _ = Support.Convert(value);
+        _ = System.Linq.Enumerable.Empty<Request>();
+        _ = new Worker().Instance(value);
+        _ = value.Extend();
+        _ = FixtureExtensions.Extend(value);
+        string Local(Request input) => Support.Load(input);
+        Func<Request, string> deferred = input => Support.Load(input);
+        return loaded;
+    }
+}
+public sealed class Second : IHandler<Request>
+{
+    public string Handle(Request value) => Support.Load(value) + Support.Deferred(value)
+        + ((Func<Request, string>)(input => Support.Load(input)))(value);
+}
 [ApiController]
 [Route("api/items")]
 public sealed class ItemsController(IHandler<Request> handler) : ControllerBase
@@ -370,6 +551,60 @@ public static class Registrations
                             for item in imports), imports)
         self.assertEqual(ATLAS._compiler_safe_tree(self.repo, "obj"), generated_before)
         self.assertFalse((self.repo / "bin").exists())
+        source_edges = payload["source_call_edges"]
+        self.assertEqual(len(source_edges), 16)
+        self.assertEqual({edge["callee_method"] for edge in source_edges}, {"Load", "Deferred"})
+        self.assertEqual({edge["callee_containing_type"] for edge in source_edges}, {"global::Fixture.Support"})
+        lexical_graph = self.graph(snapshot["snapshot_id"])
+        load_facts = [fact for fact in lexical_graph["facts"]
+                      if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Load"
+                      and fact["source"]["path"] == "Fixture.cs"]
+        self.assertEqual(len(load_facts), 2)
+        expected_load = next(fact for fact in load_facts
+                             if source.read_text(encoding="utf-8")[fact["source"]["span"]["start_offset"]:
+                                                                 fact["source"]["span"]["end_offset"]]
+                             == 'public static string Load(Request value) => "loaded";')
+        load_edges = [edge for edge in source_edges if edge["callee_method"] == "Load"]
+        self.assertEqual(len(load_edges), 8)
+        self.assertEqual({edge["callee_lexical_method_fact_id"] for edge in load_edges}, {expected_load["id"]})
+        self.assertTrue(all(edge["callee_source"] == expected_load["source"] for edge in load_edges))
+        deferred_facts = [fact for fact in lexical_graph["facts"]
+                          if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Deferred"
+                          and fact["source"]["path"] == "Fixture.cs"]
+        deferred_edges = [edge for edge in source_edges if edge["callee_method"] == "Deferred"]
+        self.assertEqual(len(deferred_facts), 1)
+        self.assertEqual(len(deferred_edges), 8)
+        self.assertEqual({edge["callee_lexical_method_fact_id"] for edge in deferred_edges}, {deferred_facts[0]["id"]})
+        self.assertTrue(all(edge["callee_source"] == deferred_facts[0]["source"] for edge in deferred_edges))
+        self.assertTrue(all(edge["compiler_binding_confirmed"] and not edge["runtime_reachability_proven"] for edge in source_edges))
+        expression_handler_edges = [edge for edge in load_edges if edge["implementation_type"] == "global::Fixture.Second"]
+        self.assertEqual(len(expression_handler_edges), 4)
+        generic_limitations = [item for item in payload["source_call_unresolved"]
+                               if item.get("reason") == "generic source method is outside the supported lexical source-call shape"]
+        self.assertEqual(len(generic_limitations), 4)
+        generic_identities = {(item["route"], item["http_method"], item["implementation_type"], item["implementation_method"])
+                              for item in generic_limitations}
+        self.assertEqual(len(generic_identities), 4)
+        limitation_routes = {(item["http_method"], item["route"]) for item in generic_limitations}
+        self.assertEqual(limitation_routes, expected)
+        self.assertEqual({item["implementation_type"] for item in generic_limitations}, {"global::Fixture.First"})
+        self.assertEqual({item["implementation_method"] for item in generic_limitations}, {"Handle"})
+        checked_limitations = ATLAS._verify_compiler_source_call_unresolved(
+            snapshot, relationships, payload["source_call_unresolved"])
+        self.assertEqual(len(checked_limitations), len(payload["source_call_unresolved"]))
+        external_call_offset = source.read_text(encoding="utf-8").index("System.Linq.Enumerable.Empty")
+        external_generic_limitations = [item for item in payload["source_call_unresolved"]
+                                        if item["source"]["span"]["start_offset"] == external_call_offset]
+        self.assertEqual(len(external_generic_limitations), 4)
+        self.assertTrue(all(item["reason"] == "bound call is outside the supported same-compilation static source-method shape"
+                            for item in external_generic_limitations))
+        self.assertEqual({edge["route"] for edge in source_edges}, {route for _verb, route in expected})
+        self.assertTrue(any(item["kind"] == "unsupported_handler_source_call" for item in payload["source_call_unresolved"]))
+        impact = json.loads(self.impact("Support.Deferred", max_tokens=32000).stdout)
+        self.assertEqual(impact["candidate_count"], 2)
+        self.assertEqual(len(impact["compiler_associated_route_paths"]), 8)
+        self.assertFalse(impact["compiler_associated_route_paths_scope"]["runtime_reachability_proven"])
+        self.assertLessEqual(impact["budget"]["stdout_bytes_including_newline"], 32000)
         assets = self.repo / "obj" / "project.assets.json"
         assets.write_bytes(assets.read_bytes() + b" ")
         stale = self.impact("Fixture.First.Handle", expect=2)
@@ -2131,8 +2366,52 @@ class Setup
         self.assertFalse(candidate["traversable"])
         self.assertTrue(candidate["candidate_fact_ids"])
         self.assertTrue(any(item["kind"] == "type_binding_candidate" and item["fact_id"] == injection["id"] for item in graph["unresolved"]))
-        self.assertEqual(graph["extractor_identity"], "csharp-lexical-facts-v7:python-stdlib-lexer")
+        self.assertEqual(graph["extractor_identity"], "csharp-lexical-facts-v8:python-stdlib-lexer")
         self.assertTrue(graph["limitations"])
+
+    def test_expression_body_method_spans_include_semicolon_and_preserve_overloads(self):
+        shapes = self.repo / "SpanShapes.cs"
+        shapes.write_text('''class SpanShapes
+{
+    bool Plain() => true;
+    bool Spaced() => true    ;
+    bool Commented() => true /* gap */;
+    int Convert(int value) => value;
+    string Convert(string value) => value;
+    void Block() { }
+}
+''', encoding="utf-8")
+        captured = self.repo / "ToBoolCaptured.cs"
+        prefix = "class ToBoolCaptured {\n"
+        captured_method = "private static bool ToBool(byte value) => value != 0;"
+        self.assertLessEqual(len(prefix), 8062)
+        captured.write_text(prefix + (" " * (8062 - len(prefix))) + captured_method + "\n}\n", encoding="utf-8")
+        git(self.repo, "add", "--", "SpanShapes.cs", "ToBoolCaptured.cs")
+
+        indexed = self.index()
+        facts = self.graph(indexed["snapshot_id"])["facts"]
+        methods = [fact for fact in facts if fact.get("kind") == "method_declaration"]
+        by_name = {name: next(fact for fact in methods if fact.get("method_name") == name and fact["source"]["path"] == "SpanShapes.cs")
+                   for name in ("Plain", "Spaced", "Commented", "Block")}
+        source = shapes.read_text(encoding="utf-8")
+        for name, expected in {
+            "Plain": "bool Plain() => true;",
+            "Spaced": "bool Spaced() => true    ;",
+            "Commented": "bool Commented() => true /* gap */;",
+        }.items():
+            span = by_name[name]["source"]["span"]
+            self.assertEqual(source[span["start_offset"]:span["end_offset"]], expected)
+        block_span = by_name["Block"]["source"]["span"]
+        self.assertEqual(source[block_span["start_offset"]:block_span["end_offset"]], "void Block() { }")
+
+        overloads = [fact for fact in methods if fact.get("method_name") == "Convert" and fact["source"]["path"] == "SpanShapes.cs"]
+        self.assertEqual(len(overloads), 2)
+        self.assertEqual(len({(fact["id"], fact["source"]["span"]["start_offset"], fact["source"]["span"]["end_offset"])
+                              for fact in overloads}), 2)
+        captured_fact = next(fact for fact in methods if fact.get("method_name") == "ToBool"
+                             and fact["source"]["path"] == "ToBoolCaptured.cs")
+        self.assertEqual((captured_fact["source"]["span"]["start_offset"], captured_fact["source"]["span"]["end_offset"]),
+                         (8062, 8115))
 
     def test_ambiguous_namespace_type_identity_is_not_joined(self):
         source = self.repo / "Ambiguous.cs"

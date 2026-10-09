@@ -57,6 +57,8 @@ object Anchor(string path, TextSpan span) {
 string? ConstantString(AttributeSyntax attribute, SemanticModel model) { var expr=attribute.ArgumentList?.Arguments.FirstOrDefault()?.Expression; var value=expr is null?default:model.GetConstantValue(expr); return value.HasValue?value.Value as string:null; }
 var records=new List<SortedDictionary<string,object?>>();
 var unresolved=new List<SortedDictionary<string,object?>>();
+var sourceCallEdges=new List<SortedDictionary<string,object?>>();
+var sourceCallUnresolved=new List<SortedDictionary<string,object?>>();
 var allTypes=Types(compilation.Assembly.GlobalNamespace).ToArray();
 foreach(var tree in compilation.SyntaxTrees.OrderBy(t=>t.FilePath,StringComparer.Ordinal)) {
  var root=await tree.GetRootAsync(); var model=compilation.GetSemanticModel(tree);
@@ -140,6 +142,68 @@ foreach(var tree in compilation.SyntaxTrees.OrderBy(t=>t.FilePath,StringComparer
      ["service_parameter"]=receiver.Name,["service_type"]=service.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["service_parameter_source"]=Anchor(tree.FilePath,receiver.DeclaringSyntaxReferences.Single().GetSyntax().Span),
      ["bound_member"]=target.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["bound_member_source"]=Anchor(targetLocation.SourceTree!.FilePath,targetLocation.SourceSpan),["implementation_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["implementation_method_containing_type"]=impl.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["implementation_type"]=implPair.Concrete.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["implementation_source"]=Anchor(implLocation.SourceTree!.FilePath,implLocation.SourceSpan),["compiler_implementation_match"]=true,["registrations"]=registrationSyntax,["runtime_DI_selection_proven"]=false
     });
+    if (impl.MethodKind==MethodKind.Ordinary && impl.ContainingAssembly==compilation.Assembly) {
+     var implementationSyntax=impl.DeclaringSyntaxReferences.SingleOrDefault()?.GetSyntax();
+     if (implementationSyntax is MethodDeclarationSyntax implementationNode && (implementationNode.Body is not null || implementationNode.ExpressionBody is not null)) {
+      var implementationTree=implementationNode.SyntaxTree;
+      var implementationModel=compilation.GetSemanticModel(implementationTree);
+      var callNodes=implementationNode.Body is not null
+       ? implementationNode.Body.DescendantNodes(descendIntoChildren: node => node is not AnonymousFunctionExpressionSyntax && node is not LocalFunctionStatementSyntax).OfType<InvocationExpressionSyntax>()
+       : implementationNode.ExpressionBody!.Expression.DescendantNodesAndSelf(
+          descendIntoChildren: node => node is not AnonymousFunctionExpressionSyntax && node is not LocalFunctionStatementSyntax)
+         .OfType<InvocationExpressionSyntax>();
+      foreach (var sourceInvocation in callNodes) {
+       var sourceInfo=implementationModel.GetSymbolInfo(sourceInvocation);
+       var called=sourceInfo.Symbol as IMethodSymbol;
+       var calledNode=called is {DeclaringSyntaxReferences.Length:1}
+        ? called.DeclaringSyntaxReferences[0].GetSyntax() as MethodDeclarationSyntax
+        : null;
+       var supportedStaticSourceShape=called is not null && called.MethodKind==MethodKind.Ordinary && called.IsStatic &&
+        !called.IsExtensionMethod && called.ReducedFrom is null && called.ContainingAssembly==compilation.Assembly &&
+        called.DeclaringSyntaxReferences.Length==1 && calledNode is not null &&
+        (calledNode.Body is not null || calledNode.ExpressionBody is not null);
+       var unsupportedGenericSourceShape=supportedStaticSourceShape && called!.Arity>0;
+       if (!supportedStaticSourceShape || unsupportedGenericSourceShape) {
+        var reason=sourceInfo.CandidateReason==CandidateReason.Ambiguous
+          ? "compiler reported an ambiguous direct call"
+          : sourceInfo.Symbol is null ? "call is not one bound ordinary static source method"
+          : unsupportedGenericSourceShape ? "generic source method is outside the supported lexical source-call shape"
+          : "bound call is outside the supported same-compilation static source-method shape";
+        if (sourceInfo.CandidateReason==CandidateReason.Ambiguous)
+         throw new Exception("ambiguous compiler source call at "+implementationTree.FilePath+":"+sourceInvocation.SpanStart);
+        sourceCallUnresolved.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+         ["route"]=routeShape.Route,["http_method"]=routeShape.Verb,
+         ["implementation_type"]=implPair.Concrete.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+         ["implementation_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+         ["kind"]="unsupported_handler_source_call",["caller_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+         ["source"]=Anchor(implementationTree.FilePath,sourceInvocation.Span),["reason"]=reason
+        });
+        continue;
+       }
+       sourceCallEdges.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+        ["route"]=routeShape.Route,["http_method"]=routeShape.Verb,
+        ["implementation_type"]=implPair.Concrete.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["implementation_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["caller_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["caller_source"]=Anchor(implementationTree.FilePath,implementationNode.Span),
+        ["callee_method"]=called.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["callee_containing_type"]=called.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["callee_source"]=Anchor(calledNode.SyntaxTree.FilePath,calledNode.Span),
+        ["call_site_source"]=Anchor(implementationTree.FilePath,sourceInvocation.Span),
+        ["compiler_binding_confirmed"]=true,["runtime_reachability_proven"]=false
+       });
+      }
+     } else {
+      sourceCallUnresolved.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+       ["route"]=routeShape.Route,["http_method"]=routeShape.Verb,
+       ["implementation_type"]=implPair.Concrete.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["implementation_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["kind"]="unsupported_handler_source_method_body",["caller_method"]=impl.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["source"]=Anchor(implLocation.SourceTree!.FilePath,implLocation.SourceSpan),
+       ["reason"]="handler implementation is not a block-bodied source method"
+      });
+     }
+    }
    }
   }
  }
@@ -161,6 +225,9 @@ var imports=importPaths.Distinct(StringComparer.Ordinal).OrderBy(p=>p,StringComp
  return new SortedDictionary<string,object?>(StringComparer.Ordinal){["logical_path"]=logical,["path"]=inMirror?rel.Replace(Path.DirectorySeparatorChar,'/'):full.Replace(Path.DirectorySeparatorChar,'/'),["sha256"]=Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(full)))};
 }).ToArray();
 records=records.OrderBy(r=>(string)r["route"]!,StringComparer.Ordinal).ThenBy(r=>(string)r["action_method"]!,StringComparer.Ordinal).ThenBy(r=>(string)r["bound_member"]!,StringComparer.Ordinal).ToList();
+sourceCallEdges=sourceCallEdges.OrderBy(r=>(string)r["route"]!,StringComparer.Ordinal).ThenBy(r=>(string)r["http_method"]!,StringComparer.Ordinal)
+ .ThenBy(r=>(string)r["implementation_type"]!,StringComparer.Ordinal).ThenBy(r=>JsonSerializer.Serialize(r["call_site_source"]),StringComparer.Ordinal)
+ .ThenBy(r=>(string)r["callee_method"]!,StringComparer.Ordinal).ToList();
 var refs=compilation.References.OfType<PortableExecutableReference>().Select(r=>new SortedDictionary<string,object?>(StringComparer.Ordinal){["display"]=r.Display,["aliases"]=r.Properties.Aliases.OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["embed_interop_types"]=r.Properties.EmbedInteropTypes,["kind"]=r.Properties.Kind.ToString(),["sha256"]=r.FilePath is not null && File.Exists(r.FilePath)?Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(r.FilePath))):null}).OrderBy(x=>x["display"]?.ToString(),StringComparer.Ordinal).ToArray();
 string StableAssemblyPath(System.Reflection.Assembly assembly) {
  var name=Path.GetFileName(assembly.Location); var format=Path.Combine(sdk.MSBuildPath,"DotnetTools","dotnet-format");
@@ -189,5 +256,5 @@ var semanticParseOptions=compilation.SyntaxTrees.OrderBy(t=>Path.GetFullPath(t.F
  return new SortedDictionary<string,object?>(StringComparer.Ordinal){["path"]=CanonicalPath(mirrorRoot,repositoryRoot,tree.FilePath),["language_version"]=parse.LanguageVersion.ToString(),["source_code_kind"]=parse.Kind.ToString(),["documentation_mode"]=parse.DocumentationMode.ToString(),["preprocessor_symbols"]=parse.PreprocessorSymbolNames.OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["features"]=new SortedDictionary<string,string>(parse.Features.ToDictionary(kv=>kv.Key,kv=>kv.Value,StringComparer.Ordinal),StringComparer.Ordinal)};
 }).ToArray();
 string StableDiagnostic(string value) => value.Replace(mirrorRoot+Path.DirectorySeparatorChar,"repo/",StringComparison.Ordinal).Replace(mirrorRoot,"repo",StringComparison.Ordinal);
-var output=new SortedDictionary<string,object?>(StringComparer.Ordinal){["relationships"]=records,["unresolved"]=unresolved.OrderBy(x=>x["source"]?.ToString(),StringComparer.Ordinal).ToArray(),["references"]=refs,["imports"]=imports,["toolchain_assemblies"]=toolAssemblies,["build_host_files"]=buildHostFiles,["compiler_errors"]=errors,["compiler_warnings"]=diagnostics.Where(d=>d.Severity==DiagnosticSeverity.Warning).Select(d=>StableDiagnostic(d.ToString())).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["workspace_diagnostics"]=workspaceDiagnostics.Select(StableDiagnostic).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["sdk_path"]=sdk.MSBuildPath,["roslyn_version"]=typeof(Compilation).Assembly.GetName().Version?.ToString(),["language_version"]=((CSharpParseOptions)compilation.SyntaxTrees.First().Options).LanguageVersion.ToString(),["target_framework"]=framework,["source_trees"]=compilation.SyntaxTrees.Count(),["compilation_options"]=semanticCompilationOptions,["parse_options"]=semanticParseOptions};
+var output=new SortedDictionary<string,object?>(StringComparer.Ordinal){["relationships"]=records,["unresolved"]=unresolved.OrderBy(x=>x["source"]?.ToString(),StringComparer.Ordinal).ToArray(),["source_call_edges"]=sourceCallEdges,["source_call_unresolved"]=sourceCallUnresolved.OrderBy(x=>x["source"]?.ToString(),StringComparer.Ordinal).ToArray(),["references"]=refs,["imports"]=imports,["toolchain_assemblies"]=toolAssemblies,["build_host_files"]=buildHostFiles,["compiler_errors"]=errors,["compiler_warnings"]=diagnostics.Where(d=>d.Severity==DiagnosticSeverity.Warning).Select(d=>StableDiagnostic(d.ToString())).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["workspace_diagnostics"]=workspaceDiagnostics.Select(StableDiagnostic).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["sdk_path"]=sdk.MSBuildPath,["roslyn_version"]=typeof(Compilation).Assembly.GetName().Version?.ToString(),["language_version"]=((CSharpParseOptions)compilation.SyntaxTrees.First().Options).LanguageVersion.ToString(),["target_framework"]=framework,["source_trees"]=compilation.SyntaxTrees.Count(),["compilation_options"]=semanticCompilationOptions,["parse_options"]=semanticParseOptions};
 Console.WriteLine(JsonSerializer.Serialize(output,new JsonSerializerOptions{WriteIndented=true}));

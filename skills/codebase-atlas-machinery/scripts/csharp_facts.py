@@ -9,7 +9,7 @@ import re
 from typing import Any
 
 
-EXTRACTION_METHOD = "csharp-lexical-facts-v7"
+EXTRACTION_METHOD = "csharp-lexical-facts-v8"
 SUPPORTED_FORMS = [
     "namespace-scoped class and interface declarations",
     "class primary-constructor parameters with literal type expressions",
@@ -663,11 +663,14 @@ def _parse_file(path: str, source: str, source_hash: str) -> dict[str, Any]:
                     cursor = close_paren + 1
                     continue
                 body_end = method_body_close
+                method_source_end = body_end + 1
                 next_cursor = method_body_close + 1
             else:
                 body_end = body_start
                 while body_end < body_close and tokens[body_end].value != ";":
                     body_end += 1
+                method_source_end = (body_end + 1 if body_end < body_close and tokens[body_end].value == ";"
+                                     else max(body_start + 1, body_end))
                 next_cursor = min(body_close, body_end + 1)
             method_id = _stable_id(["method", type_id, method_name, path, tokens[name_index].start])
             method_attrs = _attributes(tokens, method_header_start, name_index, pairs)
@@ -676,7 +679,7 @@ def _parse_file(path: str, source: str, source_hash: str) -> dict[str, Any]:
                 "kind": "method_declaration",
                 "owner_type_id": type_id,
                 "method_name": method_name,
-                "source": _source_ref(path, source_hash, tokens, method_header_start, body_end + 1 if tokens[after_paren].value == "{" else max(body_start + 1, body_end)),
+                "source": _source_ref(path, source_hash, tokens, method_header_start, method_source_end),
             })
             for attr in method_attrs:
                 if attr["name"].split(".")[-1] == "Authorize":
