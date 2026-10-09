@@ -161,7 +161,7 @@ foreach(var tree in compilation.SyntaxTrees.OrderBy(t=>t.FilePath,StringComparer
 const int MaxSourceCallRoots=20000, MaxSourceCallNodes=50000, MaxSourceCallEdges=250000;
 const int MaxInspectedSourceInvocations=500000, MaxSourceCallUnsupported=250000;
 const int MaxNestedBodyExclusions=100000, MaxSourceCallGraphBytes=134217728, MaxImpactWitnessHops=2000000;
-const long MaxSourceCallTraversalWork=2000000, MaxSourceCallCompatibilityRecords=2000000;
+const long MaxInterfaceCandidateChecks=2000000, MaxSourceCallTraversalWork=2000000, MaxSourceCallCompatibilityRecords=2000000;
 var roots=new List<SortedDictionary<string,object?>>();
 var nodes=new List<SortedDictionary<string,object?>>();
 var graphEdges=new List<SortedDictionary<string,object?>>();
@@ -191,6 +191,85 @@ string AddNode(IMethodSymbol candidate, MethodDeclarationSyntax? declaration=nul
  });
  return id;
 }
+string TypeFactId(INamedTypeSymbol type) {
+ var ns=type.ContainingNamespace?.ToDisplayString(); return (string.IsNullOrEmpty(ns)?"":ns+".")+type.Name+"`"+type.Arity;
+}
+bool HasGenericEnclosingType(INamedTypeSymbol? type) {
+ for(var current=type;current is not null;current=current.ContainingType) if(current.Arity>0) return true;
+ return false;
+}
+SyntaxToken TypeKeyword(TypeDeclarationSyntax declaration) => declaration switch {
+ ClassDeclarationSyntax value=>value.Keyword, InterfaceDeclarationSyntax value=>value.Keyword,
+ StructDeclarationSyntax value=>value.Keyword, RecordDeclarationSyntax value=>value.Keyword,
+ _=>default
+};
+SyntaxToken TypeIdentifier(TypeDeclarationSyntax declaration) => declaration switch {
+ ClassDeclarationSyntax value=>value.Identifier, InterfaceDeclarationSyntax value=>value.Identifier,
+ StructDeclarationSyntax value=>value.Identifier, RecordDeclarationSyntax value=>value.Identifier,
+ _=>default
+};
+SortedDictionary<string,object?> TypeFactSource(INamedTypeSymbol type, TypeDeclarationSyntax declaration) {
+ var keyword=TypeKeyword(declaration); var identifier=TypeIdentifier(declaration);
+ if(keyword.RawKind==0 || identifier.RawKind==0) throw new Exception("interface dispatch type has no supported type declaration");
+ return (SortedDictionary<string,object?>)Anchor(declaration.SyntaxTree.FilePath,TextSpan.FromBounds(keyword.SpanStart,identifier.Span.End));
+}
+TypeDeclarationSyntax? SourceTypeDeclaration(INamedTypeSymbol type) => type.DeclaringSyntaxReferences
+ .Select(reference=>reference.GetSyntax()).OfType<TypeDeclarationSyntax>()
+ .OrderBy(syntax=>syntax.SyntaxTree.FilePath,StringComparer.Ordinal).ThenBy(syntax=>syntax.SpanStart).FirstOrDefault();
+long candidateTypeChecks=0, traversalWork=0;
+List<object>? MembershipPath(INamedTypeSymbol fromType, INamedTypeSymbol toType) {
+ var start=fromType.OriginalDefinition; var target=toType.OriginalDefinition;
+ if(SymbolEqualityComparer.Default.Equals(start,target)) return new List<object>();
+ var queue=new Queue<(INamedTypeSymbol Type,List<object> Path)>();
+ var seen=new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default){start}; queue.Enqueue((start,new List<object>()));
+ while(queue.Count>0) {
+  var current=queue.Dequeue();
+  foreach(var declaration in current.Type.DeclaringSyntaxReferences.Select(reference=>reference.GetSyntax())
+    .OfType<TypeDeclarationSyntax>().OrderBy(syntax=>syntax.SyntaxTree.FilePath,StringComparer.Ordinal).ThenBy(syntax=>syntax.SpanStart)) {
+   if(declaration.BaseList is null) continue;
+   var model=compilation.GetSemanticModel(declaration.SyntaxTree);
+   foreach(var baseType in declaration.BaseList.Types.OrderBy(item=>item.SpanStart)) {
+    candidateTypeChecks++; traversalWork++;
+    if(candidateTypeChecks>MaxInterfaceCandidateChecks || traversalWork>MaxSourceCallTraversalWork)
+     throw new Exception("source-call interface-hierarchy work cap exceeded; no partial graph emitted");
+    if(model.GetTypeInfo(baseType.Type).Type is not INamedTypeSymbol nextType) continue;
+    var next=nextType.OriginalDefinition;
+    if(next.ContainingAssembly!=compilation.Assembly) continue;
+    if(seen.Contains(next)) continue;
+    if(HasGenericEnclosingType(next)) continue;
+    var terminalName=baseType.Type switch {
+     SimpleNameSyntax simple=>simple.Identifier.ValueText,
+     QualifiedNameSyntax qualified=>qualified.Right.Identifier.ValueText,
+     AliasQualifiedNameSyntax aliasQualified=>aliasQualified.Name.Identifier.ValueText,
+     _=>null
+    };
+    if(terminalName!=next.Name) continue;
+    var nextDeclaration=SourceTypeDeclaration(next);
+    if(nextDeclaration is null) continue;
+    var step=new SortedDictionary<string,object?>(StringComparer.Ordinal){
+     ["from_type"]=current.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+     ["from_type_id"]=TypeFactId(current.Type),["from_type_source"]=TypeFactSource(current.Type,declaration),
+     ["from_type_declaration_source"]=Anchor(declaration.SyntaxTree.FilePath,declaration.Span),
+     ["to_type"]=next.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+     ["to_type_id"]=TypeFactId(next),["to_type_source"]=TypeFactSource(next,nextDeclaration),
+     ["edge_kind"]=next.TypeKind==TypeKind.Interface?"interface":"base",
+     ["base_list_source"]=Anchor(declaration.SyntaxTree.FilePath,declaration.BaseList.Span),
+     ["type_syntax_source"]=Anchor(declaration.SyntaxTree.FilePath,baseType.Type.Span)
+    };
+    var path=new List<object>(current.Path){step};
+    if(SymbolEqualityComparer.Default.Equals(next,target)) return path;
+    seen.Add(next); queue.Enqueue((next,path));
+   }
+  }
+ }
+ return null;
+}
+var InterfaceSignatureTypeFormat=SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
+ SymbolDisplayFormat.FullyQualifiedFormat.MiscellaneousOptions|SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+string MethodSignature(IMethodSymbol method) => method.Name+"`"+method.Arity+"("+
+ string.Join(",",method.Parameters.Select(parameter=>parameter.RefKind+":"+parameter.Type.ToDisplayString(InterfaceSignatureTypeFormat)))+")->"+method.ReturnType.ToDisplayString(InterfaceSignatureTypeFormat);
+string[] MethodParameterSignatures(IMethodSymbol method) => method.Parameters
+ .Select(parameter=>parameter.RefKind+":"+parameter.Type.ToDisplayString(InterfaceSignatureTypeFormat)).ToArray();
 foreach(var root in routeRoots.OrderBy(x=>x.Route,StringComparer.Ordinal).ThenBy(x=>x.Verb,StringComparer.Ordinal)
  .ThenBy(x=>x.Concrete.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),StringComparer.Ordinal)
  .ThenBy(x=>x.Method.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),StringComparer.Ordinal)) {
@@ -215,7 +294,7 @@ foreach(var root in routeRoots.OrderBy(x=>x.Route,StringComparer.Ordinal).ThenBy
 var edgeKeys=new HashSet<string>(StringComparer.Ordinal);
 var unsupportedKeys=new HashSet<string>(StringComparer.Ordinal);
 var exclusionKeys=new HashSet<string>(StringComparer.Ordinal);
-int inspectedInvocations=0; long traversalWork=0, compatibilityRecords=0;
+int inspectedInvocations=0; long compatibilityRecords=0;
 while(nodeQueue.Count>0) {
  var callerId=nodeQueue.Dequeue();
  var (caller,callerNode)=methodByNode[callerId];
@@ -254,10 +333,10 @@ while(nodeQueue.Count>0) {
  }
  var callNodes=bodyRoots.SelectMany(BodyDescendants).OfType<InvocationExpressionSyntax>();
  foreach(var invocation in callNodes) {
-  traversalWork++;
-  if(traversalWork>MaxSourceCallTraversalWork) throw new Exception("source-call graph traversal-work cap exceeded; no partial graph emitted");
   inspectedInvocations++;
   if(inspectedInvocations>MaxInspectedSourceInvocations) throw new Exception("source-call inspected-invocation cap exceeded; no partial graph emitted");
+  traversalWork++;
+  if(traversalWork>MaxSourceCallTraversalWork) throw new Exception("source-call graph traversal-work cap exceeded; no partial graph emitted");
   var sourceInfo=model.GetSymbolInfo(invocation);
   var called=sourceInfo.Symbol as IMethodSymbol;
   var calledNode=called is {DeclaringSyntaxReferences.Length:1}
@@ -274,6 +353,188 @@ while(nodeQueue.Count>0) {
    : supportedInstanceSourceShape ? "non_virtual_instance_source" : null;
   var callAnchor=Anchor(callerTree.FilePath,invocation.Span);
   var callSpan=(SortedDictionary<string,object?>)((SortedDictionary<string,object?>)callAnchor)["span"]!;
+  if(called is not null && called.ContainingType.TypeKind==TypeKind.Interface) {
+   if(sourceInfo.CandidateReason==CandidateReason.Ambiguous)
+    throw new Exception("ambiguous compiler interface call at "+callerTree.FilePath+":"+invocation.SpanStart);
+   var interfaceType=called.ContainingType;
+   var interfaceMethodSyntax=called.DeclaringSyntaxReferences.SingleOrDefault()?.GetSyntax() as MethodDeclarationSyntax;
+   var interfaceOwnerSyntax=interfaceMethodSyntax?.AncestorsAndSelf().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
+   var receiverType=invocation.Expression is MemberAccessExpressionSyntax interfaceAccessForType
+    ? model.GetTypeInfo(interfaceAccessForType.Expression).Type as INamedTypeSymbol : null;
+   var interfaceSupported=called.MethodKind==MethodKind.Ordinary && !called.IsStatic && called.Arity==0
+    && !called.ReturnsByRef && !called.ReturnsByRefReadonly
+    && called.IsAbstract && interfaceMethodSyntax is not null && interfaceMethodSyntax.Body is null
+    && interfaceMethodSyntax.ExpressionBody is null && !HasGenericEnclosingType(interfaceType)
+    && interfaceType.ContainingNamespace is not null && interfaceOwnerSyntax is not null
+    && receiverType is not null && receiverType.TypeKind==TypeKind.Interface
+    && SymbolEqualityComparer.Default.Equals(receiverType.OriginalDefinition,interfaceType.OriginalDefinition);
+   var interfaceEvidence=interfaceSupported ? new SortedDictionary<string,object?>(StringComparer.Ordinal) {
+    ["bound_interface_type"]=interfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+    ["bound_interface_type_id"]=TypeFactId(interfaceType),
+    ["bound_interface_type_source"]=TypeFactSource(interfaceType,interfaceOwnerSyntax!),
+    ["bound_interface_declaration_source"]=Anchor(interfaceOwnerSyntax!.SyntaxTree.FilePath,
+     TextSpan.FromBounds(interfaceOwnerSyntax.Keyword.SpanStart,interfaceOwnerSyntax.Span.End)),
+    ["bound_interface_member"]=interfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)+"."+MethodSignature(called),
+    ["bound_interface_signature"]=MethodSignature(called),
+    ["bound_interface_parameters"]=MethodParameterSignatures(called),
+    ["bound_interface_arity"]=called.Arity,["bound_interface_parameter_count"]=called.Parameters.Length,
+    ["bound_interface_member_source"]=Anchor(interfaceMethodSyntax!.SyntaxTree.FilePath,interfaceMethodSyntax.Span),
+    ["bound_interface_member_name_source"]=Anchor(interfaceMethodSyntax.SyntaxTree.FilePath,interfaceMethodSyntax.Identifier.Span)
+   } : null;
+   var interfaceCallKey=callerId+"|"+callerTree.FilePath+":"+callSpan["start_offset"]+":"+callSpan["end_offset"];
+   if(!interfaceSupported) {
+    if(unsupportedKeys.Add(interfaceCallKey)) graphUnsupported.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+     ["caller_node_id"]=callerId,["caller_method"]=caller.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+     ["caller_source"]=callerAnchor,["call_site_source"]=callAnchor,["kind"]="unsupported_source_call",
+    ["reason"]="bound interface dispatch is generic, static, default, external, lacks one source declaration, or has a receiver interface different from the declaring interface"
+    });
+   } else {
+    var interfaceCandidates=new List<INamedTypeSymbol>();
+    foreach(var type in allTypes) {
+     candidateTypeChecks++; traversalWork++;
+     if(candidateTypeChecks>MaxInterfaceCandidateChecks || traversalWork>MaxSourceCallTraversalWork)
+      throw new Exception("source-call interface-candidate scan cap exceeded; no partial graph emitted");
+     if(type.TypeKind is TypeKind.Class or TypeKind.Struct && type.AllInterfaces.Any(candidateInterface=>SymbolEqualityComparer.Default.Equals(candidateInterface.OriginalDefinition,interfaceType.OriginalDefinition)))
+      interfaceCandidates.Add(type);
+    }
+    interfaceCandidates=interfaceCandidates.OrderBy(type=>type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),StringComparer.Ordinal)
+     .ThenBy(type=>type.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree.FilePath,StringComparer.Ordinal).ToList();
+    if(interfaceCandidates.Count==0 && unsupportedKeys.Add(interfaceCallKey)) graphUnsupported.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+     ["caller_node_id"]=callerId,["caller_method"]=caller.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["caller_source"]=callerAnchor,
+     ["call_site_source"]=callAnchor,["kind"]="unsupported_source_call",["reason"]="no source class candidate implements the bound interface member"
+    });
+    foreach(var candidateType in interfaceCandidates) {
+     candidateTypeChecks++;
+     traversalWork++;
+     if(candidateTypeChecks>MaxInterfaceCandidateChecks || traversalWork>MaxSourceCallTraversalWork)
+      throw new Exception("source-call interface-candidate work cap exceeded; no partial graph emitted");
+     var candidateSyntax=candidateType.DeclaringSyntaxReferences.Select(reference=>reference.GetSyntax()).OfType<TypeDeclarationSyntax>()
+      .OrderBy(syntax=>syntax.SyntaxTree.FilePath,StringComparer.Ordinal).ThenBy(syntax=>syntax.SpanStart).FirstOrDefault();
+     var implementation=candidateType.FindImplementationForInterfaceMember(called) as IMethodSymbol;
+     var implementationSyntax=implementation?.DeclaringSyntaxReferences.SingleOrDefault()?.GetSyntax() as MethodDeclarationSyntax;
+     var implementationOwnerSyntax=implementationSyntax?.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+     var candidateGeneric=HasGenericEnclosingType(candidateType);
+     var implementationGeneric=implementation is not null && (implementation.Arity>0 || HasGenericEnclosingType(implementation.ContainingType));
+     var supportedImplementation=implementation is not null && implementation.MethodKind==MethodKind.Ordinary
+      && !implementation.IsStatic && !implementation.IsVirtual && !implementation.IsAbstract && !implementation.IsOverride
+      && !implementation.ReturnsByRef && !implementation.ReturnsByRefReadonly
+      && SymbolEqualityComparer.Default.Equals(implementation.ReturnType,called.ReturnType)
+      && !implementationGeneric && implementationSyntax is not null && implementationOwnerSyntax is not null
+      && implementationSyntax.ExplicitInterfaceSpecifier is null
+      && (implementationSyntax.Body is not null || implementationSyntax.ExpressionBody is not null)
+      && implementation.ContainingAssembly==compilation.Assembly && implementation.DeclaringSyntaxReferences.Length==1;
+     var reason=candidateType.TypeKind!=TypeKind.Class ? "value-type interface candidate is excluded by the supported class-only shape"
+      : candidateType.IsAbstract ? "abstract interface candidate is excluded"
+      : candidateGeneric ? "generic interface candidate or containing type is excluded"
+      : implementation is null || implementationSyntax is null ? "interface implementation is external or has no unique source declaration"
+      : implementationGeneric ? "generic implementation method or containing type is excluded"
+      : implementation.IsStatic ? "static interface implementation is excluded"
+      : implementation.IsVirtual || implementation.IsOverride ? "virtual or override interface implementation is excluded"
+      : implementation.IsAbstract ? "abstract interface implementation is excluded"
+      : implementationSyntax?.ExplicitInterfaceSpecifier is not null ? "explicit interface implementation is outside the supported ordinary method shape"
+      : !supportedImplementation ? "interface implementation is outside the supported ordinary source method shape"
+      : null;
+     var candidateTypeSource=candidateSyntax is null?null:TypeFactSource(candidateType,candidateSyntax);
+     var interfacePath=candidateGeneric || candidateTypeSource is null ? null:MembershipPath(candidateType,interfaceType);
+     var implementationPath=!supportedImplementation || candidateGeneric || candidateTypeSource is null
+      ? null:MembershipPath(candidateType,implementation!.ContainingType);
+     if(candidateType.TypeKind==TypeKind.Class && !candidateType.IsAbstract && !candidateGeneric && supportedImplementation && implementation is not null
+        && implementationSyntax is not null && implementationOwnerSyntax is not null
+        && interfacePath is not null && implementationPath is not null && candidateTypeSource is not null) {
+      var implementationAnchor=Anchor(implementationSyntax.SyntaxTree.FilePath,implementationSyntax.Span);
+      var implementationAdmissionSpan=(SortedDictionary<string,object?>)((SortedDictionary<string,object?>)implementationAnchor)["span"]!;
+      var implementationAdmissionKey=string.Join("|",implementation.Name,(string)((SortedDictionary<string,object?>)implementationAnchor)["path"]!,
+       (string)((SortedDictionary<string,object?>)implementationAnchor)["sha256"]!,
+       (int)implementationAdmissionSpan["start_offset"]!,(int)implementationAdmissionSpan["end_offset"]!);
+      if(!admittedMethods.Contains(implementationAdmissionKey)) reason="implementation method is outside the exact saved lexical declaration manifest";
+      else {
+       var evidence=new SortedDictionary<string,object?>(StringComparer.Ordinal) {
+        ["bound_interface_type"]=interfaceEvidence!["bound_interface_type"],
+        ["bound_interface_type_id"]=interfaceEvidence["bound_interface_type_id"],
+        ["bound_interface_type_source"]=interfaceEvidence["bound_interface_type_source"],
+        ["bound_interface_declaration_source"]=interfaceEvidence["bound_interface_declaration_source"],
+        ["bound_interface_member"]=interfaceEvidence["bound_interface_member"],
+        ["bound_interface_signature"]=interfaceEvidence["bound_interface_signature"],
+        ["bound_interface_parameters"]=interfaceEvidence["bound_interface_parameters"],
+        ["bound_interface_arity"]=interfaceEvidence["bound_interface_arity"],["bound_interface_parameter_count"]=interfaceEvidence["bound_interface_parameter_count"],
+        ["bound_interface_member_source"]=interfaceEvidence["bound_interface_member_source"],
+        ["bound_interface_member_name_source"]=interfaceEvidence["bound_interface_member_name_source"],
+        ["candidate_type"]=candidateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["candidate_type_id"]=TypeFactId(candidateType),["candidate_type_source"]=candidateTypeSource,
+        ["candidate_identity"]=candidateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)+"|"+candidateTypeSource["path"]+"|"+
+         ((SortedDictionary<string,object?>)candidateTypeSource["span"]!)["start_offset"]+"|"+
+         ((SortedDictionary<string,object?>)candidateTypeSource["span"]!)["end_offset"],
+       ["implementation_method"]=implementation.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["implementation_signature"]=MethodSignature(implementation),
+        ["implementation_parameters"]=MethodParameterSignatures(implementation),
+        ["implementation_method_source"]=implementationAnchor,
+        ["implementation_owner_type"]=implementation.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+        ["implementation_owner_type_id"]=TypeFactId(implementation.ContainingType),
+        ["implementation_owner_type_source"]=TypeFactSource(implementation.ContainingType,implementationOwnerSyntax),
+        ["candidate_to_interface_path"]=interfacePath,
+        ["candidate_to_implementation_owner_path"]=implementationPath,
+        ["claim"]="compiler_confirmed_source_interface_implementation_correspondence",
+        ["compiler_implementation_match"]=true,["runtime_DI_selection_proven"]=false
+       };
+       var interfaceCalleeId=AddNode(implementation.OriginalDefinition,implementationSyntax);
+       var candidateIdentity=(string)evidence["candidate_identity"]!;
+       var interfaceEdgeKey=interfaceCallKey+"|"+candidateIdentity;
+       if(edgeKeys.Add(interfaceEdgeKey)) {
+        if(graphEdges.Count>=MaxSourceCallEdges) throw new Exception("source-call graph edge cap exceeded; no partial graph emitted");
+        graphEdges.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+         ["caller_node_id"]=callerId,["callee_node_id"]=interfaceCalleeId,
+         ["caller_method"]=caller.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),["caller_source"]=callerAnchor,
+         ["callee_method"]=implementation.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+         ["callee_containing_type"]=implementation.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+         ["callee_source"]=implementationAnchor,["call_site_source"]=callAnchor,
+         ["dispatch_kind"]="interface_implementation_source",["interface_binding"]=evidence,
+         ["compiler_binding_confirmed"]=true,["runtime_reachability_proven"]=false,["runtime_DI_selection_proven"]=false
+        });
+       }
+       continue;
+      }
+     }
+     if(reason is null) reason="candidate membership path is outside the supported source-bound relationship";
+     if(candidateTypeSource is null) {
+      var key=interfaceCallKey+"|unsupported-candidate|"+candidateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+      if(unsupportedKeys.Add(key)) graphUnsupported.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+       ["caller_node_id"]=callerId,["caller_method"]=caller.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["caller_source"]=callerAnchor,["call_site_source"]=callAnchor,["kind"]="unsupported_source_call",["reason"]=reason
+      });
+     } else {
+      var excludedEvidence=new SortedDictionary<string,object?>(StringComparer.Ordinal) {
+       ["bound_interface_type"]=interfaceEvidence!["bound_interface_type"],
+       ["bound_interface_type_id"]=interfaceEvidence["bound_interface_type_id"],
+       ["bound_interface_type_source"]=interfaceEvidence["bound_interface_type_source"],
+       ["bound_interface_declaration_source"]=interfaceEvidence["bound_interface_declaration_source"],
+       ["bound_interface_member"]=interfaceEvidence["bound_interface_member"],
+       ["bound_interface_signature"]=interfaceEvidence["bound_interface_signature"],
+       ["bound_interface_parameters"]=interfaceEvidence["bound_interface_parameters"],
+       ["bound_interface_arity"]=interfaceEvidence["bound_interface_arity"],["bound_interface_parameter_count"]=interfaceEvidence["bound_interface_parameter_count"],
+       ["bound_interface_member_source"]=interfaceEvidence["bound_interface_member_source"],
+       ["bound_interface_member_name_source"]=interfaceEvidence["bound_interface_member_name_source"],
+       ["candidate_type"]=candidateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["candidate_type_id"]=TypeFactId(candidateType),["candidate_type_source"]=candidateTypeSource,
+       ["candidate_identity"]=candidateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)+"|"+candidateTypeSource["path"]+"|"+
+        ((SortedDictionary<string,object?>)candidateTypeSource["span"]!)["start_offset"]+"|"+
+        ((SortedDictionary<string,object?>)candidateTypeSource["span"]!)["end_offset"],
+       ["implementation_method"]=implementation?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["implementation_method_source"]=implementationSyntax is null?null:Anchor(implementationSyntax.SyntaxTree.FilePath,implementationSyntax.Span),
+       ["reason"]=reason
+      };
+      var candidateIdentity=(string)excludedEvidence["candidate_identity"]!;
+      var key=interfaceCallKey+"|unsupported-interface-candidate|"+candidateIdentity;
+      if(unsupportedKeys.Add(key)) graphUnsupported.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+       ["caller_node_id"]=callerId,["caller_method"]=caller.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+       ["caller_source"]=callerAnchor,["call_site_source"]=callAnchor,
+       ["kind"]="unsupported_interface_candidate",["reason"]=reason,["interface_binding"]=excludedEvidence
+      });
+     }
+    }
+   }
+   if(graphUnsupported.Count>MaxSourceCallUnsupported) throw new Exception("source-call unsupported-call cap exceeded; no partial graph emitted");
+   continue;
+  }
   if(dispatchKind is null) {
    if(sourceInfo.CandidateReason==CandidateReason.Ambiguous)
     throw new Exception("ambiguous compiler source call at "+callerTree.FilePath+":"+invocation.SpanStart);
@@ -334,24 +595,28 @@ foreach(var root in roots) {
  foreach(var edge in graphEdgesByCaller.GetValueOrDefault(rootNodeId) ?? Array.Empty<SortedDictionary<string,object?>>()) {
   compatibilityRecords++;
   if(compatibilityRecords>MaxSourceCallCompatibilityRecords) throw new Exception("source-call compatibility projection cap exceeded; no partial graph emitted");
-  sourceCallEdges.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+  var projectedEdge=new SortedDictionary<string,object?>(StringComparer.Ordinal){
    ["route"]=route,["http_method"]=verb,["implementation_type"]=implementationType,
    ["implementation_method"]=implementationMethod,["caller_method"]=root["root_method"],
    ["caller_source"]=root["root_source"],["callee_method"]=edge["callee_method"],
    ["callee_containing_type"]=edge["callee_containing_type"],["callee_source"]=edge["callee_source"],
    ["call_site_source"]=edge["call_site_source"],["dispatch_kind"]=edge["dispatch_kind"],
    ["compiler_binding_confirmed"]=true,["runtime_reachability_proven"]=false,["runtime_DI_selection_proven"]=false
-  });
+  };
+  if(edge.TryGetValue("interface_binding",out var interfaceBinding)) projectedEdge["interface_binding"]=interfaceBinding;
+  sourceCallEdges.Add(projectedEdge);
  }
  foreach(var limitation in unsupportedByCaller.GetValueOrDefault(rootNodeId) ?? Array.Empty<SortedDictionary<string,object?>>()) {
   compatibilityRecords++;
   if(compatibilityRecords>MaxSourceCallCompatibilityRecords) throw new Exception("source-call compatibility projection cap exceeded; no partial graph emitted");
-  sourceCallUnresolved.Add(new SortedDictionary<string,object?>(StringComparer.Ordinal){
+  var projectedLimitation=new SortedDictionary<string,object?>(StringComparer.Ordinal){
    ["route"]=route,["http_method"]=verb,["implementation_type"]=implementationType,
    ["implementation_method"]=implementationMethod,["caller_method"]=limitation["caller_method"],
    ["caller_source"]=limitation["caller_source"],["kind"]=(string)limitation["kind"]! == "unsupported_source_call" ? "unsupported_handler_source_call" : limitation["kind"],
    ["source"]=limitation["call_site_source"],["reason"]=limitation["reason"]
-  });
+  };
+  if(limitation.TryGetValue("interface_binding",out var interfaceBinding)) projectedLimitation["interface_binding"]=interfaceBinding;
+  sourceCallUnresolved.Add(projectedLimitation);
  }
 }
 string EdgeSortKey(SortedDictionary<string,object?> edge) {
@@ -359,20 +624,23 @@ string EdgeSortKey(SortedDictionary<string,object?> edge) {
  var span=(SortedDictionary<string,object?>)anchor["span"]!;
  return anchor["path"]+"\0"+Convert.ToInt64(span["start_offset"]).ToString("D12",System.Globalization.CultureInfo.InvariantCulture);
 }
-var orderedGraphEdges=graphEdges.OrderBy(EdgeSortKey,StringComparer.Ordinal)
- .ThenBy(edge=>edge["caller_node_id"]!.ToString(),StringComparer.Ordinal).ToArray();
+ var orderedGraphEdges=graphEdges.OrderBy(EdgeSortKey,StringComparer.Ordinal)
+ .ThenBy(edge=>edge["caller_node_id"]!.ToString(),StringComparer.Ordinal)
+ .ThenBy(edge=>edge.TryGetValue("interface_binding",out var binding) && binding is SortedDictionary<string,object?> proof
+  ? proof.GetValueOrDefault("candidate_identity")?.ToString() : "",StringComparer.Ordinal).ToArray();
 var sourceCallGraph=new SortedDictionary<string,object?>(StringComparer.Ordinal){
- ["schema_version"]=1,["status"]="complete",
+ ["schema_version"]=2,["status"]="complete",
  ["caps"]=new SortedDictionary<string,object?>(StringComparer.Ordinal){
   ["roots"]=MaxSourceCallRoots,["nodes"]=MaxSourceCallNodes,["edges"]=MaxSourceCallEdges,
   ["inspected_invocations"]=MaxInspectedSourceInvocations,["unsupported"]=MaxSourceCallUnsupported,
+  ["interface_candidate_checks"]=MaxInterfaceCandidateChecks,
   ["nested_body_exclusions"]=MaxNestedBodyExclusions,["serialized_graph_bytes"]=MaxSourceCallGraphBytes,
   ["impact_witness_hops"]=MaxImpactWitnessHops,["traversal_work"]=MaxSourceCallTraversalWork,
   ["compatibility_records"]=MaxSourceCallCompatibilityRecords
  },
  ["counts"]=new SortedDictionary<string,object?>(StringComparer.Ordinal){
   ["roots"]=roots.Count,["nodes"]=nodes.Count,["edges"]=graphEdges.Count,
-  ["inspected_invocations"]=inspectedInvocations,["unsupported"]=graphUnsupported.Count,
+  ["inspected_invocations"]=inspectedInvocations,["interface_candidate_checks"]=candidateTypeChecks,["unsupported"]=graphUnsupported.Count,
   ["nested_body_exclusions"]=nestedExclusions.Count,["method_bodies_traversed"]=nodes.Count,
   ["traversal_work"]=traversalWork,["compatibility_records"]=compatibilityRecords,["serialized_graph_bytes"]=0
  },
@@ -383,7 +651,9 @@ var sourceCallGraph=new SortedDictionary<string,object?>(StringComparer.Ordinal)
  ["nodes"]=nodes.OrderBy(node=>node["id"]!.ToString(),StringComparer.Ordinal).ToArray(),
  ["edges"]=orderedGraphEdges,
  ["unsupported"]=graphUnsupported.OrderBy(item=>EdgeSortKey(new SortedDictionary<string,object?>(StringComparer.Ordinal){["call_site_source"]=item["call_site_source"]}),StringComparer.Ordinal)
-  .ThenBy(item=>item["caller_node_id"]!.ToString(),StringComparer.Ordinal).ToArray(),
+  .ThenBy(item=>item["caller_node_id"]!.ToString(),StringComparer.Ordinal)
+  .ThenBy(item=>item.TryGetValue("interface_binding",out var binding) && binding is SortedDictionary<string,object?> proof
+   ? proof.GetValueOrDefault("candidate_identity")?.ToString() : "",StringComparer.Ordinal).ToArray(),
  ["nested_body_exclusions"]=nestedExclusions.OrderBy(item=>{var anchor=(SortedDictionary<string,object?>)item["source"]!;var span=(SortedDictionary<string,object?>)anchor["span"]!;return anchor["path"]+"\0"+Convert.ToInt64(span["start_offset"]).ToString("D12",System.Globalization.CultureInfo.InvariantCulture);},StringComparer.Ordinal)
   .ThenBy(item=>item["caller_node_id"]!.ToString(),StringComparer.Ordinal).ToArray()
 };
@@ -444,7 +714,9 @@ var semanticParseOptions=compilation.SyntaxTrees.OrderBy(t=>Path.GetFullPath(t.F
  return new SortedDictionary<string,object?>(StringComparer.Ordinal){["path"]=CanonicalPath(mirrorRoot,repositoryRoot,tree.FilePath),["language_version"]=parse.LanguageVersion.ToString(),["source_code_kind"]=parse.Kind.ToString(),["documentation_mode"]=parse.DocumentationMode.ToString(),["preprocessor_symbols"]=parse.PreprocessorSymbolNames.OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["features"]=new SortedDictionary<string,string>(parse.Features.ToDictionary(kv=>kv.Key,kv=>kv.Value,StringComparer.Ordinal),StringComparer.Ordinal)};
 }).ToArray();
 string StableDiagnostic(string value) => value.Replace(mirrorRoot+Path.DirectorySeparatorChar,"repo/",StringComparison.Ordinal).Replace(mirrorRoot,"repo",StringComparison.Ordinal);
-sourceCallEdges=sourceCallEdges.OrderBy(edge=>edge["route"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["http_method"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["implementation_type"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["call_site_source"]!.ToString(),StringComparer.Ordinal).ToList();
+sourceCallEdges=sourceCallEdges.OrderBy(edge=>edge["route"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["http_method"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["implementation_type"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["call_site_source"]!.ToString(),StringComparer.Ordinal)
+ .ThenBy(edge=>edge.TryGetValue("interface_binding",out var binding) && binding is SortedDictionary<string,object?> proof
+  ? proof.GetValueOrDefault("candidate_identity")?.ToString() : "",StringComparer.Ordinal).ToList();
 sourceCallUnresolved=sourceCallUnresolved.OrderBy(edge=>edge["route"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["http_method"]!.ToString(),StringComparer.Ordinal).ThenBy(edge=>edge["source"]!.ToString(),StringComparer.Ordinal).ToList();
 var output=new SortedDictionary<string,object?>(StringComparer.Ordinal){["relationships"]=records,["unresolved"]=unresolved.OrderBy(x=>x["source"]?.ToString(),StringComparer.Ordinal).ToArray(),["source_call_graph"]=sourceCallGraph,["source_call_edges"]=sourceCallEdges,["source_call_unresolved"]=sourceCallUnresolved,["references"]=refs,["imports"]=imports,["toolchain_assemblies"]=toolAssemblies,["build_host_files"]=buildHostFiles,["compiler_errors"]=errors,["compiler_warnings"]=diagnostics.Where(d=>d.Severity==DiagnosticSeverity.Warning).Select(d=>StableDiagnostic(d.ToString())).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["workspace_diagnostics"]=workspaceDiagnostics.Select(StableDiagnostic).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),["sdk_path"]=sdk.MSBuildPath,["roslyn_version"]=typeof(Compilation).Assembly.GetName().Version?.ToString(),["language_version"]=((CSharpParseOptions)compilation.SyntaxTrees.First().Options).LanguageVersion.ToString(),["target_framework"]=framework,["source_trees"]=compilation.SyntaxTrees.Count(),["compilation_options"]=semanticCompilationOptions,["parse_options"]=semanticParseOptions};
 var outputJson=JsonSerializer.Serialize(output,new JsonSerializerOptions{WriteIndented=true});

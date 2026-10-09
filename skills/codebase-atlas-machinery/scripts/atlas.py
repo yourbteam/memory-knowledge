@@ -21,7 +21,7 @@ import tempfile
 
 SCHEMA_VERSION = 2
 INVENTORY_BASIS = "git-index-paths+working-tree-bytes"
-SOURCE_CALL_GRAPH_SCHEMA_VERSION = 1
+SOURCE_CALL_GRAPH_SCHEMA_VERSION = 2
 SOURCE_CALL_GRAPH_CAPS = {
     "roots": 20_000,
     "nodes": 50_000,
@@ -32,6 +32,7 @@ SOURCE_CALL_GRAPH_CAPS = {
     "serialized_graph_bytes": 134_217_728,
     "impact_witness_hops": 2_000_000,
     "traversal_work": 2_000_000,
+    "interface_candidate_checks": 2_000_000,
     "compatibility_records": 2_000_000,
 }
 LEXICAL_METHOD_MANIFEST_SCHEMA_VERSION = 1
@@ -2526,6 +2527,13 @@ def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationship
             if not isinstance(raw.get(key), str) or not raw[key]:
                 raise AtlasError(f"compiler source-call edge has invalid {key}; no supplement published")
         _validate_compiler_source_call_edge_proof(raw, "no supplement published")
+        if raw.get("dispatch_kind") == "interface_implementation_source":
+            binding = raw.get("interface_binding")
+            if (not isinstance(binding, dict) or binding.get("claim") != "compiler_confirmed_source_interface_implementation_correspondence"
+                    or binding.get("compiler_implementation_match") is not True or binding.get("runtime_DI_selection_proven") is not False):
+                raise AtlasError("compiler projected interface edge has invalid source evidence; no supplement published")
+        elif raw.get("interface_binding") is not None:
+            raise AtlasError("compiler projected direct edge contains unexpected interface evidence; no supplement published")
         callers = [relation for relation in relationships
                    if relation.get("route") == raw.get("route") and relation.get("http_method") == raw.get("http_method")
                    and relation.get("implementation_type") == raw.get("implementation_type")
@@ -2544,7 +2552,8 @@ def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationship
         if (caller_span is None or call_span[0] != caller_span[0] or not isinstance(call_anchor.get("sha256"), str)
                 or call_anchor.get("sha256") != caller_fact.get("source", {}).get("sha256")
                 or not caller_span[1] <= call_span[1] <= call_span[2] <= caller_span[2]):
-            raise AtlasError("compiler source-call site is outside its verified handler method; no supplement published")
+            raise AtlasError(f"compiler source-call site is outside its verified handler method: route={raw.get('route')!r} verb={raw.get('http_method')!r} caller_method={raw.get('caller_method')!r} callee={raw.get('callee_method')!r} caller={caller_span!r} call={call_span!r} "+
+                             f"anchor_hash={call_anchor.get('sha256')!r} handler_hash={caller_fact.get('source', {}).get('sha256')!r}; no supplement published")
         if not isinstance(call_anchor.get("span"), dict) or not all(isinstance(call_anchor["span"].get(k), int) for k in ("start_offset", "end_offset")):
             raise AtlasError("compiler source-call site has an invalid span; no supplement published")
         if not isinstance(raw.get("callee_source"), dict) or raw["callee_source"].get("sha256") != files[_compiler_span(raw["callee_source"])[0]].get("sha256"):
@@ -2555,7 +2564,8 @@ def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationship
                      "callee_lexical_method_fact_id": callee_fact.get("id"),
                      "lexical_implementation_fact_id": callers[0].get("lexical_implementation_fact_id")})
         identity = (edge.get("route_fact_id"), edge.get("caller_lexical_method_fact_id"),
-                    edge.get("callee_lexical_method_fact_id"), call_span, edge.get("implementation_type"))
+                    edge.get("callee_lexical_method_fact_id"), call_span, edge.get("implementation_type"),
+                    (edge.get("interface_binding") or {}).get("candidate_identity"))
         if identity in seen:
             raise AtlasError("compiler source-call graph contains a duplicate callsite relationship; no supplement published")
         seen.add(identity)
@@ -2563,18 +2573,25 @@ def _verify_compiler_source_call_edges(snapshot: dict[str, object], relationship
     return sorted(verified, key=lambda edge: (str(edge.get("route_fact_id")), str(edge.get("caller_lexical_method_fact_id")),
                                                str(edge.get("call_site_source", {}).get("path")),
                                                int(edge.get("call_site_source", {}).get("span", {}).get("start_offset", 0)),
-                                               str(edge.get("callee_method")), str(edge.get("implementation_type"))))
+                                               str(edge.get("callee_method")), str(edge.get("implementation_type")),
+                                               str((edge.get("interface_binding") or {}).get("candidate_identity", ""))))
 
 
 def _validate_compiler_source_call_edge_proof(edge: dict[str, object], context: str) -> None:
     """Enforce the closed dispatch and proof-label contract at every trust boundary."""
     dispatch_kind = edge.get("dispatch_kind")
-    if not isinstance(dispatch_kind, str) or dispatch_kind not in {"static_source", "non_virtual_instance_source"}:
+    if not isinstance(dispatch_kind, str) or dispatch_kind not in {"static_source", "non_virtual_instance_source", "interface_implementation_source"}:
         raise AtlasError(f"compiler source-call edge has missing or invalid dispatch_kind; {context}")
     if (edge.get("compiler_binding_confirmed") is not True
             or edge.get("runtime_reachability_proven") is not False
             or edge.get("runtime_DI_selection_proven") is not False):
         raise AtlasError(f"compiler source-call edge has invalid proof labels; {context}")
+    if dispatch_kind == "interface_implementation_source":
+        binding = edge.get("interface_binding")
+        if (not isinstance(binding, dict) or binding.get("claim") != "compiler_confirmed_source_interface_implementation_correspondence"
+                or binding.get("compiler_implementation_match") is not True
+                or binding.get("runtime_DI_selection_proven") is not False):
+            raise AtlasError(f"compiler interface edge has invalid source-correspondence evidence; {context}")
 
 
 def _source_call_node_id(source: object) -> str | None:
@@ -2630,6 +2647,148 @@ def _verify_compiler_source_call_graph(
     type_facts = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "type_declaration"]
     files = {str(entry.get("path")): entry for entry in snapshot.get("files", []) if isinstance(entry, dict)}
     lexical_type_cache: dict[str, tuple[list[object], dict[int, int], dict[int, int]]] = {}
+
+    def expected_type_display(fact: dict[str, object]) -> str:
+        span = _compiler_span(fact.get("source"))
+        if span is None:
+            raise AtlasError("compiler interface type has no source span; no supplement published")
+        fd = os.open(repo, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            evidence = _read_working_file(fd, span[0], collect_source=True)
+        finally:
+            os.close(fd)
+        raw = evidence.get("_source_bytes")
+        if not isinstance(raw, bytes) or evidence.get("sha256") != fact.get("source", {}).get("sha256"):
+            raise AtlasError("compiler interface type source changed during validation; no supplement published")
+        source_text = raw.decode("utf-8-sig")
+        from csharp_facts import lex
+        tokens, _directives = lex(source_text)
+        opening = next((token for token in tokens if token.start >= span[2] and token.value == "{"), None)
+        if opening is None:
+            raise AtlasError("compiler interface type has no source body; no supplement published")
+        probe = {"owner_type_id": fact.get("type_id"), "source": {"path": span[0], "span": {
+            "start_offset": opening.start + 1, "end_offset": opening.start + 1}}}
+        return expected_containing_type(probe)
+
+    def verify_type_anchor(binding: dict[str, object], key: str, type_id_key: str, label: str,
+                           display_key: str | None = None) -> dict[str, object]:
+        anchor, type_id = binding.get(key), binding.get(type_id_key)
+        span = _compiler_span(anchor)
+        if span is None or not isinstance(anchor, dict) or not isinstance(type_id, str):
+            raise AtlasError(f"compiler interface {label} type reference is malformed; no supplement published")
+        file = files.get(span[0])
+        matches = [fact for fact in type_facts if fact.get("type_id") == type_id and _compiler_span(fact.get("source")) == span
+                   and isinstance(fact.get("source"), dict) and fact["source"].get("sha256") == anchor.get("sha256")
+                   and file is not None and file.get("sha256") == anchor.get("sha256")]
+        if len(matches) != 1:
+            raise AtlasError(f"compiler interface {label} type anchor does not identify one exact saved lexical type fact; no supplement published")
+        if display_key is not None and binding.get(display_key) != expected_type_display(matches[0]):
+            raise AtlasError(f"compiler interface {label} display identity disagrees with its lexical owner; no supplement published")
+        return matches[0]
+
+    def verify_interface_binding(binding: object, *, supported: bool, edge: dict[str, object] | None = None) -> None:
+        if not isinstance(binding, dict):
+            raise AtlasError("compiler interface dispatch evidence is missing; no supplement published")
+        common = {"bound_interface_type", "bound_interface_type_id", "bound_interface_type_source", "bound_interface_declaration_source", "bound_interface_member",
+                  "bound_interface_signature", "bound_interface_parameters", "bound_interface_arity", "bound_interface_parameter_count",
+                  "bound_interface_member_source", "bound_interface_member_name_source",
+                  "candidate_type", "candidate_type_id", "candidate_type_source", "candidate_identity"}
+        expected = (common | {"implementation_method", "implementation_signature", "implementation_method_source",
+                              "implementation_parameters",
+                              "implementation_owner_type", "implementation_owner_type_id", "implementation_owner_type_source",
+                              "candidate_to_interface_path", "candidate_to_implementation_owner_path", "claim",
+                              "compiler_implementation_match", "runtime_DI_selection_proven"}) if supported else (
+                              common | {"implementation_method", "implementation_method_source", "reason"})
+        if set(binding) != expected:
+            raise AtlasError("compiler interface evidence has unknown or missing fields; no supplement published")
+        interface_fact = verify_type_anchor(binding, "bound_interface_type_source", "bound_interface_type_id", "interface", "bound_interface_type")
+        candidate_fact = verify_type_anchor(binding, "candidate_type_source", "candidate_type_id", "candidate", "candidate_type")
+        candidate_span = _compiler_span(binding.get("candidate_type_source"))
+        expected_candidate_identity = f"{binding.get('candidate_type')}|{candidate_span[0]}|{candidate_span[1]}|{candidate_span[2]}" if candidate_span else None
+        if (binding.get("candidate_identity") != expected_candidate_identity
+                or not isinstance(binding.get("bound_interface_arity"), int) or isinstance(binding.get("bound_interface_arity"), bool)
+                or binding.get("bound_interface_arity") != 0
+                or not isinstance(binding.get("bound_interface_parameter_count"), int)
+                or isinstance(binding.get("bound_interface_parameter_count"), bool)
+                or binding.get("bound_interface_parameter_count") < 0
+                or not isinstance(binding.get("bound_interface_parameters"), list)
+                or len(binding["bound_interface_parameters"]) != binding.get("bound_interface_parameter_count")):
+            raise AtlasError("compiler interface candidate identity or bound signature is invalid; no supplement published")
+        add_reference("interface-proof:" + str(binding.get("candidate_identity")) + ":interface", binding.get("bound_interface_type_source"))
+        add_reference("interface-proof:" + str(binding.get("candidate_identity")) + ":candidate", binding.get("candidate_type_source"))
+        member_span = _compiler_span(binding.get("bound_interface_member_source"))
+        member_name_span = _compiler_span(binding.get("bound_interface_member_name_source"))
+        declaration_span = _compiler_span(binding.get("bound_interface_declaration_source"))
+        if (member_span is None or member_name_span is None or member_span[0] != member_name_span[0]
+                or declaration_span is None or declaration_span[0] != member_span[0]
+                or declaration_span[1] != _compiler_span(binding.get("bound_interface_type_source"))[1]
+                or not _compiler_span(binding.get("bound_interface_type_source"))[2] <= declaration_span[2]
+                or not declaration_span[1] <= member_span[1] <= member_span[2] <= declaration_span[2]
+                or not member_span[1] <= member_name_span[1] <= member_name_span[2] <= member_span[2]
+                or member_span[0] != _compiler_span(binding.get("bound_interface_type_source"))[0]
+                or member_span[1] <= _compiler_span(binding.get("bound_interface_type_source"))[2]):
+            raise AtlasError("compiler interface member source is not contained in its bound interface source file; no supplement published")
+        member_owner_probe = {"owner_type_id": interface_fact.get("type_id"), "source": binding.get("bound_interface_member_source")}
+        if expected_containing_type(member_owner_probe) != expected_type_display(interface_fact):
+            raise AtlasError("compiler interface member declaration belongs to a different lexical interface; no supplement published")
+        member_reference_id = f"interface-proof:{binding.get('candidate_identity')}:{member_span[0]}:{member_span[1]}:{member_span[2]}"
+        add_reference(member_reference_id + ":interface-declaration", binding.get("bound_interface_declaration_source"))
+        add_reference(member_reference_id + ":member", binding.get("bound_interface_member_source"))
+        add_reference(member_reference_id + ":member-name", binding.get("bound_interface_member_name_source"))
+        if (interface_fact.get("declaration_kind") != "interface"
+                or (supported and candidate_fact.get("declaration_kind") not in {"class", "record"})
+                or (not supported and candidate_fact.get("declaration_kind") not in {"class", "struct", "record"})):
+            raise AtlasError("compiler interface evidence has a source declaration of the wrong kind; no supplement published")
+        if supported:
+            owner_fact = verify_type_anchor(binding, "implementation_owner_type_source", "implementation_owner_type_id", "implementation owner", "implementation_owner_type")
+            if edge is None or (binding.get("implementation_method") != edge.get("callee_method")
+                    or binding.get("implementation_method_source") != edge.get("callee_source")
+                    or binding.get("implementation_owner_type") != edge.get("callee_containing_type")):
+                raise AtlasError("compiler interface implementation evidence disagrees with its edge endpoint; no supplement published")
+            impl_span = _compiler_span(binding.get("implementation_method_source"))
+            impl_matches = [fact for fact in method_facts if _compiler_span(fact.get("source")) == impl_span
+                            and fact.get("method_name") == str(binding.get("implementation_signature", "")).split("(", 1)[0].split("`", 1)[0]
+                            and fact.get("owner_type_id") == owner_fact.get("type_id")]
+            if len(impl_matches) != 1:
+                raise AtlasError("compiler interface implementation method does not match its exact source owner; no supplement published")
+            if binding.get("claim") != "compiler_confirmed_source_interface_implementation_correspondence" or binding.get("compiler_implementation_match") is not True or binding.get("runtime_DI_selection_proven") is not False:
+                raise AtlasError("compiler interface edge has invalid correspondence labels; no supplement published")
+            paths = ((binding.get("candidate_to_interface_path"), binding.get("candidate_type_id"), binding.get("bound_interface_type_id")),
+                     (binding.get("candidate_to_implementation_owner_path"), binding.get("candidate_type_id"), binding.get("implementation_owner_type_id")))
+            for path, start, end in paths:
+                if not isinstance(path, list):
+                    raise AtlasError("compiler interface membership path is malformed; no supplement published")
+                cursor = start
+                for step in path:
+                    fields = {"from_type", "from_type_id", "from_type_source", "from_type_declaration_source", "to_type", "to_type_id", "to_type_source", "edge_kind", "base_list_source", "type_syntax_source"}
+                    if not isinstance(step, dict) or set(step) != fields or step.get("from_type_id") != cursor or step.get("edge_kind") not in {"base", "interface"}:
+                        raise AtlasError("compiler interface membership path has an invalid step; no supplement published")
+                    verify_type_anchor(step, "from_type_source", "from_type_id", "membership source", "from_type")
+                    verify_type_anchor(step, "to_type_source", "to_type_id", "membership target", "to_type")
+                    declaration_span = _compiler_span(step.get("from_type_declaration_source"))
+                    from_span = _compiler_span(step.get("from_type_source"))
+                    base_span, syntax_span = _compiler_span(step.get("base_list_source")), _compiler_span(step.get("type_syntax_source"))
+                    if (declaration_span is None or from_span is None or declaration_span[0] != from_span[0]
+                            or not declaration_span[1] <= from_span[1] <= from_span[2] <= declaration_span[2]
+                            or base_span is None or syntax_span is None or declaration_span[0] != base_span[0]
+                            or not declaration_span[1] <= base_span[1] <= base_span[2] <= declaration_span[2]
+                            or base_span[0] != syntax_span[0]
+                            or not base_span[1] <= syntax_span[1] <= syntax_span[2] <= base_span[2]):
+                        raise AtlasError("compiler interface membership syntax anchor is invalid; no supplement published")
+                    cursor = step.get("to_type_id")
+                if cursor != end:
+                    raise AtlasError("compiler interface membership path reaches a different type; no supplement published")
+        elif not isinstance(binding.get("reason"), str) or not binding.get("reason"):
+            raise AtlasError("compiler interface candidate exclusion has no reason; no supplement published")
+        if supported:
+            add_reference("interface-proof:" + str(binding.get("candidate_identity")) + ":implementation-owner", binding.get("implementation_owner_type_source"))
+            add_reference("interface-proof:" + str(binding.get("candidate_identity")) + ":implementation", binding.get("implementation_method_source"))
+            for path_key in ("candidate_to_interface_path", "candidate_to_implementation_owner_path"):
+                for index, step in enumerate(binding[path_key]):
+                    for field in ("from_type_source", "from_type_declaration_source", "to_type_source", "base_list_source", "type_syntax_source"):
+                        add_reference(f"interface-proof:{binding.get('candidate_identity')}:{path_key}:{index}:{field}", step[field])
+        elif isinstance(binding.get("implementation_method_source"), dict):
+            add_reference("interface-proof:" + str(binding.get("candidate_identity")) + ":excluded-implementation", binding.get("implementation_method_source"))
 
     def expected_containing_type(method_fact: dict[str, object]) -> str:
         owner_id = method_fact.get("owner_type_id")
@@ -2725,8 +2884,8 @@ def _verify_compiler_source_call_graph(
     item_fields = {
         "roots": {"route", "http_method", "implementation_type", "implementation_method", "root_method", "root_node_id", "root_source", "route_fact_id", "lexical_implementation_method_fact_id"},
         "nodes": {"id", "method", "containing_type", "source", "lexical_method_fact_id"},
-        "edges": {"caller_node_id", "callee_node_id", "caller_method", "caller_source", "callee_method", "callee_containing_type", "callee_source", "call_site_source", "dispatch_kind", "compiler_binding_confirmed", "runtime_reachability_proven", "runtime_DI_selection_proven", "caller_lexical_method_fact_id", "callee_lexical_method_fact_id"},
-        "unsupported": {"caller_node_id", "caller_method", "caller_source", "call_site_source", "kind", "reason", "callee_method", "callee_source"},
+        "edges": {"caller_node_id", "callee_node_id", "caller_method", "caller_source", "callee_method", "callee_containing_type", "callee_source", "call_site_source", "dispatch_kind", "compiler_binding_confirmed", "runtime_reachability_proven", "runtime_DI_selection_proven", "caller_lexical_method_fact_id", "callee_lexical_method_fact_id", "interface_binding"},
+        "unsupported": {"caller_node_id", "caller_method", "caller_source", "call_site_source", "kind", "reason", "callee_method", "callee_source", "interface_binding"},
         "nested_body_exclusions": {"caller_node_id", "caller_method", "caller_source", "nested_body_kind", "source", "reason"},
     }
     if any(not isinstance(items, list) or any(not isinstance(item, dict) for item in items)
@@ -2738,8 +2897,10 @@ def _verify_compiler_source_call_graph(
             if key == "roots": required -= {"route_fact_id", "lexical_implementation_method_fact_id"}
             if key == "nodes": required -= {"lexical_method_fact_id"}
             if key == "edges": required -= {"caller_lexical_method_fact_id", "callee_lexical_method_fact_id"}
+        if key == "edges":
+            required = required - {"interface_binding"}
         if key == "unsupported":
-            required = required - {"callee_method", "callee_source"}
+            required = required - {"callee_method", "callee_source", "interface_binding"}
         if any(not required <= set(item) or set(item) - item_fields[key] for item in items):
             raise AtlasError(f"compiler source-call graph {key} entries have unknown or missing fields; no supplement published")
     for item in collections["unsupported"]:
@@ -2748,8 +2909,10 @@ def _verify_compiler_source_call_graph(
         has_callee_source = "callee_source" in item
         if lexical_boundary != has_callee_method or lexical_boundary != has_callee_source:
             raise AtlasError("compiler source-call graph lexical boundary fields are incomplete or unexpected; no supplement published")
+        if (item.get("kind") == "unsupported_interface_candidate") != isinstance(item.get("interface_binding"), dict):
+            raise AtlasError("compiler interface candidate boundary evidence is incomplete or unexpected; no supplement published")
     counts = graph.get("counts")
-    count_fields = {"roots", "nodes", "edges", "inspected_invocations", "unsupported", "nested_body_exclusions", "method_bodies_traversed", "serialized_graph_bytes", "traversal_work", "compatibility_records"}
+    count_fields = {"roots", "nodes", "edges", "inspected_invocations", "interface_candidate_checks", "unsupported", "nested_body_exclusions", "method_bodies_traversed", "serialized_graph_bytes", "traversal_work", "compatibility_records"}
     if not isinstance(counts, dict) or set(counts) != count_fields:
         raise AtlasError("compiler source-call graph counts are missing; no supplement published")
     if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts.values()):
@@ -2758,12 +2921,16 @@ def _verify_compiler_source_call_graph(
         if counts.get(key) != len(items) or len(items) > int(SOURCE_CALL_GRAPH_CAPS[key]):
             raise AtlasError(f"compiler source-call graph {key} count exceeds or disagrees with its cap; no supplement published")
     inspected = counts.get("inspected_invocations")
-    if (not isinstance(inspected, int) or inspected != len(collections["edges"]) + len(collections["unsupported"])
+    invocation_sites = {(str(item.get("caller_node_id")), _compiler_span(item.get("call_site_source")))
+                        for item in collections["edges"] + collections["unsupported"]}
+    if (not isinstance(inspected, int) or inspected != len(invocation_sites)
             or inspected > SOURCE_CALL_GRAPH_CAPS["inspected_invocations"]):
         raise AtlasError("compiler source-call graph inspected-invocation count is inconsistent; no supplement published")
     if counts.get("method_bodies_traversed") != len(collections["nodes"]):
         raise AtlasError("compiler source-call graph method-body traversal count is inconsistent; no supplement published")
-    if (counts.get("traversal_work") != inspected or counts["traversal_work"] > SOURCE_CALL_GRAPH_CAPS["traversal_work"]
+    if (counts.get("traversal_work") != inspected + counts["interface_candidate_checks"]
+            or counts["interface_candidate_checks"] > SOURCE_CALL_GRAPH_CAPS["interface_candidate_checks"]
+            or counts["traversal_work"] > SOURCE_CALL_GRAPH_CAPS["traversal_work"]
             or counts["compatibility_records"] > SOURCE_CALL_GRAPH_CAPS["compatibility_records"]):
         raise AtlasError("compiler source-call graph traversal or compatibility work count is inconsistent; no supplement published")
     if not isinstance(counts.get("serialized_graph_bytes"), int) or counts["serialized_graph_bytes"] < 1:
@@ -2883,7 +3050,12 @@ def _verify_compiler_source_call_graph(
         if edge.get("caller_source") != caller.get("source") or edge.get("callee_source") != callee.get("source"):
             raise AtlasError("compiler source-call graph edge source anchor disagrees with its endpoint; no supplement published")
         _validate_compiler_source_call_edge_proof(edge, "no supplement published")
-        key = (str(caller_id), call_span)
+        interface_edge = edge.get("dispatch_kind") == "interface_implementation_source"
+        if interface_edge:
+            verify_interface_binding(edge.get("interface_binding"), supported=True, edge=edge)
+        elif "interface_binding" in edge:
+            raise AtlasError("compiler direct source-call edge contains unexpected interface evidence; no supplement published")
+        key = (str(caller_id), call_span, str((edge.get("interface_binding") or {}).get("candidate_identity")) if interface_edge else "direct")
         if key in edge_keys:
             raise AtlasError("compiler source-call graph contains a duplicate callsite edge; no supplement published")
         edge_keys.add(key)
@@ -2898,6 +3070,16 @@ def _verify_compiler_source_call_graph(
         add_reference(f"edge-caller:{caller_id}:{call_span[1]}", edge.get("caller_source"))
         add_reference(f"edge-callee:{callee_id}:{call_span[1]}", edge.get("callee_source"))
         add_reference(f"edge-callsite:{caller_id}:{call_span[1]}", edge.get("call_site_source"))
+        if interface_edge:
+            binding = edge["interface_binding"]
+            candidate_identity = str(binding["candidate_identity"])
+            for refkey in ("bound_interface_type_source", "bound_interface_declaration_source", "candidate_type_source", "implementation_owner_type_source",
+                           "bound_interface_member_source", "bound_interface_member_name_source", "implementation_method_source"):
+                add_reference(f"interface:{caller_id}:{call_span[1]}:{candidate_identity}:{refkey}", binding.get(refkey))
+            for path_key in ("candidate_to_interface_path", "candidate_to_implementation_owner_path"):
+                for step_index, step in enumerate(binding[path_key]):
+                    for refkey in ("from_type_source", "from_type_declaration_source", "to_type_source", "base_list_source", "type_syntax_source"):
+                        add_reference(f"interface:{caller_id}:{call_span[1]}:{candidate_identity}:{path_key}:{step_index}:{refkey}", step.get(refkey))
         adjacency.setdefault(str(caller_id), []).append(edge)
 
     def check_contained_anchor(caller_id: object, anchor: object, label: str) -> None:
@@ -2913,10 +3095,21 @@ def _verify_compiler_source_call_graph(
         if (not isinstance(caller_id, str) or caller is None or item.get("caller_method") != caller.get("method")
                 or item.get("caller_source") != caller.get("source")
                 or not isinstance(item.get("kind"), str)
-                or item.get("kind") not in {"unsupported_source_call", "unsupported_source_method_body", "unsupported_lexical_source_method"}
+                or item.get("kind") not in {"unsupported_source_call", "unsupported_source_method_body", "unsupported_lexical_source_method", "unsupported_interface_candidate"}
                 or not isinstance(item.get("reason"), str) or not item.get("reason")):
             raise AtlasError("compiler source-call graph limitation is not bound to its visited caller; no supplement published")
-        unsupported_identity = (caller_id, _compiler_span(item.get("call_site_source")), item.get("kind"))
+        if item.get("kind") == "unsupported_interface_candidate":
+            verify_interface_binding(item.get("interface_binding"), supported=False)
+            binding = item["interface_binding"]
+            unsupported_call_span = _compiler_span(item.get("call_site_source"))
+            assert unsupported_call_span is not None
+            for refkey in ("bound_interface_type_source", "bound_interface_declaration_source", "candidate_type_source",
+                           "bound_interface_member_source", "bound_interface_member_name_source"):
+                add_reference(f"interface:{caller_id}:{unsupported_call_span[1]}:{binding['candidate_identity']}:{refkey}", binding.get(refkey))
+        elif "interface_binding" in item:
+            raise AtlasError("compiler unsupported boundary contains unexpected interface evidence; no supplement published")
+        unsupported_identity = (caller_id, _compiler_span(item.get("call_site_source")), item.get("kind"),
+                                item.get("interface_binding", {}).get("candidate_identity") if isinstance(item.get("interface_binding"), dict) else None)
         if unsupported_identity in unsupported_identities:
             raise AtlasError("compiler source-call graph contains a duplicate unsupported boundary; no supplement published")
         unsupported_identities.add(unsupported_identity)
@@ -2936,6 +3129,14 @@ def _verify_compiler_source_call_graph(
             if callee_identity in manifest_by_identity:
                 raise AtlasError("compiler lexical boundary callee was already admitted; no supplement published")
             add_reference(f"unsupported-callee:{caller_id}:{unsupported_span[1] if unsupported_span else -1}", callee_source)
+    positive_candidate_calls = {(str(edge.get("caller_node_id")), _compiler_span(edge.get("call_site_source")),
+                                 str((edge.get("interface_binding") or {}).get("candidate_identity")))
+                                for edge in collections["edges"] if edge.get("dispatch_kind") == "interface_implementation_source"}
+    excluded_candidate_calls = {(str(item.get("caller_node_id")), _compiler_span(item.get("call_site_source")),
+                                 str((item.get("interface_binding") or {}).get("candidate_identity")))
+                                for item in collections["unsupported"] if item.get("kind") == "unsupported_interface_candidate"}
+    if positive_candidate_calls & excluded_candidate_calls:
+        raise AtlasError("compiler interface candidate is both supported and excluded at one callsite; no supplement published")
     nested_identities = set()
     for item in collections["nested_body_exclusions"]:
         caller_id = item.get("caller_node_id")
@@ -2958,6 +3159,499 @@ def _verify_compiler_source_call_graph(
     snippets = _source_texts(repo, references)
     snippet_by_id = {str(item["fact_id"]): str(item["text"]) for item in snippets}
     from csharp_facts import lex
+
+    known_source_type_names: dict[str, tuple[str, ...] | None] = {}
+    bodyless_source_type_displays: dict[tuple[str, int, int], str] = {}
+
+    def normalized_type(values: list[str]) -> str:
+        values = [value for value in values if value not in {"global", "::"}]
+        aliases = {"String": "string", "Boolean": "bool", "Byte": "byte", "SByte": "sbyte",
+                   "Int16": "short", "UInt16": "ushort", "Int32": "int", "UInt32": "uint",
+                   "Int64": "long", "UInt64": "ulong", "Single": "float", "Double": "double",
+                   "Decimal": "decimal", "Char": "char", "Object": "object"}
+        return " ".join(aliases.get(value, value) for value in values)
+
+    def source_type_matches_compiler(source_values: list[str], compiler_type: str) -> bool:
+        aliases = {"String": "string", "Boolean": "bool", "Byte": "byte", "SByte": "sbyte",
+                   "Int16": "short", "UInt16": "ushort", "Int32": "int", "UInt32": "uint",
+                   "Int64": "long", "UInt64": "ulong", "Single": "float", "Double": "double",
+                   "Decimal": "decimal", "Char": "char", "Object": "object"}
+
+        def parse(values: list[str]) -> tuple[tuple[str, ...], tuple[object, ...], tuple[tuple[str, int], ...]] | None:
+            values = [value for value in values if value]
+            position = 0
+
+            def type_node() -> tuple[tuple[str, ...], tuple[object, ...], tuple[tuple[str, int], ...]] | None:
+                nonlocal position
+                if position + 1 < len(values) and values[position] == "global" and values[position + 1] == "::":
+                    position += 2
+                parts: list[str] = []
+                arguments: list[object] = []
+                if position < len(values) and values[position] == "(":
+                    position += 1
+                    tuple_items: list[object] = []
+                    has_comma = False
+                    while True:
+                        element = type_node()
+                        if element is None:
+                            return None
+                        element_name = None
+                        if (position < len(values)
+                                and re.fullmatch(r"@?[A-Za-z_][A-Za-z_0-9]*", values[position])
+                                and values[position] not in {"in", "out", "ref"}):
+                            element_name = values[position].removeprefix("@")
+                            position += 1
+                        tuple_items.append((element, element_name))
+                        if position >= len(values):
+                            return None
+                        if values[position] == ",":
+                            has_comma = True
+                            position += 1
+                            continue
+                        if values[position] != ")" or not has_comma:
+                            return None
+                        position += 1
+                        break
+                    parts = ["<tuple>"]
+                    arguments = tuple_items
+                else:
+                    if position >= len(values) or not re.fullmatch(r"@?[A-Za-z_][A-Za-z_0-9]*", values[position]):
+                        return None
+                    parts.append(aliases.get(values[position].removeprefix("@"), values[position].removeprefix("@")))
+                    position += 1
+                    while position < len(values) and values[position] == ".":
+                        position += 1
+                        if position >= len(values) or not re.fullmatch(r"@?[A-Za-z_][A-Za-z_0-9]*", values[position]):
+                            return None
+                        parts.append(aliases.get(values[position].removeprefix("@"), values[position].removeprefix("@")))
+                        position += 1
+                if parts != ["<tuple>"] and position < len(values) and values[position] == "<":
+                    position += 1
+                    while True:
+                        argument = type_node()
+                        if argument is None:
+                            return None
+                        arguments.append(argument)
+                        if position >= len(values):
+                            return None
+                        if values[position] == ",":
+                            position += 1
+                            continue
+                        if values[position] != ">":
+                            return None
+                        position += 1
+                        break
+                suffixes: list[tuple[str, int]] = []
+                while position < len(values):
+                    if values[position] == "?":
+                        suffixes.append(("nullable", 0)); position += 1
+                    elif values[position] == "*":
+                        suffixes.append(("pointer", 0)); position += 1
+                    elif values[position] == "[":
+                        position += 1; rank = 1
+                        while position < len(values) and values[position] == ",":
+                            rank += 1; position += 1
+                        if position >= len(values) or values[position] != "]":
+                            return None
+                        position += 1; suffixes.append(("array", rank))
+                    else:
+                        break
+                return (tuple(parts), tuple(arguments), tuple(suffixes))
+
+            root = type_node()
+            return root if root is not None and position == len(values) else None
+
+        def source_type_display(fact: dict[str, object]) -> str:
+            span = _compiler_span(fact.get("source"))
+            if span is None:
+                raise AtlasError("compiler interface source type has no exact lexical anchor; no supplement published")
+            cache_key = (span[0], span[1], span[2])
+            cached = bodyless_source_type_displays.get(cache_key)
+            if cached is not None:
+                return cached
+            source_fd = os.open(repo, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                evidence = _read_working_file(source_fd, span[0], collect_source=True)
+            finally:
+                os.close(source_fd)
+            source_bytes = evidence.get("_source_bytes")
+            if (not isinstance(source_bytes, bytes)
+                    or evidence.get("sha256") != fact.get("source", {}).get("sha256")):
+                raise AtlasError("compiler interface source type changed during validation; no supplement published")
+            from csharp_facts import _angle_matches, _matches
+            tokens, _directives = lex(source_bytes.decode("utf-8-sig"))
+            braces, angles = _matches(tokens), _angle_matches(tokens)
+            from csharp_facts import _namespace_at
+
+            def declaration_shape(owner: dict[str, object]) -> tuple[int, int, int, int | None] | None:
+                owner_span = _compiler_span(owner.get("source"))
+                if (owner_span is None or owner_span[0] != span[0]
+                        or owner.get("source", {}).get("sha256") != evidence.get("sha256")):
+                    return None
+                starts = [index for index, token in enumerate(tokens)
+                          if token.start == owner_span[1] and token.value in {"class", "interface", "struct", "record"}]
+                if len(starts) != 1:
+                    return None
+                keyword_index = starts[0]
+                name_index = keyword_index + 1
+                if tokens[keyword_index].value == "record" and name_index < len(tokens) and tokens[name_index].value in {"class", "struct"}:
+                    name_index += 1
+                while name_index < len(tokens) and tokens[name_index].kind != "identifier":
+                    name_index += 1
+                if (name_index >= len(tokens) or tokens[name_index].value.removeprefix("@") != owner.get("name")
+                        or tokens[name_index].end != owner_span[2]
+                        or _namespace_at(tokens, keyword_index, braces) != str(owner.get("namespace") or "")):
+                    return None
+                cursor = name_index + 1
+                actual_arity = 0
+                if cursor < len(tokens) and tokens[cursor].value == "<" and cursor in angles:
+                    parameter_close = angles[cursor]
+                    actual_arity = 1 + sum(1 for index in range(cursor + 1, parameter_close)
+                                           if tokens[index].value == ",")
+                    cursor = parameter_close + 1
+                expected_arity = owner.get("arity")
+                if (not isinstance(expected_arity, int) or isinstance(expected_arity, bool)
+                        or expected_arity != actual_arity):
+                    return None
+                angle = square = paren = 0
+                terminator = None
+                for index in range(cursor, len(tokens)):
+                    value = tokens[index].value
+                    if value == "(" : paren += 1
+                    elif value == ")": paren = max(0, paren - 1)
+                    elif value == "[": square += 1
+                    elif value == "]": square = max(0, square - 1)
+                    elif value == "<": angle += 1
+                    elif value == ">": angle = max(0, angle - 1)
+                    elif value in {"{", ";"} and angle == square == paren == 0:
+                        terminator = index; break
+                if terminator is None:
+                    return None
+                close = braces.get(terminator) if tokens[terminator].value == "{" else None
+                return keyword_index, name_index, terminator, close
+
+            target_shape = declaration_shape(fact)
+            if target_shape is None:
+                raise AtlasError("compiler interface source type is not one exact lexical declaration; no supplement published")
+
+            def segment(owner: dict[str, object], shape: tuple[int, int, int, int | None]) -> str:
+                _keyword, name_index, _terminator, _close = shape
+                name = str(owner.get("name"))
+                arity = owner.get("arity")
+                if not isinstance(arity, int) or isinstance(arity, bool) or arity < 0:
+                    raise AtlasError("compiler interface source type arity is malformed; no supplement published")
+                if arity == 0:
+                    return name
+                open_index = name_index + 1
+                close_index = angles.get(open_index)
+                if close_index is None:
+                    raise AtlasError("compiler interface source type parameters are not lexically bounded; no supplement published")
+                parameters = [tokens[index].value.removeprefix("@") for index in range(open_index + 1, close_index)
+                              if tokens[index].kind == "identifier" and tokens[index].value not in {"in", "out"}]
+                if len(parameters) != arity:
+                    raise AtlasError("compiler interface source type parameters disagree with lexical arity; no supplement published")
+                return name + "<" + ", ".join(parameters) + ">"
+
+            enclosing_by_physical: dict[tuple[int, int, int], tuple[int, dict[str, object], tuple[int, int, int, int | None]]] = {}
+            for owner in type_facts:
+                owner_span = _compiler_span(owner.get("source"))
+                if owner_span is None or owner_span[0] != span[0] or owner_span[1] >= span[1]:
+                    continue
+                shape = declaration_shape(owner)
+                if shape is None or shape[3] is None:
+                    continue
+                if tokens[shape[2]].start < span[1] < tokens[shape[3]].end:
+                    physical_owner = (tokens[shape[1]].start, tokens[shape[2]].start, tokens[shape[3]].end)
+                    enclosing_by_physical.setdefault(physical_owner, (owner_span[1], owner, shape))
+            enclosing = list(enclosing_by_physical.values())
+            enclosing.sort(key=lambda item: item[0])
+            namespace = str(fact.get("namespace") or "")
+            parts = [segment(owner, shape) for _start, owner, shape in enclosing]
+            parts.append(segment(fact, target_shape))
+            result = "global::" + (namespace + "." if namespace else "") + ".".join(parts)
+            bodyless_source_type_displays[cache_key] = result
+            return result
+
+        source = parse(source_values)
+        compiler_tokens = [token.value for token in lex(compiler_type)[0]]
+        compiler = parse(compiler_tokens)
+        if source is None or compiler is None:
+            return False
+
+        def source_identity(name: tuple[str, ...], compiler_name: tuple[str, ...]) -> bool:
+            if len(name) > 1:
+                return name == compiler_name
+            leaf = name[-1]
+            if leaf not in known_source_type_names:
+                matches = [fact for fact in type_facts if fact.get("name") == leaf and fact.get("arity") == 0]
+                if matches:
+                    # The saved lexical index can contain multiple anchors for
+                    # one C# declaration (notably `record struct`, whose
+                    # `record` and `struct` keywords each produce a fact).
+                    # Reconstruct every full lexical identity from its exact
+                    # source anchor and collapse only identical identities;
+                    # type_id is intentionally not used as a deduplication key.
+                    identities: set[tuple[str, ...]] = set()
+                    for fact in matches:
+                        fact_span = _compiler_span(fact.get("source"))
+                        if fact_span is None:
+                            raise AtlasError("compiler interface source type has no exact lexical anchor; no supplement published")
+                        source_fd = os.open(repo, os.O_RDONLY | os.O_DIRECTORY)
+                        try:
+                            source_evidence = _read_working_file(source_fd, fact_span[0], collect_source=True)
+                        finally:
+                            os.close(source_fd)
+                        if (not isinstance(source_evidence.get("_source_bytes"), bytes)
+                                or source_evidence.get("sha256") != fact.get("source", {}).get("sha256")):
+                            raise AtlasError("compiler interface source type changed during validation; no supplement published")
+                        canonical_text = source_type_display(fact)
+                        canonical = parse([token.value for token in lex(canonical_text)[0]])
+                        if canonical is None:
+                            raise AtlasError("compiler interface source type identity is malformed; no supplement published")
+                        identities.add(canonical[0])
+                    known_source_type_names[leaf] = next(iter(identities)) if len(identities) == 1 else None
+                else:
+                    known_source_type_names[leaf] = ()
+            canonical_name = known_source_type_names[leaf]
+            if canonical_name:
+                return canonical_name == compiler_name
+            if canonical_name is None:
+                return False
+            return bool(compiler_name) and leaf == compiler_name[-1]
+
+        def equivalent(left: tuple[tuple[str, ...], tuple[object, ...], tuple[tuple[str, int], ...]],
+                       right: tuple[tuple[str, ...], tuple[object, ...], tuple[tuple[str, int], ...]]) -> bool:
+            left_name, left_arguments, left_suffixes = left
+            right_name, right_arguments, right_suffixes = right
+            if left_name == ("<tuple>",) or right_name == ("<tuple>",):
+                if left_name != right_name or left_suffixes != right_suffixes or len(left_arguments) != len(right_arguments):
+                    return False
+                return all(isinstance(left_item, tuple) and isinstance(right_item, tuple)
+                           and left_item[1] == right_item[1]
+                           and equivalent(left_item[0], right_item[0])
+                           for left_item, right_item in zip(left_arguments, right_arguments))
+            names_match = source_identity(left_name, right_name)
+            return (names_match and len(left_arguments) == len(right_arguments)
+                    and all(equivalent(a, b) for a, b in zip(left_arguments, right_arguments))
+                    and left_suffixes == right_suffixes)
+
+        return equivalent(source, compiler)
+
+    def signature_parameter_part(signature: str) -> list[str]:
+        open_paren = signature.find("(")
+        close_marker = signature.find(")->", open_paren + 1)
+        if open_paren < 0 or close_marker < 0:
+            raise AtlasError("compiler interface signature is malformed; no supplement published")
+        body = signature[open_paren + 1:close_marker]
+        if not body:
+            return []
+        pieces: list[str] = []
+        start = angle = square = paren = 0
+        for index, value in enumerate(body):
+            if value == "," and angle == square == paren == 0:
+                pieces.append(body[start:index]); start = index + 1; continue
+            if value == "<": angle += 1
+            elif value == ">": angle = max(0, angle - 1)
+            elif value == "[": square += 1
+            elif value == "]": square = max(0, square - 1)
+            elif value == "(": paren += 1
+            elif value == ")": paren = max(0, paren - 1)
+        pieces.append(body[start:])
+        return pieces
+
+    def signature_agrees_with_parameters(signature: object, parameters: object) -> bool:
+        if not isinstance(signature, str) or not isinstance(parameters, list):
+            return False
+        actual = signature_parameter_part(signature)
+        if actual != parameters:
+            return False
+        return True
+
+    def source_parameter_signatures(text: str, method_name: str) -> list[str]:
+        tokens, _directives = lex(text)
+        name_index = next((index for index, token in enumerate(tokens[:-1])
+                           if token.value.removeprefix("@") == method_name and tokens[index + 1].value == "("), None)
+        if name_index is None:
+            raise AtlasError("compiler interface source declaration has no exact named parameter list; no supplement published")
+        opening = name_index + 1; depth = 0; closing = None
+        for index in range(opening, len(tokens)):
+            if tokens[index].value == "(": depth += 1
+            elif tokens[index].value == ")":
+                depth -= 1
+                if depth == 0:
+                    closing = index; break
+        if closing is None:
+            raise AtlasError("compiler interface source parameter list is unclosed; no supplement published")
+        groups: list[list[str]] = [[]]
+        angle = square = paren = brace = 0
+        for token in tokens[opening + 1:closing]:
+            value = token.value
+            if value == "," and angle == square == paren == brace == 0:
+                groups.append([]); continue
+            groups[-1].append(value)
+            if value == "<": angle += 1
+            elif value == ">": angle = max(0, angle - 1)
+            elif value == "[": square += 1
+            elif value == "]": square = max(0, square - 1)
+            elif value == "(": paren += 1
+            elif value == ")": paren = max(0, paren - 1)
+            elif value == "{": brace += 1
+            elif value == "}": brace = max(0, brace - 1)
+        if len(groups) == 1 and not groups[0]:
+            return []
+        result: list[str] = []
+        modifiers = {"this", "params", "scoped", "ref", "out", "in", "readonly"}
+        ref_kinds = {"ref": "Ref", "out": "Out", "in": "In"}
+        for group in groups:
+            before_default = []
+            depth_angle = depth_square = depth_paren = 0
+            for value in group:
+                if value == "=" and depth_angle == depth_square == depth_paren == 0:
+                    break
+                before_default.append(value)
+                if value == "<": depth_angle += 1
+                elif value == ">": depth_angle = max(0, depth_angle - 1)
+                elif value == "[": depth_square += 1
+                elif value == "]": depth_square = max(0, depth_square - 1)
+                elif value == "(": depth_paren += 1
+                elif value == ")": depth_paren = max(0, depth_paren - 1)
+            ids = [index for index, value in enumerate(before_default) if re.fullmatch(r"@?[A-Za-z_][A-Za-z_0-9]*", value)]
+            if len(ids) < 2:
+                raise AtlasError("compiler interface source parameter shape is outside the supported lexical form; no supplement published")
+            parameter_name_index = ids[-1]
+            prefix = before_default[:parameter_name_index]
+            ref_kind = next((ref_kinds[value] for value in prefix if value in ref_kinds), "None")
+            type_values = [value for value in prefix if value not in modifiers]
+            result.append(ref_kind + ":" + normalized_type(type_values))
+        return result
+
+    def source_return_signature(text: str, method_name: str) -> str:
+        tokens, _directives = lex(text)
+        index = next((position for position, token in enumerate(tokens[:-1])
+                      if token.value.removeprefix("@") == method_name and tokens[position + 1].value == "("), None)
+        if index is None:
+            raise AtlasError("compiler interface source declaration has no exact return type; no supplement published")
+        modifiers = {"public", "protected", "private", "internal", "new", "static", "abstract", "virtual",
+                     "override", "sealed", "extern", "unsafe", "async", "partial"}
+        type_values = [token.value for token in tokens[:index] if token.value not in modifiers]
+        if not type_values:
+            raise AtlasError("compiler interface source declaration has no return type; no supplement published")
+        return normalized_type(type_values)
+
+    def verify_source_signature(binding: dict[str, object], *, caller_id: str, call_start: int) -> None:
+        candidate_identity = str(binding["candidate_identity"])
+        member_name = str(binding["bound_interface_signature"]).split("(", 1)[0].split("`", 1)[0]
+        if not signature_agrees_with_parameters(binding.get("bound_interface_signature"),
+                                                binding.get("bound_interface_parameters")):
+            raise AtlasError("compiler interface bound signature disagrees with its parameter evidence; no supplement published")
+        member_key = f"interface:{caller_id}:{call_start}:{candidate_identity}:bound_interface_member_source"
+        member_text = snippet_by_id.get(member_key, "")
+        member_actual = source_parameter_signatures(member_text, member_name)
+        expected = binding.get("bound_interface_parameters")
+        if not isinstance(expected, list) or any(not isinstance(item, str) or ":" not in item for item in expected):
+            raise AtlasError("compiler interface parameter signature is malformed; no supplement published")
+        expected_parameters: list[tuple[str, str]] = []
+        for item in expected:
+            ref_kind, type_name = item.split(":", 1)
+            expected_parameters.append((ref_kind, type_name))
+        if (len(member_actual) != len(expected_parameters)
+                or any(actual.split(":", 1)[0] != expected_ref_kind
+                       or not source_type_matches_compiler(
+                           [token.value for token in lex(actual.split(":", 1)[1])[0]],
+                           expected_type)
+                       for actual, (expected_ref_kind, expected_type) in zip(member_actual, expected_parameters))):
+            member_span = _compiler_span(binding.get("bound_interface_member_source"))
+            member_path = member_span[0] if member_span else "?"
+            member_offset = member_span[1] if member_span else -1
+            raise AtlasError(
+                "compiler interface member source overload disagrees with the compiler-bound parameter signature; "
+                f"member={binding.get('bound_interface_member')!r} source={member_path}:{member_offset} "
+                f"source_parameters={member_actual[:40]!r} source_parameter_count={len(member_actual)} "
+                f"bound_interface_parameters={[item[:160] for item in expected[:40]]!r} "
+                f"bound_interface_parameter_count={len(expected)} "
+                f"bound_interface_signature={binding.get('bound_interface_signature')!r}; no supplement published")
+        expected_return_text = str(binding["bound_interface_signature"]).rsplit(")->", 1)[1]
+        expected_return = normalized_type([token.value for token in lex(expected_return_text)[0]])
+        actual_member_return = source_return_signature(member_text, member_name)
+        if not source_type_matches_compiler([token.value for token in lex(actual_member_return)[0]], expected_return_text):
+            actual_tokens = [token.value for token in lex(actual_member_return)[0]]
+            member_span = _compiler_span(binding.get("bound_interface_member_source"))
+            member_path = member_span[0] if member_span else "?"
+            member_offset = member_span[1] if member_span else -1
+            raise AtlasError(
+                "compiler interface member source return type disagrees with its compiler-bound signature; "
+                f"member={binding.get('bound_interface_member')!r} source={member_path}:{member_offset} "
+                f"source_return_tokens={actual_tokens[:80]!r} source_return_token_count={len(actual_tokens)} "
+                f"compiler_return_type={expected_return_text!r}; no supplement published")
+        if binding.get("bound_interface_member") != str(binding.get("bound_interface_type")) + "." + str(binding.get("bound_interface_signature")):
+            raise AtlasError("compiler interface member label disagrees with its declaring type and signature; no supplement published")
+        declaration_key = f"interface:{caller_id}:{call_start}:{candidate_identity}:bound_interface_declaration_source"
+        declaration_tokens, _directives = lex(snippet_by_id.get(declaration_key, ""))
+        expected_type_name = str(binding.get("bound_interface_type", "")).rsplit(".", 1)[-1]
+        opening = next((index for index, token in enumerate(declaration_tokens) if token.value == "{"), None)
+        if (len(declaration_tokens) < 3 or declaration_tokens[0].value != "interface"
+                or declaration_tokens[1].value.removeprefix("@") != expected_type_name or opening is None):
+            raise AtlasError("compiler interface declaration source has the wrong exact owner; no supplement published")
+        depth = 0; closing = None
+        for index in range(opening, len(declaration_tokens)):
+            if declaration_tokens[index].value == "{": depth += 1
+            elif declaration_tokens[index].value == "}":
+                depth -= 1
+                if depth == 0:
+                    closing = index; break
+        if closing != len(declaration_tokens) - 1:
+            raise AtlasError("compiler interface declaration anchor does not end at its owner's closing brace; no supplement published")
+        if binding.get("implementation_signature") is not None:
+            implementation_name = str(binding["implementation_signature"]).split("(", 1)[0].split("`", 1)[0]
+            implementation_key = f"interface:{caller_id}:{call_start}:{candidate_identity}:implementation_method_source"
+            implementation_actual = source_parameter_signatures(snippet_by_id.get(implementation_key, ""), implementation_name)
+            implementation_expected = binding.get("implementation_parameters")
+            if not isinstance(implementation_expected, list):
+                raise AtlasError("compiler interface implementation parameter signature is malformed; no supplement published")
+            if not signature_agrees_with_parameters(binding.get("implementation_signature"), implementation_expected):
+                raise AtlasError("compiler interface implementation signature disagrees with its parameter evidence; no supplement published")
+            implementation_parameters: list[tuple[str, str]] = []
+            for item in implementation_expected:
+                if not isinstance(item, str) or ":" not in item:
+                    raise AtlasError("compiler interface implementation parameter signature is malformed; no supplement published")
+                ref_kind, type_name = item.split(":", 1)
+                implementation_parameters.append((ref_kind, type_name))
+            if (len(implementation_actual) != len(implementation_parameters)
+                    or any(actual.split(":", 1)[0] != expected_ref_kind
+                           or not source_type_matches_compiler(
+                               [token.value for token in lex(actual.split(":", 1)[1])[0]],
+                               expected_type)
+                           for actual, (expected_ref_kind, expected_type) in zip(implementation_actual, implementation_parameters))
+                    or implementation_expected != expected):
+                raise AtlasError("compiler interface implementation source disagrees with the bound interface signature; no supplement published")
+            implementation_return_text = str(binding["implementation_signature"]).rsplit(")->", 1)[1]
+            implementation_return = normalized_type([token.value for token in lex(implementation_return_text)[0]])
+            if not source_type_matches_compiler(
+                    [token.value for token in lex(source_return_signature(snippet_by_id.get(implementation_key, ""), implementation_name))[0]],
+                    implementation_return_text):
+                raise AtlasError("compiler interface implementation source return type disagrees with its compiler-bound signature; no supplement published")
+            if implementation_return != expected_return:
+                raise AtlasError("compiler interface implementation return type disagrees with the bound member; no supplement published")
+
+    for item in collections["unsupported"]:
+        if item.get("kind") != "unsupported_interface_candidate":
+            continue
+        binding = item["interface_binding"]
+        call_span = _compiler_span(item["call_site_source"])
+        assert call_span is not None
+        candidate_identity = str(binding["candidate_identity"])
+        verify_source_signature(binding, caller_id=str(item["caller_node_id"]), call_start=call_span[1])
+        name_key = f"interface:{item['caller_node_id']}:{call_span[1]}:{candidate_identity}:bound_interface_member_name_source"
+        name_tokens, _directives = lex(snippet_by_id.get(name_key, ""))
+        method_name = str(binding["bound_interface_signature"]).split("(", 1)[0].split("`", 1)[0]
+        declaration_key = f"interface:{item['caller_node_id']}:{call_span[1]}:{candidate_identity}:bound_interface_declaration_source"
+        declaration_tokens, _directives = lex(snippet_by_id.get(declaration_key, ""))
+        if (len(name_tokens) != 1 or name_tokens[0].value.removeprefix("@") != method_name
+                or len(declaration_tokens) < 3 or declaration_tokens[0].value != "interface"
+                or not any(token.value == "{" for token in declaration_tokens)
+                or declaration_tokens[-1].value != "}"):
+            raise AtlasError("compiler interface exclusion member is outside its exact interface declaration; no supplement published")
+
     for edge in collections["edges"]:
         key = f"edge-callsite:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}"
         text = snippet_by_id.get(key, "")
@@ -2976,9 +3670,91 @@ def _verify_compiler_source_call_graph(
         if opening is None or opening == 0:
             raise AtlasError("compiler source-call graph callsite has no exact invocation head; no supplement published")
         called_name = tokens[opening - 1].value.removeprefix("@")
-        expected_name = str(edge.get("callee_method", "")).rsplit(".", 1)[-1].split("(", 1)[0]
+        if edge.get("dispatch_kind") == "interface_implementation_source":
+            expected_name = str(edge["interface_binding"].get("bound_interface_signature", "")).split("(", 1)[0].split("`", 1)[0]
+        else:
+            expected_name = str(edge.get("callee_method", "")).rsplit(".", 1)[-1].split("(", 1)[0]
         if called_name != expected_name:
             raise AtlasError("compiler source-call graph callsite head does not match its callee; impact refused")
+        binding = edge.get("interface_binding")
+        if isinstance(binding, dict):
+            verify_source_signature(binding, caller_id=str(edge["caller_node_id"]),
+                                    call_start=_compiler_span(edge["call_site_source"])[1])
+            member_span = _compiler_span(binding.get("bound_interface_member_name_source"))
+            candidate_identity = str(binding["candidate_identity"])
+            member_key = f"interface:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}:{candidate_identity}:bound_interface_member_name_source"
+            member_tokens, _directives = lex(snippet_by_id.get(member_key, ""))
+            expected_member_name = str(binding.get("bound_interface_signature", "")).split("(", 1)[0].split("`", 1)[0]
+            if member_span is None or len(member_tokens) != 1 or member_tokens[0].value.removeprefix("@") != expected_member_name:
+                raise AtlasError("compiler interface member-name anchor does not match the bound signature; no supplement published")
+            declaration_key = f"interface:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}:{candidate_identity}:bound_interface_member_source"
+            declaration_tokens, _directives = lex(snippet_by_id.get(declaration_key, ""))
+            if not any(token.value.removeprefix("@") == expected_member_name for token in declaration_tokens):
+                raise AtlasError("compiler interface member declaration anchor has the wrong member name; no supplement published")
+            for path_key in ("candidate_to_interface_path", "candidate_to_implementation_owner_path"):
+                for step_index, step in enumerate(binding[path_key]):
+                    key = f"interface:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}:{candidate_identity}:{path_key}:{step_index}:type_syntax_source"
+                    syntax_tokens, _directives = lex(snippet_by_id.get(key, ""))
+                    declaration_key = f"interface:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}:{candidate_identity}:{path_key}:{step_index}:from_type_declaration_source"
+                    declaration_tokens, _directives = lex(snippet_by_id.get(declaration_key, ""))
+                    from_type_name = str(step.get("from_type", "")).rsplit(".", 1)[-1].split("`", 1)[0]
+                    type_keywords = {"class", "interface", "struct", "record"}
+                    declaration_keyword_index = next((index for index, token in enumerate(declaration_tokens[:8])
+                                                       if token.value in type_keywords), None)
+                    record_class = (declaration_keyword_index is not None
+                                    and declaration_tokens[declaration_keyword_index].value == "record"
+                                    and declaration_keyword_index + 1 < len(declaration_tokens)
+                                    and declaration_tokens[declaration_keyword_index + 1].value in {"class", "struct"})
+                    declaration_name_index = (declaration_keyword_index + 2 if record_class
+                                              else declaration_keyword_index + 1 if declaration_keyword_index is not None else 0)
+                    allowed_modifiers = {"public", "protected", "private", "internal", "new", "static", "abstract",
+                                         "sealed", "partial", "unsafe", "readonly", "ref", "file"}
+                    if (len(declaration_tokens) < 4
+                            or declaration_keyword_index is None
+                            or declaration_name_index >= len(declaration_tokens)
+                            or any(token.value not in allowed_modifiers for token in declaration_tokens[:declaration_keyword_index])
+                            or declaration_tokens[declaration_name_index].value.removeprefix("@") != from_type_name):
+                        raise AtlasError("compiler interface membership declaration is not one exact lexical type owner; no supplement published")
+                    body_open = next((index for index in range(declaration_name_index + 1, len(declaration_tokens))
+                                      if declaration_tokens[index].value == "{"), None)
+                    depth = 0; body_close = None
+                    if body_open is not None:
+                        for index in range(body_open, len(declaration_tokens)):
+                            if declaration_tokens[index].value == "{": depth += 1
+                            elif declaration_tokens[index].value == "}":
+                                depth -= 1
+                                if depth == 0:
+                                    body_close = index; break
+                    if body_open is None or body_close != len(declaration_tokens) - 1:
+                        raise AtlasError("compiler interface membership declaration is not one exact lexical type owner; no supplement published")
+                    target_name = str(step.get("to_type_id", "")).split(".")[-1].split("`")[0]
+                    if not syntax_tokens or not any(token.value.removeprefix("@") == target_name for token in syntax_tokens):
+                        raise AtlasError(f"compiler interface membership syntax does not name its target type: target={target_name!r} tokens={[token.value for token in syntax_tokens]!r}; no supplement published")
+                    base_key = f"interface:{edge['caller_node_id']}:{_compiler_span(edge['call_site_source'])[1]}:{candidate_identity}:{path_key}:{step_index}:base_list_source"
+                    base_tokens, _directives = lex(snippet_by_id.get(base_key, ""))
+                    syntax_values = [token.value for token in syntax_tokens]
+                    base_values = [token.value for token in base_tokens]
+                    matches = [index for index in range(len(base_values) - len(syntax_values) + 1)
+                               if base_values[index:index + len(syntax_values)] == syntax_values]
+                    declaration_values = [token.value for token in declaration_tokens[:body_open]]
+                    base_matches = [index for index in range(len(declaration_values) - len(base_values) + 1)
+                                    if declaration_values[index:index + len(base_values)] == base_values]
+                    slots: list[list[str]] = []
+                    if base_values and base_values[0] == ":":
+                        slot: list[str] = []; angle = square = paren = 0
+                        for value in base_values[1:]:
+                            if value == "," and angle == square == paren == 0:
+                                slots.append(slot); slot = []; continue
+                            slot.append(value)
+                            if value == "<": angle += 1
+                            elif value == ">": angle = max(0, angle - 1)
+                            elif value == "[": square += 1
+                            elif value == "]": square = max(0, square - 1)
+                            elif value == "(": paren += 1
+                            elif value == ")": paren = max(0, paren - 1)
+                        if slot: slots.append(slot)
+                    if (len(matches) != 1 or len(base_matches) != 1 or syntax_values not in slots):
+                        raise AtlasError("compiler interface membership source is not one exact base-list slot; no supplement published")
     for item in collections["unsupported"]:
         if item["kind"] not in {"unsupported_source_call", "unsupported_lexical_source_method"}:
             continue
@@ -3041,9 +3817,11 @@ def _verify_compiler_source_call_graph(
     graph["roots"] = sorted(collections["roots"], key=lambda root: (
         str(root["route"]), str(root["http_method"]), str(root["implementation_type"]), str(root["implementation_method"])))
     graph["edges"] = sorted(collections["edges"], key=lambda edge: (
-        str(edge["call_site_source"]["path"]), int(edge["call_site_source"]["span"]["start_offset"]), str(edge["caller_node_id"])))
+        str(edge["call_site_source"]["path"]), int(edge["call_site_source"]["span"]["start_offset"]), str(edge["caller_node_id"]),
+        str((edge.get("interface_binding") or {}).get("candidate_identity", ""))))
     graph["unsupported"] = sorted(collections["unsupported"], key=lambda item: (
-        str(item["call_site_source"]["path"]), int(item["call_site_source"]["span"]["start_offset"]), str(item["caller_node_id"])))
+        str(item["call_site_source"]["path"]), int(item["call_site_source"]["span"]["start_offset"]), str(item["caller_node_id"]),
+        str((item.get("interface_binding") or {}).get("candidate_identity", ""))))
     graph["nested_body_exclusions"] = sorted(collections["nested_body_exclusions"], key=lambda item: (
         str(item["source"]["path"]), int(item["source"]["span"]["start_offset"]), str(item["caller_node_id"])))
     if bind:
@@ -3084,7 +3862,8 @@ def _verify_compiler_source_call_graph(
                                  "callee_containing_type": edge["callee_containing_type"],
                                  "callee_source": edge["callee_source"], "call_site_source": edge["call_site_source"],
                                  "dispatch_kind": edge["dispatch_kind"], "compiler_binding_confirmed": True,
-                                 "runtime_reachability_proven": False, "runtime_DI_selection_proven": False})
+                                 "runtime_reachability_proven": False, "runtime_DI_selection_proven": False,
+                                 **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {})})
         for item in unsupported_by_caller.get(root_id, []):
             projected_count += 1
             if projected_count > SOURCE_CALL_GRAPH_CAPS["compatibility_records"]:
@@ -3092,7 +3871,8 @@ def _verify_compiler_source_call_graph(
             unresolved.append({**route_identity, "caller_method": item["caller_method"],
                                "caller_source": item["caller_source"],
                                "kind": "unsupported_handler_source_call" if item["kind"] == "unsupported_source_call" else item["kind"],
-                               "source": item["call_site_source"], "reason": item["reason"]})
+                               "source": item["call_site_source"], "reason": item["reason"],
+                               **({"interface_binding": item["interface_binding"]} if item.get("interface_binding") else {})})
 
     if counts["compatibility_records"] != projected_count:
         raise AtlasError("compiler source-call graph compatibility count disagrees with root-expanded projections; no supplement published")
@@ -3691,7 +4471,8 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                 reverse.setdefault(str(edge["callee_node_id"]), []).append(edge)
             for incoming in reverse.values():
                 incoming.sort(key=lambda edge: (str(edge["caller_node_id"]), str(edge["call_site_source"]["path"]),
-                                                int(edge["call_site_source"]["span"]["start_offset"])))
+                                                int(edge["call_site_source"]["span"]["start_offset"]),
+                                                str((edge.get("interface_binding") or {}).get("candidate_identity", ""))))
             target_nodes = {str(node["id"]): node for node in call_graph["nodes"]
                             if node.get("lexical_method_fact_id") == method.get("id")}
             next_edge: dict[str, dict[str, object]] = {}
@@ -3742,7 +4523,8 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                     "caller_lexical_method_fact_id": edge["caller_lexical_method_fact_id"],
                                     "callee_lexical_method_fact_id": edge["callee_lexical_method_fact_id"],
                                     "dispatch_kind": edge["dispatch_kind"], "call_site_source": edge["call_site_source"],
-                                    "callee_source": edge["callee_source"]} for edge in chain],
+                                    "callee_source": edge["callee_source"],
+                                    **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {})} for edge in chain],
                     "claim": "compiler_confirmed_shortest_source_call_chain_associated_with_route_handler",
                     "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
                     "runtime_DI_selection_proven": False,
@@ -3753,7 +4535,8 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                        "dispatch_kind": edge["dispatch_kind"],
                                        "caller_lexical_method_fact_id": edge["caller_lexical_method_fact_id"],
                                        "callee_lexical_method_fact_id": edge["callee_lexical_method_fact_id"],
-                                       "call_site_source": edge["call_site_source"], "callee_source": edge["callee_source"]}
+                                       "call_site_source": edge["call_site_source"], "callee_source": edge["callee_source"],
+                                       **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {})}
                 compiler_route_paths.append(witness)
         if compiler_callers:
             document["compiler_confirmed_interface_callers"] = sorted(compiler_callers,

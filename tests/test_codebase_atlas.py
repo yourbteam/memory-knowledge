@@ -286,8 +286,10 @@ class AtlasCliTests(unittest.TestCase):
         graph_caps = dict(ATLAS.SOURCE_CALL_GRAPH_CAPS)
         graph_counts = {"roots": 1, "nodes": 2, "edges": 1, "inspected_invocations": 1,
                         "unsupported": 0, "nested_body_exclusions": 1, "method_bodies_traversed": 2,
-                        "serialized_graph_bytes": 1, "traversal_work": 1, "compatibility_records": 1}
-        graph_payload = {"schema_version": 1, "status": "complete", "caps": graph_caps, "counts": graph_counts,
+                        "serialized_graph_bytes": 1, "traversal_work": 1, "compatibility_records": 1,
+                        "interface_candidate_checks": 0}
+        graph_payload = {"schema_version": ATLAS.SOURCE_CALL_GRAPH_SCHEMA_VERSION, "status": "complete",
+                         "caps": graph_caps, "counts": graph_counts,
                          "roots": [{"route": relation["route"], "http_method": relation["http_method"],
                                     "implementation_type": relation["implementation_type"],
                                     "implementation_method": relation["implementation_method"],
@@ -676,7 +678,9 @@ class Handler
         source.write_text('''using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 namespace Fixture;
-public sealed record Request;
+public sealed record Request(int Number = 0);
+public readonly record struct ResolvedAssociation(long LocationId, long TourTimeSlotsId, string GroupId,
+    string? Name, DateTime? MediaCreatedAt, long? UploadedByDeviceId = null, string? StablePhotoId = null);
 public interface IHandler<T> { string Handle(T value); }
 public static class Support
 {
@@ -684,6 +688,10 @@ public static class Support
     public static string Load(string value) => value;
     public static string Convert<T>(T value) => value.ToString()!;
     public static string Deferred(Request value) => value.ToString();
+    public static System.Threading.Tasks.Task<Request?> WorkerHelper(Request value) => null!;
+    public static System.Threading.Tasks.Task<IReadOnlyList<long>> SearchHelper(string query,
+        IReadOnlyList<(long ImageId, string S3Key)> images, CancellationToken cancellationToken) => null!;
+    public static System.Threading.Tasks.Task<ResolvedAssociation> ResolveHelper(ResolvedAssociation value) => null!;
     public static string DeepStart(Request value) => DeepLeft(value) + DeepRight(value);
     public static string DeepLeft(Request value) => DeepMiddle(value);
     public static string DeepRight(Request value) => DeepMiddle(value);
@@ -703,15 +711,47 @@ public sealed class AccessGate
     public bool Check(string value) => true;
 }
 public class AuditTrail { public string Record(Request value) => value.ToString(); }
-public interface IWorker { string Run(Request value); }
-public class VirtualWorker : IWorker { public virtual string Run(Request value) => value.ToString(); }
-public sealed class First(AccessGate gate, IWorker interfaceWorker, VirtualWorker virtualWorker) : IHandler<Request>
+public interface IWorker { System.Threading.Tasks.Task<Request?> Run(Request value); }
+public interface IFaceSearchProcessor
+{
+    System.Threading.Tasks.Task<IReadOnlyList<long>> SearchAsync(string query,
+        IReadOnlyList<(long ImageId, string S3Key)> images, CancellationToken cancellationToken);
+}
+public interface IAssociationResolver
+{
+    System.Threading.Tasks.Task<ResolvedAssociation> ResolveAsync(ResolvedAssociation value);
+}
+public interface IWorkerBase { string RunChild(Request value); }
+public interface IChildWorker : IWorkerBase { }
+public interface IGenericWorker<T> { string RunGeneric(Request value); }
+public class VirtualWorker : IWorker { public virtual System.Threading.Tasks.Task<Request?> Run(Request value) => null!; }
+public sealed class ChildWorker : IChildWorker { public string RunChild(Request value) => value.ToString(); }
+public sealed class GenericWorker<T> : IGenericWorker<T> { public string RunGeneric(Request value) => value.ToString(); }
+public class ConcreteWorker : IWorker, IFaceSearchProcessor, IAssociationResolver
+{
+    public System.Threading.Tasks.Task<Request?> Run(Request value) => Support.WorkerHelper(value);
+    public System.Threading.Tasks.Task<IReadOnlyList<long>> SearchAsync(string query,
+        IReadOnlyList<(long ImageId, string S3Key)> images, CancellationToken cancellationToken) =>
+        Support.SearchHelper(query, images, cancellationToken);
+    public System.Threading.Tasks.Task<ResolvedAssociation> ResolveAsync(ResolvedAssociation value) =>
+        Support.ResolveHelper(value);
+}
+public sealed class InheritedWorker : ConcreteWorker { }
+public sealed class First(AccessGate gate, IWorker interfaceWorker, VirtualWorker virtualWorker,
+    IFaceSearchProcessor faceSearch, IAssociationResolver associationResolver,
+    IChildWorker childWorker, IGenericWorker<Request> genericWorker) : IHandler<Request>
 {
     public string Handle(Request value)
     {
         var loaded = Support.Load(value) + Support.Deferred(value) + Support.DeepStart(value) + Support.ProjectTrend(value);
         _ = gate.Check(value);
-        _ = interfaceWorker.Run(value);
+            IReadOnlyList<(long ImageId, string S3Key)> imagePairs =
+                new (long ImageId, string S3Key)[] { ((long)value.Number, "key") };
+            _ = interfaceWorker.Run(value);
+            _ = faceSearch.SearchAsync("query", imagePairs, default);
+            _ = associationResolver.ResolveAsync(default);
+                _ = childWorker.RunChild(value);
+            _ = genericWorker.RunGeneric(value);
         _ = virtualWorker.Run(value);
         _ = Support.Convert(value);
         _ = System.Linq.Enumerable.Empty<Request>();
@@ -808,15 +848,39 @@ public static class Registrations
         self.assertEqual(ATLAS._compiler_safe_tree(self.repo, "obj"), generated_before)
         self.assertFalse((self.repo / "bin").exists())
         source_edges = payload["source_call_edges"]
-        self.assertEqual(len(source_edges), 40)
-        self.assertEqual({edge["callee_method"] for edge in source_edges}, {"Load", "Deferred", "DeepStart", "Check", "Record"})
-        self.assertEqual({edge["dispatch_kind"] for edge in source_edges}, {"static_source", "non_virtual_instance_source"})
+        self.assertEqual(len(source_edges), 64)
+        self.assertEqual({edge["callee_method"] for edge in source_edges},
+                         {"Load", "Deferred", "DeepStart", "Check", "Record", "Run", "SearchAsync", "ResolveAsync"})
+        self.assertEqual({edge["dispatch_kind"] for edge in source_edges},
+                         {"static_source", "non_virtual_instance_source", "interface_implementation_source"})
         static_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "static_source"]
         instance_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "non_virtual_instance_source"]
         self.assertEqual(len(static_edges), 32)
         self.assertEqual(len(instance_edges), 8)
+        interface_edges = [edge for edge in source_edges if edge["dispatch_kind"] == "interface_implementation_source"]
+        self.assertEqual(len(interface_edges), 24)
+        self.assertTrue(all(edge["interface_binding"]["compiler_implementation_match"]
+                            and not edge["interface_binding"]["runtime_DI_selection_proven"] for edge in interface_edges))
+        self.assertEqual({edge["interface_binding"]["candidate_type"] for edge in interface_edges},
+                         {"global::Fixture.ConcreteWorker", "global::Fixture.InheritedWorker"})
+        interface_graph_edges = [edge for edge in payload["source_call_graph"]["edges"]
+                                 if edge["dispatch_kind"] == "interface_implementation_source"]
+        self.assertEqual(len(interface_graph_edges), 6)
+        self.assertEqual(len({edge["callee_node_id"] for edge in interface_graph_edges}), 3)
+        inherited_candidate_edge = next(edge for edge in interface_graph_edges
+                                        if edge["interface_binding"]["candidate_type"] == "global::Fixture.InheritedWorker")
+        self.assertEqual(inherited_candidate_edge["interface_binding"]["candidate_to_implementation_owner_path"][0]["to_type_id"],
+                         "Fixture.ConcreteWorker`0")
         self.assertEqual({edge["callee_containing_type"] for edge in static_edges}, {"global::Fixture.Support"})
         lexical_graph = self.graph(snapshot["snapshot_id"])
+        resolved_association_facts = [fact for fact in lexical_graph["facts"]
+                                      if fact.get("kind") == "type_declaration"
+                                      and fact.get("type_id") == "Fixture.ResolvedAssociation`0"]
+        self.assertEqual(len(resolved_association_facts), 2)
+        resolved_spans = [ATLAS._compiler_span(fact["source"]) for fact in resolved_association_facts]
+        self.assertEqual(len({span[0] for span in resolved_spans}), 1)
+        self.assertEqual(len({span[2] for span in resolved_spans}), 1)
+        self.assertEqual(len({span[1] for span in resolved_spans}), 2)
         load_facts = [fact for fact in lexical_graph["facts"]
                       if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Load"
                       and fact["source"]["path"] == "Fixture.cs"]
@@ -878,6 +942,16 @@ public static class Registrations
             self.assertTrue(all(left["callee_lexical_method_fact_id"] == right["caller_lexical_method_fact_id"]
                                 for left, right in zip(chain, chain[1:])))
             self.assertEqual(chain[-1]["callee_lexical_method_fact_id"], deep_leaf["lexical_method_fact_id"])
+        interface_impact = json.loads(self.impact("Support.WorkerHelper", max_tokens=100000).stdout)
+        interface_paths = interface_impact["compiler_associated_route_paths"]
+        self.assertEqual(len(interface_paths), 4)
+        self.assertTrue(all(path["hop_count"] == 2 for path in interface_paths))
+        interface_hops = [path["call_chain"][0] for path in interface_paths]
+        self.assertTrue(all(hop["dispatch_kind"] == "interface_implementation_source"
+                            and hop["interface_binding"]["claim"] == "compiler_confirmed_source_interface_implementation_correspondence"
+                            and not hop["interface_binding"]["runtime_DI_selection_proven"] for hop in interface_hops))
+        self.assertEqual({hop["interface_binding"]["candidate_type"] for hop in interface_hops},
+                         {"global::Fixture.ConcreteWorker"})
         self.assertEqual(call_graph["counts"]["nested_body_exclusions"], 4)
         check_facts = [fact for fact in lexical_graph["facts"]
                        if fact.get("kind") == "method_declaration" and fact.get("method_name") == "Check"
@@ -927,7 +1001,27 @@ public static class Registrations
                                item.get("source", {}).get("span", {}).get("start_offset") ==
                                source.read_text(encoding="utf-8").index("virtualWorker.Run")]
         self.assertEqual(len(virtual_limitations), 8)
-        self.assertTrue(all(item["kind"] == "unsupported_handler_source_call" for item in virtual_limitations))
+        interface_limitations = [item for item in virtual_limitations if item["source"]["span"]["start_offset"] ==
+                                 source.read_text(encoding="utf-8").index("interfaceWorker.Run")]
+        self.assertEqual(len(interface_limitations), 4)
+        self.assertTrue(all(item["kind"] == "unsupported_interface_candidate" for item in interface_limitations))
+        self.assertEqual({item["interface_binding"]["candidate_type"] for item in interface_limitations},
+                         {"global::Fixture.VirtualWorker"})
+        direct_virtual_limitations = [item for item in virtual_limitations if item["source"]["span"]["start_offset"] ==
+                                      source.read_text(encoding="utf-8").index("virtualWorker.Run")]
+        self.assertTrue(all(item["kind"] == "unsupported_handler_source_call" for item in direct_virtual_limitations))
+        inherited_interface_limits = [item for item in payload["source_call_unresolved"]
+                                      if item["source"]["span"]["start_offset"] ==
+                                      source.read_text(encoding="utf-8").index("childWorker.RunChild")]
+        self.assertEqual(len(inherited_interface_limits), 4)
+        self.assertTrue(all(item["kind"] == "unsupported_handler_source_call"
+                            and "receiver interface different" in item["reason"] for item in inherited_interface_limits))
+        generic_interface_limits = [item for item in payload["source_call_unresolved"]
+                                    if item["source"]["span"]["start_offset"] ==
+                                    source.read_text(encoding="utf-8").index("genericWorker.RunGeneric")]
+        self.assertEqual(len(generic_interface_limits), 4)
+        self.assertTrue(all(item["kind"] == "unsupported_handler_source_call"
+                            and "generic" in item["reason"] for item in generic_interface_limits))
         extension_offsets = {source.read_text(encoding="utf-8").index("value.Extend()"),
                              source.read_text(encoding="utf-8").index("FixtureExtensions.Extend(value)")}
         extension_limitations = [item for item in payload["source_call_unresolved"]
@@ -946,9 +1040,398 @@ public static class Registrations
                          {"non_virtual_instance_source"})
         self.assertFalse(instance_impact["compiler_associated_route_paths_scope"]["runtime_reachability_proven"])
         assets = self.repo / "obj" / "project.assets.json"
-        assets.write_bytes(assets.read_bytes() + b" ")
+        original_assets = assets.read_bytes()
+        assets.write_bytes(original_assets + b" ")
         stale = self.impact("Fixture.First.Handle", expect=2)
         self.assertIn("generated inputs are stale", stale.stderr)
+        assets.write_bytes(original_assets)
+
+        interface_groups = {}
+        for edge in payload["source_call_graph"]["edges"]:
+            if edge["dispatch_kind"] != "interface_implementation_source":
+                continue
+            call_span = ATLAS._compiler_span(edge["call_site_source"])
+            interface_groups.setdefault((edge["caller_node_id"], call_span), []).append(edge)
+        fixture_text_for_calls = source.read_text(encoding="utf-8")
+
+        def candidate_group_at(call):
+            expected_start = fixture_text_for_calls.index(call)
+            return next(group for (_caller, span), group in interface_groups.items()
+                        if span[1] == expected_start and len(group) == 2)
+
+        positive_edges = candidate_group_at("interfaceWorker.Run")
+        search_positive_edges = candidate_group_at("faceSearch.SearchAsync")
+        association_positive_edges = candidate_group_at("associationResolver.ResolveAsync")
+        for group in (positive_edges, search_positive_edges, association_positive_edges):
+            self.assertEqual(len({edge["interface_binding"]["candidate_identity"] for edge in group}), 2)
+            self.assertEqual(len({edge["callee_node_id"] for edge in group}), 1)
+        self.assertEqual(len({edge["interface_binding"]["candidate_identity"] for edge in positive_edges}), 2)
+        self.assertEqual(len({edge["callee_node_id"] for edge in positive_edges}), 1)
+        self.assertEqual({edge["interface_binding"]["candidate_type"] for edge in positive_edges},
+                         {"global::Fixture.ConcreteWorker", "global::Fixture.InheritedWorker"})
+        positive = next(edge for edge in positive_edges
+                        if edge["interface_binding"]["candidate_type"] == "global::Fixture.ConcreteWorker")
+        inherited = next(edge for edge in positive_edges
+                         if edge["interface_binding"]["candidate_type"] == "global::Fixture.InheritedWorker")
+        search_positive = next(edge for edge in search_positive_edges
+                               if edge["interface_binding"]["candidate_type"] == "global::Fixture.ConcreteWorker")
+        association_positive = next(edge for edge in association_positive_edges
+                                    if edge["interface_binding"]["candidate_type"] == "global::Fixture.ConcreteWorker")
+        self.assertNotEqual(positive["interface_binding"]["candidate_to_implementation_owner_path"],
+                            inherited["interface_binding"]["candidate_to_implementation_owner_path"])
+
+        def make_anchor(template, start, end):
+            anchor = json.loads(json.dumps(template))
+            anchor["span"]["start_offset"] = start
+            anchor["span"]["end_offset"] = end
+            return anchor
+
+        def reseal(tampered):
+            graph_value = tampered["source_call_graph"]
+            for _ in range(8):
+                actual_size = len(ATLAS._canonical_json(graph_value))
+                if graph_value["counts"]["serialized_graph_bytes"] == actual_size:
+                    break
+                graph_value["counts"]["serialized_graph_bytes"] = actual_size
+            stable = {key: value for key, value in tampered.items() if key != "content_sha256"}
+            tampered["content_sha256"] = hashlib.sha256(ATLAS._canonical_json(stable)).hexdigest()
+            return ATLAS._canonical_json(tampered).decode("ascii")
+
+        compiler_source = source.read_text(encoding="utf-8")
+        binding = positive["interface_binding"]
+        search_binding = search_positive["interface_binding"]
+        association_binding = association_positive["interface_binding"]
+        self.assertIn("Request?>", binding["bound_interface_signature"])
+        self.assertIn("long ImageId", search_binding["bound_interface_signature"])
+        self.assertIn("string S3Key", search_binding["bound_interface_signature"])
+        self.assertIn("ImageId", search_binding["bound_interface_parameters"][1])
+        self.assertIn("S3Key", search_binding["bound_interface_parameters"][1])
+        self.assertIn("Task<global::Fixture.ResolvedAssociation>", association_binding["bound_interface_signature"])
+        self.assertIn("string? Name", compiler_source)
+        self.assertIn("DateTime? MediaCreatedAt", compiler_source)
+        common_binding_keys = {
+            "bound_interface_type", "bound_interface_type_id", "bound_interface_type_source",
+            "bound_interface_declaration_source", "bound_interface_member", "bound_interface_signature",
+            "bound_interface_parameters", "bound_interface_arity", "bound_interface_parameter_count",
+            "bound_interface_member_source", "bound_interface_member_name_source", "candidate_type",
+            "candidate_type_id", "candidate_type_source", "candidate_identity",
+        }
+
+        def candidate_edge(graph_value, identity, call_text=None):
+            expected_start = compiler_source.index(call_text) if call_text else None
+            return next(item for item in graph_value["edges"]
+                        if isinstance(item.get("interface_binding"), dict)
+                        and item["interface_binding"].get("candidate_identity") == identity
+                        and (expected_start is None or
+                             ATLAS._compiler_span(item.get("call_site_source"))[1] == expected_start))
+
+        def make_exclusion(edge, native):
+            source_binding = edge["interface_binding"]
+            excluded_binding = {key: source_binding[key] for key in common_binding_keys}
+            excluded_binding.update({"implementation_method": source_binding["implementation_method"],
+                                     "implementation_method_source": source_binding["implementation_method_source"],
+                                     "reason": native["interface_binding"]["reason"]})
+            native.update({"caller_node_id": edge["caller_node_id"], "caller_method": edge["caller_method"],
+                           "caller_source": edge["caller_source"], "call_site_source": edge["call_site_source"],
+                           "interface_binding": excluded_binding})
+
+        def conflict_with_supported_candidate(graph_value):
+            edge = candidate_edge(graph_value, binding["candidate_identity"])
+            unsupported = next(item for item in graph_value["unsupported"]
+                               if item["kind"] == "unsupported_interface_candidate"
+                               and item["caller_node_id"] == edge["caller_node_id"]
+                               and ATLAS._compiler_span(item["call_site_source"]) ==
+                               ATLAS._compiler_span(edge["call_site_source"]))
+            make_exclusion(edge, unsupported)
+
+        def wrong_overload_signature(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            proof["bound_interface_parameters"] = ["None:string"]
+            proof["bound_interface_signature"] = replace_signature_parameter(
+                proof["bound_interface_signature"], "None:string")
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+
+        def replace_signature_parameter(signature, parameter):
+            member_name = signature.split("(", 1)[0]
+            return_type = signature.rsplit(")->", 1)[1]
+            return f"{member_name}({parameter})->{return_type}"
+
+        def wrong_signature_parameters_disagree(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            proof["bound_interface_signature"] = replace_signature_parameter(
+                proof["bound_interface_signature"], "string")
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+
+        def wrong_nullable_return(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            self.assertIn("Request?>", proof["bound_interface_signature"])
+            self.assertIn("Request?>", proof["implementation_signature"])
+            proof["bound_interface_signature"] = proof["bound_interface_signature"].replace("Request?>", "Request>")
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+            proof["implementation_signature"] = proof["implementation_signature"].replace("Request?>", "Request>")
+
+        def wrong_tuple_parameter(graph_value, old, new):
+            target = candidate_edge(graph_value, search_binding["candidate_identity"], "faceSearch.SearchAsync")
+            proof = target["interface_binding"]
+            parameter = proof["bound_interface_parameters"][1]
+            self.assertIn(old, parameter)
+            altered = parameter.replace(old, new)
+            parameters = list(proof["bound_interface_parameters"])
+            parameters[1] = altered
+            proof["bound_interface_parameters"] = parameters
+            proof["bound_interface_signature"] = proof["bound_interface_signature"].replace(parameter, altered)
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+            implementation_parameter = proof["implementation_parameters"][1]
+            self.assertIn(old, implementation_parameter)
+            altered_implementation = implementation_parameter.replace(old, new)
+            implementation_parameters = list(proof["implementation_parameters"])
+            implementation_parameters[1] = altered_implementation
+            proof["implementation_parameters"] = implementation_parameters
+            proof["implementation_signature"] = proof["implementation_signature"].replace(
+                implementation_parameter, altered_implementation)
+
+        def wrong_tuple_element_type(graph_value):
+            wrong_tuple_parameter(graph_value, "long ImageId", "int ImageId")
+
+        def wrong_tuple_element_name(graph_value):
+            wrong_tuple_parameter(graph_value, "ImageId", "AssetId")
+
+        def wrong_namespace_parameter(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            altered = "None:global::Elsewhere.Request"
+            proof["bound_interface_parameters"] = [altered]
+            proof["bound_interface_signature"] = replace_signature_parameter(
+                proof["bound_interface_signature"], altered)
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+            proof["implementation_parameters"] = [altered]
+            proof["implementation_signature"] = replace_signature_parameter(
+                proof["implementation_signature"], altered)
+
+        def wrong_array_parameter(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            altered = "None:global::Fixture.Request[]"
+            proof["bound_interface_parameters"] = [altered]
+            proof["bound_interface_signature"] = replace_signature_parameter(
+                proof["bound_interface_signature"], altered)
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+            proof["implementation_parameters"] = [altered]
+            proof["implementation_signature"] = replace_signature_parameter(
+                proof["implementation_signature"], altered)
+
+        def wrong_ref_kind_parameter(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            altered = "Ref:global::Fixture.Request"
+            proof["bound_interface_parameters"] = [altered]
+            proof["bound_interface_signature"] = replace_signature_parameter(
+                proof["bound_interface_signature"], altered)
+            proof["bound_interface_member"] = proof["bound_interface_type"] + "." + proof["bound_interface_signature"]
+            proof["implementation_parameters"] = [altered]
+            proof["implementation_signature"] = replace_signature_parameter(
+                proof["implementation_signature"], altered)
+
+        def wrong_implementation_array_parameter(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            proof = target["interface_binding"]
+            altered = "None:global::Fixture.Request[]"
+            proof["implementation_parameters"] = [altered]
+            proof["implementation_signature"] = replace_signature_parameter(
+                proof["implementation_signature"], altered)
+
+        def wrong_membership_type_source(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            step = target["interface_binding"]["candidate_to_interface_path"][0]
+            step["from_type_source"] = json.loads(json.dumps(step["to_type_source"]))
+
+        def matching_type_name_outside_base_list(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            step = target["interface_binding"]["candidate_to_interface_path"][0]
+            start = compiler_source.index("IWorker interfaceWorker")
+            step["type_syntax_source"] = make_anchor(step["type_syntax_source"], start, start + len("IWorker"))
+
+        def sibling_interface_member_with_widened_declaration(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            target_binding = target["interface_binding"]
+            declaration_ref = target_binding["bound_interface_declaration_source"]
+            interface_start = ATLAS._compiler_span(declaration_ref)[1]
+            sibling_member_start = compiler_source.index("RunChild(Request value)")
+            sibling_name_start = sibling_member_start
+            sibling_member_end = sibling_member_start + len("RunChild(Request value);")
+            widened_end = compiler_source.index("}", sibling_member_end) + 1
+            target_binding["bound_interface_declaration_source"] = make_anchor(
+                declaration_ref, interface_start, widened_end)
+            target_binding["bound_interface_member_source"] = make_anchor(
+                target_binding["bound_interface_member_source"], sibling_member_start, sibling_member_end)
+            target_binding["bound_interface_member_name_source"] = make_anchor(
+                target_binding["bound_interface_member_name_source"], sibling_name_start,
+                sibling_name_start + len("RunChild"))
+
+        def widened_membership_owner_contains_sibling_base_list(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            step = target["interface_binding"]["candidate_to_interface_path"][0]
+            from_span = ATLAS._compiler_span(step["from_type_source"])
+            concrete_start = compiler_source.rfind("public class ConcreteWorker", 0, from_span[1])
+            inherited_start = compiler_source.index("public sealed class InheritedWorker")
+            concrete_end = compiler_source.rfind("}", 0, inherited_start) + 1
+            sibling_start = compiler_source.index("public class VirtualWorker")
+            step["from_type_declaration_source"] = make_anchor(
+                step["from_type_declaration_source"], sibling_start, concrete_end)
+
+        def attach_valid_proof_to_unrelated_endpoint(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            unrelated = next(node for node in graph_value["nodes"]
+                             if node["id"] != target["callee_node_id"])
+            target.update({"callee_node_id": unrelated["id"], "callee_method": unrelated["method"],
+                           "callee_containing_type": unrelated["containing_type"],
+                           "callee_source": unrelated["source"],
+                           "callee_lexical_method_fact_id": unrelated["lexical_method_fact_id"]})
+
+        def wrong_fqn_with_recomputed_identity(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            target_binding = target["interface_binding"]
+            span = ATLAS._compiler_span(target_binding["candidate_type_source"])
+            target_binding["candidate_type"] = "global::Wrong.ConcreteWorker"
+            target_binding["candidate_identity"] = "|".join(
+                [target_binding["candidate_type"], span[0], str(span[1]), str(span[2])])
+
+        def runtime_flag_true(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            target["runtime_DI_selection_proven"] = True
+
+        def duplicate_supported_candidate(graph_value):
+            target = candidate_edge(graph_value, binding["candidate_identity"])
+            duplicate = candidate_edge(graph_value, inherited["interface_binding"]["candidate_identity"])
+            duplicate["interface_binding"] = json.loads(json.dumps(target["interface_binding"]))
+
+        def sync_compatibility_views(tampered):
+            old_graph = original_payload["source_call_graph"]
+            new_graph = tampered["source_call_graph"]
+            for before, after in zip(old_graph["edges"], new_graph["edges"]):
+                if before.get("dispatch_kind") != "interface_implementation_source":
+                    continue
+                before_span = ATLAS._compiler_span(before["call_site_source"])
+                before_identity = before["interface_binding"]["candidate_identity"]
+                for projection in tampered["source_call_edges"]:
+                    if (projection.get("dispatch_kind") == "interface_implementation_source"
+                            and projection.get("caller_lexical_method_fact_id") == before.get("caller_lexical_method_fact_id")
+                            and projection.get("callee_lexical_method_fact_id") == before.get("callee_lexical_method_fact_id")
+                            and ATLAS._compiler_span(projection.get("call_site_source")) == before_span
+                            and projection.get("interface_binding", {}).get("candidate_identity") == before_identity):
+                        for key in ("callee_method", "callee_containing_type", "callee_source",
+                                    "callee_lexical_method_fact_id", "interface_binding",
+                                    "compiler_binding_confirmed", "runtime_reachability_proven",
+                                    "runtime_DI_selection_proven"):
+                            projection[key] = after[key]
+            for before, after in zip(old_graph["unsupported"], new_graph["unsupported"]):
+                if before.get("kind") != "unsupported_interface_candidate":
+                    continue
+                before_span = ATLAS._compiler_span(before["call_site_source"])
+                before_identity = before["interface_binding"]["candidate_identity"]
+                for projection in tampered["source_call_unresolved"]:
+                    if (projection.get("kind") == "unsupported_interface_candidate"
+                            and projection.get("caller_method") == before.get("caller_method")
+                            and ATLAS._compiler_span(projection.get("source")) == before_span
+                            and projection.get("interface_binding", {}).get("candidate_identity") == before_identity):
+                        projection["interface_binding"] = after["interface_binding"]
+                        projection["reason"] = after["reason"]
+
+        interface_mutations = [
+            ("supported and excluded candidate", conflict_with_supported_candidate,
+             "compiler interface candidate is both supported and excluded at one callsite"),
+            ("wrong overload parameter signature", wrong_overload_signature,
+             "compiler interface member source overload disagrees with the compiler-bound parameter signature"),
+            ("signature string disagrees with its parameter evidence", wrong_signature_parameters_disagree,
+             "compiler interface bound signature disagrees with its parameter evidence"),
+            ("nullable task result is forged as nonnullable", wrong_nullable_return,
+             "compiler interface member source return type disagrees with its compiler-bound signature"),
+            ("tuple element type is forged", wrong_tuple_element_type,
+             "compiler interface member source overload disagrees with the compiler-bound parameter signature"),
+            ("tuple element name is forged", wrong_tuple_element_name,
+             "compiler interface member source overload disagrees with the compiler-bound parameter signature"),
+            ("qualified parameter is not collapsed", wrong_namespace_parameter,
+             "compiler interface member source overload disagrees with the compiler-bound parameter signature"),
+            ("array parameter is not collapsed", wrong_array_parameter,
+             "compiler interface member source overload disagrees with the compiler-bound parameter signature"),
+            ("ref kind is not collapsed", wrong_ref_kind_parameter,
+             "compiler interface member source overload disagrees with the compiler-bound parameter signature"),
+            ("implementation array parameter is not collapsed", wrong_implementation_array_parameter,
+             "compiler interface implementation source disagrees with the bound interface signature"),
+            ("wrong membership source type", wrong_membership_type_source,
+             "compiler interface membership source type anchor does not identify one exact saved lexical type fact"),
+            ("matching type name outside base list", matching_type_name_outside_base_list,
+             "compiler interface membership syntax anchor is invalid"),
+            ("sibling interface member under widened declaration", sibling_interface_member_with_widened_declaration,
+             "compiler source-call lexical owner is not the innermost enclosing type"),
+            ("widened membership owner contains sibling genuine base list",
+             widened_membership_owner_contains_sibling_base_list,
+             "compiler interface membership declaration is not one exact lexical type owner"),
+            ("valid interface proof on unrelated callee", attach_valid_proof_to_unrelated_endpoint,
+             "compiler interface implementation evidence disagrees with its edge endpoint"),
+            ("wrong FQN with candidate identity resealed", wrong_fqn_with_recomputed_identity,
+             "compiler interface candidate display identity disagrees with its lexical owner"),
+            ("runtime selection claim", runtime_flag_true,
+             "compiler source-call edge has invalid proof labels"),
+            ("duplicate callsite candidate identity", duplicate_supported_candidate,
+             "compiler source-call graph contains a duplicate callsite edge"),
+        ]
+        with sqlite3.connect(self.db) as connection:
+            original_row = connection.execute(
+                "SELECT payload_json FROM atlas_compiler_supplements WHERE snapshot_id=?",
+                (snapshot["snapshot_id"],)).fetchone()
+        original_payload = json.loads(original_row[0])
+        compiler_route_fact_id = relationships[0]["lexical_route_fact_id"]
+        for label, mutate, diagnostic in interface_mutations:
+            tampered = json.loads(json.dumps(original_payload))
+            mutate(tampered["source_call_graph"])
+            sync_compatibility_views(tampered)
+            if label == "supported and excluded candidate":
+                graph_value = tampered["source_call_graph"]
+                positive_keys = {(edge["caller_node_id"], ATLAS._compiler_span(edge["call_site_source"]),
+                                  edge["interface_binding"]["candidate_identity"])
+                                 for edge in graph_value["edges"]
+                                 if isinstance(edge.get("interface_binding"), dict)}
+                excluded_keys = {(item["caller_node_id"], ATLAS._compiler_span(item["call_site_source"]),
+                                  item["interface_binding"]["candidate_identity"])
+                                 for item in graph_value["unsupported"]
+                                 if item.get("kind") == "unsupported_interface_candidate"}
+                self.assertTrue(positive_keys & excluded_keys, "tamper must create a real supported/excluded candidate conflict")
+            encoded = reseal(tampered)
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                                   (tampered["content_sha256"], encoded, snapshot["snapshot_id"]))
+            db_before_refusal = self.db.read_bytes()
+            impact_refused = self.impact("Support.WorkerHelper", max_tokens=100000, expect=None)
+            self.assertEqual(impact_refused.returncode, 2, label + ": impact accepted tampered graph: " + impact_refused.stdout)
+            self.assertEqual(impact_refused.stdout, "", label)
+            self.assertIn(diagnostic, impact_refused.stderr, label)
+            self.assertEqual(self.db.read_bytes(), db_before_refusal, label)
+            pack_refused = self.evidence_pack(compiler_route_fact_id, max_tokens=100000, expect=None)
+            self.assertEqual(pack_refused.returncode, 2, label + ": evidence-pack accepted tampered graph: " + pack_refused.stdout)
+            self.assertEqual(pack_refused.stdout, "", label)
+            self.assertIn(diagnostic, pack_refused.stderr, label)
+            self.assertEqual(self.db.read_bytes(), db_before_refusal, label)
+            with sqlite3.connect(self.db) as connection:
+                connection.execute("UPDATE atlas_compiler_supplements SET content_sha256=?,payload_json=? WHERE snapshot_id=?",
+                                   (original_payload["content_sha256"], original_row[0], snapshot["snapshot_id"]))
+
+        source.write_text(compiler_source +
+                          "\npublic static class Alternate { public readonly record struct ResolvedAssociation(long LocationId); }\n",
+                          encoding="utf-8")
+        git(self.repo, "add", "--", "Fixture.cs")
+        snapshot = self.index()
+        db_before_ambiguous_type_index = self.db.read_bytes()
+        alternate_indexed = self.cli("compiler-index", "--repo", os.fspath(self.repo), "--db", os.fspath(self.db),
+                                     "--project", "Fixture.csproj", "--framework", "net8.0", expect=2)
+        self.assertEqual(alternate_indexed.stdout, "")
+        self.assertIn("compiler interface member source overload disagrees with the compiler-bound parameter signature",
+                      alternate_indexed.stderr)
+        self.assertIn("global::Fixture.ResolvedAssociation", alternate_indexed.stderr)
+        self.assertEqual(self.db.read_bytes(), db_before_ambiguous_type_index)
 
         broken = self.repo / "Broken.cs"
         broken.write_text("namespace Fixture; public class Broken { public void M() { MissingSymbol(); } }", encoding="utf-8")
