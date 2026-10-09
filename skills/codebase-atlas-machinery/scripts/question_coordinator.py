@@ -9,6 +9,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
+import stat
 import sys
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -16,6 +18,7 @@ if os.fspath(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, os.fspath(SCRIPT_DIR))
 
 import atlas  # noqa: E402
+import csharp_facts  # noqa: E402
 
 
 SCHEMA_VERSION = 1
@@ -25,6 +28,45 @@ ARTIFACTS = {
     "review.json", "answer-review-packet.json", "review-result.json", "correction-packet.json",
     "corrected-answer-packet.json", "corrected-review.json", "accepted-package.json", "evidence-gap.json",
 }
+EXPANSION_PACKET = "expansion-review-packet.json"
+EXPANSION_REVIEW = "expansion-review.json"
+EXPANSION_PACKAGE = "expansion-package.json"
+EXPANSION_IMPORT_BINDING = "expansion-import-binding.json"
+EXPANSION_SCHEMA_VERSION = 2
+EXPANSION_PACKAGE_SCHEMA_VERSION = 1
+EXPANSION_IMPORT_BINDING_SCHEMA_VERSION = 1
+EXPANSION_SELECTION_AUTHORITY_VERSION = 1
+EXPANSION_SELECTOR_VIEW_VERSION = 1
+EXPANSION_MAX_BYTES = 50_000_000
+EXPANSION_GRAMMAR = "csharp-member-const-literal-v1"
+C_SHARP_KEYWORDS = {
+    "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const",
+    "continue", "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern",
+    "false", "finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface",
+    "internal", "is", "lock", "long", "namespace", "new", "null", "object", "operator", "out", "override",
+    "params", "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof",
+    "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong",
+    "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while", "add", "alias", "ascending",
+    "async", "await", "by", "descending", "dynamic", "equals", "from", "get", "global", "group", "init", "into",
+    "join", "let", "managed", "nameof", "not", "notnull", "on", "or", "orderby", "partial", "record", "remove",
+    "select", "set", "unmanaged", "value", "var", "when", "where", "with", "yield", "and", "file", "required", "scoped",
+}
+EXPANSION_FORBIDDEN = {
+    "answer-packet.json", "answer.json", "review.json", "answer-review-packet.json",
+    "review-result.json", "correction-packet.json", "corrected-answer-packet.json",
+    "corrected-review.json", "accepted-package.json",
+}
+EXPANSION_REVIEW_SCHEMA = {
+    "version": 2,
+    "fields": ["candidate_reviews", "decision", "obligation_reviews", "packet_sha256", "reviewer_identity", "reviewer_model", "review_schema_version"],
+    "obligation_fields": ["basis", "classification", "obligation_id", "selected_candidate_ids"],
+    "candidate_fields": ["basis", "candidate_id", "disposition"],
+    "classifications": ["local_evidence", "external_or_unresolved"],
+    "dispositions": ["selected", "not_selected"],
+    "decisions": ["accepted", "rejected"],
+    "reviewer_model": "GPT-6.1 Sol High",
+}
+_EXPANSION_REVIEW_SCHEMA_V1 = {**EXPANSION_REVIEW_SCHEMA, "version": 1}
 
 # These definitions are the sole authority for both the model-facing contracts and
 # the validators. Packet prose and the accepted wire format must never drift apart.
@@ -148,9 +190,25 @@ def _read(path: Path, label: str) -> object:
 
 def _save_immutable(path: Path, value: object) -> None:
     encoded = _bytes(value)
-    if path.exists():
+    try:
+        existing = os.lstat(path)
+    except FileNotFoundError:
+        existing = None
+    except OSError as exc:
+        raise CoordinatorError(f"cannot inspect existing artifact {path}: {exc}") from exc
+    if existing is not None:
+        if not stat.S_ISREG(existing.st_mode):
+            raise CoordinatorError(f"existing immutable artifact is not a regular file: {path}")
         try:
-            old = path.read_bytes()
+            fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+            try:
+                opened = os.fstat(fd)
+                if not stat.S_ISREG(opened.st_mode) or (opened.st_dev, opened.st_ino) != (existing.st_dev, existing.st_ino):
+                    raise CoordinatorError(f"existing immutable artifact changed during validation: {path}")
+                with os.fdopen(fd, "rb", closefd=False) as stream:
+                    old = stream.read()
+            finally:
+                os.close(fd)
         except OSError as exc:
             raise CoordinatorError(f"cannot verify existing artifact {path}: {exc}") from exc
         if old != encoded:
@@ -158,7 +216,7 @@ def _save_immutable(path: Path, value: object) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
     except FileExistsError as exc:
         raise CoordinatorError(f"artifact appeared while saving; verify exact content: {path}") from exc
     with os.fdopen(fd, "wb") as stream:
@@ -169,12 +227,37 @@ def _save_immutable(path: Path, value: object) -> None:
 
 def _read_artifact(run: Path, name: str) -> dict[str, object]:
     path = run / name
-    if path.is_symlink() or not path.is_file():
-        raise CoordinatorError(f"required stage artifact is missing or unsafe: {path}")
-    value = _read(path, name)
-    if path.read_bytes() != _bytes(value):
+    raw = _read_regular_bytes(path, name)
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CoordinatorError(f"cannot read {name} {path}: {exc}") from exc
+    if not isinstance(value, dict):
+        raise CoordinatorError(f"{name} must contain a JSON object: {path}")
+    if raw != _bytes(value):
         raise CoordinatorError(f"stage artifact is not canonical JSON: {path}")
     return value
+
+
+def _read_regular_bytes(path: Path, label: str) -> bytes:
+    try:
+        before = os.lstat(path)
+    except OSError as exc:
+        raise CoordinatorError(f"cannot inspect {label} {path}: {exc}") from exc
+    if not stat.S_ISREG(before.st_mode):
+        raise CoordinatorError(f"{label} must be a no-follow regular file: {path}")
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        try:
+            opened = os.fstat(fd)
+            if not stat.S_ISREG(opened.st_mode) or (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
+                raise CoordinatorError(f"{label} changed during no-follow validation: {path}")
+            with os.fdopen(fd, "rb", closefd=False) as stream:
+                return stream.read()
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        raise CoordinatorError(f"cannot read {label} {path}: {exc}") from exc
 
 
 def _stable_focus(value: dict[str, object]) -> dict[str, object]:
@@ -437,13 +520,9 @@ def _semantic_payload(identity: dict[str, object], question: str, question_sha25
             "obligations": obligations, "candidates": stable_candidates}
 
 
-def prepare(repo: str, db: str, question_file: str, obligations_file: str, controller: str, run_dir: str,
-            limit: int = DEFAULT_LIMIT) -> dict[str, object]:
-    try:
-        question_raw = Path(question_file).read_bytes()
-        question = question_raw.decode("utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
-        raise CoordinatorError(f"question file must be readable UTF-8: {exc}") from exc
+def _build_prepared_selection(repo: str, db: str, question_raw: bytes, question: str,
+                              obligations_file: str, controller: str,
+                              limit: int = DEFAULT_LIMIT) -> tuple[dict[str, object], list[dict[str, object]]]:
     if not question.strip() or not controller.strip():
         raise CoordinatorError("question and exact controller type identity must be nonempty")
     normalized, obligation_id, obligations_source = _obligations(Path(obligations_file), question)
@@ -473,6 +552,18 @@ def prepare(repo: str, db: str, question_file: str, obligations_file: str, contr
                                               normalized["required_routes"], obligation_items, packet_candidates))
     packet["semantic_sha256"] = semantic_hash
     packet["packet_sha256"] = _digest(packet)
+    return packet, candidates
+
+
+def prepare(repo: str, db: str, question_file: str, obligations_file: str, controller: str, run_dir: str,
+            limit: int = DEFAULT_LIMIT) -> dict[str, object]:
+    try:
+        question_raw = Path(question_file).read_bytes()
+        question = question_raw.decode("utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CoordinatorError(f"question file must be readable UTF-8: {exc}") from exc
+    packet, candidates = _build_prepared_selection(repo, db, question_raw, question, obligations_file, controller, limit)
+    semantic_hash = packet["semantic_sha256"]
     run = Path(run_dir).expanduser()
     if run.exists() and (run.is_symlink() or not run.is_dir()):
         raise CoordinatorError("run path must be a real directory")
@@ -488,11 +579,19 @@ def prepare(repo: str, db: str, question_file: str, obligations_file: str, contr
     else:
         _save_immutable(observations_path, observed)
     return {"result": "prepared", "run_dir": os.fspath(run.resolve()), "packet_sha256": packet["packet_sha256"],
-            "semantic_sha256": semantic_hash, "candidate_count": len(candidates), "obligation_id": obligation_id}
+            "semantic_sha256": semantic_hash, "candidate_count": len(candidates), "obligation_id": packet["obligation_id"]}
 
 
-def _revalidate(run: Path, repo: str, db: str, obligations_file: str) -> dict[str, object]:
+def _revalidate(run: Path, repo: str, db: str, obligations_file: str,
+                expansion_run_dir: str | None = None) -> dict[str, object]:
     packet = _read_artifact(run, "selection-packet.json")
+    expanded = "expansion_binding_lineage" in packet or "supplemental_evidence" in packet
+    if expanded:
+        if expansion_run_dir is None:
+            raise CoordinatorError("expanded run requires --expansion-run-dir bound to the exact path recorded at import preparation")
+        return _revalidate_expanded_selection(run, repo, db, obligations_file, expansion_run_dir, packet)
+    if expansion_run_dir is not None:
+        raise CoordinatorError("--expansion-run-dir is only valid for an expansion-aware selection packet")
     if packet.get("packet_sha256") != _digest({key: value for key, value in packet.items() if key != "packet_sha256"}):
         raise CoordinatorError("selection packet packet_sha256 does not match its canonical content")
     saved_observations = _validate_candidate_observations(_read_artifact(run, "candidate-observations.json"), packet)
@@ -704,6 +803,1515 @@ def _revalidate(run: Path, repo: str, db: str, obligations_file: str) -> dict[st
     return packet
 
 
+def _canonical_run_path(path: Path, label: str, *, must_exist: bool) -> Path:
+    expanded = path.expanduser()
+    if expanded.is_symlink() or (expanded.exists() and not expanded.is_dir()):
+        raise CoordinatorError(f"{label} must be a real directory: {expanded}")
+    try:
+        return expanded.resolve(strict=must_exist)
+    except OSError as exc:
+        raise CoordinatorError(f"cannot resolve {label} {expanded}: {exc}") from exc
+
+
+def _type_boundaries(graph: dict[str, object], path: str, text: str) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    tokens, directives = csharp_facts.lex(text)
+    pairs: dict[int, int] = {}
+    stack: list[int] = []
+    for index, token in enumerate(tokens):
+        if token.value == "{":
+            stack.append(index)
+        elif token.value == "}" and stack:
+            pairs[stack.pop()] = index
+    boundaries: list[dict[str, object]] = []
+    facts = graph.get("facts")
+    if not isinstance(facts, list):
+        raise CoordinatorError("current source graph facts are unavailable for lexical owner reconstruction")
+    for fact in facts:
+        if not isinstance(fact, dict) or fact.get("kind") != "type_declaration":
+            continue
+        source = fact.get("source")
+        span = source.get("span") if isinstance(source, dict) else None
+        if not isinstance(source, dict) or source.get("path") != path or not isinstance(span, dict):
+            continue
+        start = span.get("start_offset")
+        if not isinstance(start, int):
+            continue
+        keyword = next((i for i, token in enumerate(tokens) if token.start == start), None)
+        if keyword is None:
+            continue
+        opening = next((i for i in range(keyword, len(tokens)) if tokens[i].value in {"{", ";"}), None)
+        if opening is None or tokens[opening].value != "{" or opening not in pairs:
+            continue
+        boundaries.append({"fact": fact, "open": opening, "close": pairs[opening],
+                           "start_offset": tokens[opening].start, "end_offset": tokens[pairs[opening]].end})
+    conditional_ranges: list[tuple[int, int]] = []
+    conditional_stack: list[int] = []
+    for directive in directives:
+        command = directive.value.lstrip()[1:].strip().split(None, 1)[0] if directive.value.lstrip().startswith("#") else ""
+        if command in {"if", "elif", "else"}:
+            if command == "if":
+                conditional_stack.append(directive.start)
+        elif command == "endif" and conditional_stack:
+            conditional_ranges.append((conditional_stack.pop(), directive.end))
+    for start in conditional_stack:
+        conditional_ranges.append((start, len(text)))
+    return boundaries, [{"start": start, "end": end} for start, end in sorted(conditional_ranges)]
+
+
+def _lexical_owner_at(boundaries: list[dict[str, object]], offset: int) -> tuple[dict[str, object] | None, str | None]:
+    containing = [item for item in boundaries if item["start_offset"] <= offset <= item["end_offset"]]
+    if not containing:
+        return None, "lexical_owner_missing"
+    smallest = min(int(item["end_offset"]) - int(item["start_offset"]) for item in containing)
+    owners = [item for item in containing if int(item["end_offset"]) - int(item["start_offset"]) == smallest]
+    if len(owners) != 1 or not isinstance(owners[0].get("fact"), dict) or not owners[0]["fact"].get("id"):
+        return None, "ambiguous_lexical_owner"
+    return owners[0], None
+
+
+def _member_constant_candidates(graph: dict[str, object], files: dict[str, tuple[str, str]], identifiers: set[str]) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    found: list[dict[str, object]] = []
+    exclusions: list[dict[str, object]] = []
+    for path in sorted(files, key=lambda value: value.encode("utf-8")):
+        text, source_hash = files[path]
+        boundaries, conditional_ranges = _type_boundaries(graph, path, text)
+        tokens, _ = csharp_facts.lex(text)
+        for ti, token in enumerate(tokens):
+            if token.value != "const":
+                continue
+            owner, owner_error = _lexical_owner_at(boundaries, token.start)
+            if owner is None or not (owner["open"] < ti < owner["close"]):
+                lookahead = tokens[ti:min(len(tokens), ti + 16)]
+                seeded = sorted({item.value.lstrip("@") for item in lookahead if item.kind == "identifier" and item.value.lstrip("@") in identifiers})
+                exclusions.extend({"path": path, "reason": owner_error or "constant_owner_boundary_unresolved", "identifier": name,
+                                   "start_offset": token.start, "incomplete": True} for name in seeded)
+                continue
+            # Only visit member-scope declarations. Angle brackets are deliberately
+            # absent here: comparisons and shifts in initializers have no delimiter role.
+            curly = paren = bracket = 0
+            for prior in range(owner["open"] + 1, ti):
+                value = tokens[prior].value
+                if value == "{": curly += 1
+                elif value == "}": curly -= 1
+                elif value == "(": paren += 1
+                elif value == ")": paren -= 1
+                elif value == "[": bracket += 1
+                elif value == "]": bracket -= 1
+            if curly != 0 or paren != 0 or bracket != 0:
+                continue
+            end_i = ti
+            stack: list[str] = []
+            malformed = False
+            while end_i < owner["close"]:
+                value = tokens[end_i].value
+                if end_i > ti and not stack and value in {"const", "public", "private", "protected", "internal", "static"}:
+                    malformed = True
+                    break
+                if (end_i > ti and not stack and tokens[end_i].line > tokens[end_i - 1].line
+                        and tokens[end_i].kind == "identifier" and end_i + 1 < owner["close"]
+                        and tokens[end_i + 1].kind == "identifier"
+                        and tokens[end_i + 2].value in {"(", "{", "=", ";"}):
+                    malformed = True
+                    break
+                if value in {"(", "[", "{"}: stack.append(value)
+                elif value in {")", "]", "}"}:
+                    expected = {")": "(", "]": "[", "}": "{"}[value]
+                    if not stack or stack[-1] != expected:
+                        malformed = True
+                        break
+                    stack.pop()
+                if value == ";" and not stack:
+                    break
+                end_i += 1
+            if malformed or end_i >= owner["close"] or tokens[end_i].value != ";" or stack:
+                end_bound = min(end_i, int(owner["close"]))
+                seeded = sorted({item.value.lstrip("@") for item in tokens[ti + 1:end_bound]
+                                 if item.kind == "identifier" and item.value.lstrip("@") in identifiers})
+                exclusions.extend({"path": path, "reason": "constant_statement_unterminated_or_unbalanced", "identifier": name,
+                                   "start_offset": token.start, "incomplete": True} for name in seeded)
+                continue
+            # Find the first top-level initializer before splitting comma-separated
+            # declarators. This keeps commas in a generic type prefix out of the split.
+            first_eq = None
+            stack = []
+            for idx in range(ti + 1, end_i):
+                value = tokens[idx].value
+                if value in {"(", "[", "{"}: stack.append(value)
+                elif value in {")", "]", "}"}:
+                    expected = {")": "(", "]": "[", "}": "{"}[value]
+                    if not stack or stack[-1] != expected: malformed = True; break
+                    stack.pop()
+                elif value == "=" and not stack:
+                    first_eq = idx
+                    break
+            if malformed or first_eq is None:
+                seeded = sorted({item.value.lstrip("@") for item in tokens[ti + 1:end_i]
+                                 if item.kind == "identifier" and item.value.lstrip("@") in identifiers})
+                exclusions.extend({"path": path, "reason": "constant_declarator_unclassifiable", "identifier": name,
+                                   "start_offset": token.start, "incomplete": True} for name in seeded)
+                continue
+            first_name_i = first_eq - 1
+            while first_name_i > ti and tokens[first_name_i].kind != "identifier": first_name_i -= 1
+            type_prefix = tokens[ti + 1:first_name_i]
+            # Parse the type prefix independently from initializer tokenization. The
+            # narrow accepted form is one identifier; other balanced prefixes remain
+            # visible as unsupported candidates rather than hiding later declarators.
+            type_prefix_classified = bool(type_prefix) and type_prefix[0].kind == "identifier"
+            angle_depth = 0
+            for type_token in type_prefix:
+                if type_token.value == "<": angle_depth += 1
+                elif type_token.value == ">":
+                    angle_depth -= 1
+                    if angle_depth < 0: type_prefix_classified = False
+                elif not (type_token.kind == "identifier" or type_token.value in {".", "::", ",", "<", ">", "[", "]", "?"}):
+                    type_prefix_classified = False
+            type_prefix_classified = type_prefix_classified and angle_depth == 0
+            type_supported = len(type_prefix) == 1 and type_prefix[0].kind == "identifier"
+            type_name = text[type_prefix[0].start:type_prefix[-1].end] if type_prefix else None
+            parts: list[tuple[int, int, int, int | None]] = []
+            part_start = first_eq + 1
+            first_value_end = end_i
+            stack = []
+            for idx in range(first_eq + 1, end_i):
+                value = tokens[idx].value
+                if value in {"(", "[", "{"}: stack.append(value)
+                elif value in {")", "]", "}"}:
+                    expected = {")": "(", "]": "[", "}": "{"}[value]
+                    if not stack or stack[-1] != expected: malformed = True; break
+                    stack.pop()
+                elif value == "," and not stack:
+                    first_value_end = idx
+                    break
+            parts.append((first_name_i, first_eq, first_eq + 1, first_value_end))
+            if first_value_end < end_i:
+                part_start = first_value_end + 1
+                stack = []
+                for idx in range(part_start, end_i):
+                    value = tokens[idx].value
+                    if value in {"(", "[", "{"}: stack.append(value)
+                    elif value in {")", "]", "}"}:
+                        expected = {")": "(", "]": "[", "}": "{"}[value]
+                        if not stack or stack[-1] != expected: malformed = True; break
+                        stack.pop()
+                    elif value == "," and not stack:
+                        # The segment is one declarator; its initializer is literal-only
+                        # in the supported grammar, so later top-level commas delimit it.
+                        eq_part = next((j for j in range(part_start, idx) if tokens[j].value == "="), None)
+                        parts.append((part_start, eq_part if eq_part is not None else idx,
+                                      eq_part + 1 if eq_part is not None else idx, idx))
+                        part_start = idx + 1
+                if not malformed and part_start < end_i:
+                    eq_part = next((j for j in range(part_start, end_i) if tokens[j].value == "="), None)
+                    parts.append((part_start, eq_part if eq_part is not None else end_i,
+                                  eq_part + 1 if eq_part is not None else end_i, end_i))
+            if malformed or stack:
+                seeded = sorted({item.value.lstrip("@") for item in tokens[ti + 1:end_i]
+                                 if item.kind == "identifier" and item.value.lstrip("@") in identifiers})
+                exclusions.extend({"path": path, "reason": "constant_declarator_unclassifiable", "identifier": name,
+                                   "start_offset": token.start, "incomplete": True} for name in seeded)
+                continue
+            decl_start_i = ti
+            modifiers = {"public", "protected", "internal", "private", "static", "new", "unsafe", "extern"}
+            while decl_start_i > 0 and tokens[decl_start_i - 1].value in modifiers:
+                decl_start_i -= 1
+            statement_span = {"start_offset": tokens[decl_start_i].start, "end_offset": tokens[end_i].end,
+                "start_line": tokens[decl_start_i].line, "start_column": tokens[decl_start_i].column,
+                "end_line": tokens[end_i].end_line, "end_column": tokens[end_i].end_column,
+                "offset_unit": "unicode_codepoint"}
+            is_conditional = any(item["start"] <= token.start < item["end"] for item in conditional_ranges)
+            for part_index, (name_i, eq_i, value_start, part_end) in enumerate(parts):
+                if name_i is None or name_i >= part_end or tokens[name_i].kind != "identifier":
+                    seeded_names = sorted({item.value.lstrip("@") for item in tokens[part_start:part_end]
+                                           if item.kind == "identifier" and item.value.lstrip("@") in identifiers})
+                    exclusions.extend({"path": path, "reason": "unsupported_constant_declarator_syntax", "identifier": name,
+                                       "start_offset": tokens[part_start].start if part_start < part_end else token.start,
+                                       "incomplete": True} for name in seeded_names)
+                    continue
+                name = tokens[name_i].value.lstrip("@")
+                if name not in identifiers:
+                    continue
+                if not type_prefix_classified:
+                    exclusions.append({"path": path, "reason": "constant_type_prefix_unclassifiable", "identifier": name,
+                                       "start_offset": tokens[name_i].start, "incomplete": True})
+                    continue
+                if eq_i is None:
+                    exclusions.append({"path": path, "reason": "constant_initializer_missing", "identifier": name,
+                                       "start_offset": tokens[name_i].start, "incomplete": True})
+                    continue
+                value_tokens = tokens[value_start:part_end]
+                initializer_supported = ((len(value_tokens) == 1 and value_tokens[0].kind in {"number", "string", "raw_literal", "char"})
+                    or (len(value_tokens) == 2 and value_tokens[0].value in {"+", "-"} and value_tokens[1].kind == "number")
+                    or (len(value_tokens) == 1 and value_tokens[0].value in {"true", "false", "null"}))
+                parsed = type_supported and initializer_supported
+                literal = text[value_tokens[0].start:value_tokens[-1].end] if initializer_supported else None
+                name_span = {"start_offset": tokens[name_i].start, "end_offset": tokens[name_i].end,
+                             "offset_unit": "unicode_codepoint"}
+                initializer_span = ({"start_offset": value_tokens[0].start, "end_offset": value_tokens[-1].end,
+                                     "offset_unit": "unicode_codepoint"} if value_tokens else None)
+                owner_fact = owner.get("fact") if owner else None
+                owner_id = owner_fact.get("id") if isinstance(owner_fact, dict) else None
+                owner_name = owner_fact.get("type_id") if isinstance(owner_fact, dict) else None
+                reasons: list[str] = []
+                if owner_error: reasons.append(owner_error)
+                if is_conditional: reasons.append("conditional_directive")
+                if not parsed: reasons.append("unsupported_constant_syntax")
+                candidate = {"identifier": name, "path": path, "sha256": source_hash,
+                    "span": statement_span, "name_span": name_span, "initializer_span": initializer_span,
+                    "source_anchor": {"path": path, "sha256": source_hash},
+                    "snippet": text[statement_span["start_offset"]:statement_span["end_offset"]],
+                    "source_snippet": {"span": statement_span, "text": text[statement_span["start_offset"]:statement_span["end_offset"]]},
+                    "owner_type_id": owner_name, "owner_fact_id": owner_id, "constant_type": type_name,
+                    "type_prefix_classified": type_prefix_classified,
+                    "literal": literal, "syntax_supported": bool(parsed), "conditional": is_conditional,
+                    "eligible_use_ids": [], "reasons": reasons}
+                candidate["candidate_id"] = "candidate-" + _digest({key: value for key, value in candidate.items() if key != "candidate_id"})[:24]
+                found.append(candidate)
+    return found, exclusions
+
+
+def _method_identifier_safety(text: str, tokens: list[object], use_start: int, use_end: int, identifier: str) -> tuple[bool, str | None]:
+    """Conservative lexical screen; this records syntax evidence, never compiler binding."""
+    pairs: dict[int, int] = {}
+    stack: list[int] = []
+    for index, token in enumerate(tokens):
+        if token.value == "{": stack.append(index)
+        elif token.value == "}" and stack: pairs[stack.pop()] = index
+    use_i = next((i for i, token in enumerate(tokens) if token.start == use_start and token.end == use_end), None)
+    if use_i is None:
+        return False, "origin_use_token_not_found"
+    bodies = [(opening, closing) for opening, closing in pairs.items() if tokens[opening].start < use_start < tokens[closing].end]
+    if not bodies:
+        return False, "containing_method_scope_unresolved"
+    controls = {"if", "for", "foreach", "while", "switch", "catch", "using", "lock", "fixed"}
+    method_bodies = []
+    for opening, closing in bodies:
+        if opening == 0 or tokens[opening - 1].value != ")":
+            continue
+        depth = 0
+        left_paren = None
+        for idx in range(opening - 1, -1, -1):
+            if tokens[idx].value == ")": depth += 1
+            elif tokens[idx].value == "(":
+                depth -= 1
+                if depth == 0:
+                    left_paren = idx
+                    break
+        if left_paren is not None and left_paren > 0 and tokens[left_paren - 1].value not in controls:
+            method_bodies.append((opening, closing, left_paren))
+    if not method_bodies:
+        return False, "containing_method_scope_unresolved"
+    # The direct method body is the widest method-shaped brace enclosing the use;
+    # nested local functions/lambdas are scanned as part of its conservative scope.
+    opening, closing, left_paren = max(method_bodies, key=lambda item: tokens[item[1]].end - tokens[item[0]].start)
+    # Any other same-name token in the method can be a declaration or a binding-relevant
+    # occurrence in a nested scope. Without a compiler, refuse to claim it cannot shadow.
+    occurrences = [i for i, token in enumerate(tokens) if token.kind == "identifier"
+                   and token.value.lstrip("@") == identifier and i != use_i
+                   and ((left_paren < i < opening) or (opening < i < closing))]
+    if occurrences:
+        known_type_words = {"var", "const", "bool", "byte", "char", "decimal", "double", "float", "int", "long",
+            "object", "sbyte", "short", "string", "uint", "ulong", "ushort", "out", "is", "case", "foreach", "catch"}
+        for i in occurrences:
+            prior = tokens[i - 1].value if i else ""
+            following = tokens[i + 1].value if i + 1 < len(tokens) else ""
+            if prior in known_type_words or following in {"=>", ",", ")", "}"} or prior in {"out", "var"}:
+                return False, "shadowed_identifier_in_lexical_owner"
+        return False, "identifier_binding_context_unclassified"
+    return True, None
+
+
+def _owner_has_same_name_member(graph: dict[str, object], path: str, text: str,
+                                candidate: dict[str, object], use: dict[str, object]) -> bool:
+    tokens, _ = csharp_facts.lex(text)
+    boundaries, _ = _type_boundaries(graph, path, text)
+    owner = next((item for item in boundaries if item["fact"].get("id") == use.get("owner_fact_id")), None)
+    if owner is None: return False
+    name_span = candidate.get("name_span", {})
+    candidate_offset = name_span.get("start_offset") if isinstance(name_span, dict) else None
+    use_span = use.get("identifier_use_span", {})
+    use_offset = use_span.get("start_offset") if isinstance(use_span, dict) else None
+    for i, token in enumerate(tokens):
+        if token.value.lstrip("@") != candidate.get("identifier") or token.start in {candidate_offset, use_offset}:
+            continue
+        if not (owner["start_offset"] < token.start < owner["end_offset"]): continue
+        prior = tokens[i - 1].value if i else ""
+        following = tokens[i + 1].value if i + 1 < len(tokens) else ""
+        type_like = (i > 0 and (tokens[i - 1].kind == "identifier" or prior in {">", "]", "?"}))
+        if type_like and following in {"=", ",", ";"}:
+            return True
+    return False
+
+
+def _validate_expansion_max_bytes(max_bytes: object) -> int:
+    if type(max_bytes) is not int or not 1 <= max_bytes <= EXPANSION_MAX_BYTES:
+        raise CoordinatorError(f"--max-bytes observed {max_bytes!r}; required an exact integer in 1..{EXPANSION_MAX_BYTES}")
+    return max_bytes
+
+
+def _build_gap_expansion_packet(repo: str, db: str, source_run_dir: str, destination_run_dir: str,
+                                obligations_file: str, max_bytes: int,
+                                expansion_schema_version: int = EXPANSION_SCHEMA_VERSION) -> dict[str, object]:
+    max_bytes = _validate_expansion_max_bytes(max_bytes)
+    source = _canonical_run_path(Path(source_run_dir), "source run", must_exist=True)
+    destination = _canonical_run_path(Path(destination_run_dir), "destination run", must_exist=False)
+    if source == destination:
+        raise CoordinatorError("source and destination run paths must be distinct")
+    for name in EXPANSION_FORBIDDEN:
+        if os.path.lexists(source / name):
+            raise CoordinatorError(f"source run is not a selection-stage evidence gap; forbidden artifact exists: {name}")
+    if any(path.name.startswith("expansion-") for path in source.iterdir()):
+        raise CoordinatorError("source run already contains expansion lineage")
+    packet = _revalidate(source, repo, db, obligations_file)
+    if not (source / "evidence-gap.json").is_file():
+        raise CoordinatorError("source run must contain a validated selection-stage evidence-gap terminal")
+    gap = _read_artifact(source, "evidence-gap.json")
+    selection_record = gap.get("selection_record")
+    if not isinstance(selection_record, dict):
+        raise CoordinatorError("source evidence gap does not preserve its exact selection record")
+    if (gap.get("result") != "evidence_gap" or gap.get("packet_sha256") != packet.get("packet_sha256")
+            or gap.get("completeness_claim") is not False
+            or "review" in gap):
+        raise CoordinatorError("source evidence gap is not the canonical selection-stage terminal for this packet")
+    identity = packet.get("identity")
+    if not isinstance(identity, dict):
+        raise CoordinatorError("selection identity is malformed")
+    snapshot, _snapshots, extractor, live = atlas._current_route_snapshot(Path(db).expanduser().resolve(strict=True), repo)
+    if (snapshot.get("snapshot_id") != identity.get("snapshot_id") or extractor != identity.get("extractor_identity")
+            or live.get("repository_root") != identity.get("repository_root") or live.get("head") != identity.get("head")
+            or live.get("status") != identity.get("repository_status")):
+        raise CoordinatorError("current checkout, status, snapshot, or extractor differs from the selection-stage identity")
+    root = atlas._repo_root(repo)
+    root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+    files: dict[str, tuple[str, str]] = {}
+    scanned_bytes = 0
+    exclusions: list[dict[str, object]] = []
+    try:
+        inventory = snapshot.get("files")
+        if not isinstance(inventory, list):
+            raise CoordinatorError("current snapshot lacks its tracked-file inventory")
+        for entry in inventory:
+            if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+                raise CoordinatorError("tracked-file inventory contains an invalid entry")
+            path = entry["path"]
+            if not path.lower().endswith(".cs"):
+                continue
+            if entry.get("presence") != "present" or entry.get("type") != "file" or not isinstance(entry.get("sha256"), str):
+                exclusions.append({"path": path, "reason": "unsafe_or_missing_tracked_source"})
+                continue
+            evidence = atlas._read_working_file(root_fd, path, collect_source=True)
+            raw = evidence.get("_source_bytes")
+            if evidence.get("presence") != "present" or evidence.get("type") != "file" or evidence.get("sha256") != entry["sha256"] or not isinstance(raw, bytes):
+                exclusions.append({"path": path, "reason": "unsafe_or_changed_source"})
+                continue
+            scanned_bytes += len(raw)
+            if scanned_bytes > max_bytes:
+                raise CoordinatorError(f"verified source scan exceeds --max-bytes: observed {scanned_bytes}, limit {max_bytes}; no packet written")
+            try:
+                files[path] = (raw.decode("utf-8-sig"), str(entry["sha256"]))
+            except UnicodeDecodeError:
+                exclusions.append({"path": path, "reason": "source_not_utf8"})
+    finally:
+        os.close(root_fd)
+    untracked_csharp = [item for item in live.get("status", []) if isinstance(item, dict)
+                        and str(item.get("path", "")).lower().endswith(".cs")
+                        and (item.get("index_status") == "?" or item.get("worktree_status") == "?")]
+    exclusions.extend({"path": item["path"], "reason": "untracked_source_excluded"} for item in untracked_csharp)
+    absent = [item for item in packet["obligations"] if any(
+        review.get("obligation_id") == item["obligation_id"] and review.get("candidate_status") == "absent_from_candidates"
+        for review in selection_record.get("obligation_reviews", []))]
+    selected_ids = set(gap.get("selected_route_fact_ids", []))
+    by_route = {candidate["route"]["id"]: candidate for candidate in packet["candidates"]
+                if candidate.get("route", {}).get("id") in selected_ids}
+    origin_uses: list[dict[str, object]] = []
+    seeds: set[str] = set()
+    for obligation in absent:
+        meaning_ids = {match.group(0).lstrip("@") for match in re.finditer(r"@?[A-Za-z_][A-Za-z0-9_]*", str(obligation["meaning"]))
+                       if match.group(0).lstrip("@") not in C_SHARP_KEYWORDS}
+        for route_id in sorted(by_route):
+            focus = by_route[route_id].get("map", {})
+            anchors = {item.get("source_id"): item for item in focus.get("source_anchors", []) if isinstance(item, dict)}
+            snippets = {item.get("snippet_id"): item for item in focus.get("source_snippets", []) if isinstance(item, dict)}
+            for claim_index, claim in enumerate(focus.get("claims", [])):
+                if not isinstance(claim, dict): continue
+                claim_ids = {match.group(0).lstrip("@") for match in re.finditer(r"@?[A-Za-z_][A-Za-z0-9_]*", str(claim.get("claim", "")))
+                             if match.group(0).lstrip("@") not in C_SHARP_KEYWORDS}
+                for evidence in claim.get("evidence", []):
+                    if not isinstance(evidence, dict): continue
+                    anchor = anchors.get(evidence.get("source_id")); snippet = snippets.get(evidence.get("snippet_id"))
+                    if not isinstance(anchor, dict) or not isinstance(snippet, dict) or snippet.get("source_id") != evidence.get("source_id"):
+                        continue
+                    source_text = files.get(str(anchor.get("path")))
+                    span = snippet.get("span")
+                    if not source_text or not isinstance(span, dict) or anchor.get("sha256") != source_text[1]: continue
+                    start, end = span.get("start_offset"), span.get("end_offset")
+                    snippet_text = snippet.get("text")
+                    if (not isinstance(start, int) or not isinstance(end, int) or not isinstance(snippet_text, str)
+                            or source_text[0][start:end] != snippet_text):
+                        continue
+                    source_tokens, _ = csharp_facts.lex(source_text[0])
+                    for source_token in csharp_facts.lex(snippet_text)[0]:
+                        if source_token.kind != "identifier": continue
+                        identifier = source_token.value.lstrip("@")
+                        if identifier in C_SHARP_KEYWORDS or identifier not in meaning_ids or identifier not in claim_ids:
+                            continue
+                        absolute_start, absolute_end = start + source_token.start, start + source_token.end
+                        matching = [i for i, token in enumerate(source_tokens) if token.start == absolute_start and token.end == absolute_end
+                                    and token.kind == "identifier" and token.value.lstrip("@") == identifier]
+                        if len(matching) != 1:
+                            continue
+                        use_i = matching[0]
+                        qualified = use_i > 0 and source_tokens[use_i - 1].value in {".", "?.", "::"}
+                        qualifier = (source_tokens[use_i - 2].value if qualified and use_i > 1 else source_tokens[use_i - 1].value if qualified else None)
+                        use_owner, use_owner_error = _lexical_owner_at(_type_boundaries(snapshot["source_graph"], str(anchor["path"]), source_text[0])[0], absolute_start)
+                        use_owner_fact = use_owner.get("fact") if use_owner else None
+                        owner_id = use_owner_fact.get("id") if isinstance(use_owner_fact, dict) else None
+                        owner_type_id = use_owner_fact.get("type_id") if isinstance(use_owner_fact, dict) else None
+                        conditional_ranges = _type_boundaries(snapshot["source_graph"], str(anchor["path"]), source_text[0])[1]
+                        conditional_use = any(item["start"] <= absolute_start < item["end"] for item in conditional_ranges)
+                        method_safe, method_reason = _method_identifier_safety(source_text[0], source_tokens, absolute_start, absolute_end, identifier)
+                        use_id = "use-" + _digest({"obligation_id": obligation["obligation_id"], "route_fact_id": route_id,
+                            "claim_index": claim_index, "source_id": anchor["source_id"], "path": anchor["path"],
+                            "sha256": anchor["sha256"], "span": [absolute_start, absolute_end], "identifier": identifier})[:24]
+                        origin_uses.append({"use_id": use_id, "obligation_id": obligation["obligation_id"],
+                            "route_fact_id": route_id, "claim_index": claim_index, "map_claim": claim["claim"],
+                            "citation": {"fact_id": evidence.get("fact_id"), "source_id": anchor["source_id"],
+                                         "snippet_id": snippet["snippet_id"], "span": span},
+                            "source_anchor": {"path": anchor["path"], "sha256": anchor["sha256"]},
+                            "identifier": identifier, "identifier_use_span": {"start_offset": absolute_start,
+                                "end_offset": absolute_end, "offset_unit": "unicode_codepoint"},
+                            "unqualified": not qualified, "qualification_context": {"qualified": qualified,
+                                "preceding_tokens": [item.value for item in source_tokens[max(0, use_i - 2):use_i]],
+                                "qualifier_token": qualifier},
+                            "owner_fact_id": owner_id, "owner_type_id": owner_type_id, "owner_resolution_reason": use_owner_error,
+                            "conditional": conditional_use, "method_lexical_safe": method_safe,
+                            "method_lexical_reason": method_reason, "snippet": snippet_text})
+                        seeds.add(identifier)
+    origin_uses = list({item["use_id"]: item for item in origin_uses}.values())
+    origin_uses.sort(key=lambda item: (str(item["obligation_id"]), str(item["route_fact_id"]),
+                                       str(item["source_anchor"]["path"]), item["identifier_use_span"]["start_offset"], str(item["use_id"])))
+    candidates, parser_exclusions = _member_constant_candidates(snapshot["source_graph"], files, seeds)
+    exclusions.extend(parser_exclusions)
+    for candidate in candidates:
+        for use in origin_uses:
+            if candidate["identifier"] != use["identifier"]:
+                continue
+            if candidate["path"] != use["source_anchor"]["path"]:
+                continue
+            if candidate.get("owner_fact_id") != use.get("owner_fact_id"):
+                candidate["reasons"].append("not_same_file_and_lexical_owner_as_origin_use")
+                candidate["reasons"].append("origin_and_declaration_lexical_owner_mismatch")
+                continue
+            if not use.get("unqualified"):
+                candidate["reasons"].append("origin_use_is_qualified")
+            elif use.get("conditional"):
+                candidate["reasons"].append("conditional_origin_use")
+            elif use.get("owner_resolution_reason"):
+                candidate["reasons"].append(str(use["owner_resolution_reason"]))
+            elif not use.get("owner_fact_id") or candidate.get("owner_fact_id") != use.get("owner_fact_id"):
+                candidate["reasons"].append("origin_and_declaration_lexical_owner_mismatch")
+            elif use.get("method_lexical_reason"):
+                candidate["reasons"].append(str(use["method_lexical_reason"]))
+            elif _owner_has_same_name_member(snapshot["source_graph"], candidate["path"], files[candidate["path"]][0], candidate, use):
+                candidate["reasons"].append("shadowed_identifier_in_lexical_owner")
+            elif candidate["syntax_supported"] and not candidate["conditional"] and not untracked_csharp and not exclusions:
+                candidate["eligible_use_ids"].append(use["use_id"])
+            else:
+                candidate["reasons"].extend(reason for reason in ("unsupported_or_conditional_source",) if reason not in candidate["reasons"])
+    eligible_groups: dict[tuple[str, str, str], list[dict[str, object]]] = {}
+    for candidate in candidates:
+        if candidate["eligible_use_ids"]:
+            eligible_groups.setdefault((str(candidate["identifier"]), str(candidate["path"]), str(candidate["owner_fact_id"])), []).append(candidate)
+    for group in eligible_groups.values():
+        if len(group) > 1:
+            for candidate in group:
+                candidate["eligible_use_ids"] = []
+                candidate["reasons"].append("ambiguous_same_owner_declarations")
+    for candidate in candidates:
+        if not candidate["eligible_use_ids"] and not candidate["reasons"]:
+            candidate["reasons"].append("not_same_file_and_lexical_owner_as_origin_use")
+    candidates.sort(key=lambda item: (str(item["identifier"]), str(item["path"]).encode("utf-8"),
+                                      item["span"]["start_offset"], str(item["owner_type_id"]), str(item["candidate_id"])))
+    by_obligation = []
+    for obligation in absent:
+        uses = [item for item in origin_uses if item["obligation_id"] == obligation["obligation_id"]]
+        matched = [item for item in candidates if any(item["identifier"] == use["identifier"] for use in uses)]
+        use_ids = {item["use_id"] for item in uses}
+        eligible = [item["candidate_id"] for item in matched if use_ids.intersection(item["eligible_use_ids"])]
+        by_obligation.append({"obligation": obligation, "origin_use_ids": [item["use_id"] for item in uses],
+                              "candidate_ids": [item["candidate_id"] for item in matched],
+                              "eligible_candidate_ids": eligible,
+                              "unresolved_reasons": sorted(
+                                  {reason for item in matched for reason in item["reasons"]}
+                                  | (set() if eligible else {"no_eligible_declaration"}))})
+    packet_out: dict[str, object] = {
+        "expansion_schema_version": expansion_schema_version, "packet_type": "gap_local_evidence_expansion_review",
+        "source_run_path": os.fspath(source), "destination_run_path": os.fspath(destination),
+        "question": packet["question"], "question_bytes_utf8_hex": str(packet["question"]).encode("utf-8").hex(),
+        "question_sha256": packet["question_sha256"],
+        "obligations": {"canonical_path": identity["obligations_file_path"], "raw_sha256": identity["obligations_file_sha256"],
+                        "meanings": packet["obligations"]},
+        "source_gap_sha256": gap["package_sha256"], "source_gap_file_sha256": hashlib.sha256(_read_regular_bytes(source / "evidence-gap.json", "source evidence gap")).hexdigest(),
+        "selection_packet_sha256": packet["packet_sha256"],
+        "selection_semantic_sha256": packet["semantic_sha256"], "selection_sha256": _digest(selection_record),
+        "identity": {key: identity[key] for key in ("repository_root", "head", "head_ref", "repository_status",
+                     "snapshot_id", "extractor_identity", "controller_type_id")},
+        "search": {"grammar": EXPANSION_GRAMMAR, "max_bytes": max_bytes, "scanned_source_bytes": scanned_bytes,
+                   "complete": not bool(exclusions or untracked_csharp), "seed_rule": "exact case-sensitive C# identifier overlap among authoritative meaning, map claim, and verified cited source snippet",
+                   "binding_boundary": "lexical owner and conservative method/scope token analysis only; no compiler binding is claimed",
+                   "identifiers": sorted(seeds), "candidate_order": ["identifier", "path UTF-8 bytes", "start_offset", "owner_type_id", "candidate_id"]},
+        "absent_obligations": by_obligation, "origin_uses": origin_uses, "declaration_candidates": candidates,
+        "exclusions": sorted(exclusions, key=lambda item: (str(item.get("path", "")), str(item.get("reason", "")))),
+        "review_contract": _expansion_review_contract(expansion_schema_version, by_obligation, candidates),
+        "evidence_boundary": "Supplemental expansion evidence is distinct from candidate.map and its original receipt. A later import requires separate expansion packet, review, and package hashes and cannot reuse map-review authority. The original map's numeric value remains unproven from that map.",
+    }
+    packet_out["packet_sha256"] = _digest(packet_out)
+    encoded = _bytes(packet_out)
+    if len(encoded) > max_bytes:
+        raise CoordinatorError(f"canonical expansion packet exceeds --max-bytes: observed {len(encoded)}, limit {max_bytes}; no packet written")
+    return packet_out
+
+
+def _expansion_review_contract(version: int, absent_obligations: list[dict[str, object]],
+                               candidates: list[dict[str, object]]) -> dict[str, object]:
+    if version == 1:
+        # Frozen v1 packet wire shape. The omission of `decision` is retained so old
+        # packet bytes reconstruct exactly; the validator still requires it.
+        return {"review_schema_version": 1, "packet_sha256": "copy expansion-review-packet.json packet_sha256 exactly",
+            "reviewer_identity": "nonempty audit label, not authentication", "reviewer_model": "GPT-6.1 Sol High audit label, not authentication",
+            "obligation_reviews": {"coverage": "one ordered entry for every absent_obligations item", "fields": ["obligation_id", "classification", "selected_candidate_ids", "basis"],
+                "classification": {"local_evidence": "may select only exact candidate IDs listed eligible_candidate_ids for this obligation", "external_or_unresolved": "selected_candidate_ids must be empty"}},
+            "candidate_reviews": {"coverage": "account for every declaration_candidates item exactly once", "fields": ["candidate_id", "disposition", "basis"], "disposition": ["selected", "not_selected"]},
+            "rules": "Every absent obligation and every candidate must be accounted for exactly once. Local evidence requires semantic confirmation that the cited declaration supplies the missing fact; eligibility is only a code-owned lexical boundary. Candidates are leads, not evidence until reviewed. Labels are audit labels, not authentication."}
+    if version != EXPANSION_REVIEW_SCHEMA["version"]:
+        raise CoordinatorError(f"unsupported expansion schema version {version!r}; allowed versions are 1 and {EXPANSION_REVIEW_SCHEMA['version']}")
+    schema = EXPANSION_REVIEW_SCHEMA
+    return {
+        "reviewer_model": {"exact": schema["reviewer_model"], "meaning": "audit label, not authentication"},
+        "encoding": "JSON encoded as ASCII-escaped bytes valid as UTF-8; sorted object keys; compact separators (',', ':'); no BOM; exactly one trailing newline",
+        "exact_top_level_fields": sorted(schema["fields"]),
+        "object_fields": {
+            "top_level": sorted(schema["fields"]),
+            "obligation_review": sorted(schema["obligation_fields"]),
+            "candidate_review": sorted(schema["candidate_fields"]),
+        },
+        "packet_sha256": "copy expansion-review-packet.json packet_sha256 exactly",
+        "reviewer_identity": "nonempty audit label; not authentication",
+        "review_schema_version": schema["version"],
+        "decision": {"allowed": list(schema["decisions"]),
+            "accepted": "save the review and package; local, unresolved, or mixed classifications are allowed and unresolved obligations yield an external_or_unresolved package",
+            "rejected": "save the review only; do not create an expansion package"},
+        "obligation_reviews": {"coverage": "exactly one entry for every absent_obligations item, in packet order",
+            "ordered_obligations": [{"obligation_id": item["obligation"]["obligation_id"],
+                "eligible_candidate_ids": list(item["eligible_candidate_ids"])} for item in absent_obligations],
+            "fields": sorted(schema["obligation_fields"]),
+            "basis": "nonempty string of at least 20 characters",
+            "classification": {"allowed": list(schema["classifications"]),
+                "local_evidence": "selected_candidate_ids must be nonempty and contain only IDs in this obligation's eligible_candidate_ids, in declaration_candidates packet order",
+                "external_or_unresolved": "selected_candidate_ids must be empty"},
+            "selected_candidate_ids": "array of unique strings in declaration_candidates packet order; local_evidence requires at least one eligible ID"},
+        "candidate_reviews": {"coverage": "exactly one entry for every declaration_candidates item, in packet order",
+            "ordered_candidate_ids": [item["candidate_id"] for item in candidates],
+            "fields": sorted(schema["candidate_fields"]), "disposition": list(schema["dispositions"]),
+            "basis": "nonempty string of at least 20 characters",
+            "selected_union": "disposition is selected exactly when candidate_id occurs in the union of local obligation selected_candidate_ids"},
+        "rules": "All object fields are exact; arrays have complete ordered coverage. Every absent obligation is classified once, every candidate is reviewed once, and each selected candidate is eligible for every obligation that selects it. Sol provides the semantic judgment; code validates schema, ordering, and code-owned eligibility. Reviewer labels are unauthenticated.",
+    }
+
+
+def expand_gap_prepare(repo: str, db: str, source_run_dir: str, destination_run_dir: str,
+                       obligations_file: str, max_bytes: int = 10_000_000) -> dict[str, object]:
+    max_bytes = _validate_expansion_max_bytes(max_bytes)
+    destination = _canonical_run_path(Path(destination_run_dir), "destination run", must_exist=False)
+    if destination.exists():
+        if destination.is_symlink() or not destination.is_dir():
+            raise CoordinatorError("destination run must be a real directory")
+        allowed = {EXPANSION_PACKET, EXPANSION_REVIEW, EXPANSION_PACKAGE, EXPANSION_IMPORT_BINDING}
+        existing = {item.name for item in destination.iterdir()}
+        if existing - allowed:
+            raise CoordinatorError("destination run already contains unrelated artifacts; choose an empty destination")
+        if EXPANSION_PACKET in existing:
+            try:
+                saved_packet = _read_artifact(destination, EXPANSION_PACKET)
+                saved_search = saved_packet.get("search")
+                saved_max_bytes = saved_search.get("max_bytes") if isinstance(saved_search, dict) else None
+                if type(saved_max_bytes) is not int or saved_max_bytes != max_bytes:
+                    raise CoordinatorError(f"--max-bytes requested {max_bytes}; saved expansion packet requires {saved_max_bytes!r}; supply the saved value to replay")
+                destination, packet = _reconstruct_expansion_packet(repo, db, source_run_dir, os.fspath(destination), obligations_file)
+                if EXPANSION_IMPORT_BINDING in existing:
+                    expand_gap_status(repo, db, source_run_dir, os.fspath(destination), obligations_file)
+            except CoordinatorError as exc:
+                raise CoordinatorError(f"immutable artifact already exists and does not match the requested replay: {exc}") from exc
+            return {"result": "expansion_review_prepared", "destination_run_dir": os.fspath(destination),
+                "packet_sha256": packet["packet_sha256"], "packet_bytes": len(_bytes(packet)),
+                "absent_obligation_count": len(packet["absent_obligations"]),
+                "candidate_count": len(packet["declaration_candidates"])}
+        if existing:
+            raise CoordinatorError("expansion destination contains review/package artifacts without its packet")
+    packet = _build_gap_expansion_packet(repo, db, source_run_dir, os.fspath(destination), obligations_file, max_bytes)
+    destination.mkdir(parents=True, exist_ok=True)
+    _save_immutable(destination / EXPANSION_PACKET, packet)
+    return {"result": "expansion_review_prepared", "destination_run_dir": os.fspath(destination),
+            "packet_sha256": packet["packet_sha256"], "packet_bytes": len(_bytes(packet)),
+            "absent_obligation_count": len(packet["absent_obligations"]),
+            "candidate_count": len(packet["declaration_candidates"])}
+
+
+def _expansion_review_template(packet: dict[str, object]) -> dict[str, object]:
+    schema = EXPANSION_REVIEW_SCHEMA if packet.get("expansion_schema_version") == EXPANSION_SCHEMA_VERSION else _EXPANSION_REVIEW_SCHEMA_V1
+    return {"review_schema_version": schema["version"], "packet_sha256": packet["packet_sha256"],
+        "reviewer_identity": "<Sol reviewer identity>", "reviewer_model": EXPANSION_REVIEW_SCHEMA["reviewer_model"],
+        "decision": "<accepted|rejected>",
+        "obligation_reviews": [{"obligation_id": item["obligation"]["obligation_id"], "classification": "<local_evidence|external_or_unresolved>",
+            "selected_candidate_ids": [], "basis": "<Sol semantic judgment: explain whether local declarations satisfy the missing meaning>"}
+            for item in packet["absent_obligations"]],
+        "candidate_reviews": [{"candidate_id": item["candidate_id"], "disposition": "<selected|not_selected>",
+            "basis": "<Sol semantic judgment for candidate>"} for item in packet["declaration_candidates"]]}
+
+
+def _reconstruct_expansion_packet(repo: str, db: str, source_run_dir: str, destination_run_dir: str,
+                                  obligations_file: str) -> tuple[Path, dict[str, object]]:
+    source = _canonical_run_path(Path(source_run_dir), "source run", must_exist=True)
+    destination = _canonical_run_path(Path(destination_run_dir), "destination run", must_exist=True)
+    packet_path = destination / EXPANSION_PACKET
+    saved = _read_artifact(destination, EXPANSION_PACKET)
+    if saved.get("source_run_path") != os.fspath(source) or saved.get("destination_run_path") != os.fspath(destination):
+        raise CoordinatorError("expansion packet source/destination binding differs from the requested run paths")
+    version = saved.get("expansion_schema_version")
+    if type(version) is not int or version not in (1, EXPANSION_SCHEMA_VERSION):
+        raise CoordinatorError(f"expansion packet version observed {version!r}; allowed exact integer versions are 1 and {EXPANSION_SCHEMA_VERSION}")
+    search = saved.get("search")
+    max_bytes = search.get("max_bytes") if isinstance(search, dict) else None
+    if not isinstance(max_bytes, int) or isinstance(max_bytes, bool) or not 1 <= max_bytes <= EXPANSION_MAX_BYTES:
+        raise CoordinatorError("saved expansion packet has an invalid frozen max_bytes")
+    expected = _build_gap_expansion_packet(repo, db, os.fspath(source), os.fspath(destination), obligations_file,
+                                           max_bytes, expansion_schema_version=version)
+    if _bytes(expected) != _read_regular_bytes(packet_path, "expansion packet"):
+        raise CoordinatorError("expansion packet does not exactly reconstruct from current source, checkout, DB, obligations, and run binding")
+    _validate_expansion_artifacts(destination)
+    return destination, expected
+
+
+def _validate_expansion_artifacts(destination: Path) -> None:
+    allowed = {EXPANSION_PACKET, EXPANSION_REVIEW, EXPANSION_PACKAGE, EXPANSION_IMPORT_BINDING}
+    entries = {item.name for item in destination.iterdir()}
+    if entries - allowed:
+        raise CoordinatorError("expansion destination contains unknown artifacts")
+    for name in sorted(entries):
+        artifact = _read_artifact(destination, name)
+        if name == EXPANSION_PACKAGE:
+            _validate_expansion_package_schema(artifact)
+        elif name == EXPANSION_IMPORT_BINDING:
+            _validate_expansion_import_binding_schema(artifact)
+
+
+def _validate_expansion_package_schema(package: dict[str, object]) -> None:
+    version = package.get("package_schema_version")
+    if type(version) is not int or version != EXPANSION_PACKAGE_SCHEMA_VERSION:
+        raise CoordinatorError("expansion package schema version must be the exact integer version 1")
+
+
+EXPANSION_IMPORT_BINDING_FIELDS = {
+    "binding_schema_version", "expansion_run_path", "source_run_path", "target_run_path",
+    "question", "obligations", "controller_type_id", "checkout", "snapshot_id", "extractor_identity",
+    "packet_sha256", "review_sha256", "package_sha256", "source_gap_sha256", "source_gap_file_sha256",
+    "selection_packet_sha256", "selection_semantic_sha256", "selection_sha256", "support_joins",
+    "source_inventory", "binding_sha256",
+}
+
+
+def _validate_expansion_import_binding_schema(binding: dict[str, object]) -> None:
+    version = binding.get("binding_schema_version")
+    if type(version) is not int or version != EXPANSION_IMPORT_BINDING_SCHEMA_VERSION:
+        raise CoordinatorError("expansion import binding schema version must be the exact integer version 1")
+    if set(binding) != EXPANSION_IMPORT_BINDING_FIELDS:
+        raise CoordinatorError("expansion import binding must contain the exact code-owned fields")
+    expected_hash = _digest({key: value for key, value in binding.items() if key != "binding_sha256"})
+    if binding.get("binding_sha256") != expected_hash:
+        raise CoordinatorError("expansion import binding self-hash does not match canonical content")
+
+
+def _validate_expansion_review(packet: dict[str, object], review: object) -> dict[str, object]:
+    packet_version = packet.get("expansion_schema_version")
+    schema = EXPANSION_REVIEW_SCHEMA if packet_version == EXPANSION_SCHEMA_VERSION else _EXPANSION_REVIEW_SCHEMA_V1
+    if not isinstance(review, dict):
+        raise CoordinatorError("expansion review observed a non-object; required a JSON object with the exact code-owned top-level fields")
+    _require_exact_fields(review, schema["fields"], "expansion review", "add missing fields and remove unexpected fields")
+    version = review.get("review_schema_version")
+    if type(version) is not int or version != schema["version"]:
+        raise CoordinatorError(f"expansion review schema version observed {version!r}; required exact integer {schema['version']} for packet version {packet_version}")
+    if review.get("packet_sha256") != packet.get("packet_sha256"):
+        raise CoordinatorError(f"expansion review packet_sha256 observed {review.get('packet_sha256')!r}; copy the reconstructed packet_sha256 exactly")
+    atlas._answer_nonempty(review.get("reviewer_identity"), "expansion reviewer_identity")
+    if review.get("reviewer_model") != schema["reviewer_model"]:
+        raise CoordinatorError(f"expansion reviewer_model must be exactly {schema['reviewer_model']}")
+    decision = review.get("decision")
+    if not isinstance(decision, str) or decision not in schema["decisions"]:
+        raise CoordinatorError(f"expansion review decision observed {decision!r}; allowed values are {schema['decisions']!r}")
+    obligations = packet["absent_obligations"]
+    reviews = review.get("obligation_reviews")
+    if not isinstance(reviews, list) or len(reviews) != len(obligations):
+        raise CoordinatorError("expansion review must account for every absent obligation exactly once in packet order")
+    selected_union: set[str] = set()
+    local_count = 0
+    for index, item in enumerate(reviews):
+        expected = obligations[index]
+        oid = expected["obligation"]["obligation_id"]
+        if not isinstance(item, dict):
+            raise CoordinatorError(f"expansion obligation review {index + 1} observed a non-object; required exact fields for {oid}")
+        _require_exact_fields(item, schema["obligation_fields"], f"expansion obligation review {index + 1} ({oid})",
+                              "add missing fields and remove unexpected fields")
+        if item.get("obligation_id") != oid:
+            raise CoordinatorError(f"expansion obligation review {index + 1} observed obligation_id {item.get('obligation_id')!r}; required {oid!r} in packet order")
+        atlas._answer_nonempty(item.get("basis"), f"expansion obligation {oid} basis", 20)
+        classification = item.get("classification")
+        ids = item.get("selected_candidate_ids")
+        eligible = set(expected["eligible_candidate_ids"])
+        if not isinstance(ids, list) or any(not isinstance(value, str) for value in ids) or len(ids) != len(set(ids)):
+            raise CoordinatorError(f"selected candidate IDs for {oid} must be a unique ordered string array")
+        ordered_ids = [candidate["candidate_id"] for candidate in packet["declaration_candidates"] if candidate["candidate_id"] in set(ids)]
+        if ids != ordered_ids:
+            raise CoordinatorError(f"selected candidate IDs for {oid} observed order {ids!r}; required declaration_candidates packet order {ordered_ids!r}")
+        if classification == "local_evidence":
+            if not ids or any(value not in eligible for value in ids):
+                raise CoordinatorError(f"local_evidence for {oid} requires nonempty IDs eligible for that exact obligation")
+            local_count += 1
+            selected_union.update(ids)
+        elif classification == "external_or_unresolved":
+            if ids:
+                raise CoordinatorError(f"external_or_unresolved for {oid} must have no selected candidate IDs")
+        else:
+            raise CoordinatorError(f"expansion classification for {oid} is invalid")
+    candidate_reviews = review.get("candidate_reviews")
+    candidates = packet["declaration_candidates"]
+    if not isinstance(candidate_reviews, list) or len(candidate_reviews) != len(candidates):
+        raise CoordinatorError("expansion review must account for every declaration candidate exactly once in packet order")
+    for index, item in enumerate(candidate_reviews):
+        expected = candidates[index]
+        candidate_id = expected["candidate_id"]
+        if not isinstance(item, dict):
+            raise CoordinatorError(f"candidate review {index + 1} observed a non-object; required exact fields for {candidate_id}")
+        _require_exact_fields(item, schema["candidate_fields"], f"candidate review {index + 1} ({candidate_id})",
+                              "add missing fields and remove unexpected fields")
+        if item.get("candidate_id") != candidate_id:
+            raise CoordinatorError(f"candidate review {index + 1} observed candidate_id {item.get('candidate_id')!r}; required {candidate_id!r} in packet order")
+        atlas._answer_nonempty(item.get("basis"), f"candidate {candidate_id} basis", 20)
+        disposition = item.get("disposition")
+        should_select = candidate_id in selected_union
+        if not isinstance(disposition, str) or disposition not in schema["dispositions"] or (disposition == "selected") != should_select:
+            raise CoordinatorError(f"candidate disposition for {candidate_id} must match the union of selected obligation IDs")
+        if should_select:
+            eligible_for_local = [obligation for obligation, review_item in zip(obligations, reviews, strict=True)
+                if review_item["classification"] == "local_evidence" and candidate_id in review_item["selected_candidate_ids"]]
+            if any(candidate_id not in obligation["eligible_candidate_ids"] for obligation in eligible_for_local):
+                raise CoordinatorError(f"shared candidate {candidate_id} is not independently eligible for every selecting obligation")
+    normalized = dict(review)
+    normalized["obligation_reviews"] = reviews
+    normalized["candidate_reviews"] = candidate_reviews
+    return normalized
+
+
+def _require_exact_fields(value: dict[str, object], expected_fields: list[str], label: str, correction: str) -> None:
+    expected = set(expected_fields)
+    observed = set(value)
+    missing = sorted(expected - observed)
+    unexpected = sorted(observed - expected)
+    if missing or unexpected:
+        details = []
+        if missing:
+            details.append(f"missing fields {missing!r}")
+        if unexpected:
+            details.append(f"unexpected fields {unexpected!r}")
+        raise CoordinatorError(f"{label} has {'; '.join(details)}; required correction: {correction}")
+
+
+def _expansion_package(packet: dict[str, object], review: dict[str, object]) -> dict[str, object]:
+    review_hash = _digest(review)
+    selected_ids = {candidate_id for item in review["obligation_reviews"] for candidate_id in item["selected_candidate_ids"]}
+    fully_local = (review["decision"] == "accepted" and packet["search"]["complete"]
+                   and bool(review["obligation_reviews"])
+                   and all(item["classification"] == "local_evidence" for item in review["obligation_reviews"]))
+    lineage_fields = ("source_run_path", "destination_run_path", "question", "question_bytes_utf8_hex", "question_sha256",
+        "obligations", "source_gap_sha256", "source_gap_file_sha256", "selection_packet_sha256", "selection_semantic_sha256",
+        "selection_sha256", "identity", "search")
+    package: dict[str, object] = {"package_schema_version": EXPANSION_PACKAGE_SCHEMA_VERSION,
+        "package_type": "local_expansion" if fully_local else "external_or_unresolved",
+        "packet_sha256": packet["packet_sha256"], "review_sha256": review_hash,
+        "lineage": {key: packet[key] for key in lineage_fields},
+        "current_answer_authority": False, "full_question_completeness": False, "completeness_claim": False,
+        "review_authority_boundary": "This semantic review covers expansion candidates only. The original map receipt does not review these declarations and supplies no authority to import them."}
+    if fully_local:
+        candidates = {item["candidate_id"]: item for item in packet["declaration_candidates"]}
+        selected_evidence = [{"evidence_kind": "supplemental_declaration_candidate", "candidate_id": candidate_id,
+                              "declaration": candidates[candidate_id]}
+                             for candidate_id in sorted(selected_ids)]
+        use_ids = {use_id for candidate_id in selected_ids for use_id in candidates[candidate_id]["eligible_use_ids"]}
+        origins = [{"evidence_kind": "origin_use_provenance", **use} for use in packet["origin_uses"] if use["use_id"] in use_ids]
+        package["selected_declaration_evidence"] = selected_evidence
+        package["origin_use_evidence"] = origins
+        package["obligation_reviews"] = review["obligation_reviews"]
+    else:
+        incomplete_search = not packet["search"]["complete"]
+        unresolved = []
+        for item in review["obligation_reviews"]:
+            if incomplete_search or item["classification"] == "external_or_unresolved":
+                unresolved.append({"obligation_id": item["obligation_id"], "classification": item["classification"],
+                    "reason": "search_incomplete" if incomplete_search else "reviewed_external_or_unresolved"})
+        package["unresolved_obligations"] = unresolved
+        package["unresolved_candidates"] = [{"candidate_id": item["candidate_id"], "reasons": item["reasons"],
+                                               "review_disposition": review_item["disposition"]}
+                                              for item in packet["declaration_candidates"]
+                                              for review_item in review["candidate_reviews"]
+                                              if review_item["candidate_id"] == item["candidate_id"]
+                                              and review_item["disposition"] == "not_selected"]
+    package["package_sha256"] = _digest(package)
+    return package
+
+
+def expand_gap_review(repo: str, db: str, source_run_dir: str, destination_run_dir: str,
+                      obligations_file: str, review_file: str) -> dict[str, object]:
+    destination, packet = _reconstruct_expansion_packet(repo, db, source_run_dir, destination_run_dir, obligations_file)
+    if EXPANSION_PACKAGE in {item.name for item in destination.iterdir()}:
+        _read_artifact(destination, EXPANSION_PACKAGE)
+    review_path = Path(review_file).expanduser()
+    raw_review = _read_regular_bytes(review_path, "expansion review input")
+    try:
+        review_input = json.loads(raw_review.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CoordinatorError(f"cannot read expansion review input {review_path}: {exc}") from exc
+    if not isinstance(review_input, dict) or raw_review != _bytes(review_input):
+        raise CoordinatorError("expansion review input must be a canonical JSON object")
+    review = _validate_expansion_review(packet, review_input)
+    review_path_in_run = destination / EXPANSION_REVIEW
+    if review["decision"] == "rejected" and (destination / EXPANSION_PACKAGE).exists():
+        raise CoordinatorError("rejected review conflicts with an existing authoritative expansion package")
+    _save_immutable(review_path_in_run, review)
+    if review["decision"] == "rejected":
+        return {"result": "expansion_review_saved", "state": "review_only", "review_sha256": _digest(review)}
+    package = _expansion_package(packet, review)
+    _save_immutable(destination / EXPANSION_PACKAGE, package)
+    state = "local_expansion_ready" if package["package_type"] == "local_expansion" else "external_or_unresolved"
+    return {"result": "expansion_review_saved", "state": state, "review_sha256": _digest(review),
+            "package_sha256": package["package_sha256"], "package_type": package["package_type"]}
+
+
+def expand_gap_status(repo: str, db: str, source_run_dir: str, destination_run_dir: str,
+                      obligations_file: str) -> dict[str, object]:
+    destination, packet = _reconstruct_expansion_packet(repo, db, source_run_dir, destination_run_dir, obligations_file)
+    names = {item.name for item in destination.iterdir()}
+    allowed = {EXPANSION_PACKET, EXPANSION_REVIEW, EXPANSION_PACKAGE, EXPANSION_IMPORT_BINDING}
+    if names - allowed:
+        raise CoordinatorError("expansion destination contains unknown artifacts")
+    package_path = destination / EXPANSION_PACKAGE
+    if EXPANSION_REVIEW not in names:
+        if EXPANSION_PACKAGE in names:
+            raise CoordinatorError("expansion package exists without its review")
+        if EXPANSION_IMPORT_BINDING in names:
+            raise CoordinatorError("expansion import binding exists without a reviewed package")
+        return {"state": "packet_only", "packet_sha256": packet["packet_sha256"]}
+    review = _read_artifact(destination, EXPANSION_REVIEW)
+    review = _validate_expansion_review(packet, review)
+    expected_package = _expansion_package(packet, review) if review["decision"] == "accepted" else None
+    if EXPANSION_PACKAGE not in names:
+        if EXPANSION_IMPORT_BINDING in names:
+            raise CoordinatorError("expansion import binding exists without its package")
+        return {"state": "review_only", "decision": review["decision"], "review_sha256": _digest(review),
+                "package_pending": review["decision"] == "accepted"}
+    if expected_package is None:
+        raise CoordinatorError("rejected review must not have an expansion package")
+    saved_package = _read_artifact(destination, EXPANSION_PACKAGE)
+    if _bytes(expected_package) != _read_regular_bytes(package_path, "expansion package"):
+        raise CoordinatorError("expansion package does not reconstruct from exact packet and review")
+    binding_path = destination / EXPANSION_IMPORT_BINDING
+    if binding_path.exists() or binding_path.is_symlink():
+        binding = _read_artifact(destination, EXPANSION_IMPORT_BINDING)
+        question_binding = binding.get("question")
+        if not isinstance(question_binding, dict) or not isinstance(question_binding.get("canonical_path"), str):
+            raise CoordinatorError("expansion import binding question path is malformed")
+        _reconstruct_expanded_prepare(repo, db, source_run_dir, os.fspath(destination),
+            os.fspath(question_binding["canonical_path"]), obligations_file,
+            str(binding.get("target_run_path", "")))
+    state = "local_expansion_ready" if saved_package["package_type"] == "local_expansion" else "external_or_unresolved"
+    return {"state": state, "decision": review["decision"], "packet_sha256": packet["packet_sha256"],
+            "review_sha256": _digest(review), "package_sha256": saved_package["package_sha256"],
+            "package_type": saved_package["package_type"]}
+
+
+def _paths_overlap(left: Path, right: Path) -> bool:
+    return left == right or left in right.parents or right in left.parents
+
+
+def _canonical_target_path(path: str) -> Path:
+    supplied = Path(path).expanduser()
+    if supplied.is_symlink() or (supplied.exists() and not supplied.is_dir()):
+        raise CoordinatorError(f"target run must be a real directory: {supplied}")
+    try:
+        return supplied.resolve(strict=False)
+    except OSError as exc:
+        raise CoordinatorError(f"cannot resolve target run {supplied}: {exc}") from exc
+
+
+def _expansion_support_joins(packet: dict[str, object], review: dict[str, object],
+                             package: dict[str, object]) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    if (packet.get("search", {}).get("complete") is not True
+            or package.get("package_type") != "local_expansion"
+            or package.get("current_answer_authority") is not False
+            or package.get("full_question_completeness") is not False
+            or package.get("completeness_claim") is not False):
+        raise CoordinatorError("expansion is not complete local evidence with answer and completeness authority disabled")
+    candidates = {item["candidate_id"]: item for item in packet["declaration_candidates"]}
+    uses = {item["use_id"]: item for item in packet["origin_uses"]}
+    joins: list[dict[str, object]] = []
+    supplemental: list[dict[str, object]] = []
+    for item in review["obligation_reviews"]:
+        oid = item["obligation_id"]
+        if item["classification"] != "local_evidence" or not item["selected_candidate_ids"]:
+            raise CoordinatorError(f"local expansion import requires local evidence for every absent obligation; observed {oid}")
+        absent = next((row for row in packet["absent_obligations"] if row["obligation"]["obligation_id"] == oid), None)
+        if absent is None:
+            raise CoordinatorError(f"selected obligation {oid} is absent from the reconstructed expansion packet")
+        allowed_candidates = set(absent["eligible_candidate_ids"])
+        for candidate_id in item["selected_candidate_ids"]:
+            candidate = candidates.get(candidate_id)
+            if candidate is None or candidate_id not in allowed_candidates:
+                raise CoordinatorError(f"selected candidate {candidate_id} is not eligible for exact obligation {oid}")
+            matched_uses = []
+            for use_id in candidate["eligible_use_ids"]:
+                use = uses.get(use_id)
+                if use is None or use.get("obligation_id") != oid:
+                    continue
+                anchor = use.get("source_anchor")
+                if (use.get("identifier") != candidate.get("identifier")
+                        or not isinstance(anchor, dict)
+                        or anchor.get("path") != candidate.get("path")
+                        or anchor.get("sha256") != candidate.get("sha256")
+                        or use.get("owner_fact_id") != candidate.get("owner_fact_id")
+                        or use.get("owner_type_id") != candidate.get("owner_type_id")
+                        or not use.get("unqualified") or use.get("conditional")):
+                    raise CoordinatorError(f"candidate {candidate_id} does not exactly join eligible source, owner, route, and use for {oid}")
+                matched_uses.append(use)
+            if not matched_uses:
+                raise CoordinatorError(f"candidate {candidate_id} has no obligation-matched eligible origin use for {oid}")
+            for use in matched_uses:
+                join = {"obligation_id": oid, "candidate_id": candidate_id, "use_id": use["use_id"],
+                    "route_fact_id": use["route_fact_id"], "owner_fact_id": use["owner_fact_id"],
+                    "source_anchor": use["source_anchor"], "citation": use["citation"]}
+                joins.append(join)
+                supplemental.append({"evidence_kind": "supplemental_declaration_candidate",
+                    "eligibility": "eligible_for_later_selection_review", "answer_authority": False,
+                    "obligation_id": oid, "candidate_id": candidate_id, "declaration": candidate,
+                    "origin_use": {"use_id": use["use_id"], "route_fact_id": use["route_fact_id"],
+                        "citation": use["citation"], "source_anchor": use["source_anchor"],
+                        "identifier_use_span": use["identifier_use_span"], "owner_fact_id": use["owner_fact_id"],
+                        "owner_type_id": use["owner_type_id"]}})
+    joins.sort(key=lambda row: (row["obligation_id"], row["candidate_id"], row["use_id"]))
+    supplemental.sort(key=lambda row: (row["obligation_id"], row["candidate_id"], row["origin_use"]["use_id"]))
+    return joins, supplemental
+
+
+def _build_expansion_import_state(repo: str, db: str, source_run_dir: str, expansion_run_dir: str,
+                                  question_file: str, obligations_file: str, target_run_dir: str
+                                  ) -> tuple[dict[str, object], dict[str, object], dict[str, object], Path, Path]:
+    source = _canonical_run_path(Path(source_run_dir), "source run", must_exist=True)
+    expansion, expansion_packet = _reconstruct_expansion_packet(repo, db, source_run_dir, expansion_run_dir, obligations_file)
+    if EXPANSION_REVIEW not in {item.name for item in expansion.iterdir()} or EXPANSION_PACKAGE not in {item.name for item in expansion.iterdir()}:
+        raise CoordinatorError("expansion import requires a saved accepted review and package")
+    review = _validate_expansion_review(expansion_packet, _read_artifact(expansion, EXPANSION_REVIEW))
+    if review["decision"] != "accepted":
+        raise CoordinatorError("expansion import requires an accepted semantic review")
+    expected_package = _expansion_package(expansion_packet, review)
+    if expected_package["package_type"] != "local_expansion":
+        raise CoordinatorError("external, mixed, or incomplete expansion package cannot be imported")
+    if _bytes(expected_package) != _read_regular_bytes(expansion / EXPANSION_PACKAGE, "expansion package"):
+        raise CoordinatorError("saved expansion package differs from reconstructed packet and review")
+    joins, supplemental = _expansion_support_joins(expansion_packet, review, expected_package)
+
+    try:
+        question_input = Path(question_file).expanduser()
+        if question_input.is_symlink():
+            raise CoordinatorError(f"question file must be a no-follow regular file: {question_input}")
+        question_path = question_input.resolve(strict=True)
+        question_raw = _read_regular_bytes(question_input, "question file")
+        question = question_raw.decode("utf-8")
+    except CoordinatorError:
+        raise
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CoordinatorError(f"question file must be readable no-follow UTF-8: {exc}") from exc
+    if (question != expansion_packet.get("question")
+            or hashlib.sha256(question_raw).hexdigest() != expansion_packet.get("question_sha256")):
+        raise CoordinatorError("question file bytes do not exactly match the original selection and expansion question")
+    obligations = expansion_packet["obligations"]
+    obligations_path = Path(obligations_file).expanduser().resolve(strict=True)
+    obligations_raw = _read_regular_bytes(obligations_path, "obligations file")
+    if (os.fspath(obligations_path) != obligations["canonical_path"]
+            or hashlib.sha256(obligations_raw).hexdigest() != obligations["raw_sha256"]):
+        raise CoordinatorError("obligations path differs from the frozen expansion packet")
+    # Rebuild the ordinary packet against current maps and require exact byte identity with the original run.
+    source_packet = _read_artifact(source, "selection-packet.json")
+    ordinary_packet, candidates = _build_prepared_selection(repo, db, question_raw, question, obligations_file,
+        str(source_packet.get("identity", {}).get("controller_type_id", "")), DEFAULT_LIMIT)
+    if _bytes(ordinary_packet) != _read_regular_bytes(source / "selection-packet.json", "source selection packet"):
+        raise CoordinatorError("current question, obligations, controller, checkout, maps, or receipts differ from the original source selection packet")
+    current_route_ids = {candidate["route"]["id"] for candidate in candidates}
+    if any(join["route_fact_id"] not in current_route_ids for join in joins):
+        raise CoordinatorError("supplemental origin use route is not present in the current accepted route maps")
+    if ordinary_packet["obligations"] != obligations["meanings"]:
+        raise CoordinatorError("original obligations meanings differ from expansion lineage")
+
+    target = _canonical_target_path(target_run_dir)
+    db_path = Path(db).expanduser().resolve(strict=True)
+    repo_path = Path(repo).expanduser().resolve(strict=True)
+    paths = [("source run", source), ("expansion run", expansion), ("target run", target),
+             ("repository", repo_path), ("database", db_path)]
+    for index, (left_name, left) in enumerate(paths):
+        for right_name, right in paths[index + 1:]:
+            if _paths_overlap(left, right):
+                raise CoordinatorError(f"{left_name} path overlaps {right_name}: {left} and {right}")
+
+    packet = {key: value for key, value in ordinary_packet.items()
+              if key not in {"semantic_sha256", "packet_sha256"}}
+    identity = ordinary_packet["identity"]
+    binding: dict[str, object] = {
+        "binding_schema_version": EXPANSION_IMPORT_BINDING_SCHEMA_VERSION,
+        "expansion_run_path": os.fspath(expansion), "source_run_path": os.fspath(source),
+        "target_run_path": os.fspath(target),
+        "question": {"canonical_path": os.fspath(question_path), "raw_sha256": hashlib.sha256(question_raw).hexdigest(),
+                     "text": question, "question_sha256": ordinary_packet["question_sha256"]},
+        "obligations": {"canonical_path": obligations["canonical_path"], "raw_sha256": obligations["raw_sha256"],
+                        "meanings": obligations["meanings"]},
+        "controller_type_id": identity["controller_type_id"],
+        "checkout": {key: identity[key] for key in ("repository_root", "head", "head_ref", "repository_status")},
+        "snapshot_id": identity["snapshot_id"], "extractor_identity": identity["extractor_identity"],
+        "packet_sha256": expansion_packet["packet_sha256"], "review_sha256": _digest(review),
+        "package_sha256": expected_package["package_sha256"],
+        "source_gap_sha256": expansion_packet["source_gap_sha256"],
+        "source_gap_file_sha256": expansion_packet["source_gap_file_sha256"],
+        "selection_packet_sha256": expansion_packet["selection_packet_sha256"],
+        "selection_semantic_sha256": expansion_packet["selection_semantic_sha256"],
+        "selection_sha256": expansion_packet["selection_sha256"],
+        "support_joins": joins,
+        "source_inventory": {
+            "routes": [{"route_fact_id": candidate["route"]["id"], "map_sha256": _digest(candidate["map"]),
+                "review_receipt_hash": candidate["provenance"].get("flow_review_receipt", {}).get("receipt_hash"),
+                "binding_hash": candidate["provenance"].get("binding_hash"),
+                "association_review_hash": candidate["provenance"].get("association_review_hash")}
+                for candidate in candidates],
+            "declarations": [{"path": candidate["path"], "sha256": candidate["sha256"]}
+                for candidate in expansion_packet["declaration_candidates"] if candidate["candidate_id"] in
+                    {row["candidate_id"] for row in joins}],
+        },
+    }
+    binding["binding_sha256"] = _digest(binding)
+    packet["supplemental_evidence"] = {"schema_version": 1, "current_answer_authority": False,
+        "full_question_completeness": False, "completeness_claim": False,
+        "state": "eligible_for_later_selection_review", "records": supplemental}
+    packet["expansion_binding_lineage"] = {"binding_sha256": binding["binding_sha256"],
+        "expansion_run_path": os.fspath(expansion), "packet_sha256": binding["packet_sha256"],
+        "review_sha256": binding["review_sha256"], "package_sha256": binding["package_sha256"],
+        "source_run_path": os.fspath(source), "target_run_path": os.fspath(target)}
+    semantic_payload = _semantic_payload(packet["identity"], packet["question"], packet["question_sha256"],
+        packet["obligation_id"], packet["required_routes"], packet["obligations"], packet["candidates"])
+    semantic_payload["supplemental_evidence"] = packet["supplemental_evidence"]
+    semantic_payload["expansion_binding_lineage"] = packet["expansion_binding_lineage"]
+    packet["semantic_sha256"] = _digest(semantic_payload)
+    packet["packet_sha256"] = _digest(packet)
+    observations = _candidate_observations(candidates, packet["packet_sha256"])
+    return binding, packet, observations, expansion, target
+
+
+def _reconstruct_expanded_prepare(repo: str, db: str, source_run_dir: str, expansion_run_dir: str,
+                                  question_file: str, obligations_file: str, target_run_dir: str,
+                                  *, allow_partial: bool = True
+                                  ) -> tuple[dict[str, object], dict[str, object], dict[str, object], Path, Path]:
+    binding, packet, observations, expansion, target = _build_expansion_import_state(repo, db,
+        source_run_dir, expansion_run_dir, question_file, obligations_file, target_run_dir)
+    saved_binding = _read_artifact(expansion, EXPANSION_IMPORT_BINDING)
+    _validate_expansion_import_binding_schema(saved_binding)
+    if _bytes(binding) != _read_regular_bytes(expansion / EXPANSION_IMPORT_BINDING, "expansion import binding"):
+        raise CoordinatorError("saved expansion import binding does not reconstruct from current source, review, package, question, maps, and target")
+    names = {item.name for item in target.iterdir()} if target.exists() else set()
+    allowed = {"selection-packet.json", "candidate-observations.json", "selection.json", "answer-packet.json", "evidence-gap.json",
+               "review.json", "answer-review-packet.json", "review-result.json", "correction-packet.json",
+               "corrected-answer-packet.json", "corrected-review.json", "accepted-package.json"}
+    if names - allowed:
+        raise CoordinatorError("target run contains unrelated artifacts; expanded prepare requires a fresh target")
+    if not allow_partial and not {"selection-packet.json", "candidate-observations.json"}.issubset(names):
+        raise CoordinatorError("expanded target is incomplete; status requires both packet artifacts")
+    packet_path = target / "selection-packet.json"
+    if packet_path.exists() or packet_path.is_symlink():
+        if _read_regular_bytes(packet_path, "expanded target selection packet") != _bytes(packet):
+            raise CoordinatorError("expanded target selection packet differs from independent reconstruction")
+    observation_path = target / "candidate-observations.json"
+    if observation_path.exists() or observation_path.is_symlink():
+        saved_observations = _validate_candidate_observations(_read_artifact(target, "candidate-observations.json"), packet)
+        if _bytes(_observation_projection(saved_observations)) != _bytes(_observation_projection(observations)):
+            raise CoordinatorError("expanded target observations differ from current maps, excluding only freshness.checked_at")
+        observations = saved_observations
+    return binding, packet, observations, expansion, target
+
+
+def _expanded_join_rows(packet: dict[str, object]) -> list[dict[str, object]]:
+    supplemental = packet.get("supplemental_evidence")
+    records = supplemental.get("records") if isinstance(supplemental, dict) else None
+    if not isinstance(records, list):
+        raise CoordinatorError("expanded packet supplemental records are malformed")
+    joins = []
+    for record in records:
+        if not isinstance(record, dict) or not isinstance(record.get("declaration"), dict) or not isinstance(record.get("origin_use"), dict):
+            raise CoordinatorError("expanded packet supplemental record is malformed")
+        declaration, origin = record["declaration"], record["origin_use"]
+        joins.append({"obligation_id": record.get("obligation_id"), "candidate_id": record.get("candidate_id"),
+            "use_id": origin.get("use_id"), "route_fact_id": origin.get("route_fact_id"),
+            "path": declaration.get("path"), "sha256": declaration.get("sha256"),
+            "owner_fact_id": declaration.get("owner_fact_id"), "owner_type_id": declaration.get("owner_type_id")})
+    joins.sort(key=lambda item: (str(item["obligation_id"]), str(item["candidate_id"]), str(item["use_id"])))
+    if any(not isinstance(item[key], str) or not item[key] for item in joins for key in item):
+        raise CoordinatorError("expanded packet contains an incomplete candidate/use/route/source/owner join")
+    return joins
+
+
+def _expanded_obligation_groups(packet: dict[str, object]) -> list[dict[str, object]]:
+    by_id: dict[str, list[dict[str, object]]] = {}
+    for row in _expanded_join_rows(packet):
+        by_id.setdefault(str(row["obligation_id"]), []).append(row)
+    obligation_ids = _obligation_ids(packet["obligations"])
+    groups = []
+    for obligation_id in obligation_ids:
+        rows = by_id.get(obligation_id, [])
+        if rows:
+            groups.append({"obligation_id": obligation_id,
+                "supporting_route_fact_ids": sorted({str(row["route_fact_id"]) for row in rows}),
+                "route_candidate_ids_must_remain_accepted": sorted({str(row["route_fact_id"]) for row in rows}),
+                "declaration_candidate_ids": sorted({str(row["candidate_id"]) for row in rows}),
+                "joins": rows})
+    extra = set(by_id) - set(obligation_ids)
+    if extra:
+        raise CoordinatorError(f"expanded packet has supplemental records for unknown obligations: {sorted(extra)}")
+    return groups
+
+
+def _expansion_selector_view(packet: dict[str, object]) -> dict[str, object]:
+    return {"selector_view_schema_version": EXPANSION_SELECTOR_VIEW_VERSION,
+        "selection_packet_sha256": packet["packet_sha256"],
+        "supplemental_obligations": _expanded_obligation_groups(packet),
+        "support_rule": "For each listed obligation, supporting_route_fact_ids must equal its bound supplemental route set exactly; every candidate listed must remain accepted.",
+        "semantic_answer_claim": False}
+
+
+def _expanded_selection_authority(packet: dict[str, object]) -> dict[str, object]:
+    lineage = packet.get("expansion_binding_lineage")
+    if not isinstance(lineage, dict):
+        raise CoordinatorError("expanded packet binding lineage is malformed")
+    authority = {"authority_schema_version": EXPANSION_SELECTION_AUTHORITY_VERSION,
+        "selection_packet_sha256": packet["packet_sha256"],
+        "expansion_packet_sha256": lineage.get("packet_sha256"),
+        "expansion_review_sha256": lineage.get("review_sha256"),
+        "expansion_package_sha256": lineage.get("package_sha256"),
+        "expansion_binding_sha256": lineage.get("binding_sha256"),
+        "obligations": _expanded_obligation_groups(packet)}
+    authority["authority_sha256"] = _digest(authority)
+    return authority
+
+
+def _check_expanded_selection_support(packet: dict[str, object], record: dict[str, object]) -> dict[str, object]:
+    groups = _expanded_obligation_groups(packet)
+    reviews, candidates = record.get("obligation_reviews"), record.get("candidate_reviews")
+    if not isinstance(reviews, list) or not isinstance(candidates, list):
+        raise CoordinatorError("expanded selection reviews are malformed")
+    candidate_decisions = {item.get("route_fact_id"): item.get("decision") for item in candidates if isinstance(item, dict)}
+    for group in groups:
+        obligation_id = str(group["obligation_id"])
+        item = next((value for value in reviews if isinstance(value, dict) and value.get("obligation_id") == obligation_id), None)
+        if item is None or item.get("candidate_status") != "present_in_candidates":
+            raise CoordinatorError(f"expanded obligation {obligation_id} must be present through reviewed supplemental support")
+        expected_routes = group["supporting_route_fact_ids"]
+        if item.get("supporting_route_fact_ids") != expected_routes:
+            raise CoordinatorError(f"expanded obligation {obligation_id} supporting_route_fact_ids must equal its bound supplemental route set exactly: {expected_routes!r}")
+        rejected = [route_id for route_id in expected_routes if candidate_decisions.get(route_id) != "accept"]
+        if rejected:
+            raise CoordinatorError(f"expanded obligation {obligation_id} requires accepted supplemental route candidate(s): {rejected!r}")
+    return _expanded_selection_authority(packet)
+
+
+def _build_expanded_answer_packet(packet: dict[str, object], selection_payload: dict[str, object],
+                                  union: dict[str, object]) -> dict[str, object]:
+    result = {"answer_schema_version": 1, "packet_type": "multi_map_answer", "question": packet["question"],
+        "question_sha256": packet["question_sha256"], "controller_type_id": packet["identity"]["controller_type_id"],
+        "obligation_id": packet["obligation_id"], "snapshot_id": packet["identity"]["snapshot_id"],
+        "extractor_identity": packet["identity"]["extractor_identity"], "selection": selection_payload,
+        "required_routes": packet["required_routes"], "obligations": packet["obligations"],
+        "claims": list(union["claims"]), "source_anchors": list(union["source_anchors"]),
+        "source_snippets": list(union["source_snippets"])}
+    anchors, snippets = result["source_anchors"], result["source_snippets"]
+    records = packet["supplemental_evidence"]["records"]
+    for record in sorted(records, key=lambda value: (str(value["obligation_id"]), str(value["candidate_id"]), str(value["origin_use"]["use_id"]))):
+        declaration = record["declaration"]
+        path, sha, span, claim_text = declaration["path"], declaration["sha256"], declaration["span"], declaration["snippet"]
+        if not isinstance(claim_text, str) or not claim_text:
+            raise CoordinatorError("supplemental declaration claim has no exact source snippet")
+        anchor = next((item for item in anchors if item["path"] == path and item["sha256"] == sha), None)
+        if anchor is None:
+            anchor = {"source_id": f"source-{len(anchors) + 1}", "path": path, "sha256": sha}
+            anchors.append(anchor)
+        snippet = next((item for item in snippets if item["source_id"] == anchor["source_id"] and item["span"] == span), None)
+        if snippet is not None and snippet["text"] != claim_text:
+            raise CoordinatorError(f"supplemental source snippet collides with different text at {path} {span!r}")
+        if snippet is None:
+            snippet_id = "snippet-" + hashlib.sha256(_bytes([path, sha, _bytes(span).decode("ascii")])).hexdigest()
+            if any(item["snippet_id"] == snippet_id and item["text"] != claim_text for item in snippets):
+                raise CoordinatorError("supplemental snippet identity collides with conflicting text")
+            snippet = {"snippet_id": snippet_id, "source_id": anchor["source_id"], "span": span, "text": claim_text}
+            snippets.append(snippet)
+        elif not snippet.get("snippet_id"):
+            raise CoordinatorError("reused source snippet is missing its stable identity")
+        claim_number = len(result["claims"]) + 1
+        origin, lineage = record["origin_use"], packet["expansion_binding_lineage"]
+        result["claims"].append({"claim_number": claim_number, "claim": claim_text,
+            "evidence": [{"claim_number": claim_number, "fact_id": "expansion-" + str(record["candidate_id"]),
+                "source_id": anchor["source_id"], "path": path, "sha256": sha, "span": span,
+                "snippet_id": snippet["snippet_id"]}],
+            "provenance": {"evidence_kind": "supplemental_declaration", "obligation_id": record["obligation_id"],
+                "candidate_id": record["candidate_id"], "use_id": origin["use_id"], "route_fact_id": origin["route_fact_id"],
+                "owner_fact_id": declaration["owner_fact_id"], "owner_type_id": declaration["owner_type_id"],
+                "expansion_packet_sha256": lineage["packet_sha256"], "expansion_review_sha256": lineage["review_sha256"],
+                "expansion_package_sha256": lineage["package_sha256"], "expansion_binding_sha256": lineage["binding_sha256"],
+                "old_map_receipt_authority": False}})
+    result["expansion_provenance"] = dict(packet["expansion_binding_lineage"])
+    result["original_map_limitation"] = "The original candidate.map and its receipt did not prove the supplemental declaration or numeric value; this evidence has separate expansion review authority."
+    result["current_answer_authority"] = False
+    result["full_question_completeness"] = False
+    result["completeness_claim"] = False
+    result["answer_contract"] = _answer_contract(result)
+    result["semantic_sha256"] = _digest({key: value for key, value in result.items() if key != "semantic_sha256"})
+    return result
+
+
+def _expanded_evidence_gap(packet: dict[str, object], selection_payload: dict[str, object],
+                           partial_packet: dict[str, object]) -> dict[str, object]:
+    record = selection_payload["selection_record"]
+    reviews = record["obligation_reviews"]
+    absent = [item for item in reviews if item["candidate_status"] == "absent_from_candidates"]
+    mandatory = {group["obligation_id"] for group in _expanded_obligation_groups(packet)}
+    if not absent:
+        raise CoordinatorError("expanded evidence-gap terminal requires at least one absent ordinary obligation")
+    if any(item["obligation_id"] in mandatory for item in absent):
+        raise CoordinatorError("a mandatory supplemental obligation cannot remain absent in an expanded evidence gap")
+    lineage = packet["expansion_binding_lineage"]
+    gap = {"schema_version": 1, "result": "evidence_gap", "question": packet["question"],
+        "packet_sha256": packet["packet_sha256"], "semantic_sha256": packet["semantic_sha256"],
+        "selection_packet_sha256": packet["packet_sha256"],
+        "expansion_packet_sha256": lineage["packet_sha256"], "expansion_review_sha256": lineage["review_sha256"],
+        "expansion_package_sha256": lineage["package_sha256"], "expansion_binding_sha256": lineage["binding_sha256"],
+        "expansion_lineage": lineage, "selection": selection_payload,
+        "selection_sha256": _digest(record), "selection_payload_sha256": _digest(selection_payload),
+        "selected_route_fact_ids": [item["route_fact_id"] for item in selection_payload["selected_candidates"]],
+        "absent_obligations": absent,
+        "supported_partial_coverage": {"claims": partial_packet["claims"],
+            "source_anchors": partial_packet["source_anchors"], "source_snippets": partial_packet["source_snippets"]},
+        "original_map_limitation": partial_packet["original_map_limitation"],
+        "current_answer_authority": False, "full_question_completeness": False, "completeness_claim": False}
+    gap["package_sha256"] = _digest(gap)
+    return gap
+
+
+def _revalidate_expanded_selection(run: Path, repo: str, db: str, obligations_file: str,
+                                   expansion_run_dir: str, packet: dict[str, object]) -> dict[str, object]:
+    lineage = packet.get("expansion_binding_lineage")
+    if not isinstance(lineage, dict):
+        raise CoordinatorError("expanded selection packet lineage is malformed")
+    expansion = _canonical_run_path(Path(expansion_run_dir), "expansion run", must_exist=True)
+    if os.fspath(expansion) != lineage.get("expansion_run_path"):
+        raise CoordinatorError("expanded selection requires the exact bound --expansion-run-dir")
+    binding = _read_artifact(expansion, EXPANSION_IMPORT_BINDING)
+    question = binding.get("question") if isinstance(binding, dict) else None
+    question_path = question.get("canonical_path") if isinstance(question, dict) else None
+    source_path = binding.get("source_run_path") if isinstance(binding, dict) else None
+    if not isinstance(question_path, str) or not isinstance(source_path, str):
+        raise CoordinatorError("expanded import binding lacks exact source/question paths")
+    rebuilt_binding, rebuilt_packet, _observations, _expansion, target = _reconstruct_expanded_prepare(
+        repo, db, source_path, os.fspath(expansion), question_path, obligations_file, os.fspath(run), allow_partial=True)
+    if os.fspath(target) != os.fspath(_canonical_target_path(os.fspath(run))):
+        raise CoordinatorError("expanded target path differs from its canonical bound path")
+    if _bytes(packet) != _bytes(rebuilt_packet) or _bytes(binding) != _bytes(rebuilt_binding):
+        raise CoordinatorError("expanded packet or binding differs from independent P2a reconstruction")
+    names = {item.name for item in run.iterdir()}
+    allowed = {"selection-packet.json", "candidate-observations.json", "selection.json", "answer-packet.json",
+               "evidence-gap.json", "review.json", "answer-review-packet.json", "review-result.json",
+               "correction-packet.json", "corrected-answer-packet.json", "corrected-review.json", "accepted-package.json"}
+    if not {"selection-packet.json", "candidate-observations.json"}.issubset(names):
+        raise CoordinatorError("expanded selection target is incomplete; packet and observations are required")
+    if names - allowed:
+        raise CoordinatorError(f"expanded run contains unsupported later-stage artifacts: {sorted(names - allowed)!r}")
+    for artifact in run.iterdir():
+        try:
+            mode = artifact.lstat().st_mode
+        except OSError as exc:
+            raise CoordinatorError(f"expanded artifact cannot be inspected without following links: {artifact.name}: {exc}") from exc
+        if not stat.S_ISREG(mode):
+            raise CoordinatorError(f"expanded artifact must be a no-follow regular file: {artifact.name}")
+    if (run / "selection.json").exists():
+        saved = _read_artifact(run, "selection.json")
+        record = saved.get("selection_record")
+        if not isinstance(record, dict):
+            raise CoordinatorError("expanded saved selection record is malformed")
+        checked = _validate_selection(packet, record)
+        authority = _check_expanded_selection_support(packet, record)
+        chosen = {candidate["route"]["id"]: candidate for candidate in checked["accepted"]}
+        expected_selection = {"schema_version": 1, "selection_packet_sha256": packet["packet_sha256"],
+            "selection_record": record,
+            "selected_candidates": [{"route_fact_id": route_id, "overlay_id": chosen[route_id]["provenance"]["overlay_id"],
+                "binding_hash": chosen[route_id]["provenance"]["binding_hash"],
+                "association_review_hash": chosen[route_id]["provenance"]["association_review_hash"],
+                "review_receipt_hash": chosen[route_id]["provenance"]["flow_review_receipt"]["receipt_hash"]}
+                for route_id in sorted(chosen)], "obligation_status": checked["obligations"],
+            "supplemental_selection_authority": authority}
+        if _bytes(saved) != _bytes(expected_selection):
+            raise CoordinatorError("expanded selection authority or selected-map provenance differs from exact reconstruction")
+        absent = [item for item in record["obligation_reviews"] if item["candidate_status"] == "absent_from_candidates"]
+        if (run / "answer-packet.json").exists() and (run / "evidence-gap.json").exists():
+            raise CoordinatorError("expanded evidence gap cannot coexist with an answer packet")
+        partial_packet = _build_expanded_answer_packet(packet, expected_selection, _selected_union(packet, checked["accepted"]))
+        if (run / "answer-packet.json").exists():
+            if absent:
+                raise CoordinatorError("expanded answer packet cannot exist while an ordinary obligation remains absent")
+            if _bytes(_read_artifact(run, "answer-packet.json")) != _bytes(partial_packet):
+                raise CoordinatorError("expanded answer packet does not reconstruct from selected maps and supplemental joins")
+        if (run / "evidence-gap.json").exists():
+            if not absent:
+                raise CoordinatorError("expanded evidence-gap artifact has no absent ordinary obligation")
+            expected_gap = _expanded_evidence_gap(packet, expected_selection, partial_packet)
+            if _bytes(_read_artifact(run, "evidence-gap.json")) != _bytes(expected_gap):
+                raise CoordinatorError("expanded evidence-gap artifact does not reconstruct from exact lineage, selection, and supplemental partial evidence")
+        elif not absent and (run / "evidence-gap.json").exists():
+            raise CoordinatorError("expanded evidence-gap artifact is inconsistent with complete ordinary selection coverage")
+    elif (run / "answer-packet.json").exists():
+        raise CoordinatorError("expanded answer packet cannot exist without its validated selection")
+    elif (run / "evidence-gap.json").exists():
+        raise CoordinatorError("expanded evidence-gap artifact cannot exist without its validated selection")
+    # Enforce the stage dependency graph. An expanded selection gap is terminal for
+    # answer work; answer artifacts may only follow a complete selected packet.
+    names = {item.name for item in run.iterdir()}
+    if (run / "evidence-gap.json").exists() and names & {
+            "answer-packet.json", "review.json", "answer-review-packet.json", "review-result.json",
+            "correction-packet.json", "corrected-answer-packet.json", "corrected-review.json", "accepted-package.json"}:
+        raise CoordinatorError("expanded evidence-gap terminal cannot enter answer, review, correction, or acceptance stages")
+    if names & (allowed - {"selection-packet.json", "candidate-observations.json", "selection.json", "answer-packet.json", "evidence-gap.json"}):
+        if not (run / "answer-packet.json").exists() or not (run / "selection.json").exists():
+            raise CoordinatorError("expanded answer lifecycle artifact has impossible missing selection or answer-packet dependency")
+        if (run / "evidence-gap.json").exists():
+            raise CoordinatorError("expanded answer lifecycle cannot coexist with evidence-gap terminal")
+    if (run / "answer-packet.json").exists():
+        if not (run / "selection.json").exists():
+            raise CoordinatorError("expanded answer packet exists without selection")
+        answer_packet = _read_artifact(run, "answer-packet.json")
+        # Every later artifact is independently rebuilt from the exact expanded answer
+        # evidence and the ordinary code-owned schemas.
+        if (run / "review.json").exists():
+            review_packet = _read_artifact(run, "review.json")
+            answer_value = review_packet.get("answer")
+            if not isinstance(answer_value, dict) or not isinstance(answer_value.get("answer"), str):
+                raise CoordinatorError("expanded round-zero review packet does not preserve a structured answer")
+            _validate_answer(answer_packet, answer_value["answer"].encode("utf-8"), answer_value)
+            rebuilt = _make_answer_review_packet(answer_packet, answer_value, answer_value["answer"].encode("utf-8"), 0)
+            if _bytes(rebuilt) != _bytes(review_packet):
+                raise CoordinatorError("expanded round-zero review packet does not preserve exact answer evidence and authority")
+        if (run / "answer-review-packet.json").exists():
+            if not (run / "review.json").exists() or _bytes(_read_artifact(run, "answer-review-packet.json")) != _bytes(_read_artifact(run, "review.json")):
+                raise CoordinatorError("expanded answer-review packet is missing or differs from its round-zero packet")
+        if (run / "review-result.json").exists():
+            if not (run / "answer-review-packet.json").exists():
+                raise CoordinatorError("expanded review result exists without its review packet")
+            _validate_review(_read_artifact(run, "answer-review-packet.json"), _read_artifact(run, "review-result.json"),
+                             _read_artifact(run, "selection.json"))
+        if (run / "correction-packet.json").exists():
+            if not (run / "review-result.json").exists() or not (run / "answer-review-packet.json").exists():
+                raise CoordinatorError("expanded correction packet exists without its rejected round-zero review")
+            correction = _read_artifact(run, "correction-packet.json")
+            rejected = _read_artifact(run, "review-result.json")
+            review_packet = _read_artifact(run, "answer-review-packet.json")
+            expected = _expanded_correction_packet(answer_packet, review_packet, rejected)
+            if _bytes(correction) != _bytes(expected):
+                raise CoordinatorError("expanded correction packet does not preserve exact expanded evidence and rejection lineage")
+        if (run / "corrected-answer-packet.json").exists():
+            if not (run / "correction-packet.json").exists():
+                raise CoordinatorError("expanded corrected review packet exists without its correction packet")
+            correction = _read_artifact(run, "correction-packet.json")
+            corrected = _read_artifact(run, "corrected-answer-packet.json")
+            value = corrected.get("answer")
+            if not isinstance(value, dict) or corrected.get("review_contract") != _review_schema_contract(corrected["obligations"]):
+                raise CoordinatorError("expanded corrected answer packet is malformed")
+            _validate_answer(correction, str(value.get("answer", "")).encode("utf-8"), value)
+            rebuilt = _make_answer_review_packet(correction, value, value["answer"].encode("utf-8"), 1)
+            if _bytes(rebuilt) != _bytes(corrected):
+                raise CoordinatorError("expanded corrected answer packet does not reconstruct from preserved evidence")
+        if (run / "corrected-review.json").exists():
+            if not (run / "corrected-answer-packet.json").exists() or not (run / "review-result.json").exists():
+                raise CoordinatorError("expanded corrected review exists without corrected packet and first review")
+            _validate_review(_read_artifact(run, "corrected-answer-packet.json"), _read_artifact(run, "corrected-review.json"),
+                _read_artifact(run, "selection.json"), previous_reviewer_identity=str(_read_artifact(run, "review-result.json").get("reviewer_identity", "")))
+        if (run / "accepted-package.json").exists():
+            corrected_terminal = (run / "corrected-review.json").exists()
+            review_packet = _read_artifact(run, "corrected-answer-packet.json" if corrected_terminal else "answer-review-packet.json")
+            review_record = _read_artifact(run, "corrected-review.json" if corrected_terminal else "review-result.json")
+            final = _accepted_package(run, answer_packet, review_packet, review_record, corrected_terminal)
+            if _bytes(final) != _read_regular_bytes(run / "accepted-package.json", "expanded accepted package"):
+                raise CoordinatorError("expanded accepted package does not reconstruct from the exact question, answer, review, and lineage")
+    return packet
+
+
+def expand_gap_import_prepare(repo: str, db: str, source_run_dir: str, expansion_run_dir: str,
+                              target_run_dir: str, question_file: str, obligations_file: str
+                              ) -> dict[str, object]:
+    # Build and validate every input before the first filesystem write.
+    binding, packet, observations, expansion, target = _build_expansion_import_state(repo, db,
+        source_run_dir, expansion_run_dir, question_file, obligations_file, target_run_dir)
+    entries = {item.name for item in target.iterdir()} if target.exists() else set()
+    if entries - {"selection-packet.json", "candidate-observations.json"}:
+        raise CoordinatorError("target run contains unrelated artifacts; expanded prepare requires a fresh target")
+    packet_path = target / "selection-packet.json"
+    if packet_path.exists() or packet_path.is_symlink():
+        if _read_regular_bytes(packet_path, "expanded target selection packet") != _bytes(packet):
+            raise CoordinatorError("existing target selection packet conflicts with expanded prepare")
+    observation_path = target / "candidate-observations.json"
+    if observation_path.exists() or observation_path.is_symlink():
+        saved_observations = _validate_candidate_observations(_read_artifact(target, "candidate-observations.json"), packet)
+        if _bytes(_observation_projection(saved_observations)) != _bytes(_observation_projection(observations)):
+            raise CoordinatorError("existing target observations conflict with expanded prepare")
+    binding_path = expansion / EXPANSION_IMPORT_BINDING
+    if binding_path.exists() or binding_path.is_symlink():
+        saved = _read_artifact(expansion, EXPANSION_IMPORT_BINDING)
+        _validate_expansion_import_binding_schema(saved)
+        if _bytes(saved) != _bytes(binding):
+            raise CoordinatorError("expansion run is already bound to a different target or import state")
+    target.mkdir(parents=True, exist_ok=True)
+    _save_immutable(binding_path, binding)
+    _save_immutable(target / "selection-packet.json", packet)
+    if not observation_path.exists():
+        _save_immutable(observation_path, observations)
+    return {"result": "expanded_packet_prepared", "state": "expanded_packet_prepared",
+        "target_run_dir": os.fspath(target), "binding_sha256": binding["binding_sha256"],
+        "packet_sha256": packet["packet_sha256"], "semantic_sha256": packet["semantic_sha256"],
+        "candidate_count": len(packet["candidates"]), "supplemental_record_count": len(packet["supplemental_evidence"]["records"])}
+
+
+def expand_gap_import_status(repo: str, db: str, source_run_dir: str, expansion_run_dir: str,
+                             target_run_dir: str, question_file: str, obligations_file: str) -> dict[str, object]:
+    binding, packet, observations, _expansion, target = _reconstruct_expanded_prepare(repo, db,
+        source_run_dir, expansion_run_dir, question_file, obligations_file, target_run_dir, allow_partial=False)
+    return {"state": "expanded_packet_prepared", "binding_sha256": binding["binding_sha256"],
+        "packet_sha256": packet["packet_sha256"], "semantic_sha256": packet["semantic_sha256"],
+        "observations_sha256": observations["observations_sha256"],
+        "candidate_count": len(packet["candidates"]),
+        "supplemental_record_count": len(packet["supplemental_evidence"]["records"])}
+
+
+def expand_gap_selector_view(repo: str, db: str, run_dir: str, obligations_file: str,
+                             expansion_run_dir: str) -> dict[str, object]:
+    packet = _revalidate(Path(run_dir), repo, db, obligations_file, expansion_run_dir)
+    if "expansion_binding_lineage" not in packet:
+        raise CoordinatorError("expand-gap-selector-view requires an expansion-aware prepared packet")
+    return _expansion_selector_view(packet)
+
+
 def _validate_selection(packet: dict[str, object], selection: object) -> dict[str, object]:
     schema = SELECTION_RECORD_SCHEMA
     if not isinstance(selection, dict) or set(selection) != set(schema["top_level_fields"]):
@@ -829,12 +2437,33 @@ def _selected_union(packet: dict[str, object], accepted: list[dict[str, object]]
     return {"claims": claims, "source_anchors": anchor_items, "source_snippets": snippet_items}
 
 
-def _write_selection(run: Path, repo: str, db: str, selection_file: str, obligations_file: str) -> dict[str, object]:
-    packet = _revalidate(run, repo, db, obligations_file)
+def _write_selection(run: Path, repo: str, db: str, selection_file: str, obligations_file: str,
+                     expansion_run_dir: str | None = None) -> dict[str, object]:
+    packet = _revalidate(run, repo, db, obligations_file, expansion_run_dir)
     selection = _read(Path(selection_file), "independent selection")
     checked = _validate_selection(packet, selection)
+    expanded = "expansion_binding_lineage" in packet
+    supplemental_authority = _check_expanded_selection_support(packet, checked["validated"]) if expanded else None
     union = _selected_union(packet, checked["accepted"])
     absent = [key for key, status in checked["obligations"].items() if status == "absent_from_candidates"]
+    if expanded and absent:
+        chosen = {candidate["route"]["id"]: candidate for candidate in checked["accepted"]}
+        selection_payload = {"schema_version": 1, "selection_packet_sha256": packet["packet_sha256"],
+            "selection_record": checked["validated"], "selected_candidates": [
+                {"route_fact_id": route_id, "overlay_id": chosen[route_id]["provenance"]["overlay_id"],
+                 "binding_hash": chosen[route_id]["provenance"]["binding_hash"],
+                 "association_review_hash": chosen[route_id]["provenance"]["association_review_hash"],
+                 "review_receipt_hash": chosen[route_id]["provenance"]["flow_review_receipt"]["receipt_hash"]}
+                for route_id in sorted(chosen)], "obligation_status": checked["obligations"],
+            "supplemental_selection_authority": supplemental_authority}
+        partial_packet = _build_expanded_answer_packet(packet, selection_payload, union)
+        gap = _expanded_evidence_gap(packet, selection_payload, partial_packet)
+        _save_immutable(run / "selection.json", selection_payload)
+        _save_immutable(run / "evidence-gap.json", gap)
+        return {"result": "evidence_gap", "state": "evidence_gap", "package_sha256": gap["package_sha256"],
+            "selection_packet_sha256": packet["packet_sha256"], "semantic_sha256": packet["semantic_sha256"],
+            "absent_obligations": [item["obligation_id"] for item in gap["absent_obligations"]],
+            "selected_map_count": len(chosen), "supplemental_claim_count": len(partial_packet["claims"]) - len(union["claims"])}
     if absent:
         gap = {"schema_version": 1, "result": "evidence_gap", "question": packet["question"],
                "packet_sha256": packet["packet_sha256"], "semantic_sha256": packet["semantic_sha256"],
@@ -859,17 +2488,21 @@ def _write_selection(run: Path, repo: str, db: str, selection_file: str, obligat
                               "review_receipt_hash": chosen[route_id]["provenance"]["flow_review_receipt"]["receipt_hash"]}
                              for route_id in sorted(chosen)],
                          "obligation_status": checked["obligations"]}
-    union_packet = {"answer_schema_version": 1, "packet_type": "multi_map_answer", "question": packet["question"],
-                    "question_sha256": packet["question_sha256"], "controller_type_id": packet["identity"]["controller_type_id"],
-                    "obligation_id": packet["obligation_id"],
-                    "snapshot_id": packet["identity"]["snapshot_id"], "extractor_identity": packet["identity"]["extractor_identity"],
-                    "selection": selection_payload, "required_routes": packet["required_routes"],
-                    "obligations": packet["obligations"], **union}
-    union_packet["answer_contract"] = _answer_contract(union_packet)
-    union_packet["semantic_sha256"] = _digest({k: v for k, v in union_packet.items() if k != "semantic_sha256"})
+    if expanded:
+        selection_payload["supplemental_selection_authority"] = supplemental_authority
+        union_packet = _build_expanded_answer_packet(packet, selection_payload, union)
+    else:
+        union_packet = {"answer_schema_version": 1, "packet_type": "multi_map_answer", "question": packet["question"],
+                        "question_sha256": packet["question_sha256"], "controller_type_id": packet["identity"]["controller_type_id"],
+                        "obligation_id": packet["obligation_id"],
+                        "snapshot_id": packet["identity"]["snapshot_id"], "extractor_identity": packet["identity"]["extractor_identity"],
+                        "selection": selection_payload, "required_routes": packet["required_routes"],
+                        "obligations": packet["obligations"], **union}
+        union_packet["answer_contract"] = _answer_contract(union_packet)
+        union_packet["semantic_sha256"] = _digest({k: v for k, v in union_packet.items() if k != "semantic_sha256"})
     _save_immutable(run / "selection.json", selection_payload)
     _save_immutable(run / "answer-packet.json", union_packet)
-    return {"result": "selected", "selected_map_count": len(chosen), "claim_count": len(union["claims"]),
+    return {"result": "selected", "selected_map_count": len(chosen), "claim_count": len(union_packet["claims"]),
             "packet_sha256": union_packet["semantic_sha256"]}
 
 
@@ -878,6 +2511,89 @@ def _answer_contract(packet: dict[str, object]) -> dict[str, object]:
     contract["fields"]["question_id"]["exact"] = packet.get("obligation_id")
     contract["fields"]["answer"]["exact"] = "draft-file UTF-8 text"
     return contract
+
+
+def _expanded_claim_requirements(claims: object, authority: object) -> dict[str, list[int]]:
+    """Derive required supplemental answer claims from bound selection joins."""
+    if not isinstance(claims, list) or not isinstance(authority, dict):
+        raise CoordinatorError("expanded answer lacks claims or supplemental selection authority")
+    obligations = authority.get("obligations")
+    if not isinstance(obligations, list):
+        raise CoordinatorError("expanded supplemental selection authority has no ordered obligations")
+    joined: dict[str, set[tuple[str, str, str, str, str]]] = {}
+    for item in obligations:
+        if not isinstance(item, dict) or not isinstance(item.get("obligation_id"), str) or not isinstance(item.get("joins"), list):
+            raise CoordinatorError("expanded supplemental authority obligation is malformed")
+        expected = set()
+        for join in item["joins"]:
+            if not isinstance(join, dict):
+                raise CoordinatorError("expanded supplemental authority join is malformed")
+            expected.add((str(join.get("candidate_id")), str(join.get("use_id")), str(join.get("route_fact_id")),
+                          str(join.get("owner_fact_id")), str(join.get("sha256"))))
+        joined[item["obligation_id"]] = expected
+    result = {key: [] for key in joined}
+    seen: set[tuple[str, str, str, str, str]] = set()
+    for claim in claims:
+        if not isinstance(claim, dict) or not isinstance(claim.get("provenance"), dict):
+            continue
+        provenance = claim["provenance"]
+        if provenance.get("evidence_kind") != "supplemental_declaration":
+            continue
+        oid = provenance.get("obligation_id")
+        key = (str(provenance.get("candidate_id")), str(provenance.get("use_id")),
+               str(provenance.get("route_fact_id")), str(provenance.get("owner_fact_id")),
+               str((claim.get("evidence") or [{}])[0].get("sha256")))
+        if oid not in joined or key not in joined[oid]:
+            raise CoordinatorError("supplemental answer claim is not joined to exact selected expansion authority")
+        result[oid].append(claim.get("claim_number"))
+        seen.add(key)
+    if any(not numbers for numbers in result.values()):
+        raise CoordinatorError("expanded authority obligation has no corresponding supplemental declaration claim")
+    for oid, expected in joined.items():
+        if not expected.issubset(seen):
+            raise CoordinatorError(f"supplemental answer omits one or more bound declarations for {oid}")
+    return result
+
+
+def _expanded_review_contract(packet: dict[str, object]) -> dict[str, object]:
+    authority = packet.get("supplemental_selection_authority")
+    lineage = packet.get("expansion_provenance")
+    required = _expanded_claim_requirements(packet.get("claims"), authority)
+    flags = packet.get("historical_answer_authority_flags")
+    if flags != {"current_answer_authority": False, "full_question_completeness": False, "completeness_claim": False}:
+        raise CoordinatorError("expanded review must preserve all historical false answer-authority and completeness flags")
+    return {"contract_schema_version": 1, "kind": "expanded_answer_review_supplement",
+        "evidence_packet_sha256": packet.get("evidence_packet_sha256"),
+        "expansion_packet_sha256": (lineage or {}).get("packet_sha256") if isinstance(lineage, dict) else None,
+        "expansion_review_sha256": (lineage or {}).get("review_sha256") if isinstance(lineage, dict) else None,
+        "expansion_package_sha256": (lineage or {}).get("package_sha256") if isinstance(lineage, dict) else None,
+        "expansion_binding_sha256": (lineage or {}).get("binding_sha256") if isinstance(lineage, dict) else None,
+        "supplemental_selection_authority": authority,
+        "historical_answer_authority_flags": packet.get("historical_answer_authority_flags"),
+        "mandatory_supplemental_claims_by_obligation": required,
+        "acceptance_rule": "Every mandatory supplemental claim must be cited by at least one structured material claim and receive covered claim disposition; every frozen obligation must be covered and unsupported assertions empty. Otherwise classify answer_gap, eligible for the single existing correction.",
+        "authority_boundary": "This review covers this exact question, answer, and reviewed expansion evidence only. It does not establish full-question completeness, compiler/runtime binding, or acceptance."}
+
+
+def _expanded_correction_packet(answer_packet: dict[str, object], review_packet: dict[str, object],
+                                rejected: dict[str, object]) -> dict[str, object]:
+    if rejected.get("decision") != "rejected" or rejected.get("failure_kind") != "answer_gap":
+        raise CoordinatorError("expanded correction requires a rejected first review with failure_kind answer_gap")
+    expected = {"schema_version": 1, "packet_type": "multi_map_correction", "result": "correction_required",
+        "original_packet_sha256": answer_packet["semantic_sha256"], "semantic_sha256": answer_packet["semantic_sha256"],
+        "question_sha256": answer_packet["question_sha256"], "obligation_id": answer_packet["obligation_id"],
+        "required_routes": review_packet["required_routes"], "rejected_review_sha256": _digest(rejected),
+        "correction_round": 1, "max_corrections": 1, "question": review_packet["question"],
+        "obligations": review_packet["obligations"], "claims": review_packet["claims"],
+        "source_anchors": review_packet["source_anchors"], "source_snippets": review_packet["source_snippets"],
+        "rejection_reasons": {"claim_reviews": rejected["claim_reviews"], "obligation_reviews": rejected["obligation_reviews"],
+                              "unsupported_assertions": rejected["unsupported_assertions"]},
+        "supplemental_selection_authority": answer_packet["selection"]["supplemental_selection_authority"],
+        "expansion_provenance": answer_packet["expansion_provenance"]}
+    expected["historical_answer_authority_flags"] = {key: answer_packet[key] for key in
+        ("current_answer_authority", "full_question_completeness", "completeness_claim")}
+    expected["packet_sha256"] = _digest(expected)
+    return expected
 
 
 def _validate_answer(packet: dict[str, object], draft_raw: bytes, answer: object) -> dict[str, object]:
@@ -954,6 +2670,19 @@ def _make_answer_review_packet(packet: dict[str, object], answer: dict[str, obje
             "evidence_measurement": measurement,
             "review_contract": _review_schema_contract(packet["obligations"]),
             "evidence_measurement_contract": {"value": "Atlas-computed canonical union evidence measurement", "bytes": "ASCII canonical JSON for claims/source_anchors/source_snippets plus trailing newline", "scope": "evidence content only; not model consumption, retrieval stdout, time, or provider tokens"}}
+    authority = packet.get("supplemental_selection_authority")
+    lineage = packet.get("expansion_provenance")
+    if authority is None and isinstance(packet.get("selection"), dict):
+        authority = packet["selection"].get("supplemental_selection_authority")
+    if lineage is None and isinstance(packet.get("expansion_provenance"), dict):
+        lineage = packet.get("expansion_provenance")
+    if isinstance(authority, dict) and isinstance(lineage, dict):
+        result["supplemental_selection_authority"] = authority
+        result["expansion_provenance"] = lineage
+        result["historical_answer_authority_flags"] = (packet.get("historical_answer_authority_flags")
+            if isinstance(packet.get("historical_answer_authority_flags"), dict) else
+            {key: packet.get(key) for key in ("current_answer_authority", "full_question_completeness", "completeness_claim")})
+        result["expanded_review_contract"] = _expanded_review_contract(result)
     if round_number == 1:
         result["correction_lineage"] = {"correction_packet_sha256": packet["packet_sha256"],
                                         "original_packet_sha256": packet["original_packet_sha256"],
@@ -963,8 +2692,19 @@ def _make_answer_review_packet(packet: dict[str, object], answer: dict[str, obje
     return result
 
 
-def submit_answer(run: Path, repo: str, db: str, obligations_file: str, draft_file: str, answer_file: str, correction: bool = False) -> dict[str, object]:
-    _revalidate(run, repo, db, obligations_file)
+def submit_answer(run: Path, repo: str, db: str, obligations_file: str, draft_file: str, answer_file: str,
+                  correction: bool = False, expansion_run_dir: str | None = None) -> dict[str, object]:
+    _revalidate(run, repo, db, obligations_file, expansion_run_dir)
+    if (run / "evidence-gap.json").exists():
+        raise CoordinatorError("expanded evidence-gap terminal cannot enter answer or correction stages")
+    if correction and "expansion_binding_lineage" in _read_artifact(run, "selection-packet.json"):
+        if not (run / "review-result.json").exists():
+            raise CoordinatorError("expanded correction requires a saved rejected first review with failure_kind answer_gap")
+        first_review = _read_artifact(run, "review-result.json")
+        if first_review.get("decision") != "rejected" or first_review.get("failure_kind") != "answer_gap":
+            raise CoordinatorError("expanded correction requires a rejected first review with failure_kind answer_gap")
+        if not (run / "correction-packet.json").exists():
+            raise CoordinatorError("expanded rejected answer_gap review lacks its reconstructed correction packet")
     name = "answer-packet.json" if not correction else "correction-packet.json"
     packet = _read_artifact(run, name)
     try:
@@ -1032,6 +2772,28 @@ def _validate_review(review_packet: dict[str, object], review: object, selection
     if not isinstance(unsupported, list) or any(not isinstance(v, str) or not v.strip() for v in unsupported):
         raise CoordinatorError("unsupported_assertions must be an array of concrete assertion strings")
     incomplete |= bool(unsupported)
+    expanded_contract = review_packet.get("expanded_review_contract")
+    if expanded_contract is not None:
+        expected_contract = _expanded_review_contract(review_packet)
+        if _bytes(expanded_contract) != _bytes(expected_contract):
+            raise CoordinatorError("expanded answer-review supplement differs from exact packet authority and evidence")
+        requirements = expected_contract["mandatory_supplemental_claims_by_obligation"]
+        answer = review_packet.get("answer")
+        answer_claims = answer.get("material_claims", []) if isinstance(answer, dict) else []
+        cited_numbers = {number for item in answer_claims if isinstance(item, dict)
+                         for number in item.get("claim_numbers", []) if type(number) is int}
+        review_by_number = {item["claim_number"]: item for item in claim_reviews}
+        for oid, mandatory_numbers in requirements.items():
+            obligation_review = next(item for item in obligation_reviews if item["obligation_id"] == oid)
+            if obligation_review["disposition"] != "covered":
+                incomplete = True
+            for number in mandatory_numbers:
+                item = review_by_number[number]
+                cited = number in cited_numbers
+                if not cited and item["disposition"] != "incomplete":
+                    raise CoordinatorError(f"mandatory supplemental claim {number} for {oid} lacks structured citation and must be reviewed incomplete")
+                if cited and item["disposition"] != "covered":
+                    incomplete = True
     expected_kind = "evidence_gap" if gap else ("answer_gap" if incomplete else "none")
     if review.get("failure_kind") != expected_kind:
         raise CoordinatorError(f"review failure_kind must be {expected_kind} for its structured dispositions")
@@ -1045,8 +2807,11 @@ def _validate_review(review_packet: dict[str, object], review: object, selection
     return review
 
 
-def review(run: Path, repo: str, db: str, obligations_file: str, review_file: str, corrected: bool = False) -> dict[str, object]:
-    _revalidate(run, repo, db, obligations_file)
+def review(run: Path, repo: str, db: str, obligations_file: str, review_file: str, corrected: bool = False,
+           expansion_run_dir: str | None = None) -> dict[str, object]:
+    _revalidate(run, repo, db, obligations_file, expansion_run_dir)
+    if (run / "evidence-gap.json").exists():
+        raise CoordinatorError("expanded evidence-gap terminal cannot enter review stages")
     selection = _read_artifact(run, "selection.json")
     packet_name = "corrected-answer-packet.json" if corrected else "review.json"
     packet = _read_artifact(run, packet_name)
@@ -1074,7 +2839,12 @@ def review(run: Path, repo: str, db: str, obligations_file: str, review_file: st
         gap["package_sha256"] = _digest(gap)
         _save_immutable(run / "evidence-gap.json", gap)
     elif record["failure_kind"] == "answer_gap" and not corrected:
-        correction = {"schema_version": 1, "packet_type": "multi_map_correction", "result": "correction_required",
+        answer_packet = _read_artifact(run, "answer-packet.json")
+        review_packet = _read_artifact(run, "answer-review-packet.json")
+        if "expansion_provenance" in answer_packet:
+            correction = _expanded_correction_packet(answer_packet, review_packet, record)
+        else:
+            correction = {"schema_version": 1, "packet_type": "multi_map_correction", "result": "correction_required",
                       "original_packet_sha256": _read_artifact(run, "answer-packet.json")["semantic_sha256"],
                       "semantic_sha256": _read_artifact(run, "answer-packet.json")["semantic_sha256"],
                       "question_sha256": _read_artifact(run, "answer-packet.json")["question_sha256"],
@@ -1085,7 +2855,7 @@ def review(run: Path, repo: str, db: str, obligations_file: str, review_file: st
                       "source_anchors": packet["source_anchors"], "source_snippets": packet["source_snippets"],
                       "rejection_reasons": {"claim_reviews": record["claim_reviews"], "obligation_reviews": record["obligation_reviews"],
                                             "unsupported_assertions": record["unsupported_assertions"]}}
-        correction["packet_sha256"] = _digest(correction)
+            correction["packet_sha256"] = _digest(correction)
         _save_immutable(run / "correction-packet.json", correction)
     elif record["failure_kind"] == "answer_gap" and corrected:
         return {"result": "terminal_rejection", "reason": "corrected answer remains rejected; second correction is forbidden"}
@@ -1122,12 +2892,50 @@ def _accepted_package(run: Path, answer_packet: dict[str, object], packet: dict[
              "review": {"packet_sha256": packet["packet_sha256"], "review_sha256": _digest(record),
                         "reviewer_identity": record["reviewer_identity"], "reviewer_model": record["reviewer_model"]},
              "correction_lineage": None if not corrected else _read_artifact(run, "correction-packet.json")}
+    if "expansion_provenance" in answer_packet:
+        if (answer_packet.get("current_answer_authority") is not False
+                or answer_packet.get("full_question_completeness") is not False
+                or answer_packet.get("completeness_claim") is not False):
+            raise CoordinatorError("expanded answer acceptance cannot change frozen false answer-authority or completeness flags")
+        contract = packet.get("expanded_review_contract")
+        expected_contract = _expanded_review_contract(packet)
+        if _bytes(contract) != _bytes(expected_contract):
+            raise CoordinatorError("expanded accepted answer lacks its exact expansion review contract")
+        mandatory = expected_contract["mandatory_supplemental_claims_by_obligation"]
+        cited_numbers = {number for item in answer_value.get("material_claims", []) if isinstance(item, dict)
+                         for number in item.get("claim_numbers", []) if type(number) is int}
+        review_by_number = {item["claim_number"]: item for item in record.get("claim_reviews", [])}
+        if any(number not in cited_numbers or review_by_number.get(number, {}).get("disposition") != "covered"
+               for numbers in mandatory.values() for number in numbers):
+            raise CoordinatorError("expanded acceptance requires every mandatory supplemental claim to be cited and reviewed covered")
+        if (record.get("failure_kind") != "none" or record.get("decision") != "accepted"
+                or record.get("unsupported_assertions") != []
+                or any(item.get("disposition") != "covered" for item in record.get("obligation_reviews", []))):
+            raise CoordinatorError("expanded acceptance requires every obligation covered and no unsupported assertions")
+        lineage = answer_packet["expansion_provenance"]
+        authority = answer_packet["selection"]["supplemental_selection_authority"]
+        final["expansion_provenance"] = lineage
+        final["supplemental_selection_authority"] = authority
+        final["historical_answer_authority_flags"] = {key: answer_packet[key] for key in
+            ("current_answer_authority", "full_question_completeness", "completeness_claim")}
+        final["expansion_acceptance_boundary"] = {"boundary_schema_version": 1,
+            "boundary_kind": "exact_question_answer_review_only", "question_sha256": answer_packet["question_sha256"],
+            "answer_evidence_semantic_sha256": answer_packet["semantic_sha256"],
+            "review_packet_sha256": packet["packet_sha256"], "review_sha256": _digest(record),
+            "expansion_packet_sha256": lineage["packet_sha256"], "expansion_review_sha256": lineage["review_sha256"],
+            "expansion_package_sha256": lineage["package_sha256"], "expansion_binding_sha256": lineage["binding_sha256"],
+            "supplemental_selection_authority_sha256": authority["authority_sha256"],
+            "compiler_runtime_proof": False, "full_question_completeness": False,
+            "authority_statement": "Acceptance applies only to this exact question, answer, evidence packet, and semantic review; it does not establish compiler or runtime binding, and does not rewrite the preserved historical false authority flags."}
     final["package_sha256"] = _digest(final)
     return final
 
 
-def accept(run: Path, repo: str, db: str, obligations_file: str, corrected: bool = False) -> dict[str, object]:
-    _revalidate(run, repo, db, obligations_file)
+def accept(run: Path, repo: str, db: str, obligations_file: str, corrected: bool = False,
+           expansion_run_dir: str | None = None) -> dict[str, object]:
+    _revalidate(run, repo, db, obligations_file, expansion_run_dir)
+    if (run / "evidence-gap.json").exists():
+        raise CoordinatorError("expanded evidence-gap terminal cannot enter acceptance stages")
     if corrected:
         packet = _read_artifact(run, "corrected-answer-packet.json")
         record = _read_artifact(run, "corrected-review.json")
@@ -1144,8 +2952,9 @@ def accept(run: Path, repo: str, db: str, obligations_file: str, corrected: bool
     return final
 
 
-def status(run: Path, repo: str, db: str, obligations_file: str) -> dict[str, object]:
-    packet = _revalidate(run, repo, db, obligations_file)
+def status(run: Path, repo: str, db: str, obligations_file: str,
+           expansion_run_dir: str | None = None) -> dict[str, object]:
+    packet = _revalidate(run, repo, db, obligations_file, expansion_run_dir)
     artifacts = sorted(p.name for p in run.iterdir() if p.is_file())
     unexpected = sorted(set(artifacts) - ARTIFACTS)
     if unexpected:
@@ -1158,8 +2967,12 @@ def status(run: Path, repo: str, db: str, obligations_file: str) -> dict[str, ob
         gap = _read_artifact(run, "evidence-gap.json")
         if gap.get("package_sha256") != _digest({key: value for key, value in gap.items() if key != "package_sha256"}) or gap.get("completeness_claim") is not False:
             raise CoordinatorError("evidence-gap package hash or no-completeness assertion is invalid")
+    terminal = "accepted" if (run / "accepted-package.json").exists() else "evidence_gap" if (run / "evidence-gap.json").exists() else "in_progress"
+    if "expansion_binding_lineage" in packet and (run / "corrected-review.json").exists():
+        if _read_artifact(run, "corrected-review.json").get("decision") == "rejected":
+            terminal = "rejected"
     return {"result": "current", "semantic_sha256": packet["semantic_sha256"], "candidate_count": len(packet["candidates"]),
-            "artifacts": artifacts, "terminal": "accepted" if (run / "accepted-package.json").exists() else "evidence_gap" if (run / "evidence-gap.json").exists() else "in_progress"}
+            "artifacts": artifacts, "terminal": terminal}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1170,31 +2983,70 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--question-file", required=True); p.add_argument("--obligations-file", required=True)
     p.add_argument("--controller-type-id", required=True); p.add_argument("--run-dir", required=True)
     p.add_argument("--max-bytes", type=int, default=DEFAULT_LIMIT)
+    x = commands.add_parser("expand-gap-prepare", help="reconstruct a selection-stage evidence gap and prepare a local declaration review packet")
+    x.add_argument("--repo", required=True); x.add_argument("--db", required=True)
+    x.add_argument("--source-run-dir", required=True); x.add_argument("--destination-run-dir", required=True)
+    x.add_argument("--obligations-file", required=True); x.add_argument("--max-bytes", type=int, default=10_000_000)
+    xr = commands.add_parser("expand-gap-review", help="validate an independent semantic review and save a separate expansion package")
+    xr.add_argument("--repo", required=True); xr.add_argument("--db", required=True)
+    xr.add_argument("--source-run-dir", required=True); xr.add_argument("--destination-run-dir", required=True)
+    xr.add_argument("--obligations-file", required=True); xr.add_argument("--review-file", required=True)
+    xs = commands.add_parser("expand-gap-status", help="read-only reconstruction and status for a gap expansion")
+    xs.add_argument("--repo", required=True); xs.add_argument("--db", required=True)
+    xs.add_argument("--source-run-dir", required=True); xs.add_argument("--destination-run-dir", required=True)
+    xs.add_argument("--obligations-file", required=True)
+    xp = commands.add_parser("expand-gap-import-prepare", help="prepare a fresh selection packet with reviewed local expansion candidates")
+    xp.add_argument("--repo", required=True); xp.add_argument("--db", required=True)
+    xp.add_argument("--source-run-dir", required=True); xp.add_argument("--expansion-run-dir", required=True)
+    xp.add_argument("--target-run-dir", required=True); xp.add_argument("--question-file", required=True)
+    xp.add_argument("--obligations-file", required=True)
+    xps = commands.add_parser("expand-gap-import-status", help="read-only reconstruction of an expansion-aware prepared packet")
+    xps.add_argument("--repo", required=True); xps.add_argument("--db", required=True)
+    xps.add_argument("--source-run-dir", required=True); xps.add_argument("--expansion-run-dir", required=True)
+    xps.add_argument("--target-run-dir", required=True); xps.add_argument("--question-file", required=True)
+    xps.add_argument("--obligations-file", required=True)
+    xv = commands.add_parser("expand-gap-selector-view", help="emit the read-only mandatory support view for an expanded selector")
+    xv.add_argument("--repo", required=True); xv.add_argument("--db", required=True); xv.add_argument("--run-dir", required=True)
+    xv.add_argument("--obligations-file", required=True); xv.add_argument("--expansion-run-dir", required=True)
     for stage in ("select", "status"):
         s = commands.add_parser(stage); s.add_argument("--repo", required=True); s.add_argument("--db", required=True); s.add_argument("--run-dir", required=True)
         s.add_argument("--obligations-file", required=True)
+        s.add_argument("--expansion-run-dir")
         if stage == "select": s.add_argument("--selection-file", required=True)
     for stage in ("answer", "correct"):
         s = commands.add_parser(stage); s.add_argument("--repo", required=True); s.add_argument("--db", required=True); s.add_argument("--run-dir", required=True)
         s.add_argument("--obligations-file", required=True)
+        s.add_argument("--expansion-run-dir")
         s.add_argument("--draft-file", required=True); s.add_argument("--answer-file", required=True)
     for stage in ("review", "review-correction"):
         s = commands.add_parser(stage); s.add_argument("--repo", required=True); s.add_argument("--db", required=True); s.add_argument("--run-dir", required=True); s.add_argument("--review-file", required=True)
         s.add_argument("--obligations-file", required=True)
+        s.add_argument("--expansion-run-dir")
     for stage in ("accept", "accept-correction"):
         s = commands.add_parser(stage); s.add_argument("--repo", required=True); s.add_argument("--db", required=True); s.add_argument("--run-dir", required=True)
         s.add_argument("--obligations-file", required=True)
+        s.add_argument("--expansion-run-dir")
     args = parser.parse_args(argv)
     try:
         if args.command == "prepare": out = prepare(args.repo, args.db, args.question_file, args.obligations_file, args.controller_type_id, args.run_dir, args.max_bytes)
-        elif args.command == "select": out = _write_selection(Path(args.run_dir), args.repo, args.db, args.selection_file, args.obligations_file)
-        elif args.command == "status": out = status(Path(args.run_dir), args.repo, args.db, args.obligations_file)
-        elif args.command == "answer": out = submit_answer(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.draft_file, args.answer_file)
-        elif args.command == "correct": out = submit_answer(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.draft_file, args.answer_file, True)
-        elif args.command == "review": out = review(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.review_file)
-        elif args.command == "review-correction": out = review(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.review_file, True)
-        elif args.command == "accept": out = accept(Path(args.run_dir), args.repo, args.db, args.obligations_file)
-        else: out = accept(Path(args.run_dir), args.repo, args.db, args.obligations_file, True)
+        elif args.command == "expand-gap-prepare": out = expand_gap_prepare(args.repo, args.db, args.source_run_dir, args.destination_run_dir, args.obligations_file, args.max_bytes)
+        elif args.command == "expand-gap-review": out = expand_gap_review(args.repo, args.db, args.source_run_dir, args.destination_run_dir, args.obligations_file, args.review_file)
+        elif args.command == "expand-gap-status": out = expand_gap_status(args.repo, args.db, args.source_run_dir, args.destination_run_dir, args.obligations_file)
+        elif args.command == "expand-gap-import-prepare": out = expand_gap_import_prepare(args.repo, args.db, args.source_run_dir,
+            args.expansion_run_dir, args.target_run_dir, args.question_file, args.obligations_file)
+        elif args.command == "expand-gap-import-status": out = expand_gap_import_status(args.repo, args.db, args.source_run_dir,
+            args.expansion_run_dir, args.target_run_dir, args.question_file, args.obligations_file)
+        elif args.command == "expand-gap-selector-view": out = expand_gap_selector_view(args.repo, args.db, args.run_dir,
+            args.obligations_file, args.expansion_run_dir)
+        elif args.command == "select": out = _write_selection(Path(args.run_dir), args.repo, args.db, args.selection_file,
+            args.obligations_file, args.expansion_run_dir)
+        elif args.command == "status": out = status(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.expansion_run_dir)
+        elif args.command == "answer": out = submit_answer(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.draft_file, args.answer_file, expansion_run_dir=args.expansion_run_dir)
+        elif args.command == "correct": out = submit_answer(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.draft_file, args.answer_file, True, args.expansion_run_dir)
+        elif args.command == "review": out = review(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.review_file, expansion_run_dir=args.expansion_run_dir)
+        elif args.command == "review-correction": out = review(Path(args.run_dir), args.repo, args.db, args.obligations_file, args.review_file, True, args.expansion_run_dir)
+        elif args.command == "accept": out = accept(Path(args.run_dir), args.repo, args.db, args.obligations_file, expansion_run_dir=args.expansion_run_dir)
+        else: out = accept(Path(args.run_dir), args.repo, args.db, args.obligations_file, True, args.expansion_run_dir)
     except (CoordinatorError, atlas.AtlasError, OSError, ValueError, KeyError, TypeError) as exc:
         print(f"question-coordinator: {exc}", file=sys.stderr)
         return 2
