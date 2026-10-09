@@ -92,6 +92,102 @@ class AtlasCliTests(unittest.TestCase):
         return self.cli("impact", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
                         "--method", method, "--max-tokens", str(max_tokens), expect=expect)
 
+    def attach_compiler_fixture(self, snapshot, graph, route):
+        """Attach synthetic mechanics evidence; this does not stand in for Roslyn proof."""
+        import sys
+        methods = [fact for fact in graph["facts"] if fact.get("kind") == "method_declaration"]
+        action = next(fact for fact in methods if fact.get("method_name") == route["action_name"])
+        implementation = next(fact for fact in methods if fact.get("method_name") == "Handle")
+        injection = next(fact for fact in graph["facts"] if fact.get("kind") == "constructor_injection"
+                         and fact.get("owner_type_id") == action.get("owner_type_id"))
+        invocation = next(fact for fact in graph["facts"] if fact.get("kind") == "receiver_invocation_syntax"
+                          and fact.get("method_id") == action["id"])
+        registration = next(fact for fact in graph["facts"] if fact.get("kind") == "dependency_registration"
+                            and fact.get("implementation_type_expression") == "Handler")
+        reference_path = self.root / "compiler-reference.bin"
+        reference_path.write_bytes(b"compiler reference fixture")
+        project_path = self.repo / "Fixture.csproj"
+        project_path.write_text("<Project />", encoding="utf-8")
+        git(self.repo, "add", "--", "Fixture.csproj")
+        assets = self.repo / "obj" / "project.assets.json"
+        assets.parent.mkdir(parents=True, exist_ok=True)
+        assets.write_text("{}", encoding="utf-8")
+        snapshot = self.index()
+        graph = self.graph(snapshot["snapshot_id"])
+        route = next(fact for fact in graph["facts"] if fact.get("kind") == "route_action"
+                     and fact.get("route_literal") == "api/customer/save")
+        methods = [fact for fact in graph["facts"] if fact.get("kind") == "method_declaration"]
+        action = next(fact for fact in methods if fact.get("method_name") == route["action_name"])
+        implementation = next(fact for fact in methods if fact.get("method_name") == "Handle")
+        injection = next(fact for fact in graph["facts"] if fact.get("kind") == "constructor_injection"
+                         and fact.get("owner_type_id") == action.get("owner_type_id"))
+        invocation = next(fact for fact in graph["facts"] if fact.get("kind") == "receiver_invocation_syntax"
+                          and fact.get("method_id") == action["id"])
+        registration = next(fact for fact in graph["facts"] if fact.get("kind") == "dependency_registration"
+                            and fact.get("implementation_type_expression") == "Handler")
+        generated = ATLAS._compiler_safe_tree(self.repo, "obj")
+        reference = {"display": os.fspath(reference_path), "aliases": [], "embed_interop_types": False,
+                     "kind": "Assembly", "sha256": hashlib.sha256(reference_path.read_bytes()).hexdigest()}
+        external_import = self.root / "external.targets"
+        external_import.write_bytes(b"<Project />")
+        import_logical = "external/external.targets"
+        import_record = {"logical_path": import_logical, "path": external_import.as_posix(),
+                         "sha256": hashlib.sha256(external_import.read_bytes()).hexdigest()}
+        sdk_root = self.root / "sdk-fixture"
+        build_host = sdk_root / "DotnetTools" / "dotnet-format" / "BuildHost-netcore"
+        build_host.mkdir(parents=True)
+        host_fixture = build_host / "host.dll"
+        host_fixture.write_bytes(b"host fixture")
+        toolchain = {"name": "fixture", "path": os.fspath(reference_path), "sha256": reference["sha256"]}
+        inputs = {"tracked_inputs": [{"logical_path": f"tracked/{entry['path']}", "path": entry["path"],
+                                      "sha256": entry.get("sha256"), "size_bytes": entry.get("size_bytes"),
+                                      "presence": entry.get("presence"), "type": entry.get("type"),
+                                      "git_mode": entry.get("git_mode")} for entry in snapshot["files"]],
+                  "generated_inputs": generated, "references": [reference], "imports": [import_record],
+                  "toolchain_assemblies": [toolchain], "copied_tool_files": [],
+                  "build_host_files": [{"path": "host.dll", "sha256": hashlib.sha256(host_fixture.read_bytes()).hexdigest()}],
+                  "shipped_tool_inputs": ATLAS._compiler_shipped_tool_inputs(),
+                  "dotnet_host": {"path": os.fspath(reference_path), "sha256": reference["sha256"]},
+                  "project": "Fixture.csproj", "target_framework": "net10.0",
+                  "sdk_path": sdk_root.as_posix(), "roslyn_version": "fixture", "language_version": "CSharp12",
+                  "compilation_options": "fixture", "parse_options": "fixture"}
+        call_span = invocation["source"]["span"]
+        call_text = self.repo.joinpath(invocation["source"]["path"]).read_text(encoding="utf-8")
+        call_offset = call_span["start_offset"]
+        identifier_start = call_text.find("Handle", call_offset, call_span["end_offset"])
+        call_source = {"path": invocation["source"]["path"], "sha256": invocation["source"]["sha256"],
+                       "span": {**call_span, "start_offset": identifier_start,
+                                "end_offset": identifier_start + len("Handle")}}
+        relation = {"route": "api/customer/save", "http_method": "POST", "action_method": action["method_name"],
+                    "service_type": injection["type_expression"], "bound_member": "IHandler.Handle",
+                    "implementation_method": "Handler.Handle", "action_source": action["source"],
+                    "call_site_source": call_source, "service_parameter_source": injection["source"],
+                    "bound_member_source": call_source, "implementation_source": implementation["source"],
+                    "lexical_action_fact_id": action["id"], "lexical_implementation_fact_id": implementation["id"],
+                    "lexical_route_fact_id": route["id"],
+                    "implementation_type": "Demo.Handler", "implementation_method_containing_type": "Demo.Handler",
+                    "compiler_implementation_match": True,
+                    "registrations": [{"syntax": "services.AddScoped<IHandler, Handler>()", "source": registration["source"],
+                                       "lexical_registration_fact_id": registration["id"],
+                                       "runtime_DI_selection_proven": False}],
+                    "runtime_DI_selection_proven": False}
+        payload = {"supplement_schema_version": 1,
+                   "binding": {"snapshot_id": snapshot["snapshot_id"], "evidence_fingerprint": snapshot["evidence_fingerprint"],
+                               "repository_root": self.repo.resolve().as_posix(), "extractor_identity": graph["extractor_identity"],
+                               "project_path": "Fixture.csproj", "target_framework": "net10.0"},
+                   "input_identity": inputs, "input_sha256": hashlib.sha256(ATLAS._canonical_json(inputs)).hexdigest(),
+                   "provenance": {"sdk_path": "/sdk", "roslyn_version": "fixture", "language_version": "CSharp12",
+                                  "target_framework": "net10.0", "source_trees": 1, "compiler_warnings": []},
+                   "relationships": [relation], "unresolved": [], "runtime_DI_selection_proven": False}
+        content_hash = hashlib.sha256(ATLAS._canonical_json(payload)).hexdigest()
+        document = {**payload, "content_sha256": content_hash}
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS atlas_compiler_supplements (snapshot_id TEXT NOT NULL, project_path TEXT NOT NULL, content_sha256 TEXT NOT NULL, payload_json TEXT NOT NULL, PRIMARY KEY(snapshot_id,project_path), FOREIGN KEY(snapshot_id) REFERENCES atlas_snapshots(snapshot_id))")
+            connection.execute("INSERT INTO atlas_compiler_supplements VALUES (?,?,?,?)",
+                               (snapshot["snapshot_id"], "Fixture.csproj", content_hash,
+                                ATLAS._canonical_json(document).decode("ascii")))
+        return reference_path, relation, snapshot, graph, route
+
     def test_impact_view_returns_verified_definition_and_exact_lexical_calls(self):
         source = self.repo / "Calls.cs"
         source.write_text('''namespace Demo;
@@ -123,6 +219,171 @@ class Handler
         refused = self.impact("Target.Work", max_tokens=100, expect=2)
         self.assertEqual(refused.stdout, "")
         self.assertIn("stdout withheld", refused.stderr)
+
+    def test_compiler_supplement_consumers_validate_freshness_and_preserve_lexical_candidates(self):
+        _initial, graph, route = self.evidence_fixture()
+        reference, relation, _snapshot, _graph, current_route = self.attach_compiler_fixture(
+            self.query(self.index()["snapshot_id"]), graph, route,
+        )
+        impact = json.loads(self.impact("Handler.Handle", max_tokens=100000).stdout)
+        self.assertEqual(impact["candidate_count"], 0)
+        callers = impact["compiler_confirmed_interface_callers"]
+        self.assertEqual(len(callers), 1)
+        self.assertEqual(callers[0]["route"], "api/customer/save")
+        self.assertTrue(callers[0]["compiler_binding_confirmed"])
+        self.assertFalse(callers[0]["runtime_DI_selection_proven"])
+        self.assertFalse(callers[0]["registrations"][0]["runtime_DI_selection_proven"])
+
+        packet = json.loads(self.evidence_pack(current_route["id"], max_tokens=100000).stdout)
+        self.assertEqual(len(packet["compiler_relationships"]), 1)
+        self.assertGreaterEqual(len(packet["compiler_source_snippets"]), 5)
+        self.assertFalse(packet["compiler_relationship_semantics"]["runtime_DI_selection_proven"])
+        budget_refusal = self.evidence_pack(current_route["id"], max_tokens=1000, expect=2)
+        self.assertEqual(budget_refusal.stdout, "")
+        self.assertIn("stdout withheld", budget_refusal.stderr)
+
+        assets = self.repo / "obj" / "project.assets.json"
+        original_assets = assets.read_bytes()
+        assets.write_bytes(original_assets + b" ")
+        stale_generated = self.impact("Handler.Handle", expect=2)
+        self.assertIn("generated inputs are stale", stale_generated.stderr)
+        assets.write_bytes(original_assets)
+
+        original_reference = reference.read_bytes()
+        reference.write_bytes(original_reference + b"changed")
+        stale_reference = self.evidence_pack(current_route["id"], expect=2)
+        self.assertIn("reference changed", stale_reference.stderr)
+        reference.write_bytes(original_reference)
+
+        external_import = self.root / "external.targets"
+        original_import = external_import.read_bytes()
+        external_import.write_bytes(original_import + b" changed")
+        stale_import = self.impact("Handler.Handle", expect=2)
+        self.assertIn("import changed or is missing", stale_import.stderr)
+        external_import.write_bytes(original_import)
+
+        host_fixture = self.root / "sdk-fixture" / "DotnetTools" / "dotnet-format" / "BuildHost-netcore" / "host.dll"
+        original_host = host_fixture.read_bytes()
+        host_fixture.write_bytes(original_host + b" changed")
+        stale_host = self.impact("Handler.Handle", expect=2)
+        self.assertIn("BuildHost file changed or is missing", stale_host.stderr)
+        host_fixture.write_bytes(original_host)
+
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT payload_json FROM atlas_compiler_supplements WHERE snapshot_id=?",
+                                     (_snapshot["snapshot_id"],)).fetchone()
+            tampered = json.loads(row[0])
+            tampered["content_sha256"] = "0" * 64
+            connection.execute("UPDATE atlas_compiler_supplements SET payload_json=? WHERE snapshot_id=?",
+                               (json.dumps(tampered), _snapshot["snapshot_id"]))
+        corrupted = self.impact("Handler.Handle", expect=2)
+        self.assertIn("content hash mismatch", corrupted.stderr)
+
+    def test_compiler_index_refusal_does_not_write_for_an_untracked_project(self):
+        self.evidence_fixture()
+        before = self.db.read_bytes()
+        refused = self.cli("compiler-index", "--db", os.fspath(self.db), "--repo", os.fspath(self.repo),
+                           "--project", "missing.csproj", "--framework", "net10.0", expect=2)
+        self.assertIn("must match exactly one current tracked file", refused.stderr)
+        self.assertEqual(self.db.read_bytes(), before)
+
+    @unittest.skipUnless(os.environ.get("ATLAS_DOTNET"), "real Roslyn fixture needs the approved local dotnet SDK")
+    def test_compiler_index_real_roslyn_routes_and_multiple_implementations(self):
+        project = self.repo / "Fixture.csproj"
+        project.write_text('''<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
+</Project>
+''', encoding="utf-8")
+        source = self.repo / "Fixture.cs"
+        source.write_text('''using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+namespace Fixture;
+public sealed record Request;
+public interface IHandler<T> { string Handle(T value); }
+public sealed class First : IHandler<Request> { public string Handle(Request value) => "first"; }
+public sealed class Second : IHandler<Request> { public string Handle(Request value) => "second"; }
+[ApiController]
+[Route("api/items")]
+public sealed class ItemsController(IHandler<Request> handler) : ControllerBase
+{
+    [HttpGet("one")]
+    [HttpPost("two")]
+    public IActionResult Relative(Request value) { handler.Handle(value); return Ok(); }
+    [HttpGet("/absolute")]
+    public IActionResult Absolute(Request value) { handler.Handle(value); return Ok(); }
+    [HttpGet("~/tilde")]
+    public IActionResult Tilde(Request value) { handler.Handle(value); return Ok(); }
+}
+public static class Registrations
+{
+    public static void Add(IServiceCollection services)
+    {
+            services.AddScoped<IHandler<Request>, First>();
+            services.AddScoped<IHandler<Request>, Second>();
+            services.AddScoped<IHandler<Request>, First>();
+    }
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "Fixture.csproj", "Fixture.cs")
+        empty_feed = self.root / "empty-feed"
+        empty_feed.mkdir()
+        nuget = self.root / "NuGet.Config"
+        nuget.write_text(f'<configuration><packageSources><clear/><add key="empty" value="{empty_feed}"/></packageSources></configuration>', encoding="utf-8")
+        restore = subprocess.run([os.environ["ATLAS_DOTNET"], "restore", os.fspath(project), "--configfile", os.fspath(nuget), "--ignore-failed-sources"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        self.assertEqual(restore.returncode, 0, restore.stderr or restore.stdout)
+        generated_before = ATLAS._compiler_safe_tree(self.repo, "obj")
+        snapshot = self.index()
+        indexed = self.cli("compiler-index", "--repo", os.fspath(self.repo), "--db", os.fspath(self.db),
+                           "--project", "Fixture.csproj", "--framework", "net8.0")
+        self.assertEqual(indexed.returncode, 0, indexed.stderr)
+        with sqlite3.connect(self.db) as connection:
+            raw = connection.execute("SELECT payload_json FROM atlas_compiler_supplements WHERE snapshot_id=?", (snapshot["snapshot_id"],)).fetchone()[0]
+        payload = json.loads(raw)
+        relationships = payload["relationships"]
+        by_route = {}
+        for relation in relationships:
+            by_route.setdefault((relation["http_method"], relation["route"]), []).append(relation)
+        expected = {("GET", "api/items/one"), ("POST", "api/items/two"), ("GET", "absolute"), ("GET", "tilde")}
+        self.assertEqual(set(by_route), expected)
+        for route_relations in by_route.values():
+            self.assertEqual({relation["implementation_type"] for relation in route_relations}, {"global::Fixture.First", "global::Fixture.Second"})
+            self.assertEqual(len({relation["lexical_route_fact_id"] for relation in route_relations}), 1)
+            for relation in route_relations:
+                self.assertEqual({item["implementation_type"] for item in relation["registrations"]}, {relation["implementation_type"]})
+                self.assertEqual(len(relation["registrations"]), 2 if relation["implementation_type"] == "global::Fixture.First" else 1)
+        self.assertIsInstance(payload["input_identity"]["compilation_options"], dict)
+        parse_options = payload["input_identity"]["parse_options"]
+        self.assertTrue(parse_options and all({"language_version", "preprocessor_symbols", "features"} <= set(item) for item in parse_options))
+        imports = payload["input_identity"]["imports"]
+        self.assertTrue(any("Microsoft.NET.Sdk" in item["path"] and item["path"].endswith("Sdk.props") for item in imports), imports)
+        self.assertTrue(any(item["path"] == "Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll"
+                            for item in payload["input_identity"]["build_host_files"]))
+        self.assertEqual({item["logical_path"] for item in payload["input_identity"]["shipped_tool_inputs"]},
+                         {"atlas-compiler/WorkspaceProgram.cs", "atlas-compiler/extractor.csproj"})
+        self.assertIn("Microsoft.CodeAnalysis.CSharp", {item["name"] for item in payload["input_identity"]["toolchain_assemblies"]})
+        self.assertTrue(any(item["logical_path"] == "Microsoft.CodeAnalysis.CSharp.dll"
+                            for item in payload["input_identity"]["copied_tool_files"]))
+        self.assertTrue(any(item["logical_path"].startswith("external/Users/kamenkamenov/.dotnet/sdk/")
+                            and "/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.targets" in item["logical_path"]
+                            for item in imports), imports)
+        self.assertEqual(ATLAS._compiler_safe_tree(self.repo, "obj"), generated_before)
+        self.assertFalse((self.repo / "bin").exists())
+        assets = self.repo / "obj" / "project.assets.json"
+        assets.write_bytes(assets.read_bytes() + b" ")
+        stale = self.impact("Fixture.First.Handle", expect=2)
+        self.assertIn("generated inputs are stale", stale.stderr)
+
+        broken = self.repo / "Broken.cs"
+        broken.write_text("namespace Fixture; public class Broken { public void M() { MissingSymbol(); } }", encoding="utf-8")
+        git(self.repo, "add", "--", "Broken.cs")
+        self.index()
+        database_before = self.db.read_bytes()
+        fatal = self.cli("compiler-index", "--repo", os.fspath(self.repo), "--db", os.fspath(self.db),
+                         "--project", "Fixture.csproj", "--framework", "net8.0", expect=2)
+        self.assertIn("compiler errors", fatal.stderr)
+        self.assertEqual(self.db.read_bytes(), database_before)
 
     def test_impact_view_refuses_ambiguous_method_and_stale_or_unsafe_source(self):
         source = self.repo / "Calls.cs"

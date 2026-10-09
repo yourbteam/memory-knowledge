@@ -11,10 +11,12 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import stat
 import subprocess
 import sys
+import tempfile
 
 
 SCHEMA_VERSION = 2
@@ -2244,6 +2246,486 @@ def _source_texts(root: Path, references: list[tuple[str, dict[str, object]]]) -
     return [snippets[key] for key in sorted(snippets, key=lambda item: (os.fsencode(item[0]), item[2], item[3], item[4]))]
 
 
+def _compiler_safe_tree(root: Path, relative_root: str) -> list[dict[str, object]]:
+    """Hash a generated input tree without following links or special files."""
+    base = root / relative_root
+    if not base.exists():
+        return []
+    if base.is_symlink() or not base.is_dir():
+        raise AtlasError(f"unsafe compiler input tree {relative_root!r}: expected a real directory")
+    result: list[dict[str, object]] = []
+    for directory, directories, filenames in os.walk(base, followlinks=False):
+        current = Path(directory)
+        for name in sorted(directories, key=os.fsencode):
+            path = current / name
+            if path.is_symlink():
+                raise AtlasError(f"unsafe compiler input tree {relative_root!r}: symlink directory {path.relative_to(root)}")
+        for name in sorted(filenames, key=os.fsencode):
+            path = current / name
+            if path.is_symlink() or not path.is_file():
+                raise AtlasError(f"unsafe compiler input tree {relative_root!r}: non-regular file {path.relative_to(root)}")
+            relative = path.relative_to(root).as_posix()
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            result.append({"logical_path": relative, "sha256": digest, "size_bytes": path.stat().st_size})
+    return sorted(result, key=lambda item: os.fsencode(str(item["logical_path"])))
+
+
+def _compiler_temp_env(temp_root: Path, dotnet: Path, package_cache: Path) -> dict[str, str]:
+    env = dict(os.environ)
+    sdk_version = subprocess.run([str(dotnet), "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 text=True, check=False).stdout.strip()
+    sdk_dir = dotnet.parent / "sdk" / sdk_version if sdk_version else None
+    env.update({
+        "DOTNET_ROOT": str(dotnet.parent), "DOTNET_CLI_HOME": str(temp_root / "dotnet-home"),
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "1", "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+        "DOTNET_NOLOGO": "1", "NUGET_PACKAGES": str(package_cache),
+        "NUGET_HTTP_CACHE_PATH": str(temp_root / "nuget-http-cache"),
+        "RestoreIgnoreFailedSources": "true",
+        "DOTNET_HOST_PATH": str(dotnet),
+    })
+    if sdk_dir is not None and (sdk_dir / "MSBuild.dll").is_file():
+        env["MSBUILD_EXE_PATH"] = str(sdk_dir / "MSBuild.dll")
+        env["MSBuildSDKsPath"] = str(sdk_dir / "Sdks")
+    return env
+
+
+def _compiler_copy_inputs(root: Path, snapshot: dict[str, object], mirror: Path,
+                          generated_relative: str) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    files = snapshot.get("files")
+    if not isinstance(files, list):
+        raise AtlasError("current compiler snapshot has invalid tracked-file inventory")
+    tracked_manifest: list[dict[str, object]] = []
+    root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for entry in files:
+            if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+                raise AtlasError("current compiler snapshot contains an invalid tracked-file entry")
+            path = str(entry["path"])
+            evidence = _read_working_file(root_fd, path, collect_source=True)
+            if evidence.get("presence") != entry.get("presence") or evidence.get("type") != entry.get("type") or evidence.get("sha256") != entry.get("sha256"):
+                raise AtlasError(f"tracked compiler input changed since snapshot: {path}; re-index before compiler-index")
+            tracked_manifest.append({"logical_path": f"tracked/{path}", "path": path,
+                                     "sha256": entry.get("sha256"), "size_bytes": entry.get("size_bytes"),
+                                     "presence": entry.get("presence"), "type": entry.get("type"),
+                                     "git_mode": entry.get("git_mode")})
+            if entry.get("presence") != "present":
+                continue
+            if entry.get("type") != "file":
+                raise AtlasError(f"compiler input is not a regular tracked file: {path}")
+            raw = evidence.get("_source_bytes")
+            if not isinstance(raw, bytes):
+                raise AtlasError(f"tracked compiler input could not be read: {path}")
+            destination = mirror / path
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(raw)
+    finally:
+        os.close(root_fd)
+    generated_source = root / generated_relative
+    generated_manifest = _compiler_safe_tree(root, generated_relative)
+    if generated_manifest:
+        for item in generated_manifest:
+            relative = str(item["logical_path"])
+            destination = mirror / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(root / relative, destination)
+    return tracked_manifest, generated_manifest
+
+
+def _compiler_span(source: object) -> tuple[str, int, int] | None:
+    if not isinstance(source, dict) or not isinstance(source.get("path"), str):
+        return None
+    span = source.get("span")
+    if not isinstance(span, dict):
+        return None
+    start, end = span.get("start_offset"), span.get("end_offset")
+    if not isinstance(start, int) or not isinstance(end, int) or start < 0 or end < start:
+        return None
+    return str(source["path"]), start, end
+
+
+def _compiler_shipped_tool_inputs() -> list[dict[str, object]]:
+    source = Path(__file__).resolve().parent / "compiler"
+    result = []
+    for name in ("WorkspaceProgram.cs", "extractor.csproj"):
+        path = source / name
+        if not path.is_file():
+            raise AtlasError(f"shipped Roslyn compiler extractor source is incomplete: {path}")
+        result.append({"logical_path": f"atlas-compiler/{name}", "path": path.as_posix(),
+                       "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+    return result
+
+
+def _compiler_copied_tool_files(extractor_output: Path, sdk_path: str) -> list[dict[str, object]]:
+    """Map SDK tool files copied beside the extractor back to stable SDK paths."""
+    format_root = Path(sdk_path) / "DotnetTools" / "dotnet-format"
+    if not format_root.is_dir():
+        raise AtlasError(f"selected SDK dotnet-format tool directory is missing: {format_root}")
+    result: list[dict[str, object]] = []
+    for output in sorted(extractor_output.iterdir(), key=lambda path: os.fsencode(path.name)):
+        if not output.is_file() or output.suffix not in {".dll", ".exe"} or output.name.startswith("extractor."):
+            continue
+        digest = hashlib.sha256(output.read_bytes()).hexdigest()
+        matches = []
+        for source in format_root.rglob(output.name):
+            if source.is_file() and hashlib.sha256(source.read_bytes()).hexdigest() == digest:
+                matches.append(source)
+        for source in matches:
+            result.append({"logical_path": source.relative_to(format_root).as_posix(),
+                           "path": source.as_posix(), "sha256": digest})
+    return sorted(result, key=lambda item: (os.fsencode(str(item["logical_path"])), os.fsencode(str(item["path"]))))
+
+
+def _verify_compiler_relationship_graph(snapshot: dict[str, object], relationship: dict[str, object]) -> None:
+    graph = snapshot.get("source_graph")
+    facts = graph.get("facts") if isinstance(graph, dict) else None
+    if not isinstance(facts, list):
+        raise AtlasError("compiler supplement cannot verify anchors against lexical graph")
+    method_facts = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "method_declaration"]
+    action = _compiler_span(relationship.get("action_source"))
+    implementation = _compiler_span(relationship.get("implementation_source"))
+    def method_match(span: tuple[str, int, int] | None, symbol: object, containing: bool = False) -> list[dict[str, object]]:
+        if span is None or not isinstance(symbol, str):
+            return []
+        symbol_name = symbol.rsplit(".", 1)[-1].split("(", 1)[0]
+        def matches(saved: tuple[str, int, int] | None) -> bool:
+            if saved is None or saved[0] != span[0]:
+                return False
+            return saved[1] <= span[1] and span[2] <= saved[2] if containing else saved[1] == span[1] and abs(saved[2] - span[2]) <= 1
+        return [fact for fact in method_facts if matches(_compiler_span(fact.get("source")))
+                and fact.get("method_name", "").split(".")[-1] == symbol_name]
+    action_matches = method_match(action, relationship.get("action_method"))
+    implementation_matches = method_match(implementation, relationship.get("implementation_method"), containing=True)
+    if len(action_matches) != 1:
+        raise AtlasError(f"compiler action anchor does not identify exactly one saved lexical method fact: matches={len(action_matches)}")
+    if len(implementation_matches) != 1:
+        raise AtlasError(f"compiler implementation anchor does not identify exactly one saved lexical method fact: matches={len(implementation_matches)}")
+    action_fact = action_matches[0]
+    relationship["lexical_action_fact_id"] = action_fact["id"]
+    relationship["lexical_implementation_fact_id"] = implementation_matches[0]["id"]
+    route_facts = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "route_action"
+                   and fact.get("action_id") == action_fact.get("id")
+                   and fact.get("http_method") == relationship.get("http_method")
+                   and fact.get("route_literal") == relationship.get("route")]
+    if len(route_facts) != 1:
+        same_action = [(fact.get("http_method"), fact.get("route_literal"), fact.get("id"))
+                       for fact in facts if isinstance(fact, dict) and fact.get("kind") == "route_action"
+                       and fact.get("action_id") == action_fact.get("id")]
+        raise AtlasError(
+            "compiler relationship must bind to exactly one lexical route fact by action method, HTTP verb, "
+            f"and normalized route literal; matches={len(route_facts)} route={relationship.get('route')!r} "
+            f"verb={relationship.get('http_method')!r} candidates={same_action!r}"
+        )
+    relationship["lexical_route_fact_id"] = route_facts[0]["id"]
+    action_fact_id = action_fact.get("id")
+    parameter = _compiler_span(relationship.get("service_parameter_source"))
+    if parameter is None or not any(isinstance(fact, dict) and fact.get("kind") == "constructor_injection"
+                                    and fact.get("owner_type_id") == action_fact.get("owner_type_id")
+                                    and fact.get("parameter_name") == relationship.get("service_parameter")
+                                    and _compiler_span(fact.get("source")) == parameter for fact in facts):
+        raise AtlasError("compiler service parameter anchor does not exactly match a saved lexical constructor-injection fact")
+    callsite = _compiler_span(relationship.get("call_site_source"))
+    if callsite is None or not any(isinstance(fact, dict) and fact.get("kind") == "receiver_invocation_syntax"
+                                   and fact.get("method_id") == action_fact_id
+                                   and (span := _compiler_span(fact.get("source"))) is not None
+                                   and span[0] == callsite[0] and span[1] <= callsite[1] <= callsite[2] <= span[2]
+                                   for fact in facts):
+        raise AtlasError("compiler call-site anchor is not contained in a saved lexical receiver-invocation fact")
+    for registration in relationship.get("registrations", []):
+        source = _compiler_span(registration.get("source")) if isinstance(registration, dict) else None
+        matches = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "dependency_registration"
+                   and (span := _compiler_span(fact.get("source"))) is not None and source is not None
+                   and span[0] == source[0] and source[1] <= span[1] <= span[2] <= source[2]]
+        if len(matches) != 1:
+            raise AtlasError(f"compiler registration syntax anchor does not contain exactly one saved lexical registration fact: matches={len(matches)}")
+        registration["lexical_registration_fact_id"] = matches[0]["id"]
+
+
+def _compiler_build_extractor(temp_root: Path, env: dict[str, str], dotnet: Path) -> Path:
+    source = Path(__file__).resolve().parent / "compiler"
+    if not (source / "WorkspaceProgram.cs").is_file() or not (source / "extractor.csproj").is_file():
+        raise AtlasError("shipped Roslyn compiler extractor source is incomplete")
+    work = temp_root / "extractor"
+    work.mkdir()
+    shutil.copy2(source / "WorkspaceProgram.cs", work / "WorkspaceProgram.cs")
+    shutil.copy2(source / "extractor.csproj", work / "extractor.csproj")
+    empty_feed = temp_root / "empty-feed"
+    empty_feed.mkdir()
+    config = temp_root / "NuGet.Config"
+    config.write_text("<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><packageSources><clear/><add key=\"empty\" value=\"" + str(empty_feed) + "\"/></packageSources></configuration>", encoding="utf-8")
+    restore = subprocess.run([str(dotnet), "restore", str(work / "extractor.csproj"), "--configfile", str(config), "--ignore-failed-sources"],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env, check=False)
+    if restore.returncode:
+        raise AtlasError(f"offline Roslyn extractor restore failed: {(restore.stderr or restore.stdout).strip()}")
+    build = subprocess.run([str(dotnet), "build", str(work / "extractor.csproj"), "--no-restore", "--configuration", "Release"],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env, check=False)
+    if build.returncode:
+        raise AtlasError(f"Roslyn extractor build failed: {(build.stderr or build.stdout).strip()}")
+    executable = work / "bin" / "Release" / "net10.0" / "extractor.dll"
+    if not executable.is_file():
+        raise AtlasError("Roslyn extractor build produced no executable")
+    sdk_version = subprocess.run([str(dotnet), "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 text=True, check=False).stdout.strip()
+    sdk_format = dotnet.parent / "sdk" / sdk_version / "DotnetTools" / "dotnet-format"
+    build_host = sdk_format / "BuildHost-netcore"
+    if not (build_host / "Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll").is_file():
+        build_host = None
+    if build_host is None:
+        raise AtlasError("installed SDK has no cached Roslyn MSBuild build host")
+    shutil.copytree(build_host, executable.parent / "BuildHost-netcore")
+    return executable
+
+
+def compiler_index(db_arg: str, repo_arg: str, project_relative: str, framework: str) -> dict[str, object]:
+    """Create one immutable Roslyn supplement for the unique current lexical snapshot."""
+    if Path(project_relative).is_absolute() or any(part in {"", ".", ".."} for part in project_relative.split("/")):
+        raise AtlasError(f"compiler project must be a safe repository-relative path: {project_relative!r}")
+    if not project_relative.endswith(".csproj"):
+        raise AtlasError("compiler project must name one .csproj file")
+    db_path = Path(db_arg).expanduser().absolute()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    snapshot, _snapshots, extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
+    _validate_snapshot_fingerprint(snapshot, str(snapshot.get("snapshot_id")))
+    files = snapshot.get("files", [])
+    projects = [entry for entry in files if isinstance(entry, dict) and entry.get("path") == project_relative
+                and entry.get("presence") == "present" and entry.get("type") == "file"]
+    if len(projects) != 1:
+        raise AtlasError(f"compiler project must match exactly one current tracked file: {project_relative}; matches={len(projects)}")
+    project_entry = projects[0]
+    project_dir = Path(project_relative).parent.as_posix()
+    if project_dir == ".":
+        project_dir = ""
+    generated_relative = f"{project_dir + '/' if project_dir else ''}obj"
+    root = Path(live["repository_root"])
+    dotnet_arg = os.environ.get("ATLAS_DOTNET") or shutil.which("dotnet")
+    if not dotnet_arg:
+        raise AtlasError("compiler-index requires a local dotnet executable; set ATLAS_DOTNET to its absolute path")
+    dotnet = Path(dotnet_arg).expanduser().resolve(strict=True)
+    package_cache = Path(os.environ.get("NUGET_PACKAGES", Path.home() / ".nuget" / "packages")).expanduser().absolute()
+    with tempfile.TemporaryDirectory(prefix="atlas-compiler-") as temp_name:
+        temp_root = Path(temp_name)
+        mirror = temp_root / "mirror"
+        mirror.mkdir()
+        tracked_manifest, generated_manifest = _compiler_copy_inputs(root, snapshot, mirror, generated_relative)
+        if not generated_manifest or not any(item.get("logical_path") == f"{generated_relative}/project.assets.json" for item in generated_manifest):
+            raise AtlasError(f"compiler-index requires current offline project assets under {generated_relative}; no target restore or network access was attempted")
+        mirror_project = mirror / project_relative
+        mirror_project.parent.mkdir(parents=True, exist_ok=True)
+        if not mirror_project.is_file():
+            raise AtlasError(f"compiler project is missing from the protected mirror: {project_relative}")
+        env = _compiler_temp_env(temp_root, dotnet, package_cache)
+        executable = _compiler_build_extractor(temp_root, env, dotnet)
+        runtime_env = dict(os.environ)
+        runtime_env.pop("ATLAS_DOTNET", None)
+        run = subprocess.run([str(dotnet), str(executable), str(mirror_project), str(mirror), str(root), framework],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=runtime_env, check=False)
+        if run.returncode:
+            raise AtlasError(f"Roslyn workspace extraction failed; no supplement published: {(run.stderr or run.stdout).strip()}")
+        try:
+            extracted = json.loads(run.stdout)
+        except json.JSONDecodeError as exc:
+            raise AtlasError(f"Roslyn extractor returned invalid JSON; no supplement published: {exc}") from exc
+        if not isinstance(extracted, dict):
+            raise AtlasError("Roslyn extractor returned a non-object; no supplement published")
+        if extracted.get("compiler_errors"):
+            raise AtlasError(f"Roslyn reported compiler errors; no supplement published: {extracted['compiler_errors']}")
+        if any("Error" in str(item) for item in extracted.get("workspace_diagnostics", [])):
+            raise AtlasError(f"MSBuildWorkspace reported failures; no supplement published: {extracted['workspace_diagnostics']}")
+        live_after = _live_inventory_identity(repo_arg)
+        changed, reasons = _focus_source_identity(snapshot, live_after)
+        if changed or reasons:
+            raise AtlasError(f"tracked checkout changed during compiler indexing; no supplement published: {reasons}")
+        generated_after = _compiler_safe_tree(root, generated_relative)
+        if generated_after != generated_manifest:
+            raise AtlasError(f"generated compiler inputs changed during indexing at {generated_relative}; no supplement published")
+        refs = extracted.get("references")
+        if not isinstance(refs, list) or any(not isinstance(ref, dict) or not isinstance(ref.get("sha256"), str) for ref in refs):
+            raise AtlasError("Roslyn reference manifest is incomplete; no supplement published")
+        imports = extracted.get("imports")
+        toolchain = extracted.get("toolchain_assemblies")
+        build_host_files = extracted.get("build_host_files")
+        if not isinstance(imports, list) or not isinstance(toolchain, list) or not isinstance(build_host_files, list):
+            raise AtlasError("Roslyn import or toolchain manifest is incomplete; no supplement published")
+        for relationship in extracted.get("relationships", []):
+            if not isinstance(relationship, dict):
+                raise AtlasError("Roslyn returned a malformed relationship; no supplement published")
+            _verify_compiler_relationship_graph(snapshot, relationship)
+            for anchor_key in ("action_source", "call_site_source", "service_parameter_source", "bound_member_source", "implementation_source"):
+                anchor = relationship.get(anchor_key)
+                if not isinstance(anchor, dict) or not isinstance(anchor.get("path"), str) or not isinstance(anchor.get("sha256"), str):
+                    raise AtlasError(f"compiler relationship has incomplete {anchor_key}; no supplement published")
+                path = str(anchor["path"])
+                saved = next((entry for entry in files if isinstance(entry, dict) and entry.get("path") == path), None)
+                if saved is None or saved.get("presence") != "present" or saved.get("type") != "file" or saved.get("sha256") != anchor["sha256"]:
+                    raise AtlasError(f"compiler relationship anchor does not match tracked lexical snapshot: {path}; no supplement published")
+                span = anchor.get("span")
+                if not isinstance(span, dict) or not isinstance(span.get("start_offset"), int) or not isinstance(span.get("end_offset"), int):
+                    raise AtlasError(f"compiler relationship anchor has invalid span: {path}; no supplement published")
+        input_identity = {
+            "tracked_inputs": tracked_manifest,
+            "generated_inputs": generated_manifest,
+            "references": refs,
+            "imports": imports,
+            "toolchain_assemblies": toolchain,
+            "copied_tool_files": _compiler_copied_tool_files(executable.parent, str(extracted.get("sdk_path") or "")),
+            "build_host_files": build_host_files,
+            "shipped_tool_inputs": _compiler_shipped_tool_inputs(),
+            "dotnet_host": {"path": dotnet.as_posix(), "sha256": hashlib.sha256(dotnet.read_bytes()).hexdigest()},
+            "project": project_relative,
+            "target_framework": framework,
+            "sdk_path": extracted.get("sdk_path"),
+            "roslyn_version": extracted.get("roslyn_version"),
+            "language_version": extracted.get("language_version"),
+            "compilation_options": extracted.get("compilation_options"),
+            "parse_options": extracted.get("parse_options"),
+        }
+        input_hash = hashlib.sha256(_canonical_json(input_identity)).hexdigest()
+        payload: dict[str, object] = {
+            "supplement_schema_version": 1,
+            "binding": {"snapshot_id": snapshot["snapshot_id"], "evidence_fingerprint": snapshot["evidence_fingerprint"],
+                        "repository_root": root.as_posix(), "extractor_identity": extractor_identity,
+                        "project_path": project_relative, "target_framework": framework},
+            "input_identity": input_identity,
+            "input_sha256": input_hash,
+            "provenance": {key: extracted.get(key) for key in ("sdk_path", "roslyn_version", "language_version", "target_framework", "source_trees", "compiler_warnings")},
+            "relationships": extracted.get("relationships", []),
+            "unresolved": extracted.get("unresolved", []),
+            "runtime_DI_selection_proven": False,
+        }
+    content_hash = hashlib.sha256(_canonical_json(payload)).hexdigest()
+    saved_payload = {**payload, "content_sha256": content_hash}
+    serialized = _canonical_json(saved_payload).decode("ascii")
+    connection = _connect_for_index(db_path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute("CREATE TABLE IF NOT EXISTS atlas_compiler_supplements (snapshot_id TEXT NOT NULL, project_path TEXT NOT NULL, content_sha256 TEXT NOT NULL, payload_json TEXT NOT NULL, PRIMARY KEY(snapshot_id,project_path), FOREIGN KEY(snapshot_id) REFERENCES atlas_snapshots(snapshot_id))")
+        previous = connection.execute("SELECT content_sha256,payload_json FROM atlas_compiler_supplements WHERE snapshot_id=? AND project_path=?", (snapshot["snapshot_id"], project_relative)).fetchone()
+        if previous is not None and previous != (content_hash, serialized):
+            try:
+                old_payload = json.loads(previous[1])
+                changed_fields = sorted(key for key in set(old_payload) | set(saved_payload) if old_payload.get(key) != saved_payload.get(key))
+                input_fields = sorted(key for key in set(old_payload.get("input_identity", {})) | set(input_identity)
+                                      if old_payload.get("input_identity", {}).get(key) != input_identity.get(key))
+            except (json.JSONDecodeError, AttributeError):
+                changed_fields, input_fields = ["unreadable_previous_payload"], []
+            raise AtlasError(f"compiler supplement is immutable; conflicting bytes already exist; changed_fields={changed_fields}; changed_inputs={input_fields}; old={previous[0]}; new={content_hash}")
+        if previous is None:
+            connection.execute("INSERT INTO atlas_compiler_supplements(snapshot_id,project_path,content_sha256,payload_json) VALUES (?,?,?,?)", (snapshot["snapshot_id"], project_relative, content_hash, serialized))
+        connection.commit()
+    except (sqlite3.Error, AtlasError):
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+    return {"result": "compiler_indexed", "snapshot_id": snapshot["snapshot_id"], "project_path": project_relative,
+            "relationship_count": len(payload["relationships"]), "unresolved_count": len(payload["unresolved"]),
+            "content_sha256": content_hash, "input_sha256": input_hash, "runtime_DI_selection_proven": False}
+
+
+def _current_compiler_supplements(db_path: Path, snapshot: dict[str, object], repo: Path) -> list[dict[str, object]]:
+    """Load and recheck every supplement bound to this snapshot; stale records fail closed."""
+    uri = db_path.absolute().as_uri() + "?mode=ro"
+    with sqlite3.connect(uri, uri=True) as connection:
+        exists = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_compiler_supplements'").fetchone()
+        if exists is None:
+            return []
+        rows = connection.execute("SELECT project_path,content_sha256,payload_json FROM atlas_compiler_supplements WHERE snapshot_id=? ORDER BY project_path", (snapshot["snapshot_id"],)).fetchall()
+    output: list[dict[str, object]] = []
+    for project_path, stored_hash, payload_json in rows:
+        try:
+            payload = json.loads(payload_json)
+        except json.JSONDecodeError as exc:
+            raise AtlasError(f"compiler supplement is corrupt for {project_path}: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise AtlasError(f"compiler supplement is not an object for {project_path}")
+        stable = {key: value for key, value in payload.items() if key != "content_sha256"}
+        actual_hash = hashlib.sha256(_canonical_json(stable)).hexdigest()
+        if stored_hash != actual_hash or payload.get("content_sha256") != actual_hash:
+            raise AtlasError(f"compiler supplement content hash mismatch for {project_path}")
+        binding = payload.get("binding")
+        if (not isinstance(binding, dict) or binding.get("snapshot_id") != snapshot.get("snapshot_id")
+                or binding.get("evidence_fingerprint") != snapshot.get("evidence_fingerprint")
+                or binding.get("repository_root") != repo.as_posix() or binding.get("project_path") != project_path):
+            raise AtlasError(f"compiler supplement identity mismatch for {project_path}")
+        inputs = payload.get("input_identity")
+        if not isinstance(inputs, dict):
+            raise AtlasError(f"compiler supplement input identity is missing for {project_path}")
+        input_hash = hashlib.sha256(_canonical_json(inputs)).hexdigest()
+        if payload.get("input_sha256") != input_hash:
+            raise AtlasError(f"compiler supplement input hash mismatch for {project_path}")
+        if inputs.get("tracked_inputs") != [{"logical_path": f"tracked/{entry['path']}", "path": entry["path"],
+                                               "sha256": entry.get("sha256"), "size_bytes": entry.get("size_bytes"),
+                                               "presence": entry.get("presence"), "type": entry.get("type"),
+                                               "git_mode": entry.get("git_mode")}
+                                              for entry in snapshot.get("files", []) if isinstance(entry, dict)]:
+            raise AtlasError(f"compiler supplement tracked inputs are stale for {project_path}")
+        relative_obj = str(Path(project_path).parent / "obj")
+        if relative_obj.startswith("./"):
+            relative_obj = relative_obj[2:]
+        current_generated = _compiler_safe_tree(repo, relative_obj)
+        if current_generated != inputs.get("generated_inputs"):
+            raise AtlasError(f"compiler supplement generated inputs are stale for {project_path}: {relative_obj}")
+        refs = inputs.get("references")
+        if not isinstance(refs, list):
+            raise AtlasError(f"compiler supplement references are missing for {project_path}")
+        for reference in refs:
+            if not isinstance(reference, dict):
+                raise AtlasError(f"compiler supplement has malformed reference for {project_path}")
+            display = reference.get("display")
+            expected = reference.get("sha256")
+            if not isinstance(display, str) or not isinstance(expected, str) or not Path(display).is_file():
+                raise AtlasError(f"compiler supplement reference is missing for {project_path}: {display!r}")
+            if hashlib.sha256(Path(display).read_bytes()).hexdigest() != expected:
+                raise AtlasError(f"compiler supplement reference changed for {project_path}: {display}")
+        for import_record in inputs.get("imports", []):
+            if not isinstance(import_record, dict):
+                raise AtlasError(f"compiler supplement has malformed import record for {project_path}")
+            logical = import_record.get("logical_path")
+            stored_path = import_record.get("path")
+            expected = import_record.get("sha256")
+            if not isinstance(logical, str) or not isinstance(stored_path, str) or not isinstance(expected, str):
+                raise AtlasError(f"compiler supplement import identity is incomplete for {project_path}")
+            if logical.startswith("repo/"):
+                path = repo / stored_path
+            elif logical.startswith("external/"):
+                path = Path(stored_path)
+            else:
+                raise AtlasError(f"compiler supplement import has an unsupported durable identity for {project_path}: {logical}")
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                raise AtlasError(f"compiler supplement import changed or is missing for {project_path}: {logical}")
+        for assembly in inputs.get("toolchain_assemblies", []):
+            if not isinstance(assembly, dict) or not isinstance(assembly.get("path"), str) or not isinstance(assembly.get("sha256"), str):
+                raise AtlasError(f"compiler supplement toolchain identity is incomplete for {project_path}")
+            path = Path(str(assembly["path"]))
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != assembly["sha256"]:
+                raise AtlasError(f"compiler supplement toolchain assembly changed or is missing for {project_path}: {path}")
+        for copied in inputs.get("copied_tool_files", []):
+            if not isinstance(copied, dict) or not isinstance(copied.get("path"), str) or not isinstance(copied.get("sha256"), str):
+                raise AtlasError(f"compiler supplement copied SDK tool identity is malformed for {project_path}")
+            path = Path(copied["path"])
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != copied["sha256"]:
+                raise AtlasError(f"compiler supplement copied SDK tool file changed or is missing for {project_path}: {path}")
+        sdk_path = inputs.get("sdk_path")
+        if not isinstance(sdk_path, str) or not sdk_path:
+            raise AtlasError(f"compiler supplement SDK identity is missing for {project_path}")
+        for build_host_file in inputs.get("build_host_files", []):
+            if not isinstance(build_host_file, dict) or not isinstance(build_host_file.get("path"), str) or not isinstance(build_host_file.get("sha256"), str):
+                raise AtlasError(f"compiler supplement BuildHost file identity is malformed for {project_path}")
+            path = Path(sdk_path) / "DotnetTools" / "dotnet-format" / "BuildHost-netcore" / build_host_file["path"]
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != build_host_file["sha256"]:
+                raise AtlasError(f"compiler supplement BuildHost file changed or is missing for {project_path}: {path}")
+        if inputs.get("shipped_tool_inputs") != _compiler_shipped_tool_inputs():
+            raise AtlasError(f"compiler supplement shipped extractor inputs changed for {project_path}")
+        dotnet_host = inputs.get("dotnet_host")
+        if not isinstance(dotnet_host, dict) or not isinstance(dotnet_host.get("path"), str) or not isinstance(dotnet_host.get("sha256"), str):
+            raise AtlasError(f"compiler supplement dotnet host identity is malformed for {project_path}")
+        dotnet_path = Path(dotnet_host["path"])
+        if not dotnet_path.is_file() or hashlib.sha256(dotnet_path.read_bytes()).hexdigest() != dotnet_host["sha256"]:
+            raise AtlasError(f"compiler supplement dotnet host changed or is missing for {project_path}: {dotnet_path}")
+        output.append(payload)
+    return output
+
+
 def _impact_render(document: dict[str, object], max_bytes: int) -> bytes:
     budget = document["budget"]
     assert isinstance(budget, dict)
@@ -2426,6 +2908,29 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
         "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes including newline; conservative byte proxy, not model tokens",
                    "stdout_bytes_including_newline": 0},
     }
+    supplements = _current_compiler_supplements(db_path, snapshot, root)
+    if supplements:
+        compiler_callers = []
+        for supplement in supplements:
+            relationships = supplement.get("relationships", [])
+            if not isinstance(relationships, list):
+                raise AtlasError("compiler supplement relationships are malformed")
+            for relation in relationships:
+                if not isinstance(relation, dict):
+                    raise AtlasError("compiler supplement contains a malformed relationship")
+                if relation.get("lexical_implementation_fact_id") == method.get("id"):
+                    compiler_callers.append({"route": relation.get("route"), "http_method": relation.get("http_method"),
+                                             "action_method": relation.get("action_method"),
+                                             "service_type": relation.get("service_type"),
+                                             "bound_member": relation.get("bound_member"),
+                                             "implementation_method": relation.get("implementation_method"),
+                                             "source_anchors": [relation.get(key) for key in ("action_source", "call_site_source", "service_parameter_source", "bound_member_source", "implementation_source")],
+                                             "registrations": relation.get("registrations", []),
+                                             "claim": "compiler_confirmed_interface_caller_associated_with_implementation",
+                                             "compiler_binding_confirmed": True, "runtime_DI_selection_proven": False})
+        if compiler_callers:
+            document["compiler_confirmed_interface_callers"] = sorted(compiler_callers,
+                key=lambda item: (str(item.get("route")), str(item.get("action_method")), str(item.get("bound_member"))))
     encoded = _impact_render(document, max_bytes)
     return document, encoded, 0
 
@@ -2628,6 +3133,41 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
     root_calls = invocations(root_method, 1)
     root_unresolved = [u for u in unresolved if u.get("fact_id") in {route["id"], root_method["id"]}]
     mandatory_snippets = _source_texts(repo_root, mandatory_refs)
+    compiler_relations: list[dict[str, object]] = []
+    compiler_snippets: list[dict[str, object]] = []
+    supplements = _current_compiler_supplements(db_path, snapshot, repo_root)
+    action_span = root_method.get("source", {}).get("span", {})
+    action_path = root_method.get("source", {}).get("path")
+    for supplement in supplements:
+        relationships = supplement.get("relationships", [])
+        if not isinstance(relationships, list):
+            raise AtlasError("compiler supplement relationships are malformed")
+        for relation in relationships:
+            if not isinstance(relation, dict):
+                raise AtlasError("compiler supplement contains a malformed relationship")
+            anchor = relation.get("action_source")
+            span = anchor.get("span") if isinstance(anchor, dict) else None
+            if isinstance(relation, dict) and relation.get("lexical_route_fact_id") == route_fact_id:
+                compiler_relations.append(relation)
+    if compiler_relations:
+        compiler_refs: list[tuple[str, dict[str, object]]] = []
+        for index, relation in enumerate(compiler_relations):
+            for key in ("action_source", "call_site_source", "service_parameter_source", "bound_member_source", "implementation_source"):
+                source = relation.get(key)
+                if not isinstance(source, dict):
+                    raise AtlasError(f"compiler relation has no {key} source anchor")
+                compiler_refs.append((f"compiler:{index}:{key}", source))
+            registrations = relation.get("registrations", [])
+            if not isinstance(registrations, list):
+                raise AtlasError("compiler relation registrations are malformed")
+            for reg_index, registration in enumerate(registrations):
+                source = registration.get("source") if isinstance(registration, dict) else None
+                if not isinstance(source, dict):
+                    raise AtlasError("compiler registration source anchor is missing")
+                compiler_refs.append((f"compiler:{index}:registration:{reg_index}", source))
+                if registration.get("runtime_DI_selection_proven") is not False:
+                    raise AtlasError("compiler registration must remain labeled runtime-unproven")
+        compiler_snippets = _source_texts(repo_root, compiler_refs)
     def bundle_fact_ids(value: object) -> set[str]:
         found: set[str] = set()
         if isinstance(value, dict):
@@ -2700,6 +3240,14 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
                           "limitations": graph.get("limitations", []), "traversal_note": "All cross-file relationships are lexical candidates; no receiver, registration, overload, or invocation is resolved."},
         "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead", "stdout_bytes_including_newline": 0}
     }
+    if compiler_relations:
+        document["compiler_relationships"] = compiler_relations
+        document["compiler_source_snippets"] = compiler_snippets
+        document["compiler_relationship_semantics"] = {
+            "compiler_binding_confirmed": True,
+            "registrations_are_source_syntax_only": True,
+            "runtime_DI_selection_proven": False,
+        }
     encoded = _evidence_pack_render(document, max_bytes)
     for bundle in complete_bundles:
         staged_snippets = dict(selected_snippets)
@@ -3798,6 +4346,11 @@ def main(argv: list[str] | None = None) -> int:
     index_parser = commands.add_parser("index", help="capture and durably save a tracked-file inventory")
     index_parser.add_argument("--repo", required=True)
     index_parser.add_argument("--db", required=True)
+    compiler_index_parser = commands.add_parser("compiler-index", help="capture one immutable offline Roslyn supplement for a tracked C# project")
+    compiler_index_parser.add_argument("--repo", required=True)
+    compiler_index_parser.add_argument("--db", required=True)
+    compiler_index_parser.add_argument("--project", required=True, help="exact repository-relative .csproj path")
+    compiler_index_parser.add_argument("--framework", required=True, help="target framework moniker evaluated from the project")
     query_parser = commands.add_parser("query", help="retrieve a saved inventory")
     query_parser.add_argument("--db", required=True)
     query_parser.add_argument("--snapshot", required=True)
@@ -3911,6 +4464,8 @@ def main(argv: list[str] | None = None) -> int:
         encoded_output = None
         if args.command == "index":
             output = save(args.db, capture(args.repo))
+        elif args.command == "compiler-index":
+            output = compiler_index(args.db, args.repo, args.project, args.framework)
         elif args.command == "query":
             output = query(args.db, args.snapshot, args.path, args.graph)
         elif args.command == "discover":

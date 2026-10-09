@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="WorkspaceProgram.cs" />
+    <Reference Include="Microsoft.CodeAnalysis"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.CodeAnalysis.dll</HintPath></Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.CodeAnalysis.CSharp.dll</HintPath></Reference>
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.CodeAnalysis.Workspaces.dll</HintPath></Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath></Reference>
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.CodeAnalysis.Workspaces.MSBuild.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Build.Locator"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/BuildHost-netcore/Microsoft.Build.Locator.dll</HintPath></Reference>
+    <Reference Include="System.Composition.AttributedModel"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/System.Composition.AttributedModel.dll</HintPath></Reference>
+    <Reference Include="System.Composition.Convention"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/System.Composition.Convention.dll</HintPath></Reference>
+    <Reference Include="System.Composition.Hosting"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/System.Composition.Hosting.dll</HintPath></Reference>
+    <Reference Include="System.Composition.Runtime"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/System.Composition.Runtime.dll</HintPath></Reference>
+    <Reference Include="System.Composition.TypedParts"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/System.Composition.TypedParts.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Build"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Build.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Build.Framework"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Build.Framework.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Extensions.DependencyInjection.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Extensions.Logging"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Extensions.Logging.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Extensions.Logging.Abstractions.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Extensions.Options"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Extensions.Options.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Extensions.Primitives"><HintPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format/Microsoft.Extensions.Primitives.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
