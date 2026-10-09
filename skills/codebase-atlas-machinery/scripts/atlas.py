@@ -35,6 +35,25 @@ SOURCE_CALL_GRAPH_CAPS = {
     "interface_candidate_checks": 2_000_000,
     "compatibility_records": 2_000_000,
 }
+RUNTIME_OBSERVATION_SCHEMA_VERSION = 1
+RUNTIME_PROFILE_OVERRIDES = {
+    "local-storage": {
+        "interface_type": "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage",
+        "configuration_key": "AdminTourManagement:Storage:TourImage:AccountName",
+        "configuration_environment_key": "AdminTourManagement__Storage__TourImage__AccountName",
+        "configuration_state": "empty",
+        "configuration_probe": None,
+        "expected_runtime_type_leaf": "LocalDiskTourAssetStorage",
+    },
+    "cloud-storage": {
+        "interface_type": "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage",
+        "configuration_key": "AdminTourManagement:Storage:TourImage:AccountName",
+        "configuration_environment_key": "AdminTourManagement__Storage__TourImage__AccountName",
+        "configuration_state": "probe",
+        "configuration_probe": "atlasprobe",
+        "expected_runtime_type_leaf": "AzureBlobTourAssetStorage",
+    },
+}
 LEXICAL_METHOD_MANIFEST_SCHEMA_VERSION = 1
 LEXICAL_METHOD_MANIFEST_MAX_METHODS = 250000
 LEXICAL_METHOD_MANIFEST_MAX_BYTES = 67108864
@@ -4242,6 +4261,896 @@ def _current_compiler_supplements(db_path: Path, snapshot: dict[str, object], re
     return output
 
 
+def _runtime_fqn(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    result = value.removeprefix("global::")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+", result):
+        return None
+    return result
+
+
+def _runtime_type_fact(snapshot: dict[str, object], full_name: str) -> dict[str, object]:
+    graph = snapshot.get("source_graph")
+    facts = graph.get("facts") if isinstance(graph, dict) else None
+    if not isinstance(facts, list):
+        raise AtlasError("runtime-index requires the current source-fact graph")
+    matches = [fact for fact in facts if isinstance(fact, dict) and fact.get("kind") == "type_declaration"
+               and fact.get("arity") == 0
+               and ".".join(part for part in (fact.get("namespace"), fact.get("name"))
+                            if isinstance(part, str) and part) == full_name]
+    if len(matches) != 1 or not isinstance(matches[0].get("source"), dict):
+        raise AtlasError(f"runtime profile source type must resolve to one saved nongeneric declaration: {full_name}")
+    return matches[0]
+
+
+def _runtime_source_candidates(snapshot: dict[str, object], supplement: dict[str, object], interface_name: str,
+                               candidate_name: str) -> tuple[dict[str, object], dict[str, object], list[dict[str, object]]]:
+    interface_fact = _runtime_type_fact(snapshot, interface_name)
+    candidate_fact = _runtime_type_fact(snapshot, candidate_name)
+    graph = supplement.get("source_call_graph")
+    edges = graph.get("edges") if isinstance(graph, dict) else None
+    if not isinstance(edges, list):
+        raise AtlasError("runtime profile requires a validated compiler source-call graph")
+    compiler_interface = f"global::{interface_name}"
+    compiler_candidate = f"global::{candidate_name}"
+    candidates: list[dict[str, object]] = []
+    for edge in edges:
+        if not isinstance(edge, dict):
+            raise AtlasError("runtime compiler graph contains a malformed edge")
+        binding = edge.get("interface_binding")
+        if not isinstance(binding, dict) or binding.get("bound_interface_type") != compiler_interface:
+            continue
+        if binding.get("bound_interface_type_id") != interface_fact.get("type_id"):
+            raise AtlasError("runtime compiler interface edge does not join its exact source type fact")
+        if binding.get("candidate_type") != compiler_candidate:
+            continue
+        if (binding.get("candidate_type_id") != candidate_fact.get("type_id")
+                or binding.get("compiler_implementation_match") is not True
+                or binding.get("runtime_DI_selection_proven") is not False):
+            raise AtlasError("runtime compiler candidate does not join its exact source type fact")
+        call_source, implementation_source = edge.get("call_site_source"), binding.get("implementation_method_source")
+        if not isinstance(call_source, dict) or not isinstance(implementation_source, dict):
+            raise AtlasError("runtime compiler candidate lacks source anchors")
+        candidates.append({
+            "caller_method": edge.get("caller_method"),
+            "caller_lexical_method_fact_id": edge.get("caller_lexical_method_fact_id"),
+            "call_site_source": call_source,
+            "implementation_method": binding.get("implementation_method"),
+            "implementation_method_source": implementation_source,
+            "candidate_identity": binding.get("candidate_identity"),
+        })
+    candidates.sort(key=lambda item: (str(item.get("caller_lexical_method_fact_id")),
+                                      str(item.get("call_site_source", {}).get("path")),
+                                      int(item.get("call_site_source", {}).get("span", {}).get("start_offset", 0)),
+                                      str(item.get("candidate_identity"))))
+    if not candidates:
+        raise AtlasError(f"runtime profile expected type is not a supported source candidate for {interface_name}: {candidate_name}")
+    return interface_fact, candidate_fact, candidates
+
+
+def _runtime_candidate_name_for_profile(supplement: dict[str, object], interface_name: str,
+                                        expected_leaf: str) -> str:
+    graph = supplement.get("source_call_graph")
+    edges = graph.get("edges") if isinstance(graph, dict) else None
+    if not isinstance(edges, list):
+        raise AtlasError("runtime profile requires a validated compiler source-call graph")
+    expected_interface = f"global::{interface_name}"
+    names = set()
+    for edge in edges:
+        binding = edge.get("interface_binding") if isinstance(edge, dict) else None
+        candidate = binding.get("candidate_type") if isinstance(binding, dict) else None
+        if binding is None or binding.get("bound_interface_type") != expected_interface:
+            continue
+        canonical = _runtime_fqn(candidate)
+        if canonical is not None and canonical.rsplit(".", 1)[-1] == expected_leaf:
+            names.add(canonical)
+    if len(names) != 1:
+        raise AtlasError(f"runtime profile source candidate leaf must identify exactly one compiler-bound source type: {expected_leaf}; matches={len(names)}")
+    return next(iter(names))
+
+
+def _runtime_hash_file(path: object, expected: object, *, label: str) -> Path:
+    if not isinstance(path, str) or not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+        raise AtlasError(f"runtime observation {label} has an invalid file identity")
+    lexical = Path(path)
+    if not lexical.is_absolute() or lexical.as_posix() != lexical.resolve(strict=True).as_posix():
+        raise AtlasError(f"runtime observation {label} path is not canonical and absolute")
+    target = _runtime_no_symlink_path(lexical, label=label)
+    try:
+        actual = hashlib.sha256(target.read_bytes()).hexdigest()
+    except OSError as exc:
+        raise AtlasError(f"cannot recheck runtime observation {label} file: {target}") from exc
+    if actual != expected:
+        raise AtlasError(f"runtime observation {label} file changed: {target}")
+    return target
+
+
+def _runtime_artifact_root(db_path: Path, snapshot_id: object, project_path: object,
+                           interface_name: object, repo_root: Path) -> Path:
+    key = hashlib.sha256(_canonical_json({
+        "database": db_path.expanduser().absolute().as_posix(),
+        "snapshot": snapshot_id, "project": project_path, "interface": interface_name,
+    })).hexdigest()
+    root = Path(tempfile.gettempdir()).resolve(strict=True) / "atlas-runtime-observations" / key
+    _runtime_check_no_symlink_components(root, label="artifact root")
+    resolved = root.resolve(strict=False)
+    try:
+        resolved.relative_to(repo_root.resolve(strict=True))
+    except ValueError:
+        return resolved
+    raise AtlasError("runtime observation artifact root must be outside the target repository")
+
+
+def _runtime_check_no_symlink_components(path: Path, *, label: str) -> None:
+    absolute = path.absolute()
+    for parent in reversed((absolute, *absolute.parents)):
+        if parent.is_symlink():
+            raise AtlasError(f"runtime {label} path contains a symbolic link: {parent}")
+
+
+def _runtime_no_symlink_dir(path: Path, *, label: str) -> Path:
+    absolute = path.absolute()
+    _runtime_check_no_symlink_components(absolute, label=label)
+    if not absolute.exists() or not absolute.is_dir():
+        raise AtlasError(f"runtime {label} directory is missing or unsafe: {absolute}")
+    resolved = absolute.resolve(strict=True)
+    if absolute.as_posix() != resolved.as_posix():
+        raise AtlasError(f"runtime {label} directory path is not canonical: {absolute}")
+    return resolved
+
+
+def _runtime_no_symlink_path(path: Path, *, label: str) -> Path:
+    absolute = path.absolute()
+    _runtime_check_no_symlink_components(absolute, label=label)
+    if not absolute.exists() or not absolute.is_file():
+        raise AtlasError(f"runtime {label} path is missing or not a regular file: {absolute}")
+    return absolute.resolve(strict=True)
+
+
+def _runtime_require_under(path: Path, roots: list[Path], *, label: str) -> Path:
+    checked = _runtime_no_symlink_path(path, label=label)
+    for root in roots:
+        try:
+            resolved_root = root.resolve(strict=True)
+        except OSError:
+            continue
+        try:
+            checked.relative_to(resolved_root)
+            return checked
+        except ValueError:
+            continue
+    raise AtlasError(f"runtime {label} path is outside its approved source/build/runtime roots: {checked}")
+
+
+def _runtime_identity_projection(value: object, replacements: list[tuple[str, str]]) -> object:
+    if isinstance(value, str):
+        normalized = value
+        for prefix, replacement in replacements:
+            if normalized == prefix:
+                return replacement
+            if normalized.startswith(prefix.rstrip("/") + "/"):
+                normalized = replacement + normalized[len(prefix.rstrip("/")):]
+        return normalized
+    if isinstance(value, list):
+        return [_runtime_identity_projection(item, replacements) for item in value]
+    if isinstance(value, dict):
+        return {key: _runtime_identity_projection(item, replacements) for key, item in value.items()}
+    return value
+
+
+def _runtime_validate_result(
+    result: object, profile: str, spec: dict[str, object], interface_name: str, candidate_name: str,
+    snapshot: dict[str, object], repo_root: Path, supplement: dict[str, object], artifact_root: Path,
+) -> dict[str, object]:
+    top_fields = {"schema_version", "operation_nonce", "profile", "profile_inputs", "capture",
+                  "termination", "process", "input_identity", "input_identity_projection", "input_sha256"}
+    if not isinstance(result, dict) or set(result) != top_fields:
+        raise AtlasError("runtime observer returned an unsupported or open record shape")
+    nonce = result.get("operation_nonce")
+    if (result.get("schema_version") != RUNTIME_OBSERVATION_SCHEMA_VERSION or result.get("profile") != profile
+            or not isinstance(nonce, str)
+            or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", nonce)):
+        raise AtlasError("runtime observer returned a wrong profile, schema version, or operation nonce")
+    expected_profile_inputs = {"key": spec["configuration_key"], "state": spec["configuration_state"],
+                               "probe": spec["configuration_probe"]}
+    if result.get("profile_inputs") != expected_profile_inputs:
+        raise AtlasError("runtime observer profile inputs do not match the closed approved configuration")
+    input_identity = result.get("input_identity")
+    identity_fields = {
+        "schema_version", "binding", "snapshot_id", "compiler_supplement_sha256",
+        "compiler_input_identity", "compiler_input_identity_sha256", "source_snapshot_files",
+        "tracked_inputs", "generated_inputs", "copied_source_inputs", "observer_source",
+        "observer_project", "observer_assembly", "observer_outputs", "producer_identity", "application_output_root",
+        "application_entry_assembly_path", "application_outputs", "application_output_manifest_sha256",
+        "dotnet_host", "native_runtime_files", "loaded_runtime_assemblies", "project", "framework",
+    }
+    if not isinstance(input_identity, dict) or set(input_identity) != identity_fields or input_identity.get("schema_version") != 1:
+        raise AtlasError("runtime input identity has an unsupported or open schema")
+    compiler_input = supplement.get("input_identity")
+    supplement_hash = supplement.get("content_sha256")
+    if not isinstance(compiler_input, dict) or not isinstance(supplement_hash, str):
+        raise AtlasError("runtime observation has no current compiler input binding")
+    if (input_identity.get("compiler_input_identity") != compiler_input
+            or input_identity.get("compiler_supplement_sha256") != supplement_hash
+            or input_identity.get("compiler_input_identity_sha256") != hashlib.sha256(_canonical_json(compiler_input)).hexdigest()
+            or input_identity.get("snapshot_id") != snapshot.get("snapshot_id")
+            or input_identity.get("source_snapshot_files") != snapshot.get("files")
+            or input_identity.get("tracked_inputs") != compiler_input.get("tracked_inputs")
+            or input_identity.get("generated_inputs") != compiler_input.get("generated_inputs")
+            or input_identity.get("project") != compiler_input.get("project")
+            or input_identity.get("framework") != compiler_input.get("target_framework")):
+        raise AtlasError("runtime observation source/compiler identity is stale or mismatched")
+    binding = input_identity.get("binding")
+    expected_binding = {
+        "snapshot_id": snapshot.get("snapshot_id"), "project_path": compiler_input.get("project"),
+        "framework": compiler_input.get("target_framework"), "profile": profile,
+        "interface_type_name": interface_name,
+        "entry_assembly_name": str(compiler_input.get("compilation_options", {}).get("module_name", "")).removesuffix(".dll"),
+        "expected_runtime_type_name": candidate_name,
+        "account_name_state": spec["configuration_state"], "account_name_probe": spec["configuration_probe"],
+    }
+    if binding != expected_binding:
+        raise AtlasError("runtime input binding does not match the validated source interface and profile")
+    copied = input_identity.get("copied_source_inputs")
+    if not isinstance(copied, list) or not copied:
+        raise AtlasError("runtime observation has no copied source manifest")
+    saved_tracked = {entry.get("logical_path"): entry for entry in compiler_input.get("tracked_inputs", [])
+                     if isinstance(entry, dict)}
+    for item in copied:
+        if not isinstance(item, dict) or set(item) != {"logical_path", "sha256", "size_bytes"}:
+            raise AtlasError("runtime copied-source manifest entry is malformed")
+        saved = saved_tracked.get(item.get("logical_path"))
+        if saved is None or item.get("sha256") != saved.get("sha256") or item.get("size_bytes") != saved.get("size_bytes"):
+            raise AtlasError("runtime copied-source input differs from the saved compiler manifest")
+        logical = str(item.get("logical_path", ""))
+        relative = logical.removeprefix("tracked/").lower()
+        if not logical.startswith("tracked/") or any(part in relative for part in ("appsettings", "launchsettings", "usersecrets", "user-secrets", "credential", "secret")):
+            raise AtlasError("runtime source mirror contains a prohibited settings or credential input")
+        if Path(relative).suffix in {".pem", ".key", ".pfx", ".p12", ".crt", ".cer"}:
+            raise AtlasError("runtime source mirror contains a prohibited private-key or certificate input")
+    observer_source = input_identity.get("observer_source")
+    observer_project = input_identity.get("observer_project")
+    observer_assembly = input_identity.get("observer_assembly")
+    observer_outputs = input_identity.get("observer_outputs")
+    if not all(isinstance(item, dict) for item in (observer_source, observer_project, observer_assembly)) or not isinstance(observer_outputs, list):
+        raise AtlasError("runtime observer build identity is incomplete")
+    runtime_root = Path(__file__).resolve().parent / "runtime"
+    for item, path in ((observer_source, runtime_root / "StartupHook.cs"),
+                       (observer_project, runtime_root / "Atlas.RuntimeStartupObserver.csproj")):
+        if item.get("path") != path.as_posix() or item.get("sha256") != hashlib.sha256(path.read_bytes()).hexdigest():
+            raise AtlasError("runtime observer source identity changed")
+    producer_identity = input_identity.get("producer_identity")
+    atlas_source = Path(__file__).resolve()
+    launcher_source = atlas_source.parent / "runtime_index_launch.py"
+    expected_producers = {
+        "atlas_source": {"path": atlas_source.as_posix(), "sha256": hashlib.sha256(atlas_source.read_bytes()).hexdigest()},
+        "runtime_launcher_source": {"path": launcher_source.as_posix(), "sha256": hashlib.sha256(launcher_source.read_bytes()).hexdigest()},
+    }
+    if producer_identity != expected_producers:
+        raise AtlasError("runtime observation producer source identity is stale or mismatched")
+    artifact_root = _runtime_no_symlink_dir(artifact_root, label="artifact root")
+    observer_path = _runtime_no_symlink_path(Path(str(observer_assembly.get("path"))), label="observer assembly")
+    try:
+        observer_path.relative_to(artifact_root)
+    except ValueError as exc:
+        raise AtlasError("runtime observer binary is outside retained artifacts") from exc
+    observer_binary = _runtime_hash_file(observer_assembly.get("path"), observer_assembly.get("sha256"), label="observer assembly")
+    expected_record_dir = artifact_root / f"{profile}-{nonce}"
+    process = result.get("process")
+    if not isinstance(process, dict):
+        raise AtlasError("runtime process receipt has an unsupported schema")
+    process_dir_path = Path(str(process.get("artifact_dir")))
+    if not process_dir_path.is_absolute() or process_dir_path.as_posix() != process_dir_path.resolve(strict=True).as_posix():
+        raise AtlasError("runtime process artifact directory path is not canonical and absolute")
+    process_artifact_dir = _runtime_no_symlink_dir(process_dir_path, label="process artifact")
+    if process_artifact_dir != expected_record_dir.resolve(strict=True):
+        raise AtlasError("runtime process artifacts are not under the canonical profile/nonce directory")
+    if not observer_outputs:
+        raise AtlasError("runtime observer output manifest is empty")
+    for item in observer_outputs:
+        if not isinstance(item, dict) or set(item) != {"path", "sha256", "size_bytes"}:
+            raise AtlasError("runtime observer output entry is malformed")
+        relative = item.get("path")
+        if (not isinstance(relative, str) or Path(relative).is_absolute()
+                or any(part in {"", ".", ".."} for part in relative.split("/"))):
+            raise AtlasError("runtime observer output has an unsafe relative path")
+        path = observer_binary.parent / relative
+        target = _runtime_hash_file(path.as_posix(), item.get("sha256"), label="observer output")
+        if target.stat().st_size != item.get("size_bytes"):
+            raise AtlasError("runtime observer output size differs from its manifest")
+    outputs = input_identity.get("application_outputs")
+    output_root_value = input_identity.get("application_output_root")
+    entry_path_value = input_identity.get("application_entry_assembly_path")
+    if not isinstance(outputs, list) or not outputs or not isinstance(output_root_value, str) or not isinstance(entry_path_value, str):
+        raise AtlasError("runtime observation has no application output manifest")
+    output_root = _runtime_no_symlink_dir(Path(output_root_value), label="application output")
+    try:
+        output_root.relative_to(artifact_root)
+    except ValueError as exc:
+        raise AtlasError("runtime application build outputs are outside retained artifacts") from exc
+    output_by_path: dict[str, dict[str, object]] = {}
+    for item in outputs:
+        if not isinstance(item, dict) or set(item) != {"path", "sha256", "size_bytes"}:
+            raise AtlasError("runtime application output entry is malformed")
+        relative = item.get("path")
+        if not isinstance(relative, str) or Path(relative).is_absolute() or any(part in {"", ".", ".."} for part in relative.split("/")):
+            raise AtlasError("runtime application output has an unsafe relative path")
+        if relative in output_by_path:
+            raise AtlasError("runtime application output manifest repeats a path")
+        lowered = relative.lower()
+        if any(part in lowered for part in ("appsettings", "launchsettings", "usersecrets", "user-secrets", "credential", "secret")):
+            raise AtlasError("runtime application output contains prohibited configuration material")
+        if Path(relative).suffix.lower() in {".pem", ".key", ".pfx", ".p12", ".crt", ".cer"}:
+            raise AtlasError("runtime application output contains a prohibited key or certificate")
+        full_path = output_root.joinpath(*relative.split("/"))
+        target = _runtime_hash_file(full_path.as_posix(), item.get("sha256"), label="application output")
+        if target.stat().st_size != item.get("size_bytes"):
+            raise AtlasError("runtime application output size differs from its manifest")
+        output_by_path[relative] = item
+    if hashlib.sha256(_canonical_json(outputs)).hexdigest() != input_identity.get("application_output_manifest_sha256"):
+        raise AtlasError("runtime application output manifest hash mismatch")
+    entry_path = _runtime_no_symlink_path(Path(entry_path_value), label="entry assembly")
+    try:
+        entry_relative = entry_path.relative_to(output_root).as_posix()
+    except ValueError as exc:
+        raise AtlasError("runtime entry assembly is outside retained outputs") from exc
+    if entry_relative not in output_by_path:
+        raise AtlasError("runtime entry assembly is absent from the application output manifest")
+    dotnet_host = input_identity.get("dotnet_host")
+    if not isinstance(dotnet_host, dict) or set(dotnet_host) != {"path", "sha256"}:
+        raise AtlasError("runtime dotnet host identity is malformed")
+    dotnet_path = _runtime_no_symlink_path(Path(str(dotnet_host.get("path"))), label="dotnet host")
+    dotnet_root = dotnet_path.parent
+    runtime_roots = [dotnet_root / "shared" / framework for framework in
+                     ("Microsoft.NETCore.App", "Microsoft.AspNetCore.App")]
+    approved_loaded_roots = [output_root, observer_binary.parent, *runtime_roots]
+    # The execution host establishes the roots below; reject path aliases and
+    # symlink escapes before opening any tool/runtime file for hashing.
+    dotnet_path = _runtime_hash_file(dotnet_host.get("path"), dotnet_host.get("sha256"), label="dotnet host")
+    native_files = input_identity.get("native_runtime_files")
+    if not isinstance(native_files, list) or not native_files:
+        raise AtlasError("runtime native host/runtime manifest is missing")
+    native_paths: dict[str, dict[str, object]] = {}
+    for item in native_files:
+        if not isinstance(item, dict) or set(item) != {"path", "sha256", "size_bytes"}:
+            raise AtlasError("runtime native host/runtime file entry is malformed")
+        safe_path = _runtime_no_symlink_path(Path(str(item.get("path"))), label="native host/runtime file")
+        native_allowed = safe_path == dotnet_path
+        for root in (dotnet_root / "host", dotnet_root / "host" / "fxr", *runtime_roots):
+            try:
+                safe_path.relative_to(root.resolve(strict=True))
+                native_allowed = True
+                break
+            except (OSError, ValueError):
+                continue
+        if not native_allowed:
+            raise AtlasError("runtime native host/runtime file is outside the approved dotnet host and shared runtime roots")
+        target = _runtime_hash_file(item.get("path"), item.get("sha256"), label="native host/runtime file")
+        if target.stat().st_size != item.get("size_bytes"):
+            raise AtlasError("runtime native host/runtime file size differs from its manifest")
+        native_paths[target.as_posix()] = item
+    loaded_capture = result.get("capture")
+    capture_fields = {
+        "schema_version", "operation_nonce", "profile", "process_id", "entry_assembly_identity",
+        "entry_assembly_location", "profile_input_key", "profile_input_state", "profile_input_matches",
+        "interface_full_name", "interface_assembly_identity", "expected_runtime_type", "observed_runtime_type",
+        "observed_runtime_assembly_identity", "observed_runtime_assembly_location", "selection_matches",
+        "loaded_assemblies", "host_built_observed", "host_type", "host_disposed", "scope_disposed",
+        "failure_code", "failure_message",
+    }
+    if not isinstance(loaded_capture, dict) or set(loaded_capture) != capture_fields:
+        raise AtlasError("runtime capture has an unsupported or open schema")
+    if (loaded_capture.get("schema_version") != 1 or loaded_capture.get("operation_nonce") != nonce
+            or loaded_capture.get("profile") != profile
+            or loaded_capture.get("profile_input_key") != spec["configuration_environment_key"]
+            or loaded_capture.get("profile_input_state") != ("empty" if spec["configuration_state"] == "empty" else "nonempty")
+            or loaded_capture.get("profile_input_matches") is not True
+            or loaded_capture.get("interface_full_name") != interface_name
+            or loaded_capture.get("expected_runtime_type") != candidate_name
+            or loaded_capture.get("observed_runtime_type") != candidate_name
+            or loaded_capture.get("selection_matches") is not True
+            or loaded_capture.get("host_built_observed") is not True
+            or loaded_capture.get("host_disposed") is not True
+            or loaded_capture.get("scope_disposed") is not True
+            or loaded_capture.get("failure_code") is not None
+            or loaded_capture.get("failure_message") is not None):
+        raise AtlasError("runtime capture does not match its source candidate, profile input, and completed disposal")
+    entry_name = str(compiler_input.get("compilation_options", {}).get("module_name", "")).removesuffix(".dll")
+    if not isinstance(loaded_capture.get("entry_assembly_identity"), str) or loaded_capture["entry_assembly_identity"].split(",", 1)[0] != entry_name:
+        raise AtlasError("runtime capture entry assembly identity disagrees with the compiler-bound project")
+    if (loaded_capture.get("interface_assembly_identity") != loaded_capture.get("entry_assembly_identity")
+            or loaded_capture.get("observed_runtime_assembly_identity") != loaded_capture.get("entry_assembly_identity")):
+        raise AtlasError("runtime interface or selected candidate came from another assembly")
+    captured_entry_path = _runtime_no_symlink_path(
+        Path(str(loaded_capture.get("entry_assembly_location", ""))), label="captured entry assembly")
+    if captured_entry_path != entry_path:
+        raise AtlasError("runtime capture loaded an entry assembly outside retained source-bound outputs")
+    captured_runtime_path = _runtime_no_symlink_path(
+        Path(str(loaded_capture.get("observed_runtime_assembly_location", ""))), label="captured selected runtime assembly")
+    if captured_runtime_path != entry_path:
+        raise AtlasError("runtime selected candidate did not come from retained source-bound outputs")
+    loaded_capture_assemblies = loaded_capture.get("loaded_assemblies")
+    loaded_manifest = input_identity.get("loaded_runtime_assemblies")
+    if not isinstance(loaded_capture_assemblies, list) or not isinstance(loaded_manifest, list) or len(loaded_capture_assemblies) != len(loaded_manifest) or not loaded_manifest:
+        raise AtlasError("runtime loaded assembly identity manifest is incomplete")
+    manifest_keys = set()
+    for item in loaded_manifest:
+        if not isinstance(item, dict) or set(item) != {"identity", "location", "sha256", "size_bytes"}:
+            raise AtlasError("runtime loaded assembly file entry is malformed")
+        safe_path = _runtime_no_symlink_path(Path(str(item.get("location"))), label="loaded runtime assembly")
+        _runtime_require_under(safe_path, approved_loaded_roots, label="loaded assembly")
+        target = _runtime_hash_file(item.get("location"), item.get("sha256"), label="loaded runtime assembly")
+        if target.stat().st_size != item.get("size_bytes"):
+            raise AtlasError("runtime loaded assembly size differs from its manifest")
+        manifest_keys.add((item.get("identity"), target.as_posix()))
+    capture_keys = set()
+    for item in loaded_capture_assemblies:
+        if not isinstance(item, dict) or set(item) != {"identity", "location"} or not isinstance(item.get("location"), str):
+            raise AtlasError("runtime capture loaded assembly entry is malformed")
+        captured_path = _runtime_no_symlink_path(Path(item["location"]), label="captured loaded assembly")
+        _runtime_require_under(captured_path, approved_loaded_roots, label="captured loaded assembly")
+        capture_keys.add((item.get("identity"), captured_path.as_posix()))
+    if capture_keys != manifest_keys:
+        raise AtlasError("runtime captured loaded assemblies disagree with the hashed runtime manifest")
+    projection = result.get("input_identity_projection")
+    if not isinstance(projection, dict):
+        raise AtlasError("runtime observation identity projection is missing")
+    replacements = [
+        (output_root.as_posix(), "$APPLICATION_OUTPUT"),
+        (str(Path(str(observer_assembly.get("path"))).resolve().parent), "$OBSERVER_OUTPUT"),
+    ]
+    expected_projection = _runtime_identity_projection(input_identity, replacements)
+    if projection != expected_projection or hashlib.sha256(_canonical_json(projection)).hexdigest() != result.get("input_sha256"):
+        raise AtlasError("runtime stable input identity projection is invalid")
+    termination = result.get("termination")
+    termination_fields = {"schema_version", "operation_nonce", "profile", "process_id",
+                          "entry_assembly_identity", "entry_assembly_location", "host_built_observed",
+                          "intentional_host_abort", "unhandled_exception_type", "process_terminating"}
+    if not isinstance(termination, dict) or set(termination) != termination_fields:
+        raise AtlasError("runtime termination receipt has an unsupported or open schema")
+    if any(termination.get(key) != value for key, value in {
+        "schema_version": 1, "operation_nonce": nonce, "profile": profile,
+        "process_id": loaded_capture.get("process_id"),
+        "entry_assembly_identity": loaded_capture.get("entry_assembly_identity"),
+        "entry_assembly_location": loaded_capture.get("entry_assembly_location"),
+        "host_built_observed": True, "intentional_host_abort": True,
+        "unhandled_exception_type": "Microsoft.Extensions.Hosting.HostAbortedException",
+        "process_terminating": True,
+    }.items()):
+        raise AtlasError("runtime termination receipt does not join the capture and intentional abort")
+    process = result.get("process")
+    process_fields = {"exit_code", "intentional_abort_verified", "timed_out", "duration_seconds",
+                      "stdout_sha256", "stderr_sha256", "capture_path", "termination_path", "artifact_dir"}
+    if not isinstance(process, dict) or set(process) != process_fields:
+        raise AtlasError("runtime process receipt has an unsupported or open schema")
+    if (process.get("exit_code") not in {-6, 134} or process.get("intentional_abort_verified") is not True
+            or process.get("timed_out") is not False
+            or not isinstance(process.get("duration_seconds"), (int, float))
+            or isinstance(process.get("duration_seconds"), bool) or process.get("duration_seconds") < 0):
+        raise AtlasError("runtime process did not finish via the captured intentional abort")
+    for key in ("stdout_sha256", "stderr_sha256"):
+        if not isinstance(process.get(key), str) or not re.fullmatch(r"[0-9a-f]{64}", process[key]):
+            raise AtlasError("runtime process output hash is invalid")
+    pid = loaded_capture.get("process_id")
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
+        raise AtlasError("runtime capture process ID is invalid")
+    artifact_root = artifact_root.resolve(strict=True)
+    if Path(str(process.get("capture_path"))).absolute() != process_artifact_dir / "capture.json":
+        raise AtlasError("runtime capture path is outside its canonical process artifact directory")
+    if Path(str(process.get("termination_path"))).absolute() != process_artifact_dir / "termination.json":
+        raise AtlasError("runtime termination path is outside its canonical process artifact directory")
+    for path_key, expected_record in (("capture_path", loaded_capture), ("termination_path", termination)):
+        path = _runtime_no_symlink_path(Path(str(process.get(path_key))), label="capture or termination artifact")
+        try:
+            stored = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise AtlasError("retained runtime artifact is unreadable or corrupt") from exc
+        if stored != expected_record:
+            raise AtlasError("retained runtime artifact differs from the returned receipt")
+    interface_fact, candidate_fact, source_edges = _runtime_source_candidates(
+        snapshot, supplement, interface_name, candidate_name)
+    payload = {
+        "schema_version": RUNTIME_OBSERVATION_SCHEMA_VERSION,
+        "kind": "runtime_startup_observation",
+        "binding": {
+            "snapshot_id": snapshot.get("snapshot_id"),
+            "evidence_fingerprint": snapshot.get("evidence_fingerprint"),
+            "repository_root": repo_root.as_posix(),
+            "project_path": input_identity.get("project"),
+            "framework": input_identity.get("framework"),
+            "compiler_supplement_sha256": supplement_hash,
+            "interface_type_id": interface_fact.get("type_id"),
+            "interface_type": interface_name,
+            "candidate_type_id": candidate_fact.get("type_id"),
+            "candidate_type": candidate_name,
+            "interface_source": interface_fact.get("source"),
+            "candidate_source": candidate_fact.get("source"),
+            "source_edges": source_edges,
+            "profile": profile,
+        },
+        "profile_inputs": expected_profile_inputs,
+        "capture": loaded_capture,
+        "termination": termination,
+        "process": process,
+        "input_identity": input_identity,
+        "input_identity_projection": projection,
+        "input_sha256": result["input_sha256"],
+    }
+    return payload
+
+
+def _runtime_render(document: dict[str, object], max_bytes: int) -> bytes:
+    reported = 0
+    for _ in range(12):
+        document["budget"]["stdout_bytes_including_newline"] = reported
+        encoded = (_canonical_json(document) + b"\n")
+        actual = len(encoded)
+        if actual == reported:
+            if actual > max_bytes:
+                raise AtlasError(f"complete runtime-index result requires {actual} ASCII stdout bytes; --max-tokens limit is {max_bytes}; stdout withheld")
+            return encoded
+        reported = actual
+    raise AtlasError("runtime-index byte-count field did not stabilize; stdout withheld")
+
+
+def _runtime_same_observation(existing: dict[str, object], new: dict[str, object]) -> bool:
+    if (existing.get("input_sha256") != new.get("input_sha256")
+            or existing.get("binding") != new.get("binding")
+            or existing.get("profile_inputs") != new.get("profile_inputs")):
+        return False
+    old_capture, new_capture = existing.get("capture"), new.get("capture")
+    return (isinstance(old_capture, dict) and isinstance(new_capture, dict)
+            and old_capture.get("observed_runtime_type") == new_capture.get("observed_runtime_type")
+            and old_capture.get("selection_matches") is True and new_capture.get("selection_matches") is True
+            and old_capture.get("host_disposed") is True and new_capture.get("host_disposed") is True
+            and old_capture.get("scope_disposed") is True and new_capture.get("scope_disposed") is True)
+
+
+def runtime_index(db_arg: str, repo_arg: str, project_relative: str, framework: str,
+                  interface_arg: str, profile_arg: str, max_bytes: int) -> tuple[dict[str, object], bytes, int]:
+    if max_bytes < 1:
+        raise AtlasError("--max-tokens must be a positive integer")
+    db_path = Path(db_arg).expanduser().absolute()
+    if not db_path.is_file():
+        raise AtlasError(f"database does not exist: {db_path}")
+    if Path(project_relative).is_absolute() or any(part in {"", ".", ".."} for part in project_relative.split("/")):
+        raise AtlasError(f"runtime project must be a safe repository-relative path: {project_relative!r}")
+    if not project_relative.endswith(".csproj"):
+        raise AtlasError("runtime project must name one .csproj file")
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_.-]*", framework):
+        raise AtlasError("runtime framework must be a target-framework moniker")
+    interface_name = _runtime_fqn(interface_arg)
+    if interface_name is None or interface_arg not in {interface_name, f"global::{interface_name}"}:
+        raise AtlasError("--interface must be one exact fully qualified source interface name")
+    if profile_arg not in {*RUNTIME_PROFILE_OVERRIDES, "both"}:
+        raise AtlasError("--profile must be local-storage, cloud-storage, or both")
+    requested_profiles = list(RUNTIME_PROFILE_OVERRIDES) if profile_arg == "both" else [profile_arg]
+    profile_specs = []
+    for profile in requested_profiles:
+        spec = RUNTIME_PROFILE_OVERRIDES[profile]
+        if interface_name != spec["interface_type"]:
+            raise AtlasError(f"profile {profile} has no approved source/configuration binding for interface {interface_name}")
+        profile_specs.append((profile, spec))
+
+    snapshot, _snapshots, _extractor_identity, live = _current_route_snapshot(db_path, repo_arg)
+    _validate_snapshot_fingerprint(snapshot, str(snapshot.get("snapshot_id")))
+    if not isinstance(live, dict) or not isinstance(live.get("repository_root"), str):
+        raise AtlasError("runtime-index cannot identify the current repository root")
+    repo_root = Path(live["repository_root"]).resolve(strict=True)
+    supplements = _current_compiler_supplements(db_path, snapshot, repo_root)
+    matching = [item for item in supplements
+                if isinstance(item.get("binding"), dict)
+                and item["binding"].get("project_path") == project_relative
+                and item["binding"].get("target_framework") == framework]
+    if len(matching) != 1:
+        raise AtlasError(f"runtime-index requires one current compiler supplement for {project_relative} {framework}; matches={len(matching)}")
+    supplement = matching[0]
+    compiler_input = supplement.get("input_identity")
+    supplement_hash = supplement.get("content_sha256")
+    if not isinstance(compiler_input, dict) or not isinstance(supplement_hash, str):
+        raise AtlasError("runtime-index compiler supplement identity is incomplete")
+    interface_fact = _runtime_type_fact(snapshot, interface_name)
+    module_name = compiler_input.get("compilation_options", {}).get("module_name")
+    entry_assembly_name = str(module_name).removesuffix(".dll") if isinstance(module_name, str) else ""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", entry_assembly_name):
+        raise AtlasError("runtime-index compiler supplement has no safe entry-assembly identity")
+
+    atlas_source_path = Path(__file__).resolve()
+    launcher_source_path = atlas_source_path.parent / "runtime_index_launch.py"
+    import runtime_index_launch
+    if Path(runtime_index_launch.__file__).resolve() != launcher_source_path:
+        raise AtlasError("runtime-index loaded an unexpected launcher module path")
+    LaunchError = runtime_index_launch.LaunchError
+    launch = runtime_index_launch.launch
+    producer_identity = {
+        "atlas_source": {"path": atlas_source_path.as_posix(),
+                         "sha256": hashlib.sha256(atlas_source_path.read_bytes()).hexdigest()},
+        "runtime_launcher_source": {"path": launcher_source_path.as_posix(),
+                                    "sha256": hashlib.sha256(launcher_source_path.read_bytes()).hexdigest()},
+    }
+
+    artifact_root = _runtime_artifact_root(db_path, snapshot.get("snapshot_id"),
+                                           project_relative, interface_name, repo_root)
+    artifact_root.mkdir(parents=True, exist_ok=True)
+    observer_root = Path(__file__).resolve().parent / "runtime"
+    payloads: list[dict[str, object]] = []
+    completed_results: list[tuple[str, dict[str, object], str, dict[str, object]]] = []
+    source_candidate_counts: dict[str, int] = {}
+    for profile, spec in profile_specs:
+        candidate_name = _runtime_candidate_name_for_profile(
+            supplement, interface_name, str(spec["expected_runtime_type_leaf"]))
+        _interface, _candidate, source_edges = _runtime_source_candidates(snapshot, supplement, interface_name, candidate_name)
+        source_candidate_counts[profile] = len(source_edges)
+        request = {
+            "schema_version": 1,
+            "repo_root": repo_root.as_posix(),
+            "project_path": project_relative,
+            "framework": framework,
+            "snapshot_id": snapshot.get("snapshot_id"),
+            "source_snapshot_files": snapshot.get("files"),
+            "profile": profile,
+            "interface_type_name": interface_name,
+            "entry_assembly_name": entry_assembly_name,
+            "expected_runtime_type_name": candidate_name,
+            "account_name_state": spec["configuration_state"],
+            "account_name_probe": spec["configuration_probe"],
+            "observer_source_root": observer_root.as_posix(),
+            "artifact_dir": artifact_root.as_posix(),
+            "tracked_inputs": compiler_input.get("tracked_inputs"),
+            "generated_inputs": compiler_input.get("generated_inputs"),
+            "compiler_input_identity": compiler_input,
+            "compiler_supplement_sha256": supplement_hash,
+            "producer_identity": producer_identity,
+        }
+        try:
+            result = launch(request)
+        except LaunchError as exc:
+            raise AtlasError(f"runtime-index {profile} capture refused before persistence: {exc}") from exc
+        checked_payload = _runtime_validate_result(result, profile, spec, interface_name, candidate_name,
+                                                   snapshot, repo_root, supplement, artifact_root)
+        payloads.append(checked_payload)
+        completed_results.append((profile, spec, candidate_name, result))
+
+    # Close the source/build race across all requested profiles before any budget
+    # decision or database publication.
+    after_snapshot, _after_snapshots, _after_extractor, after_live = _current_route_snapshot(db_path, repo_arg)
+    _validate_snapshot_fingerprint(after_snapshot, str(after_snapshot.get("snapshot_id")))
+    if (after_snapshot.get("snapshot_id") != snapshot.get("snapshot_id")
+            or after_snapshot.get("evidence_fingerprint") != snapshot.get("evidence_fingerprint")
+            or not isinstance(after_live, dict) or after_live.get("repository_root") != repo_root.as_posix()):
+        raise AtlasError("repository source changed during runtime profile captures; no observations published")
+    after_supplements = _current_compiler_supplements(db_path, after_snapshot, repo_root)
+    after_matching = [item for item in after_supplements
+                      if isinstance(item.get("binding"), dict)
+                      and item["binding"].get("project_path") == project_relative
+                      and item["binding"].get("target_framework") == framework]
+    if len(after_matching) != 1 or after_matching[0].get("content_sha256") != supplement_hash:
+        raise AtlasError("compiler source/generated inputs changed during runtime profile captures; no observations published")
+    current_producer_identity = {
+        "atlas_source": {"path": atlas_source_path.as_posix(),
+                         "sha256": hashlib.sha256(atlas_source_path.read_bytes()).hexdigest()},
+        "runtime_launcher_source": {"path": launcher_source_path.as_posix(),
+                                    "sha256": hashlib.sha256(launcher_source_path.read_bytes()).hexdigest()},
+    }
+    if current_producer_identity != producer_identity:
+        raise AtlasError("Atlas or runtime launcher source changed during profile captures; no observations published")
+    payloads = [
+        _runtime_validate_result(result, profile, spec, interface_name, candidate_name,
+                                 after_snapshot, repo_root, after_matching[0], artifact_root)
+        for profile, spec, candidate_name, result in completed_results
+    ]
+
+    uri = db_path.as_uri() + "?mode=ro"
+    existing_rows: dict[tuple[str, str], tuple[str, dict[str, object]]] = {}
+    with sqlite3.connect(uri, uri=True) as connection:
+        exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_runtime_observations'"
+        ).fetchone()
+        if exists is not None:
+            rows = connection.execute(
+                "SELECT profile,input_sha256,content_sha256,payload_json FROM atlas_runtime_observations "
+                "WHERE snapshot_id=? AND project_path=? AND interface_type_id=?",
+                (snapshot["snapshot_id"], project_relative, interface_fact["type_id"]),
+            ).fetchall()
+            for row_profile, row_input, row_hash, row_payload in rows:
+                try:
+                    old_payload = json.loads(row_payload)
+                except json.JSONDecodeError as exc:
+                    raise AtlasError("saved runtime observation is corrupt; publication refused") from exc
+                if not isinstance(old_payload, dict) or hashlib.sha256(_canonical_json(old_payload)).hexdigest() != row_hash:
+                    raise AtlasError("saved runtime observation hash mismatch; publication refused")
+                existing_rows[(str(row_profile), str(row_input))] = (str(row_hash), old_payload)
+
+    outcomes = []
+    pending: list[tuple[dict[str, object], str]] = []
+    for payload in payloads:
+        profile = str(payload["binding"]["profile"])
+        input_hash = str(payload["input_sha256"])
+        content_hash = hashlib.sha256(_canonical_json(payload)).hexdigest()
+        previous = existing_rows.get((profile, input_hash))
+        if previous is not None:
+            if not _runtime_same_observation(previous[1], payload):
+                raise AtlasError(f"runtime observation identity conflicts with immutable saved record for profile {profile}")
+            status = "already_recorded"
+            saved_hash = previous[0]
+        else:
+            status = "recorded"
+            saved_hash = content_hash
+            pending.append((payload, content_hash))
+        outcomes.append({
+            "profile": profile,
+            "expected_runtime_type": payload["binding"]["candidate_type"],
+            "observed_runtime_type": payload["capture"]["observed_runtime_type"],
+            "compiler_source_candidate_edges": source_candidate_counts[profile],
+            "input_sha256": input_hash,
+            "content_sha256": saved_hash,
+            "status": status,
+        })
+    document: dict[str, object] = {
+        "result": "runtime_indexed",
+        "snapshot_id": snapshot["snapshot_id"],
+        "project_path": project_relative,
+        "framework": framework,
+        "interface": interface_name,
+        "interface_type_fact_id": interface_fact["id"],
+        "observations": outcomes,
+        "container_selection_observed_for_profiles": len(outcomes),
+        "runtime_route_reachability_proven": False,
+        "runtime_DI_selection_proven": False,
+        "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes including newline",
+                   "stdout_bytes_including_newline": 0},
+    }
+    encoded = _runtime_render(document, max_bytes)
+    if pending:
+        connection = _connect_for_index(db_path)
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS atlas_runtime_observations ("
+                "snapshot_id TEXT NOT NULL, project_path TEXT NOT NULL, interface_type_id TEXT NOT NULL, "
+                "profile TEXT NOT NULL, input_sha256 TEXT NOT NULL, content_sha256 TEXT NOT NULL, payload_json TEXT NOT NULL, "
+                "PRIMARY KEY(snapshot_id,project_path,interface_type_id,profile,input_sha256), "
+                "FOREIGN KEY(snapshot_id) REFERENCES atlas_snapshots(snapshot_id))"
+            )
+            for payload, content_hash in pending:
+                connection.execute(
+                    "INSERT INTO atlas_runtime_observations(snapshot_id,project_path,interface_type_id,profile,input_sha256,content_sha256,payload_json) "
+                    "VALUES (?,?,?,?,?,?,?)",
+                    (snapshot["snapshot_id"], project_relative, interface_fact["type_id"],
+                     payload["binding"]["profile"], payload["input_sha256"], content_hash,
+                     _canonical_json(payload).decode("ascii")),
+                )
+            connection.commit()
+        except (sqlite3.Error, AtlasError) as exc:
+            connection.rollback()
+            if isinstance(exc, AtlasError):
+                raise
+            raise AtlasError(f"cannot persist runtime observation atomically: {exc}") from exc
+        finally:
+            connection.close()
+    return document, encoded, 0
+
+
+def _current_runtime_observations(db_path: Path, snapshot: dict[str, object], repo_root: Path,
+                                  supplements: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Validate every current startup receipt against its current compiler/source binding."""
+    uri = db_path.absolute().as_uri() + "?mode=ro"
+    with sqlite3.connect(uri, uri=True) as connection:
+        exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='atlas_runtime_observations'"
+        ).fetchone()
+        if exists is None:
+            return []
+        rows = connection.execute(
+            "SELECT snapshot_id,project_path,interface_type_id,profile,input_sha256,content_sha256,payload_json "
+            "FROM atlas_runtime_observations WHERE snapshot_id=? ORDER BY project_path,interface_type_id,profile,input_sha256",
+            (snapshot.get("snapshot_id"),),
+        ).fetchall()
+    if len(rows) > 1024:
+        raise AtlasError("runtime observation validation cap exceeded")
+    supplements_by_project = {
+        str(item.get("binding", {}).get("project_path")): item
+        for item in supplements if isinstance(item.get("binding"), dict)
+    }
+    validated: list[dict[str, object]] = []
+    payload_fields = {"schema_version", "kind", "binding", "profile_inputs", "capture", "termination",
+                      "process", "input_identity", "input_identity_projection", "input_sha256"}
+    for row_snapshot, project_path, interface_type_id, profile, input_hash, stored_hash, payload_json in rows:
+        try:
+            payload = json.loads(payload_json)
+        except json.JSONDecodeError as exc:
+            raise AtlasError("saved runtime observation JSON is corrupt") from exc
+        if not isinstance(payload, dict) or set(payload) != payload_fields:
+            raise AtlasError("saved runtime observation has an unsupported or open schema")
+        if hashlib.sha256(_canonical_json(payload)).hexdigest() != stored_hash:
+            raise AtlasError("saved runtime observation content hash mismatch")
+        if (row_snapshot != snapshot.get("snapshot_id") or payload.get("schema_version") != RUNTIME_OBSERVATION_SCHEMA_VERSION
+                or payload.get("kind") != "runtime_startup_observation" or payload.get("input_sha256") != input_hash):
+            raise AtlasError("saved runtime observation row and receipt identities disagree")
+        binding = payload.get("binding")
+        if not isinstance(binding, dict) or binding.get("snapshot_id") != row_snapshot or binding.get("project_path") != project_path:
+            raise AtlasError("saved runtime observation snapshot or project binding is stale")
+        if binding.get("interface_type_id") != interface_type_id or binding.get("profile") != profile:
+            raise AtlasError("saved runtime observation row key disagrees with its source binding")
+        spec = RUNTIME_PROFILE_OVERRIDES.get(str(profile))
+        if spec is None or binding.get("interface_type") != spec["interface_type"]:
+            raise AtlasError("saved runtime observation profile/interface combination is not approved")
+        candidate_name = _runtime_fqn(binding.get("candidate_type"))
+        if candidate_name is None or candidate_name.rsplit(".", 1)[-1] != spec["expected_runtime_type_leaf"]:
+            raise AtlasError("saved runtime observation candidate is outside its closed source profile")
+        supplement = supplements_by_project.get(str(project_path))
+        if supplement is None or supplement.get("content_sha256") != binding.get("compiler_supplement_sha256"):
+            raise AtlasError("saved runtime observation no longer matches a current compiler supplement")
+        reconstructed = {
+            "schema_version": RUNTIME_OBSERVATION_SCHEMA_VERSION,
+            "operation_nonce": payload.get("capture", {}).get("operation_nonce") if isinstance(payload.get("capture"), dict) else None,
+            "profile": profile,
+            "profile_inputs": payload.get("profile_inputs"),
+            "capture": payload.get("capture"),
+            "termination": payload.get("termination"),
+            "process": payload.get("process"),
+            "input_identity": payload.get("input_identity"),
+            "input_identity_projection": payload.get("input_identity_projection"),
+            "input_sha256": input_hash,
+        }
+        checked = _runtime_validate_result(
+            reconstructed, str(profile), spec, str(binding.get("interface_type")),
+            candidate_name, snapshot, repo_root, supplement,
+            _runtime_artifact_root(db_path, row_snapshot, project_path, binding.get("interface_type"), repo_root),
+        )
+        if _canonical_json(checked) != _canonical_json(payload):
+            raise AtlasError("saved runtime observation source/profile projection differs from current validation")
+        validated.append(payload)
+    return validated
+
+
+def _runtime_receipt_summary(payload: dict[str, object]) -> dict[str, object]:
+    binding = payload["binding"]
+    capture = payload["capture"]
+    process = payload["process"]
+    return {
+        "profile": binding["profile"],
+        "interface_type": binding["interface_type"],
+        "interface_type_id": binding["interface_type_id"],
+        "candidate_type": binding["candidate_type"],
+        "candidate_type_id": binding["candidate_type_id"],
+        "profile_input_key": capture["profile_input_key"],
+        "profile_input_state": capture["profile_input_state"],
+        "selection_matches": capture["selection_matches"],
+        "observed_runtime_type": capture["observed_runtime_type"],
+        "operation_nonce": capture["operation_nonce"],
+        "process_id": capture["process_id"],
+        "intentional_host_abort_verified": process["intentional_abort_verified"],
+        "host_and_scope_disposed": capture["host_disposed"] and capture["scope_disposed"],
+        "input_sha256": payload["input_sha256"],
+        "content_sha256": hashlib.sha256(_canonical_json(payload)).hexdigest(),
+        "claim": "profile_specific_startup_container_resolution_for_this_source_candidate_only",
+        "runtime_route_reachability_proven": False,
+        "runtime_DI_selection_proven": False,
+    }
+
+
+def _runtime_receipts_for_binding(binding: object, observations: list[dict[str, object]]) -> list[dict[str, object]]:
+    if not isinstance(binding, dict):
+        return []
+    matches = [payload for payload in observations
+               if payload.get("binding", {}).get("interface_type_id") == binding.get("bound_interface_type_id")
+               and payload.get("binding", {}).get("candidate_type_id") == binding.get("candidate_type_id")
+               and payload.get("binding", {}).get("interface_type") == str(binding.get("bound_interface_type", "")).removeprefix("global::")
+               and payload.get("binding", {}).get("candidate_type") == str(binding.get("candidate_type", "")).removeprefix("global::")]
+    return [_runtime_receipt_summary(payload) for payload in sorted(matches, key=lambda item: str(item.get("binding", {}).get("profile")))]
+
+
+def _runtime_receipts_for_relation(relation: dict[str, object], observations: list[dict[str, object]]) -> list[dict[str, object]]:
+    interface_type = str(relation.get("service_type", "")).removeprefix("global::")
+    candidate_type = str(relation.get("implementation_type", "")).removeprefix("global::")
+    matches = [payload for payload in observations
+               if payload.get("binding", {}).get("interface_type") == interface_type
+               and payload.get("binding", {}).get("candidate_type") == candidate_type]
+    return [_runtime_receipt_summary(payload) for payload in sorted(matches, key=lambda item: str(item.get("binding", {}).get("profile")))]
+
+
 def _impact_render(document: dict[str, object], max_bytes: int) -> bytes:
     budget = document["budget"]
     assert isinstance(budget, dict)
@@ -4425,6 +5334,7 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                    "stdout_bytes_including_newline": 0},
     }
     supplements = _current_compiler_supplements(db_path, snapshot, root)
+    runtime_observations = _current_runtime_observations(db_path, snapshot, root, supplements)
     if supplements:
         compiler_callers = []
         compiler_route_paths = []
@@ -4449,7 +5359,9 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                              "source_anchors": [relation.get(key) for key in ("action_source", "call_site_source", "service_parameter_source", "bound_member_source", "implementation_source")],
                                              "registrations": relation.get("registrations", []),
                                              "claim": "compiler_confirmed_interface_caller_associated_with_implementation",
-                                             "compiler_binding_confirmed": True, "runtime_DI_selection_proven": False})
+                                             "compiler_binding_confirmed": True, "runtime_DI_selection_proven": False,
+                                             **({"runtime_startup_observations": _runtime_receipts_for_relation(relation, runtime_observations)}
+                                                if _runtime_receipts_for_relation(relation, runtime_observations) else {})})
             call_graph = supplement.get("source_call_graph")
             if not isinstance(call_graph, dict):
                 raise AtlasError("compiler supplement source-call graph is malformed")
@@ -4524,7 +5436,9 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                     "callee_lexical_method_fact_id": edge["callee_lexical_method_fact_id"],
                                     "dispatch_kind": edge["dispatch_kind"], "call_site_source": edge["call_site_source"],
                                     "callee_source": edge["callee_source"],
-                                    **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {})} for edge in chain],
+                                    **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {}),
+                                    **({"runtime_startup_observations": _runtime_receipts_for_binding(edge.get("interface_binding"), runtime_observations)}
+                                       if edge.get("interface_binding") else {})} for edge in chain],
                     "claim": "compiler_confirmed_shortest_source_call_chain_associated_with_route_handler",
                     "compiler_binding_confirmed": True, "runtime_reachability_proven": False,
                     "runtime_DI_selection_proven": False,
@@ -4536,13 +5450,22 @@ def impact_view(db_arg: str, repo_arg: str, qualified_method_name: str, max_byte
                                        "caller_lexical_method_fact_id": edge["caller_lexical_method_fact_id"],
                                        "callee_lexical_method_fact_id": edge["callee_lexical_method_fact_id"],
                                        "call_site_source": edge["call_site_source"], "callee_source": edge["callee_source"],
-                                       **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {})}
+                                       **({"interface_binding": edge["interface_binding"]} if edge.get("interface_binding") else {}),
+                                       **({"runtime_startup_observations": _runtime_receipts_for_binding(edge.get("interface_binding"), runtime_observations)}
+                                          if edge.get("interface_binding") else {})}
                 compiler_route_paths.append(witness)
         if compiler_callers:
             document["compiler_confirmed_interface_callers"] = sorted(compiler_callers,
                 key=lambda item: (str(item.get("route")), str(item.get("action_method")), str(item.get("bound_member"))))
         if graph_scopes:
             document["compiler_source_call_graph_scope"] = graph_scopes
+        if runtime_observations:
+            document["runtime_observation_scope"] = {
+                "validated_receipts": len(runtime_observations),
+                "claim": "validated startup container resolution is attached only to an exact interface and source candidate hop",
+                "runtime_route_reachability_proven": False,
+                "runtime_DI_selection_proven": False,
+            }
         if compiler_route_paths:
             unique_paths = {}
             for path in compiler_route_paths:
@@ -4768,6 +5691,7 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
     compiler_relations: list[dict[str, object]] = []
     compiler_snippets: list[dict[str, object]] = []
     supplements = _current_compiler_supplements(db_path, snapshot, repo_root)
+    runtime_observations = _current_runtime_observations(db_path, snapshot, repo_root, supplements)
     action_span = root_method.get("source", {}).get("span", {})
     action_path = root_method.get("source", {}).get("path")
     for supplement in supplements:
@@ -4800,6 +5724,53 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
                 if registration.get("runtime_DI_selection_proven") is not False:
                     raise AtlasError("compiler registration must remain labeled runtime-unproven")
         compiler_snippets = _source_texts(repo_root, compiler_refs)
+    runtime_candidate_evidence: list[dict[str, object]] = []
+    if runtime_observations:
+        observed_interfaces = {str(item.get("binding", {}).get("interface_type")) for item in runtime_observations}
+        for supplement in supplements:
+            call_graph = supplement.get("source_call_graph")
+            if not isinstance(call_graph, dict):
+                continue
+            edges = call_graph.get("edges", [])
+            roots = [root for root in call_graph.get("roots", [])
+                     if isinstance(root, dict) and root.get("route_fact_id") == route["id"]]
+            outgoing: dict[str, list[dict[str, object]]] = {}
+            for edge in edges:
+                outgoing.setdefault(str(edge.get("caller_node_id")), []).append(edge)
+            reachable: set[str] = set()
+            pending_nodes = [str(root.get("root_node_id")) for root in roots]
+            while pending_nodes:
+                node = pending_nodes.pop()
+                if node in reachable:
+                    continue
+                reachable.add(node)
+                pending_nodes.extend(str(edge.get("callee_node_id")) for edge in outgoing.get(node, []))
+            for caller_id in sorted(reachable):
+                for edge in outgoing.get(caller_id, []):
+                    binding = edge.get("interface_binding")
+                    if not isinstance(binding, dict):
+                        continue
+                    interface_type = str(binding.get("bound_interface_type", "")).removeprefix("global::")
+                    if interface_type not in observed_interfaces:
+                        continue
+                    runtime_candidate_evidence.append({
+                        "route_fact_id": route["id"],
+                        "candidate_identity": binding.get("candidate_identity"),
+                        "interface_type": interface_type,
+                        "interface_type_id": binding.get("bound_interface_type_id"),
+                        "candidate_type": str(binding.get("candidate_type", "")).removeprefix("global::"),
+                        "candidate_type_id": binding.get("candidate_type_id"),
+                        "compiler_binding_confirmed": binding.get("compiler_implementation_match") is True,
+                        "call_site_source": edge.get("call_site_source"),
+                        "implementation_method_source": binding.get("implementation_method_source"),
+                        "runtime_startup_observations": _runtime_receipts_for_binding(binding, runtime_observations),
+                        "runtime_route_reachability_proven": False,
+                        "runtime_DI_selection_proven": False,
+                    })
+        runtime_candidate_evidence.sort(key=lambda item: (
+            str(item.get("route_fact_id")), str(item.get("call_site_source", {}).get("path")),
+            int(item.get("call_site_source", {}).get("span", {}).get("start_offset", 0)),
+            str(item.get("candidate_identity"))))
     def bundle_fact_ids(value: object) -> set[str]:
         found: set[str] = set()
         if isinstance(value, dict):
@@ -4878,6 +5849,15 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
         document["compiler_relationship_semantics"] = {
             "compiler_binding_confirmed": True,
             "registrations_are_source_syntax_only": True,
+            "runtime_DI_selection_proven": False,
+        }
+    if runtime_observations:
+        document["runtime_startup_candidate_evidence"] = runtime_candidate_evidence
+        document["runtime_observation_scope"] = {
+            "validated_receipts": len(runtime_observations),
+            "reachable_candidate_edges": len(runtime_candidate_evidence),
+            "claim": "startup container resolution is associated only with exact source candidates on compiler-graph edges reachable from this mapped route handler",
+            "runtime_route_reachability_proven": False,
             "runtime_DI_selection_proven": False,
         }
     encoded = _evidence_pack_render(document, max_bytes)
@@ -5983,6 +6963,15 @@ def main(argv: list[str] | None = None) -> int:
     compiler_index_parser.add_argument("--db", required=True)
     compiler_index_parser.add_argument("--project", required=True, help="exact repository-relative .csproj path")
     compiler_index_parser.add_argument("--framework", required=True, help="target framework moniker evaluated from the project")
+    runtime_index_parser = commands.add_parser("runtime-index", help="capture and persist a source-bound startup service observation for one approved profile")
+    runtime_index_parser.add_argument("--repo", required=True)
+    runtime_index_parser.add_argument("--db", required=True)
+    runtime_index_parser.add_argument("--project", required=True, help="exact repository-relative .csproj path with a current compiler supplement")
+    runtime_index_parser.add_argument("--framework", required=True, help="exact framework identity from that compiler supplement")
+    runtime_index_parser.add_argument("--interface", required=True, help="exact fully qualified interface type from the saved source/compiler graph")
+    runtime_index_parser.add_argument("--profile", required=True, choices=("local-storage", "cloud-storage", "both"))
+    runtime_index_parser.add_argument("--max-tokens", type=int, default=65536,
+                                      help="maximum ASCII stdout bytes for the receipt summary")
     query_parser = commands.add_parser("query", help="retrieve a saved inventory")
     query_parser.add_argument("--db", required=True)
     query_parser.add_argument("--snapshot", required=True)
@@ -6098,6 +7087,10 @@ def main(argv: list[str] | None = None) -> int:
             output = save(args.db, capture(args.repo))
         elif args.command == "compiler-index":
             output = compiler_index(args.db, args.repo, args.project, args.framework)
+        elif args.command == "runtime-index":
+            output, encoded_output, exit_code = runtime_index(
+                args.db, args.repo, args.project, args.framework, args.interface, args.profile, args.max_tokens,
+            )
         elif args.command == "query":
             output = query(args.db, args.snapshot, args.path, args.graph)
         elif args.command == "discover":

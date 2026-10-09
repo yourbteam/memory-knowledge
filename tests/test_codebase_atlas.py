@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import sqlite3
 import subprocess
 import sys
@@ -19,10 +20,23 @@ LAUNCHER_PATH = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-mac
 LAUNCHER_SPEC = importlib.util.spec_from_file_location("atlas_compiler_index_launch_test_module", LAUNCHER_PATH)
 LAUNCHER = importlib.util.module_from_spec(LAUNCHER_SPEC)
 LAUNCHER_SPEC.loader.exec_module(LAUNCHER)
+RUNTIME_LAUNCHER_PATH = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/runtime_index_launch.py"
+RUNTIME_LAUNCHER_SPEC = importlib.util.spec_from_file_location("atlas_runtime_index_launch_test_module", RUNTIME_LAUNCHER_PATH)
+RUNTIME_LAUNCHER = importlib.util.module_from_spec(RUNTIME_LAUNCHER_SPEC)
+RUNTIME_LAUNCHER_SPEC.loader.exec_module(RUNTIME_LAUNCHER)
 
 
 def git(repo: Path, *args: str) -> str:
     return subprocess.check_output(["git", "-C", os.fspath(repo), *args], text=True).strip()
+
+
+def runtime_producer_identity():
+    def file_identity(path):
+        resolved = path.resolve(strict=True)
+        return {"path": resolved.as_posix(), "sha256": hashlib.sha256(resolved.read_bytes()).hexdigest()}
+
+    return {"atlas_source": file_identity(SCRIPT),
+            "runtime_launcher_source": file_identity(RUNTIME_LAUNCHER_PATH)}
 
 
 class AtlasCliTests(unittest.TestCase):
@@ -172,6 +186,371 @@ class AtlasCliTests(unittest.TestCase):
         self.assertEqual(result, 2)
         self.assertEqual(calls, [])
         self.assertEqual(database.read_bytes(), before)
+
+    def test_runtime_index_launcher_prompts_exact_interface_and_profile_then_dispatches(self):
+        checkout = self.root / "checkout"
+        (checkout / "src").mkdir(parents=True)
+        (checkout / ".git").mkdir()
+        (checkout / "src" / "App.csproj").write_text("<Project />", encoding="utf-8")
+        database = self.root / "atlas.sqlite"
+        database.write_bytes(b"saved atlas db")
+        dotnet = self.root / "dotnet"
+        dotnet.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        dotnet.chmod(0o755)
+        answers = iter([os.fspath(checkout), os.fspath(database), "src/App.csproj", "net8.0",
+                        "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage", "both"])
+        prompts = []
+        calls = []
+
+        def ask(prompt):
+            prompts.append(prompt)
+            return next(answers)
+
+        def dispatch(argv, **kwargs):
+            calls.append((argv, kwargs))
+            return subprocess.CompletedProcess(argv, 17)
+
+        result = RUNTIME_LAUNCHER.main([], input_fn=ask, runner=dispatch,
+                                       environment={"ATLAS_DOTNET": os.fspath(dotnet)}, atlas_script=SCRIPT)
+        self.assertEqual(result, 17)
+        self.assertEqual(prompts, ["Repository checkout path: ", "Atlas database path: ",
+                                   "Repository-relative project path: ", "Target framework moniker: ",
+                                   "Exact source interface type (fully qualified): ",
+                                   "Startup profile (local-storage, cloud-storage, or both): "])
+        self.assertEqual(len(calls), 1)
+        argv, kwargs = calls[0]
+        self.assertEqual(argv[1:], [os.fspath(SCRIPT), "runtime-index", "--repo", checkout.resolve().as_posix(),
+                                    "--db", database.resolve().as_posix(), "--project", "src/App.csproj",
+                                    "--framework", "net8.0", "--interface",
+                                    "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage",
+                                    "--profile", "both"])
+        self.assertEqual(kwargs["env"]["ATLAS_DOTNET"], dotnet.resolve().as_posix())
+        self.assertIs(kwargs["check"], False)
+
+    def test_runtime_index_launcher_rejects_unqualified_interface_without_dispatch(self):
+        checkout = self.root / "checkout"
+        (checkout / "src").mkdir(parents=True)
+        (checkout / ".git").mkdir()
+        (checkout / "src" / "App.csproj").write_text("<Project />", encoding="utf-8")
+        database = self.root / "atlas.sqlite"
+        database.write_bytes(b"unchanged")
+        before = database.read_bytes()
+        answers = iter([os.fspath(checkout), os.fspath(database), "src/App.csproj", "net8.0", "ITourAssetStorage"])
+        calls = []
+        result = RUNTIME_LAUNCHER.main([], input_fn=lambda _prompt: next(answers),
+                                      runner=lambda *args, **kwargs: calls.append(args),
+                                      environment={"PATH": ""}, atlas_script=SCRIPT)
+        self.assertEqual(result, 2)
+        self.assertEqual(calls, [])
+        self.assertEqual(database.read_bytes(), before)
+
+    def test_runtime_observer_rejects_open_profile_configuration_before_sdk_or_artifact_writes(self):
+        artifact_dir = self.root / "artifacts"
+        request = {"schema_version": 1, "profile": "local-storage", "account_name_state": "nonempty",
+                   "account_name_probe": "atlasprobe", "repo_root": os.fspath(self.root),
+                   "project_path": "Missing.csproj", "framework": "net8.0", "entry_assembly_name": "App",
+                   "interface_type_name": "Example.IStorage", "expected_runtime_type_name": "Example.Storage",
+                   "observer_source_root": os.fspath(self.root), "artifact_dir": os.fspath(artifact_dir),
+                   "producer_identity": runtime_producer_identity()}
+        with mock.patch.dict(os.environ, {"ATLAS_DOTNET": "", "PATH": ""}):
+            with self.assertRaisesRegex(RUNTIME_LAUNCHER.LaunchError, "closed profile configuration"):
+                RUNTIME_LAUNCHER.launch(request)
+        self.assertFalse(artifact_dir.exists())
+
+    def test_runtime_launcher_rejects_a_stale_producer_source_hash_before_artifact_creation(self):
+        artifact_dir = self.root / "stale-producer-artifacts"
+        producer_identity = runtime_producer_identity()
+        producer_identity["atlas_source"]["sha256"] = "0" * 64
+        request = {"schema_version": 1, "producer_identity": producer_identity,
+                   "profile": "local-storage", "account_name_state": "empty", "account_name_probe": None,
+                   "repo_root": os.fspath(self.root), "project_path": "Missing.csproj", "framework": "net8.0",
+                   "entry_assembly_name": "App", "interface_type_name": "Example.IStorage",
+                   "expected_runtime_type_name": "Example.Storage", "observer_source_root": os.fspath(self.root),
+                   "artifact_dir": os.fspath(artifact_dir)}
+        with self.assertRaisesRegex(RUNTIME_LAUNCHER.LaunchError, "producer source changed"):
+            RUNTIME_LAUNCHER.launch(request)
+        self.assertFalse(artifact_dir.exists())
+
+    def test_runtime_launcher_rejects_symlinked_producer_source_ancestors(self):
+        alias = self.root / "source-alias"
+        alias.symlink_to(SCRIPT.parent, target_is_directory=True)
+        producer_identity = runtime_producer_identity()
+        producer_identity["atlas_source"]["path"] = (alias / SCRIPT.name).as_posix()
+        artifact_dir = self.root / "symlink-producer-artifacts"
+        request = {"schema_version": 1, "producer_identity": producer_identity,
+                   "profile": "local-storage", "account_name_state": "empty", "account_name_probe": None,
+                   "repo_root": os.fspath(self.root), "project_path": "Missing.csproj", "framework": "net8.0",
+                   "entry_assembly_name": "App", "interface_type_name": "Example.IStorage",
+                   "expected_runtime_type_name": "Example.Storage", "observer_source_root": os.fspath(self.root),
+                   "artifact_dir": os.fspath(artifact_dir)}
+        with self.assertRaisesRegex(RUNTIME_LAUNCHER.LaunchError, "path is not a regular absolute file"):
+            RUNTIME_LAUNCHER.launch(request)
+        self.assertFalse(artifact_dir.exists())
+
+    def test_runtime_mirror_copies_only_source_build_inputs_and_excludes_configuration_files(self):
+        source_root = self.root / "source"
+        source_root.mkdir()
+        files = {
+            "Api.csproj": b"<Project />",
+            "Program.cs": b"class Program {}",
+            "appsettings.json": b"{\"PrivateKey\":\"must-not-copy\"}",
+            "credentials.json": b"{\"token\":\"must-not-copy\"}",
+            "asset.png": b"binary content is not needed before host build",
+        }
+        manifest = []
+        for relative, content in files.items():
+            path = source_root / relative
+            path.write_bytes(content)
+            manifest.append({"logical_path": f"tracked/{relative}", "path": relative,
+                             "sha256": hashlib.sha256(content).hexdigest(), "size_bytes": len(content),
+                             "presence": "present", "type": "file", "git_mode": "100644"})
+        mirror = self.root / "mirror"
+        mirror.mkdir()
+        copied = RUNTIME_LAUNCHER._copy_manifest(source_root, mirror, manifest, generated=False)
+        self.assertEqual({item["logical_path"] for item in copied},
+                         {"tracked/Api.csproj", "tracked/Program.cs", "tracked/asset.png"})
+        self.assertEqual((mirror / "Api.csproj").read_bytes(), files["Api.csproj"])
+        self.assertEqual((mirror / "Program.cs").read_bytes(), files["Program.cs"])
+        self.assertFalse((mirror / "appsettings.json").exists())
+        self.assertFalse((mirror / "credentials.json").exists())
+        self.assertEqual((mirror / "asset.png").read_bytes(), files["asset.png"])
+
+    @unittest.skipUnless(os.environ.get("ATLAS_DOTNET"), "runtime observer fixture needs the approved local dotnet SDK")
+    def test_runtime_launcher_captures_and_joins_a_real_framework_only_host(self):
+        """This mechanics fixture exercises a built host; target profile proof is a separate captured case."""
+        repo = self.root / "runtime-fixture"
+        repo.mkdir()
+        (repo / "FixtureHost.csproj").write_text(
+            "<Project Sdk=\"Microsoft.NET.Sdk.Web\"><PropertyGroup><TargetFramework>net8.0</TargetFramework>"
+            "<ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>FixtureHost</AssemblyName>"
+            "</PropertyGroup></Project>", encoding="utf-8")
+        (repo / "Program.cs").write_text(
+            "using Microsoft.AspNetCore.Builder;\nusing Microsoft.Extensions.DependencyInjection;\n"
+            "var builder = WebApplication.CreateBuilder(args);\n"
+            "builder.Services.AddScoped<Demo.IStorage, Demo.LocalStorage>();\n"
+            "var app = builder.Build();\n"
+            "namespace Demo { public interface IStorage {} public sealed class LocalStorage : IStorage {} }\n",
+            encoding="utf-8")
+        empty_feed = self.root / "empty-nuget-feed"
+        empty_feed.mkdir()
+        nuget = self.root / "NuGet.Config"
+        nuget.write_text(
+            '<?xml version="1.0" encoding="utf-8"?><configuration><packageSources><clear/><add key="empty" value="'
+            + empty_feed.as_posix() + '"/></packageSources></configuration>', encoding="utf-8")
+        dotnet = Path(os.environ["ATLAS_DOTNET"]).expanduser().resolve(strict=True)
+        restore_env = dict(os.environ)
+        restore_env.update({"DOTNET_CLI_TELEMETRY_OPTOUT": "1", "DOTNET_NOLOGO": "1", "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1"})
+        restore = subprocess.run([dotnet.as_posix(), "restore", (repo / "FixtureHost.csproj").as_posix(),
+                                  "--configfile", nuget.as_posix(), "--ignore-failed-sources"],
+                                 cwd=repo, env=restore_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 text=True, timeout=60, check=False)
+        self.assertEqual(restore.returncode, 0, restore.stderr or restore.stdout)
+        tracked = []
+        for relative in ("FixtureHost.csproj", "Program.cs"):
+            content = (repo / relative).read_bytes()
+            tracked.append({"logical_path": f"tracked/{relative}", "path": relative,
+                            "sha256": hashlib.sha256(content).hexdigest(), "size_bytes": len(content),
+                            "presence": "present", "type": "file", "git_mode": "100644"})
+        generated = []
+        for path in sorted((repo / "obj").rglob("*"), key=lambda item: os.fsencode(item.relative_to(repo).as_posix())):
+            if path.is_symlink():
+                self.fail(f"framework-only restore unexpectedly produced a symlink: {path}")
+            if path.is_file():
+                generated.append({"logical_path": path.relative_to(repo).as_posix(),
+                                  "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                                  "size_bytes": path.stat().st_size})
+        compiler_identity = {"tracked_inputs": tracked, "generated_inputs": generated}
+        request = {
+            "schema_version": 1, "snapshot_id": "a" * 64, "repo_root": repo.as_posix(),
+            "project_path": "FixtureHost.csproj", "framework": "net8.0", "profile": "local-storage",
+            "entry_assembly_name": "FixtureHost", "interface_type_name": "Demo.IStorage",
+            "expected_runtime_type_name": "Demo.LocalStorage", "account_name_state": "empty",
+            "account_name_probe": None,
+            "observer_source_root": RUNTIME_LAUNCHER_PATH.parent.joinpath("runtime").as_posix(),
+            "artifact_dir": (self.root / "runtime-artifacts").as_posix(),
+            "tracked_inputs": tracked, "generated_inputs": generated,
+            "source_snapshot_files": [{"path": "FixtureHost.csproj"}, {"path": "Program.cs"}],
+            "compiler_input_identity": compiler_identity, "compiler_supplement_sha256": "b" * 64,
+            "producer_identity": runtime_producer_identity(),
+        }
+        observed = RUNTIME_LAUNCHER.launch(request)
+        self.assertEqual(observed["profile"], "local-storage")
+        self.assertTrue(observed["process"]["intentional_abort_verified"])
+        self.assertEqual(observed["capture"]["profile_input_state"], "empty")
+        self.assertTrue(observed["capture"]["profile_input_matches"])
+        self.assertEqual(observed["capture"]["interface_full_name"], "Demo.IStorage")
+        self.assertEqual(observed["capture"]["observed_runtime_type"], "Demo.LocalStorage")
+        self.assertTrue(observed["capture"]["host_disposed"])
+        self.assertTrue(observed["capture"]["scope_disposed"])
+        self.assertEqual(observed["capture"]["failure_code"], None)
+        self.assertEqual(observed["termination"]["operation_nonce"], observed["operation_nonce"])
+        self.assertEqual(observed["termination"]["process_id"], observed["capture"]["process_id"])
+        self.assertTrue(observed["termination"]["intentional_host_abort"])
+        loaded = observed["capture"]["loaded_assemblies"]
+        hashed_loaded = observed["input_identity"]["loaded_runtime_assemblies"]
+        self.assertTrue(loaded)
+        self.assertEqual(len(loaded), len(hashed_loaded))
+        self.assertTrue(all(isinstance(item["location"], str) for item in loaded))
+        self.assertTrue(all(re.fullmatch(r"[0-9a-f]{64}", item["sha256"]) for item in hashed_loaded))
+        self.assertEqual({(item["identity"], item["location"]) for item in loaded},
+                         {(item["identity"], item["location"]) for item in hashed_loaded})
+        self.assertEqual(hashlib.sha256(json.dumps(observed["input_identity_projection"], ensure_ascii=True,
+                                                    sort_keys=True, separators=(",", ":")).encode("ascii")).hexdigest(),
+                         observed["input_sha256"])
+        self.assertEqual(observed["input_identity"]["producer_identity"], request["producer_identity"])
+        self.assertTrue((Path(observed["process"]["artifact_dir"]) / "input-identity.json").is_file())
+
+    def test_runtime_receipts_are_associated_only_with_the_exact_compiler_candidate(self):
+        interface_type = "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage"
+        local_type = "Taggable.Api.Infrastructure.AdminTourManagement.LocalDiskTourAssetStorage"
+        cloud_type = "Taggable.Api.Infrastructure.AdminTourManagement.AzureBlobTourAssetStorage"
+
+        def receipt(profile, candidate_id, candidate_type, observed_type):
+            return {
+                "binding": {"profile": profile, "interface_type_id": "interface-fact-1",
+                            "interface_type": interface_type, "candidate_type_id": candidate_id,
+                            "candidate_type": candidate_type},
+                "capture": {"profile_input_key": "AdminTourManagement__Storage__TourImage__AccountName",
+                            "profile_input_state": "empty" if profile == "local-storage" else "nonempty",
+                            "selection_matches": True, "observed_runtime_type": observed_type,
+                            "operation_nonce": "a" * 36, "process_id": 1234,
+                            "host_disposed": True, "scope_disposed": True},
+                "process": {"intentional_abort_verified": True},
+                "input_sha256": "b" * 64,
+            }
+
+        observations = [
+            receipt("local-storage", "local-fact-1", local_type, local_type),
+            receipt("cloud-storage", "cloud-fact-1", cloud_type, cloud_type),
+        ]
+        local_edge = {"bound_interface_type_id": "interface-fact-1", "bound_interface_type": f"global::{interface_type}",
+                      "candidate_type_id": "local-fact-1", "candidate_type": f"global::{local_type}"}
+        cloud_edge = {**local_edge, "candidate_type_id": "cloud-fact-1", "candidate_type": f"global::{cloud_type}"}
+        unrelated_edge = {**local_edge, "candidate_type_id": "unrelated-fact-1"}
+
+        local_receipts = ATLAS._runtime_receipts_for_binding(local_edge, observations)
+        cloud_receipts = ATLAS._runtime_receipts_for_binding(cloud_edge, observations)
+        self.assertEqual([item["profile"] for item in local_receipts], ["local-storage"])
+        self.assertEqual([item["profile"] for item in cloud_receipts], ["cloud-storage"])
+        self.assertEqual(ATLAS._runtime_receipts_for_binding(unrelated_edge, observations), [])
+        for summary in [*local_receipts, *cloud_receipts]:
+            self.assertTrue(summary["selection_matches"])
+            self.assertTrue(summary["host_and_scope_disposed"])
+            self.assertFalse(summary["runtime_route_reachability_proven"])
+            self.assertFalse(summary["runtime_DI_selection_proven"])
+
+    @unittest.skipUnless(os.environ.get("ATLAS_DOTNET"), "runtime consumer fixture needs the approved local dotnet SDK")
+    def test_runtime_index_and_consumers_keep_profile_receipts_source_candidate_scoped(self):
+        project = self.repo / "FixtureHost.csproj"
+        project.write_text('''<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>FixtureHost</AssemblyName></PropertyGroup>
+</Project>
+''', encoding="utf-8")
+        (self.repo / "Program.cs").write_text('''using Fixture;
+using Microsoft.Extensions.DependencyInjection;
+using Taggable.Api.Infrastructure.AdminTourManagement;
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.Services.AddScoped<IHandler<Request>, AssetHandler>();
+if (!string.IsNullOrEmpty(builder.Configuration["AdminTourManagement:Storage:TourImage:AccountName"]))
+    builder.Services.AddScoped<ITourAssetStorage, AzureBlobTourAssetStorage>();
+else
+    builder.Services.AddScoped<ITourAssetStorage, LocalDiskTourAssetStorage>();
+var app = builder.Build();
+app.MapControllers();
+''', encoding="utf-8")
+        (self.repo / "Storage.cs").write_text('''namespace Taggable.Api.Infrastructure.AdminTourManagement;
+public interface ITourAssetStorage { string Read(); }
+public sealed class LocalDiskTourAssetStorage : ITourAssetStorage { public string Read() => "local"; }
+public sealed class AzureBlobTourAssetStorage : ITourAssetStorage { public string Read() => "cloud"; }
+''', encoding="utf-8")
+        (self.repo / "Api.cs").write_text('''using Microsoft.AspNetCore.Mvc;
+using Taggable.Api.Infrastructure.AdminTourManagement;
+namespace Fixture;
+public sealed record Request;
+public interface IHandler<T> { string Handle(T value); }
+public sealed class AssetHandler(ITourAssetStorage storage) : IHandler<Request> {
+    public string Handle(Request value) => storage.Read();
+}
+[ApiController]
+[Route("api/assets")]
+public sealed class AssetsController(IHandler<Request> handler) : ControllerBase
+{
+    [HttpGet("list")]
+    public IActionResult Get() { handler.Handle(new Request()); return Ok(); }
+}
+''', encoding="utf-8")
+        git(self.repo, "add", "--", "FixtureHost.csproj", "Program.cs", "Storage.cs", "Api.cs")
+        empty_feed = self.root / "empty-runtime-feed"
+        empty_feed.mkdir()
+        nuget = self.root / "NuGet.Runtime.Config"
+        nuget.write_text('<configuration><packageSources><clear/><add key="empty" value="'
+                         + empty_feed.as_posix() + '"/></packageSources></configuration>', encoding="utf-8")
+        dotnet = Path(os.environ["ATLAS_DOTNET"]).expanduser().resolve(strict=True)
+        restore = subprocess.run([dotnet.as_posix(), "restore", project.as_posix(), "--configfile", nuget.as_posix(),
+                                  "--ignore-failed-sources"], cwd=self.repo, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, text=True, timeout=60, check=False)
+        self.assertEqual(restore.returncode, 0, restore.stderr or restore.stdout)
+        snapshot = self.index()
+        compiler = self.cli("compiler-index", "--repo", os.fspath(self.repo), "--db", os.fspath(self.db),
+                            "--project", "FixtureHost.csproj", "--framework", "net8.0", expect=0)
+        self.assertTrue(json.loads(compiler.stdout))
+        current_graph = self.graph(snapshot["snapshot_id"])
+        route = next(fact for fact in current_graph["facts"] if fact.get("kind") == "route_action"
+                     and fact.get("route_literal") == "api/assets/list")
+
+        index_args = ("runtime-index", "--repo", os.fspath(self.repo), "--db", os.fspath(self.db),
+                      "--project", "FixtureHost.csproj", "--framework", "net8.0", "--interface",
+                      "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage", "--profile", "both")
+        db_before_budget = self.db.read_bytes()
+        limited = self.cli(*index_args, "--max-tokens", "1", expect=2)
+        self.assertEqual(limited.stdout, "")
+        self.assertIn("stdout withheld", limited.stderr)
+        self.assertEqual(self.db.read_bytes(), db_before_budget)
+
+        indexed = self.cli(*index_args, "--max-tokens", "65536", expect=0)
+        runtime_document = json.loads(indexed.stdout)
+        self.assertEqual({item["profile"] for item in runtime_document["observations"]},
+                         {"local-storage", "cloud-storage"})
+        self.assertFalse(runtime_document["runtime_route_reachability_proven"])
+        self.assertFalse(runtime_document["runtime_DI_selection_proven"])
+        by_candidate = {}
+        for candidate, profile in (("LocalDiskTourAssetStorage", "local-storage"),
+                                   ("AzureBlobTourAssetStorage", "cloud-storage")):
+            impact = json.loads(self.impact(
+                f"Taggable.Api.Infrastructure.AdminTourManagement.{candidate}.Read", max_tokens=65536).stdout)
+            chains = impact.get("compiler_associated_route_paths", [])
+            receipts = [receipt for path in chains for hop in path.get("call_chain", [])
+                        for receipt in hop.get("runtime_startup_observations", [])]
+            matching = [receipt for receipt in receipts if receipt["candidate_type"].endswith(candidate)]
+            self.assertEqual({receipt["profile"] for receipt in matching}, {profile})
+            by_candidate[f"Taggable.Api.Infrastructure.AdminTourManagement.{candidate}"] = {profile}
+        packet = json.loads(self.evidence_pack(route["id"], max_tokens=65536).stdout)
+        pack_receipts = packet["runtime_startup_candidate_evidence"]
+        observed_pairs = {(item["candidate_type"], receipt["profile"])
+                          for item in pack_receipts for receipt in item["runtime_startup_observations"]}
+        self.assertEqual(observed_pairs,
+                         {(candidate, profile) for candidate, profiles in by_candidate.items() for profile in profiles})
+        self.assertFalse(packet["runtime_observation_scope"]["runtime_route_reachability_proven"])
+        self.assertFalse(packet["runtime_observation_scope"]["runtime_DI_selection_proven"])
+
+        with sqlite3.connect(self.db) as connection:
+            row = connection.execute("SELECT profile,input_sha256,content_sha256,payload_json "
+                                     "FROM atlas_runtime_observations ORDER BY profile LIMIT 1").fetchone()
+            original = json.loads(row[3])
+            tampered = json.loads(row[3])
+            tampered["binding"]["candidate_type_id"] = "unrelated-source-type-id"
+            encoded = ATLAS._canonical_json(tampered)
+            content_hash = hashlib.sha256(encoded).hexdigest()
+            connection.execute("UPDATE atlas_runtime_observations SET content_sha256=?,payload_json=? "
+                               "WHERE profile=? AND input_sha256=?",
+                               (content_hash, encoded.decode("ascii"), row[0], row[1]))
+        db_after_tamper = self.db.read_bytes()
+        for refused in (self.impact("Fixture.AssetHandler.Handle", max_tokens=65536, expect=2),
+                        self.evidence_pack(route["id"], max_tokens=65536, expect=2)):
+            self.assertEqual(refused.stdout, "")
+            self.assertIn("runtime observation", refused.stderr)
+            self.assertEqual(self.db.read_bytes(), db_after_tamper)
 
     def attach_compiler_fixture(self, snapshot, graph, route):
         """Attach synthetic mechanics evidence; this does not stand in for Roslyn proof."""
@@ -389,6 +768,41 @@ class Handler
         budget_refusal = self.evidence_pack(current_route["id"], max_tokens=1000, expect=2)
         self.assertEqual(budget_refusal.stdout, "")
         self.assertIn("stdout withheld", budget_refusal.stderr)
+
+        # A correctly rehashed receipt with an unapproved interface identity must be
+        # rejected by both read-only consumers before either can render evidence.
+        snapshot_row = self.query(self.index()["snapshot_id"])
+        tampered_receipt = {
+            "schema_version": ATLAS.RUNTIME_OBSERVATION_SCHEMA_VERSION,
+            "kind": "runtime_startup_observation",
+            "binding": {"snapshot_id": snapshot_row["snapshot_id"], "project_path": "Fixture.csproj",
+                        "interface_type_id": "fixture-interface-id", "interface_type": "Demo.IStore",
+                        "profile": "local-storage"},
+            "profile_inputs": {}, "capture": {}, "termination": {}, "process": {},
+            "input_identity": {}, "input_identity_projection": {}, "input_sha256": "a" * 64,
+        }
+        tampered_bytes = ATLAS._canonical_json(tampered_receipt)
+        tampered_hash = hashlib.sha256(tampered_bytes).hexdigest()
+        with sqlite3.connect(self.db) as connection:
+            connection.execute(
+                "CREATE TABLE atlas_runtime_observations (snapshot_id TEXT NOT NULL, project_path TEXT NOT NULL, "
+                "interface_type_id TEXT NOT NULL, profile TEXT NOT NULL, input_sha256 TEXT NOT NULL, "
+                "content_sha256 TEXT NOT NULL, payload_json TEXT NOT NULL, "
+                "PRIMARY KEY(snapshot_id,project_path,interface_type_id,profile,input_sha256))")
+            connection.execute(
+                "INSERT INTO atlas_runtime_observations VALUES (?,?,?,?,?,?,?)",
+                (snapshot_row["snapshot_id"], "Fixture.csproj", "fixture-interface-id", "local-storage",
+                 "a" * 64, tampered_hash, tampered_bytes.decode("ascii")),
+            )
+        db_before_refusal = self.db.read_bytes()
+        runtime_impact_refusal = self.impact("Handler.Handle", max_tokens=100000, expect=2)
+        runtime_pack_refusal = self.evidence_pack(current_route["id"], max_tokens=100000, expect=2)
+        for refused in (runtime_impact_refusal, runtime_pack_refusal):
+            self.assertEqual(refused.stdout, "")
+            self.assertIn("profile/interface combination is not approved", refused.stderr)
+            self.assertEqual(self.db.read_bytes(), db_before_refusal)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("DROP TABLE atlas_runtime_observations")
 
         assets = self.repo / "obj" / "project.assets.json"
         original_assets = assets.read_bytes()
