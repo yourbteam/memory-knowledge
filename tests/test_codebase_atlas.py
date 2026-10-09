@@ -42,7 +42,7 @@ def runtime_producer_identity():
 class AtlasCliTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.repo = self.root / "repo"
         self.repo.mkdir()
         git(self.repo, "init", "-q")

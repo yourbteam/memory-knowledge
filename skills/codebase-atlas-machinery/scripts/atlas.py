@@ -922,10 +922,106 @@ def _route_map_draft(packet: dict[str, object]) -> tuple[dict[str, object], byte
     return draft, raw
 
 
+def _historical_route_origin(db_arg: str, route_fact_id: str, origin_snapshot_id: str,
+                             origin_overlay_id: str) -> tuple[dict[str, object], dict[str, object]]:
+    """Rebuild one exact, current terminal origin binding for a historical re-review."""
+    db_path = Path(db_arg).expanduser().absolute()
+    uri = db_path.as_uri() + "?mode=ro"
+    with sqlite3.connect(uri, uri=True) as connection:
+        rows = connection.execute("SELECT snapshot_id,payload_json FROM atlas_snapshots ORDER BY snapshot_id").fetchall()
+    snapshots = {str(row_id): json.loads(payload) for row_id, payload in rows}
+    origin_snapshot = snapshots.get(origin_snapshot_id)
+    if not isinstance(origin_snapshot, dict):
+        raise AtlasError(f"historical origin snapshot is missing: {origin_snapshot_id}")
+    _validate_snapshot_fingerprint(origin_snapshot, origin_snapshot_id)
+    associations = _validated_route_associations(db_arg, db_path, origin_snapshot, snapshots)
+    matches = [item for item in associations.get(route_fact_id, [])
+               if isinstance(item, dict) and item.get("binding", {}).get("snapshot_id") == origin_snapshot_id
+               and item.get("binding", {}).get("overlay_id") == origin_overlay_id
+               and "carry_provenance" not in item]
+    if len(matches) != 1:
+        raise AtlasError(f"historical origin for route {route_fact_id} is missing, superseded, or ambiguous")
+    association = matches[0]
+    flow = query_flow(db_arg, origin_snapshot_id, origin_overlay_id)
+    if flow.get("review_status") != "accepted":
+        raise AtlasError(f"historical origin overlay for route {route_fact_id} has no accepted original review")
+    if flow.get("review_receipt", {}).get("receipt_hash") != association.get("binding", {}).get("flow_review_receipt_hash"):
+        raise AtlasError(f"historical origin receipt for route {route_fact_id} differs from its exact association")
+    origin = {
+        "schema_version": 1,
+        "snapshot_id": origin_snapshot_id,
+        "route_fact_id": route_fact_id,
+        "overlay_id": origin_overlay_id,
+        "overlay": flow["overlay"],
+        "review_receipt": flow["review_receipt"],
+        "binding": association["binding"],
+        "binding_hash": association["binding_hash"],
+        "association_review": association["association_review"],
+        "association_review_hash": association["association_review_hash"],
+    }
+    return origin, flow["overlay"]
+
+
+def _historical_route_context(db_arg: str, repo_arg: str, route_fact_id: str,
+                              origin_snapshot_id: str, origin_overlay_id: str,
+                              snapshot: dict[str, object], draft: dict[str, object],
+                              evidence: dict[str, object], *, allow_claim_correction: bool = False,
+                              legacy_context: bool = False) -> tuple[dict[str, object], list[dict[str, object]]]:
+    origin, original_overlay = _historical_route_origin(
+        db_arg, route_fact_id, origin_snapshot_id, origin_overlay_id,
+    )
+    expected_draft = {key: value for key, value in original_overlay.items() if key != "content_hash"}
+    expected_draft["snapshot_id"] = snapshot.get("snapshot_id")
+    expected_draft["extractor_identity"] = snapshot.get("source_graph", {}).get("extractor_identity")
+    if not allow_claim_correction and _canonical_json(draft) != _canonical_json(expected_draft):
+        raise AtlasError("historical route draft must preserve the exact origin title, ordered claims, citations, and schema")
+    facts = {fact.get("id"): fact for fact in snapshot.get("source_graph", {}).get("facts", []) if isinstance(fact, dict)}
+    included = {item.get("fact_id") for key in ("source_snippets", "candidate_snippets")
+                for item in evidence.get(key, []) if isinstance(item, dict)}
+    cited: dict[str, dict[str, object]] = {}
+    for conclusion in expected_draft.get("reviewed_conclusions", []):
+        for citation in conclusion.get("evidence", []):
+            fact_id = citation.get("fact_id") if isinstance(citation, dict) else None
+            fact = facts.get(fact_id)
+            if not isinstance(fact_id, str) or not isinstance(fact, dict) or citation.get("source") != fact.get("source"):
+                raise AtlasError(f"historical route citation is not an identical current source fact: {fact_id}")
+            cited[fact_id] = fact["source"]
+    missing_refs = [(fact_id, source) for fact_id, source in sorted(cited.items()) if fact_id not in included]
+    context_snippets = _source_texts(Path(repo_arg).resolve(strict=True), missing_refs) if missing_refs else []
+    if not legacy_context and context_snippets:
+        for snippet in context_snippets:
+            fact = facts.get(snippet.get("fact_id"))
+            if not isinstance(fact, dict) or fact.get("kind") != "route_action":
+                continue
+            controller_source = fact.get("controller_route_source")
+            if (not isinstance(controller_source, dict) or not isinstance(fact.get("http_method"), str)
+                    or not isinstance(fact.get("route_literal"), str)
+                    or not isinstance(fact.get("controller_route_literal"), str)
+                    or not isinstance(fact.get("action_name"), str)):
+                raise AtlasError(f"historical cited route fact {snippet.get('fact_id')} lacks exact controller-prefix source evidence")
+            controller_snippet = _source_texts(
+                Path(repo_arg).resolve(strict=True),
+                [(f"{snippet['fact_id']}:controller-route-source", controller_source)],
+            )
+            if len(controller_snippet) != 1:
+                raise AtlasError(f"historical cited route fact {snippet.get('fact_id')} has ambiguous controller-prefix source")
+            controller = controller_snippet[0]
+            snippet["route_context"] = {
+                "http_method": fact["http_method"], "route_literal": fact["route_literal"],
+                "action_name": fact["action_name"], "action_route_literal": fact.get("action_route_literal"),
+                "controller_type_id": fact.get("controller_type_id"),
+                "controller_route_literal": fact["controller_route_literal"],
+                "controller_route_source": {key: controller_source[key] for key in ("path", "sha256", "span")},
+                "controller_route_text": controller["text"],
+            }
+    return origin, context_snippets
+
+
 def _route_map_validate_packet(
     packet: dict[str, object], db_arg: str, repo_arg: str,
     allow_existing_overlay_id: str | None = None,
     review_sha256: str | None = None,
+    historical_context_mode: str = "current",
 ) -> tuple[dict[str, object], dict[str, object], dict[str, object], bytes]:
     if packet.get("packet_schema_version") != 1 or packet.get("result") != "route_map_review_required":
         raise AtlasError("unsupported route-map review packet")
@@ -963,6 +1059,37 @@ def _route_map_validate_packet(
     expected_overlay_id = hashlib.sha256(_canonical_json(draft)).hexdigest()
     route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
     revision = packet.get("revision")
+    historical_origin = packet.get("historical_origin")
+    if historical_origin is not None:
+        if revision is not None or not isinstance(historical_origin, dict):
+            raise AtlasError("historical route re-review cannot combine an origin binding with a revision packet")
+        origin_snapshot_id = historical_origin.get("snapshot_id")
+        origin_overlay_id = historical_origin.get("overlay_id")
+        if not isinstance(origin_snapshot_id, str) or not isinstance(origin_overlay_id, str):
+            raise AtlasError("historical route origin must identify one exact saved snapshot and overlay")
+        correction = packet.get("historical_correction")
+        if correction is not None and not isinstance(correction, dict):
+            raise AtlasError("historical correction lineage must be an object")
+        expected_origin, expected_context = _historical_route_context(
+            db_arg, repo_arg, route_fact_id, origin_snapshot_id, origin_overlay_id,
+            snapshot, draft, evidence, allow_claim_correction=correction is not None,
+            legacy_context=historical_context_mode == "legacy",
+        )
+        if _canonical_json(historical_origin) != _canonical_json(expected_origin):
+            raise AtlasError("historical route origin does not reconstruct from its exact accepted terminal association")
+        context = packet.get("historical_context_snippets")
+        if not isinstance(context, list) or _canonical_json(context) != _canonical_json(expected_context):
+            raise AtlasError("historical cross-route context differs from exact current source spans")
+        if historical_context_mode == "legacy" and correction is not None:
+            raise AtlasError("legacy historical context is reserved for validating a rejected predecessor")
+        if correction is not None:
+            _validate_historical_correction(
+                correction, packet, db_arg, repo_arg, draft,
+            )
+    elif "historical_context_snippets" in packet:
+        raise AtlasError("historical context snippets require an exact historical origin binding")
+    elif "historical_correction" in packet:
+        raise AtlasError("historical correction lineage requires an exact historical origin binding")
     if revision is None:
         if route_status.get("result") != "unmapped":
             existing_overlay = route_status.get("association", {}).get("binding", {}).get("overlay_id")
@@ -1047,6 +1174,12 @@ def _route_map_validate_packet(
         for snippet in snippets:
             if not isinstance(snippet, dict) or not isinstance(snippet.get("fact_id"), str):
                 raise AtlasError(f"route-map evidence {field} contains a malformed source fact")
+            source = {key: snippet.get(key) for key in ("path", "sha256", "span")}
+            packet_sources.setdefault(snippet["fact_id"], set()).add(_canonical_json(source))
+    if historical_origin is not None:
+        for snippet in packet["historical_context_snippets"]:
+            if not isinstance(snippet, dict) or not isinstance(snippet.get("fact_id"), str):
+                raise AtlasError("historical context contains a malformed source snippet")
             source = {key: snippet.get(key) for key in ("path", "sha256", "span")}
             packet_sources.setdefault(snippet["fact_id"], set()).add(_canonical_json(source))
     graph_facts = graph.get("facts", [])
@@ -1154,10 +1287,118 @@ def _validate_route_map_review(review: dict[str, object], packet: dict[str, obje
     return review
 
 
+def _validate_historical_rejected_predecessor(packet: dict[str, object], review: dict[str, object],
+                                             db_arg: str, repo_arg: str) -> str:
+    modes = ("current", "legacy")
+    failures: list[str] = []
+    # An accepted R1 correction can already have been published when status
+    # reconstructs its rejected R0 predecessor. Permit only that exact current
+    # route overlay while validating the historical packet; all packet, source,
+    # origin, and rejected-review checks still run below.
+    binding = packet.get("binding")
+    route_id = binding.get("route_fact_id") if isinstance(binding, dict) else None
+    existing_overlay_id = None
+    if isinstance(route_id, str) and route_id:
+        current, _encoded, _status = route_find(db_arg, repo_arg, route_id, 2**31 - 1)
+        if current.get("result") == "fresh":
+            current_binding = current.get("association", {}).get("binding", {})
+            candidate_overlay = current_binding.get("overlay_id") if isinstance(current_binding, dict) else None
+            if isinstance(candidate_overlay, str):
+                existing_overlay_id = candidate_overlay
+    for mode in modes:
+        try:
+            _route_map_validate_packet(packet, db_arg, repo_arg,
+                                       allow_existing_overlay_id=existing_overlay_id,
+                                       historical_context_mode=mode)
+            _validate_route_map_review(review, packet)
+        except AtlasError as exc:
+            failures.append(f"{mode}: {exc}")
+            continue
+        if (review.get("decision") == "rejected"
+                and review.get("assignment_review", {}).get("decision") == "accepted"
+                and review.get("route_association_review", {}).get("decision") == "accepted"
+                and any(isinstance(item, dict) and item.get("decision") == "rejected"
+                        for item in review.get("conclusion_reviews", []))):
+            return mode
+        raise AtlasError("historical correction requires rejected conclusions with accepted assignment and route review")
+    raise AtlasError("historical R0 packet and rejected review do not reconstruct: " + "; ".join(failures))
+
+
+def _validate_historical_correction(correction: dict[str, object], packet: dict[str, object],
+                                    db_arg: str, repo_arg: str, draft: dict[str, object]) -> None:
+    required = {"schema_version", "prior_context_mode", "prior_packet", "prior_review",
+                "prior_packet_sha256", "prior_review_sha256"}
+    if set(correction) != required or correction.get("schema_version") != 1:
+        raise AtlasError("historical correction lineage has an unsupported or noncanonical schema")
+    prior_packet = correction.get("prior_packet")
+    prior_review = correction.get("prior_review")
+    if not isinstance(prior_packet, dict) or not isinstance(prior_review, dict):
+        raise AtlasError("historical correction requires the complete saved predecessor packet and review")
+    prior_packet_sha = prior_packet.get("packet_sha256")
+    prior_review_sha = hashlib.sha256(_canonical_json(prior_review)).hexdigest()
+    if correction.get("prior_packet_sha256") != prior_packet_sha or correction.get("prior_review_sha256") != prior_review_sha:
+        raise AtlasError("historical correction predecessor packet or review digest does not match its exact saved content")
+    prior_binding = prior_packet.get("binding")
+    current_binding = packet.get("binding")
+    prior_origin = prior_packet.get("historical_origin")
+    current_origin = packet.get("historical_origin")
+    if (not isinstance(prior_binding, dict) or not isinstance(current_binding, dict)
+            or prior_binding.get("route_fact_id") != current_binding.get("route_fact_id")
+            or prior_binding.get("snapshot_id") != current_binding.get("snapshot_id")
+            or prior_binding.get("extractor_identity") != current_binding.get("extractor_identity")
+            or not isinstance(prior_origin, dict) or _canonical_json(prior_origin) != _canonical_json(current_origin)):
+        raise AtlasError("historical correction predecessor belongs to a different route, snapshot, or accepted origin")
+    if "historical_correction" in prior_packet:
+        raise AtlasError("historical correction is limited to one round; a corrected predecessor cannot be corrected again")
+    prior_context_mode = _validate_historical_rejected_predecessor(prior_packet, prior_review, db_arg, repo_arg)
+    if correction.get("prior_context_mode") != prior_context_mode:
+        raise AtlasError("historical correction predecessor context mode does not match its exact validated R0 packet")
+    rejected = {item.get("conclusion_number") for item in prior_review.get("conclusion_reviews", [])
+                if isinstance(item, dict) and item.get("decision") == "rejected"}
+    if not rejected:
+        raise AtlasError("historical correction predecessor has no rejected conclusion eligible for a text correction")
+    prior_draft, _prior_bytes = _route_map_draft(prior_packet)
+    if set(prior_draft) != set(draft):
+        raise AtlasError("historical correction may change only text in rejected conclusions")
+    for field in set(prior_draft) - {"reviewed_conclusions"}:
+        if prior_draft[field] != draft[field]:
+            raise AtlasError("historical correction may change only text in rejected conclusions")
+    old_claims = prior_draft.get("reviewed_conclusions")
+    new_claims = draft.get("reviewed_conclusions")
+    if not isinstance(old_claims, list) or not isinstance(new_claims, list) or len(old_claims) != len(new_claims):
+        raise AtlasError("historical correction must preserve conclusion count and order")
+    changed: set[int] = set()
+    for index, (old, new) in enumerate(zip(old_claims, new_claims), start=1):
+        if not isinstance(old, dict) or not isinstance(new, dict) or set(old) != set(new):
+            raise AtlasError("historical correction may change only text in rejected conclusions")
+        if old.get("evidence") != new.get("evidence"):
+            raise AtlasError("historical correction must preserve every original citation byte-for-byte")
+        if old.get("claim") != new.get("claim"):
+            if index not in rejected or not isinstance(new.get("claim"), str) or not new["claim"].strip():
+                raise AtlasError("historical correction may change text only for conclusions rejected in R0")
+            changed.add(index)
+        for field in set(old) - {"claim"}:
+            if old[field] != new[field]:
+                raise AtlasError("historical correction may change only rejected conclusion text")
+    if not changed:
+        raise AtlasError("historical correction must change text in at least one rejected conclusion")
+
+
 def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path: str, max_bytes: int,
-                      revise: bool = False) -> tuple[dict[str, object], bytes, int]:
+                      revise: bool = False, origin_snapshot_id: str | None = None,
+                      origin_overlay_id: str | None = None,
+                      correction_packet_path: str | None = None,
+                      correction_review_path: str | None = None) -> tuple[dict[str, object], bytes, int]:
     if max_bytes < 1:
         raise AtlasError("--max-tokens must be a positive integer")
+    if (origin_snapshot_id is None) != (origin_overlay_id is None):
+        raise AtlasError("historical route re-review requires both --origin-snapshot and --origin-overlay")
+    if (correction_packet_path is None) != (correction_review_path is None):
+        raise AtlasError("historical correction requires both --correction-packet-file and --correction-review-file")
+    if correction_packet_path is not None and origin_snapshot_id is None:
+        raise AtlasError("historical correction requires an exact --origin-snapshot and --origin-overlay")
+    if revise and origin_snapshot_id is not None:
+        raise AtlasError("historical route re-review cannot be combined with --revise")
     route_status, _route_bytes, _route_exit = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
     if revise:
         if route_status.get("result") != "fresh":
@@ -1207,8 +1448,37 @@ def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path
         raise AtlasError("Luna route-map draft snapshot_id and extractor_identity must match the current evidence")
     snapshot, _snapshots, _extractor, _live = _current_route_snapshot(Path(db_arg).expanduser().absolute(), repo_arg)
     _validate_reviewed_flow(snapshot, draft)
+    correction_record = None
+    if correction_packet_path is not None and correction_review_path is not None:
+        prior_packet, _prior_packet_bytes = _read_json_file(correction_packet_path, "historical predecessor packet")
+        prior_review, _prior_review_bytes = _read_json_file(correction_review_path, "historical rejected review")
+        prior_binding = prior_packet.get("binding")
+        prior_origin = prior_packet.get("historical_origin")
+        if (not isinstance(prior_binding, dict) or prior_binding.get("route_fact_id") != route_fact_id
+                or prior_binding.get("snapshot_id") != snapshot_id
+                or prior_binding.get("extractor_identity") != extractor_identity
+                or not isinstance(prior_origin, dict)
+                or prior_origin.get("snapshot_id") != origin_snapshot_id
+                or prior_origin.get("overlay_id") != origin_overlay_id):
+            raise AtlasError("historical correction predecessor does not match the exact route, snapshot, and origin")
+        prior_context_mode = _validate_historical_rejected_predecessor(prior_packet, prior_review, db_arg, repo_arg)
+        correction_record = {
+            "schema_version": 1, "prior_context_mode": prior_context_mode,
+            "prior_packet": prior_packet, "prior_review": prior_review,
+            "prior_packet_sha256": prior_packet.get("packet_sha256"),
+            "prior_review_sha256": hashlib.sha256(_canonical_json(prior_review)).hexdigest(),
+        }
+    historical_origin = None
+    historical_context = None
+    if origin_snapshot_id is not None and origin_overlay_id is not None:
+        historical_origin, historical_context = _historical_route_context(
+            db_arg, repo_arg, route_fact_id, origin_snapshot_id, origin_overlay_id,
+            snapshot, draft, evidence, allow_claim_correction=correction_record is not None,
+        )
     fact_ids = {item.get("fact_id") for item in evidence.get("source_snippets", []) + evidence.get("candidate_snippets", [])}
     fact_ids.add(route_fact_id)
+    if historical_origin is not None and isinstance(historical_context, list):
+        fact_ids.update(item.get("fact_id") for item in historical_context if isinstance(item, dict))
     citations = [citation for conclusion in draft.get("reviewed_conclusions", [])
                  for citation in conclusion.get("evidence", [])]
     if any(citation.get("fact_id") not in fact_ids for citation in citations):
@@ -1240,6 +1510,30 @@ def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path
             "Reviewer identity and model are audit labels supplied by the caller and are not authenticated by Atlas."
         ),
     }
+    if origin_snapshot_id is not None and origin_overlay_id is not None:
+        assert historical_origin is not None and historical_context is not None
+        packet["historical_origin"] = historical_origin
+        packet["historical_context_snippets"] = historical_context
+        packet["review_instructions"] = (
+            "This is an independent fresh review of a preserved historical route map. Review the one selected route "
+            "against the complete current route evidence and exact cited source spans. Separately labeled historical "
+            "cross-route context is included only because the preserved origin claims cite it; assess those citations "
+            "as context and do not treat them as behavior of the selected route. Confirm the exact origin binding, "
+            "preserved title and ordered claims, and current source correspondence. Give one accepted/rejected decision "
+            "with concrete basis for every conclusion and one separate route-association decision. Accept only when "
+            "the assignment, each conclusion, and the selected-route association are accepted. Reviewer identity and "
+            "model are caller-supplied audit labels, not authenticated by Atlas."
+        )
+    if correction_record is not None:
+        packet["historical_correction"] = correction_record
+        packet["review_instructions"] = (
+            "This is one fresh correction round for an exact rejected historical review. Independently reassess the "
+            "current complete evidence and source spans. The embedded R0 packet and rejected review are immutable "
+            "lineage; only text in conclusions rejected by R0 may change, and every citation and accepted conclusion "
+            "must remain exact. Separately labeled controller-route context supplies source-verified route-prefix "
+            "evidence for originally cited routes outside this route's complete evidence packet. Assess it only as "
+            "historical citation context. This is the final correction round; another rejection is terminal."
+        )
     if revision is not None:
         packet["revision"] = revision
         packet["review_instructions"] += (
@@ -1248,6 +1542,8 @@ def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path
             "against the new complete evidence and do not imply that the predecessor record was replaced."
         )
     packet["packet_sha256"] = _route_map_packet_digest(packet)
+    if correction_record is not None:
+        _validate_historical_correction(correction_record, packet, db_arg, repo_arg, draft)
     encoded = _canonical_json(packet) + b"\n"
     if len(encoded) > max_bytes:
         raise AtlasError(f"complete route-map review packet requires {len(encoded)} ASCII stdout bytes including newline; --max-tokens limit is {max_bytes}; stdout withheld")
@@ -1257,8 +1553,24 @@ def route_map_prepare(db_arg: str, repo_arg: str, route_fact_id: str, draft_path
 def route_map_review(db_arg: str, repo_arg: str, packet_path: str, review_path: str) -> tuple[dict[str, object], bytes, int]:
     packet, _packet_bytes = _read_json_file(packet_path, "route-map packet")
     review, _review_bytes = _read_json_file(review_path, "route-map independent review")
+    # A saved review remains verifiable after its exact accepted overlay has
+    # been published. Only pass the already-bound overlay ID through the
+    # validator's existing mapped-route allowance when it equals this packet's
+    # draft; a different current map remains a refusal.
+    allow_existing_overlay_id = None
+    binding = packet.get("binding")
+    route_fact_id = binding.get("route_fact_id") if isinstance(binding, dict) else None
+    if isinstance(route_fact_id, str) and route_fact_id:
+        current, _current_bytes, _current_status = route_find(db_arg, repo_arg, route_fact_id, 2**31 - 1)
+        if current.get("result") == "fresh":
+            current_binding = current.get("association", {}).get("binding", {})
+            current_overlay_id = current_binding.get("overlay_id") if isinstance(current_binding, dict) else None
+            draft, _draft_bytes = _route_map_draft(packet)
+            if isinstance(current_overlay_id, str) and current_overlay_id == hashlib.sha256(_canonical_json(draft)).hexdigest():
+                allow_existing_overlay_id = current_overlay_id
     _route_map_validate_packet(
         packet, db_arg, repo_arg,
+        allow_existing_overlay_id=allow_existing_overlay_id,
         review_sha256=hashlib.sha256(_canonical_json(review)).hexdigest(),
     )
     _validate_route_map_review(review, packet)
@@ -1266,6 +1578,53 @@ def route_map_review(db_arg: str, repo_arg: str, packet_path: str, review_path: 
               "evidence_sha256": packet["evidence_sha256"], "draft_sha256": packet["draft_sha256"],
               "review": review, "writes": 0}
     return result, _canonical_json(result) + b"\n", 0
+
+
+def _route_map_review_receipt(packet: dict[str, object], review: dict[str, object]) -> dict[str, object]:
+    draft, _draft_bytes = _route_map_draft(packet)
+    binding = packet.get("binding")
+    if not isinstance(binding, dict):
+        raise AtlasError("route-map receipt requires its exact packet binding")
+    overlay_id = hashlib.sha256(_canonical_json(draft)).hexdigest()
+    receipt: dict[str, object] = {
+        "receipt_schema_version": 1, "snapshot_id": binding["snapshot_id"], "overlay_id": overlay_id,
+        "overlay_content_hash": overlay_id, "extractor_identity": binding["extractor_identity"],
+        "reviewer_identity": review["reviewer_identity"], "reviewer_model": review["reviewer_model"],
+        "decision": "accepted", "reviewed_at": review["reviewed_at"],
+        "review_basis": review["assignment_review"]["basis"],
+        "packet_sha256": packet["packet_sha256"], "evidence_sha256": packet["evidence_sha256"],
+        "draft_sha256": packet["draft_sha256"],
+        "conclusion_reviews": review["conclusion_reviews"],
+        "route_association_review": review["route_association_review"],
+    }
+    historical_origin = packet.get("historical_origin")
+    if isinstance(historical_origin, dict):
+        receipt["historical_origin"] = {
+            "snapshot_id": historical_origin["snapshot_id"],
+            "route_fact_id": historical_origin["route_fact_id"],
+            "overlay_id": historical_origin["overlay_id"],
+            "review_receipt_hash": historical_origin["review_receipt"].get("receipt_hash"),
+            "binding_hash": historical_origin["binding_hash"],
+            "association_review_hash": historical_origin["association_review_hash"],
+            "context_snippets_sha256": hashlib.sha256(_canonical_json(packet["historical_context_snippets"])).hexdigest(),
+        }
+    revision = packet.get("revision")
+    if revision is not None:
+        predecessor = revision.get("predecessor") if isinstance(revision, dict) else None
+        if not isinstance(predecessor, dict):
+            raise AtlasError("route-map revision packet is missing its exact predecessor")
+        receipt["route_map_review_sha256"] = hashlib.sha256(_canonical_json(review)).hexdigest()
+        receipt["revision"] = {
+            "revision_schema_version": 1,
+            "predecessor_snapshot_id": predecessor["snapshot_id"],
+            "predecessor_route_fact_id": predecessor["route_fact_id"],
+            "predecessor_overlay_id": predecessor["overlay_id"],
+            "predecessor_flow_review_receipt_hash": predecessor["flow_review_receipt_hash"],
+            "predecessor_binding_hash": predecessor["binding_hash"],
+            "predecessor_association_review_hash": predecessor["association_review_hash"],
+            "packet_sha256": packet["packet_sha256"],
+        }
+    return receipt
 
 
 def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path: str) -> dict[str, object]:
@@ -1294,33 +1653,8 @@ def publish_route_map(db_arg: str, repo_arg: str, packet_path: str, review_path:
         overlay_payload = {**draft, "content_hash": overlay_id}
         overlay_json = _canonical_json(overlay_payload).decode("ascii")
         route_map_review_sha256 = hashlib.sha256(_canonical_json(review)).hexdigest()
-        receipt = {
-            "receipt_schema_version": 1, "snapshot_id": snapshot_id, "overlay_id": overlay_id,
-            "overlay_content_hash": overlay_id, "extractor_identity": extractor_identity,
-            "reviewer_identity": review["reviewer_identity"], "reviewer_model": review["reviewer_model"],
-            "decision": "accepted", "reviewed_at": review["reviewed_at"],
-            "review_basis": review["assignment_review"]["basis"],
-            "packet_sha256": packet["packet_sha256"], "evidence_sha256": packet["evidence_sha256"],
-            "draft_sha256": packet["draft_sha256"],
-            "conclusion_reviews": review["conclusion_reviews"],
-            "route_association_review": review["route_association_review"],
-        }
+        receipt = _route_map_review_receipt(packet, review)
         revision = packet.get("revision")
-        if revision is not None:
-            predecessor = revision.get("predecessor") if isinstance(revision, dict) else None
-            if not isinstance(predecessor, dict):
-                raise AtlasError("route-map revision packet is missing its exact predecessor")
-            receipt["route_map_review_sha256"] = route_map_review_sha256
-            receipt["revision"] = {
-                "revision_schema_version": 1,
-                "predecessor_snapshot_id": predecessor["snapshot_id"],
-                "predecessor_route_fact_id": predecessor["route_fact_id"],
-                "predecessor_overlay_id": predecessor["overlay_id"],
-                "predecessor_flow_review_receipt_hash": predecessor["flow_review_receipt_hash"],
-                "predecessor_binding_hash": predecessor["binding_hash"],
-                "predecessor_association_review_hash": predecessor["association_review_hash"],
-                "packet_sha256": packet["packet_sha256"],
-            }
         _validate_reviewed_flow(snapshot, draft)
         _validate_review_receipt(receipt, snapshot_id, overlay_id, overlay_id, extractor_identity)
         receipt_hash = hashlib.sha256(_canonical_json(receipt)).hexdigest()
@@ -4372,7 +4706,7 @@ def _runtime_artifact_root(db_path: Path, snapshot_id: object, project_path: obj
         "database": db_path.expanduser().absolute().as_posix(),
         "snapshot": snapshot_id, "project": project_path, "interface": interface_name,
     })).hexdigest()
-    root = Path(tempfile.gettempdir()).resolve(strict=True) / "atlas-runtime-observations" / key
+    root = db_path.expanduser().absolute().parent / ".atlas-runtime-observations" / key
     _runtime_check_no_symlink_components(root, label="artifact root")
     resolved = root.resolve(strict=False)
     try:
@@ -7057,6 +7391,10 @@ def main(argv: list[str] | None = None) -> int:
     map_prepare_parser.add_argument("--draft-file", required=True)
     map_prepare_parser.add_argument("--max-tokens", required=True, type=int, help="maximum ASCII stdout bytes (conservative proxy, not model tokens)")
     map_prepare_parser.add_argument("--revise", action="store_true", help="revise the one current same-snapshot direct reviewed map")
+    map_prepare_parser.add_argument("--origin-snapshot", help="re-review one exact accepted terminal historical map on the current snapshot")
+    map_prepare_parser.add_argument("--origin-overlay", help="exact accepted historical overlay paired with --origin-snapshot")
+    map_prepare_parser.add_argument("--correction-packet-file", help="exact saved rejected R0 packet for one historical text-correction round")
+    map_prepare_parser.add_argument("--correction-review-file", help="exact saved rejected R0 review paired with --correction-packet-file")
     map_review_parser = commands.add_parser("route-map-review", help="validate an independent route-map review without writing atlas records")
     map_review_parser.add_argument("--db", required=True)
     map_review_parser.add_argument("--repo", required=True)
@@ -7110,6 +7448,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "route-map-prepare":
             output, encoded_output, exit_code = route_map_prepare(
                 args.db, args.repo, args.route_fact_id, args.draft_file, args.max_tokens, args.revise,
+                args.origin_snapshot, args.origin_overlay, args.correction_packet_file, args.correction_review_file,
             )
         elif args.command == "route-map-review":
             output, encoded_output, exit_code = route_map_review(
