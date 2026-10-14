@@ -78,6 +78,25 @@ tail log → scale S1. Secrets are never printed.
 
 ## Failure Fingerprints
 
+- **`<src>.<col> has no matching column in target <Table>`** → SOURCE COLUMN DRIFT. The app added a
+  column; the loader maps CSV headers against the LIVE target schema and throws on the first
+  unmapped one, aborting the whole reload ~6 min in with **zero rows loaded**. Happened three weeks
+  running (2026-09-25 `order.donation_amount` + `donation_added_at`, 2026-10-01
+  `users.password_set_at`, 2026-10-14 `payment.displayed_total`). **The script now refuses this in
+  preflight, before the upload**, listing EVERY drifted column with its authoritative MySQL type and
+  a ready-to-run `ALTER` — the runner's own error names only the first, which is why three separate
+  weeks each revealed one column. Apply the printed statements (one at a time through MigrationRunner
+  `query`; the apply-schema helper splits on `;\n`), record one dated file under
+  `taggable-api/migrations/`, then re-run. An unmapped new TABLE is skipped harmlessly and is NOT
+  this fingerprint.
+- **Authoritative source types** come from the local MySQL mirror of the app database — container
+  `taggable-mysql8`, database `taggable_dev`, port 3307 (override with `MYSQL_CONTAINER`/`MYSQL_DB`):
+  `information_schema.COLUMNS`. Use it rather than inferring from the column name or the exported
+  values: on 2026-10-14 all 94,609 exported payments had a NULL `displayed_total`, so no value
+  existed to infer from and the name alone would equally have fitted a formatted string. The
+  preflight does this lookup automatically; it still refuses on drift when the container is down,
+  just without the type.
+
 - **Every table skipped / `Staging done (0 tables)`** → double `_table__table_` filenames (wrong export
   template). Fix: rename `name.replace('_table__table_','_table_',1)` (script does this) or re-export with
   `@DATABASE@`.
