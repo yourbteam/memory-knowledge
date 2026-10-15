@@ -1,9 +1,215 @@
+# Opt-in Development-Probe adapter for the captured worker94 failed-no-answer boundary.
+if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "--atlas-worker94-failed-job-dpp":
+    import hashlib as _h, json as _j, os as _o, shutil as _sh, subprocess as _sp, sys as _s
+    from pathlib import Path as _P
+    from datetime import datetime as _dt, timezone as _tz
+    _work=_P(_o.environ["EXPERIMENT_WORK_DIR"]).resolve(); _work.mkdir(parents=True,exist_ok=True)
+    _result=_P(_o.environ["EXPERIMENT_RESULT_PATH"]); _feed=_P(_o.environ["EXPERIMENT_TELEMETRY_PATH"])
+    _index=_P(_o.environ["ATLAS_FAILED_JOB_INDEX_PATH"]).resolve(strict=True); _index_raw=_index.read_bytes()
+    _index_sha=_o.environ["ATLAS_FAILED_JOB_INDEX_SHA256"]
+    if _h.sha256(_index_raw).hexdigest()!=_index_sha: raise SystemExit("captured failed-job index hash mismatch")
+    _proof=_j.loads(_index_raw); _case=_s.argv[2]
+    _source=_P(__file__).resolve().parents[1]/"skills/codebase-atlas-machinery/scripts/task_continuation.py"
+    _candidate_sha=_h.sha256(_source.read_bytes()).hexdigest(); _seq=0; _observations=[]
+    def _emit(kind,msg,digest,obs):
+        global _seq
+        _seq+=1; row={"schema_version":1,"sequence":_seq,"recorded_at":_dt.now(_tz.utc).isoformat(),"event":kind,"message":msg,"evidence_sha256":digest,"observations":obs}
+        _feed.parent.mkdir(parents=True,exist_ok=True)
+        with _feed.open("a",encoding="utf-8") as f:f.write(_j.dumps(row,sort_keys=True)+"\n");f.flush()
+    def _tree(root): return {str(p.relative_to(root)):_h.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*") if p.is_file()}
+    def _call(run,valid_index=True):
+        argv=[_s.executable,"-B",str(_source),"resume","--repo","/Users/kamenkamenov/taggable-api","--db","/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite","--task-file","/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt","--intake-run","/private/tmp/atlas-discount-lifecycle-task-20261012/run","--run-dir",str(run),"--engine-manifest","/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json","--max-worker-calls","1","--timeout-seconds","180","--prepare-only","--adopt-checkpoint-executor"]
+        if valid_index: argv += ["--failed-worker-evidence-index",str(_index),"--failed-worker-evidence-index-sha256",_index_sha]
+        else: argv += ["--failed-worker-evidence-index",str(_index),"--failed-worker-evidence-index-sha256","0"*64]
+        p=_sp.run(argv,capture_output=True,text=True,timeout=180,env={**_o.environ,"PYTHONDONTWRITEBYTECODE":"1"})
+        try: body=_j.loads(p.stdout)
+        except Exception: body=None
+        return {"argv":argv,"exit_code":p.returncode,"stdout":p.stdout,"stderr":p.stderr,"body":body}
+    try:
+        if _case not in {"valid-index-adoption","wrong-index-refusal","captured-file-mutation-refusal","post-admission-index-mutation-refusal"}: raise SystemExit("unknown captured case")
+        run=_work/"child-run"; _sh.copytree(_P(_proof["candidate_root"]),run)
+        before=_tree(run); _initial_events=len(list((run/"events").glob("*.json")))
+        if _case=="wrong-index-refusal":
+            call=_call(run,False); after=_tree(run)
+            if call["exit_code"]!=2 or after!=before: raise SystemExit("wrong index was not refused mutation-free")
+            _observations.append({"case":_case,"refused":True,"old_files_preserved":True,"provider_calls":0})
+        elif _case=="captured-file-mutation-refusal":
+            target=run/"workers"/"existing_map_task_fit_4ea1336ed5155b917796da39"/"events.jsonl"
+            target.write_bytes(target.read_bytes()+b"\n")
+            mutated=_tree(run); call=_call(run); after=_tree(run)
+            if call["exit_code"]!=2 or after!=mutated or len(list((run/"events").glob("*.json")))!=_initial_events: raise SystemExit("mutated captured failure was not refused mutation-free")
+            _observations.append({"case":_case,"refused":True,"mutation_preserved":after==mutated,"provider_calls":0})
+        else:
+            call=_call(run); after=_tree(run); adopted=(run/"events/000063.json")
+            if call["exit_code"]!=0 or not call["body"] or call["body"].get("events")!=63 or call["body"].get("status")!="existing_map_task_fit_4ea1336ed5155b917796da39": raise SystemExit("valid captured failure adoption did not preserve the pending task-fit status")
+            if any(after.get(k)!=v for k,v in before.items()): raise SystemExit("valid adoption changed a preexisting file")
+            event=_j.loads(adopted.read_bytes())
+            if event.get("payload",{}).get("failed_evidence_index_sha256")!=_index_sha: raise SystemExit("adoption event did not bind the explicit frozen index")
+            if _case=="post-admission-index-mutation-refusal":
+                snap=run/"inputs/engine-transition/failed-event62-evidence-index.json"; snap.write_bytes(snap.read_bytes()+b" ")
+                after_mutation=_tree(run); verify=_sp.run([_s.executable,"-B",str(_source),"status","--repo","/Users/kamenkamenov/taggable-api","--db","/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite","--task-file","/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt","--intake-run","/private/tmp/atlas-discount-lifecycle-task-20261012/run","--run-dir",str(run),"--engine-manifest","/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json"],capture_output=True,text=True,timeout=180,env={**_o.environ,"PYTHONDONTWRITEBYTECODE":"1"})
+                if verify.returncode!=2 or _tree(run)!=after_mutation: raise SystemExit("post-admission index mutation was not refused")
+                _observations.append({"case":_case,"refused":True,"after_admission_hash_guard":True,"provider_calls":0})
+            else:
+                _observations.append({"case":_case,"adopted":True,"old_files_preserved":True,"pending_status":call["body"]["status"],"event_count":63,"retry_eligibility_preflight":"passed through public resume using _load runtime context","retry_started_events":0,"provider_calls":0})
+        _raw={"case_id":_case,"candidate_module_sha256":_candidate_sha,"evidence_index_sha256":_index_sha,"provider_calls":0,"observations":_observations}
+        _raw["result_sha256"]=_h.sha256(_j.dumps(_raw,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+        _result.parent.mkdir(parents=True,exist_ok=True);_result.write_text(_j.dumps(_raw,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+        _emit("worker94-captured-failure-case-completed",_case,_raw["result_sha256"],_observations)
+    except Exception as _exc:
+        _emit("worker94-captured-failure-case-failed",str(_exc),_h.sha256(str(_exc).encode()).hexdigest(),_observations);raise
+    raise SystemExit(0)
+
+# Opt-in Development-Probe adapter for the completed-worker recovery boundary.
+if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "--atlas-completed-worker-recovery-dpp":
+    import hashlib as _h, json as _j, os as _o, shutil as _sh, subprocess as _sp, sys as _s
+    from pathlib import Path as _P
+    from datetime import datetime as _dt, timezone as _tz
+    _work=_P(_o.environ["EXPERIMENT_WORK_DIR"]).resolve(); _work.mkdir(parents=True,exist_ok=True)
+    _input=_P(_o.environ["EXPERIMENT_INPUT_PATH"]).resolve(strict=True); _result=_P(_o.environ["EXPERIMENT_RESULT_PATH"]); _feed=_P(_o.environ["EXPERIMENT_TELEMETRY_PATH"])
+    _variant=_o.environ["EXPERIMENT_VARIANT_ID"]
+    _cfg_path=_P(_o.environ["EXPERIMENT_VARIANT_PATH"]) if _o.environ.get("EXPERIMENT_VARIANT_PATH") else None
+    _cfg=_j.loads(_cfg_path.read_bytes())["configuration"] if _cfg_path else {}
+    _case=_cfg.get("case_id"); _approach=_s.argv[2]
+    _proof_path=_P(_o.environ["ATLAS_RECOVERY_PROOF_INDEX"]).resolve(strict=True); _proof_raw=_proof_path.read_bytes()
+    if _h.sha256(_proof_raw).hexdigest()!=_o.environ["ATLAS_RECOVERY_PROOF_INDEX_SHA256"]: raise SystemExit("recovery proof index digest mismatch")
+    _proof=_j.loads(_proof_raw)
+    _input_sha=_h.sha256(_input.read_bytes()).hexdigest()
+    if _case is None:
+        _matches=[name for name,digest in _proof["case_sha256"].items() if digest==_input_sha]
+        _case=_matches[0] if len(_matches)==1 else None
+    _case_sha=_proof["case_sha256"].get(_case)
+    if not _case_sha or _input_sha!=_case_sha: raise SystemExit("captured case input identity mismatch")
+    _candidate=_P(__file__).resolve().parents[1]/"skills/codebase-atlas-machinery/scripts/task_continuation.py"
+    _candidate_sha=_h.sha256(_candidate.read_bytes()).hexdigest(); _script=_s.executable; _seq=0
+    def _emit(kind,msg,digest,obs):
+        global _seq
+        _seq+=1; row={"schema_version":1,"sequence":_seq,"event":kind,"recorded_at":_dt.now(_tz.utc).isoformat(),"variant_id":_variant,"message":msg,"evidence_sha256":digest,"observations":obs}
+        _feed.parent.mkdir(parents=True,exist_ok=True)
+        with _feed.open("a",encoding="utf-8") as f:f.write(_j.dumps(row,sort_keys=True)+"\n");f.flush()
+    def _tree(root): return {str(p.relative_to(root)):_h.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*") if p.is_file()}
+    def _call(argv):
+        p=_sp.run(argv,capture_output=True,text=True,timeout=180,env={**_o.environ,"PYTHONDONTWRITEBYTECODE":"1"})
+        try: body=_j.loads(p.stdout)
+        except Exception: body=None
+        return {"argv":argv,"exit_code":p.returncode,"stdout":p.stdout,"stderr":p.stderr,"body":body}
+    _raw={"case_id":_case,"case_input_sha256":_case_sha,"approach_id":_approach,"candidate_module_sha256":_candidate_sha,"proof_index_sha256":_h.sha256(_proof_raw).hexdigest(),"provider_calls":0,"external_replay":"captured-terminal-recovery-replay" if _approach=="completed-worker-recovery" else "none"}
+    _case_task=_P(_proof["task_file"]); _intake=_P(_proof["intake_run"]); _db=_proof["db"]; _repo=_proof["repo"]
+    def _base(run):
+        return [_script,"-B",str(_candidate),"resume","--repo",_repo,"--db",_db,"--task-file",str(_case_task),"--intake-run",str(_intake),"--run-dir",str(run),"--engine-manifest",_proof["engine_manifest"],"--completed-worker-register",_proof["worker_register"],"--completed-worker-register-sha256",_proof["worker_register_sha256"],"--previous-engine-archive",_proof["previous_engine_archive"],"--max-worker-calls","1"]
+    try:
+        run=_work/"child-run"; _sh.copytree(_proof["pending_child"],run)
+        before=_tree(run); original_count=len(list((run/"events").glob("*.json")))
+        if _case=="saved-task-corruption":
+            # Exercise the captured fail-closed task-identity boundary in an isolated intake copy.
+            intake_copy=_work/"damaged-intake"; _sh.copytree(_intake,intake_copy)
+            task_copy=intake_copy/"task.txt"; task_copy.write_bytes(task_copy.read_bytes()+b"\n[isolated captured-case corruption]\n")
+            argv=_base(run)
+            argv[argv.index("--task-file")+1]=str(task_copy)
+            argv[argv.index("--intake-run")+1]=str(intake_copy)
+        else:
+            argv=_base(run)
+        _raw["public_command"]=_call(argv); _raw["run_path"]=str(run); _raw["event_count_before"]=original_count
+        _after=_tree(run); _raw["original_files_unchanged"]=all(_after.get(k)==v for k,v in before.items()); _raw["original_file_count"]=len(before)
+        _raw["event_count_after"]=len(list((run/"events").glob("*.json")))
+        _raw["event_types"]=[_j.loads(p.read_bytes()).get("type") for p in sorted((run/"events").glob("*.json"))]
+        _raw["captured_interruption_proof_sha256"]=_proof["interruption_proof_sha256"] if _case=="interrupted-intake" else None
+        _raw["captured_interruption_proof_matches"]=_h.sha256(_P(_proof["interruption_proof"]).read_bytes()).hexdigest()==_proof["interruption_proof_sha256"] if _case=="interrupted-intake" else None
+        if _case=="interrupted-intake":
+            _checkpoint=_j.loads(_P(_proof["interruption_checkpoint"]).read_bytes())
+            _raw["pre_review_checkpoint_matches"]=all(_h.sha256((run/rel).read_bytes()).hexdigest()==digest for rel,digest in _checkpoint["files"].items() if (run/rel).is_file()) and all((run/rel).is_file() for rel in _checkpoint["files"])
+        else: _raw["pre_review_checkpoint_matches"]=None
+        if _approach=="completed-worker-recovery":
+            body=_raw["public_command"].get("body") or {}; _out=run/"outputs"; _combined=_j.loads((_out/"map_review_combined.json").read_bytes()) if (_out/"map_review_combined.json").is_file() else {}
+            _valid=_j.loads((_out/"map_review_validation.json").read_bytes()) if (_out/"map_review_validation.json").is_file() else {}
+            _raw["semantic_review"]={"combined_sha256":_h.sha256((_out/"map_review_combined.json").read_bytes()).hexdigest() if (_out/"map_review_combined.json").is_file() else None,"validation_sha256":_h.sha256((_out/"map_review_validation.json").read_bytes()).hexdigest() if (_out/"map_review_validation.json").is_file() else None,"source_decision":_combined.get("source_review",{}).get("decision"),"task_fit_decision":_combined.get("task_fit",{}).get("decision"),"semantic_claim_numbers":_combined.get("task_fit",{}).get("semantic_claim_numbers"),"task_sha256":body.get("task_sha256"),"source_identity_sha256":body.get("source_identity_sha256"),"validation_result":_valid.get("result"),"validation_writes":_valid.get("writes")}
+        _raw["engine_manifest_sha256"]=_h.sha256(_P(_proof["engine_manifest"]).read_bytes()).hexdigest()
+        _raw["terminal_worker_register_sha256"]=_h.sha256(_P(_proof["worker_register"]).read_bytes()).hexdigest()
+        payload={"schema_version":1,"variant_id":_variant,"status":"completed","outcome":{"raw":_raw},"metrics":{},"error":None}
+        _result.parent.mkdir(parents=True,exist_ok=True); _result.write_text(_j.dumps(payload,sort_keys=True)+"\n")
+        _emit("work_completed","Executed the public completed-worker recovery path against the exact frozen case; no provider was called.",_h.sha256(_j.dumps(_raw,sort_keys=True).encode()).hexdigest(),{"case_id":_case,"approach_id":_approach,"case_sha256":_case_sha,"candidate_module_sha256":_candidate_sha})
+        print(_j.dumps(payload,sort_keys=True)); raise SystemExit(0)
+    except Exception as _exc:
+        _msg=f"completed-worker recovery operator failed: {type(_exc).__name__}: {_exc}"
+        _emit("operator_error",_msg,_h.sha256(_msg.encode()).hexdigest(),{"case_id":_case,"approach_id":_approach,"case_sha256":_case_sha})
+        raise
+
+# Development-Probe operator adapter; invoked only by the immutable experiment bundle.
+if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "--atlas-native-intake-experiment":
+    import hashlib as _h, importlib.util as _iu, json as _j, os as _os, shutil as _sh, subprocess as _sp, sys as _s, time as _t
+    from pathlib import Path as _P
+    from datetime import datetime as _dt, timezone as _tz
+    _work=_P(_os.environ["EXPERIMENT_WORK_DIR"]).resolve(); _input=_P(_os.environ["EXPERIMENT_INPUT_PATH"]).resolve()
+    _result=_P(_os.environ["EXPERIMENT_RESULT_PATH"]); _telemetry=_P(_os.environ["EXPERIMENT_TELEMETRY_PATH"])
+    _variant=_os.environ["EXPERIMENT_VARIANT_ID"]
+    _expected={"approved-plain-task":"aafa008afa8300979c03575df85844af35f1a5ebe3a5f4bed679aac292942c2d","missing-native-intake":"96e6cd65baaea1b1ab5c43f6f07992349648b68da49637a84b17956fcf65ab75","saved-task-corruption":"e0506883d0b74f1d588f1bbd98d3ffc0e096374ecb6fcb6c91b6340e8fe2006f","interrupted-intake":"015129cfa6924d9b7bc022fb4b42436b6f71e0dd0e19719d46c6521bc0ab840f"}
+    _raw_input=_input.read_bytes(); _input_sha=_h.sha256(_raw_input).hexdigest()
+    _cfg=_j.loads(_P(_os.environ["EXPERIMENT_VARIANT_PATH"]).read_bytes())["configuration"] if _os.environ.get("EXPERIMENT_VARIANT_PATH") else {}
+    _case=_cfg.get("case_id") or next((k for k,v in _expected.items() if v==_input_sha),None)
+    if _case not in _expected or _input_sha != _expected[_case]: raise SystemExit("frozen captured-case identity mismatch")
+    _context_path=_P("/private/tmp/atlas-discount-lifecycle-task-20261012/intake-experiment/input.json")
+    _context_bytes=_context_path.read_bytes(); _context_sha="c3b68c62a0b4ad77de37123fcc02c3c67a66f77e674683867d48b6781cef6598"
+    if _h.sha256(_context_bytes).hexdigest()!=_context_sha: raise SystemExit("frozen task context changed")
+    _context=_j.loads(_context_bytes); _repo=_context["repo"]; _db=_context["db"]; _max=_context["max_bytes"]
+    _task_bytes=_raw_input if _case=="approved-plain-task" else _context["task_text"].encode("utf-8")
+    _task=_work/"task.txt"; _task.write_bytes(_task_bytes); _run=_work/"run"
+    _source=_P(__file__).resolve().parents[1]/"skills/codebase-atlas-machinery/scripts"
+    _entry=_source/"task_intake.py"
+    _seq=0
+    def _emit(event,message,evidence,observations,correction=None):
+        global _seq
+        _seq+=1
+        rec={"schema_version":1,"sequence":_seq,"event":event,"recorded_at":_dt.now(_tz.utc).isoformat(),"variant_id":_variant,"message":message,"evidence_sha256":evidence,"observations":observations}
+        if correction is not None: rec["correction"]=correction
+        with _telemetry.open("a",encoding="utf-8") as f:f.write(_j.dumps(rec,sort_keys=True)+"\n");f.flush()
+    def _call(argv):
+        p=_sp.run(argv,capture_output=True,text=True,timeout=90,env={**_os.environ,"PYTHONDONTWRITEBYTECODE":"1"})
+        try: body=_j.loads(p.stdout)
+        except (ValueError,TypeError): body=None
+        return {"exit_code":p.returncode,"stdout":p.stdout,"stderr":p.stderr,"body":body}
+    def _files(root): return {str(p.relative_to(root)): _h.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*") if p.is_file()}
+    try:
+        if _os.environ.get("ATLAS_INTAKE_INJECT_OPERATOR_FAILURE")=="1":
+            raise RuntimeError("injected operator failure proof")
+        _base=[_s.executable,"-B",str(_entry)]; _args=["--repo",_repo,"--db",_db,"--task-file",str(_task),"--max-bytes",str(_max)]
+        _raw={"case_id":_case,"case_input_sha256":_input_sha,"task_sha256":_h.sha256(_task_bytes).hexdigest()}
+        _raw["start"]=_call(_base+["start","--run-dir",str(_run)]+_args)
+        _raw["saved_task_sha256"]=_h.sha256((_run/"task.txt").read_bytes()).hexdigest(); _before=_files(_run)
+        _raw["resume"]=_call(_base+["resume","--run-dir",str(_run)]+_args); _raw["status"]=_call(_base+["status","--run-dir",str(_run)])
+        _raw["exact_retry_artifacts_unchanged"]=_before==_files(_run)
+        _raw["events"]=[_j.loads(p.read_text()) for p in sorted((_run/"events").glob("*.json"))] if (_run/"events").exists() else []
+        _bad=_work/"tampered"; _sh.copytree(_run,_bad); (_bad/"task.txt").write_text("Unexpected replacement task\n",encoding="utf-8"); _before=_files(_bad)
+        _raw["tampered_status"]=_call(_base+["status","--run-dir",str(_bad)]); _raw["tamper_refusal_unchanged"]=_before==_files(_bad)
+        _missing=_work/"missing-stored-task"; _sh.copytree(_run,_missing); (_missing/"task.txt").unlink(); _before=_files(_missing)
+        _raw["missing_task_status"]=_call(_base+["status","--run-dir",str(_missing)])
+        _raw["missing_task_start"]=_call(_base+["start","--run-dir",str(_missing)]+_args)
+        _raw["missing_task_refusal_unchanged"]=_before==_files(_missing)
+        _s.path.insert(0,str(_source)); _spec=_iu.spec_from_file_location("atlas_task_intake",_entry); _mod=_iu.module_from_spec(_spec); _spec.loader.exec_module(_mod)
+        _interrupted=_work/"interrupted"; _identity=_mod._source_identity(_repo,_db); _mod._bind_or_start(_interrupted,_task_bytes,_identity,_max,True)
+        _raw["interrupted_artifacts"]={str(p.relative_to(_interrupted)):_j.loads(p.read_text()) for p in _interrupted.rglob("*.json")}
+        _raw["interrupted_resume"]=_call(_base+["resume","--run-dir",str(_interrupted)]+_args)
+        _refusal_run=_work/"missing-native-refusal"
+        _raw["captured_refusal"]=_call([_s.executable,"-B",str(_source/"question_coordinator.py"),"prepare","--repo",_repo,"--db",_db,"--question-file",str(_task),"--run-dir",str(_refusal_run)])
+        _payload={"schema_version":1,"variant_id":_variant,"status":"completed","outcome":{"raw":_raw},"metrics":{},"error":None}
+        _bytes=(_j.dumps(_payload,ensure_ascii=True,sort_keys=True)+"\n").encode(); _result.write_bytes(_bytes)
+        _emit("work_completed","Executed all four frozen intake checks through the candidate public CLI; result records raw command observations.",_h.sha256(_bytes).hexdigest(),{"case_id":_case,"case_input_sha256":_input_sha,"task_sha256":_raw["task_sha256"],"candidate_module_sha256":_h.sha256(_entry.read_bytes()).hexdigest()})
+        print(_j.dumps(_payload,ensure_ascii=True,sort_keys=True))
+    except Exception as _exc:
+        _msg=f"operator execution failed: {type(_exc).__name__}: {_exc}"; _digest=_h.sha256(_msg.encode()).hexdigest()
+        try:
+            _emit("operator_error",_msg,_digest,{"case_id":_case,"case_input_sha256":_input_sha},correction="Inspect the retained command and telemetry evidence, correct the operator defect, then retry in a fresh run directory.")
+        except Exception as _telemetry_exc:
+            if hasattr(_exc,"add_note"): _exc.add_note(f"operator error telemetry could not be written: {type(_telemetry_exc).__name__}: {_telemetry_exc}")
+        raise
+    raise SystemExit(0)
+
 import hashlib
 import importlib.util
 import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -24,6 +230,10 @@ RUNTIME_LAUNCHER_PATH = Path(__file__).resolve().parents[1] / "skills/codebase-a
 RUNTIME_LAUNCHER_SPEC = importlib.util.spec_from_file_location("atlas_runtime_index_launch_test_module", RUNTIME_LAUNCHER_PATH)
 RUNTIME_LAUNCHER = importlib.util.module_from_spec(RUNTIME_LAUNCHER_SPEC)
 RUNTIME_LAUNCHER_SPEC.loader.exec_module(RUNTIME_LAUNCHER)
+CONTINUATION_PATH = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/task_continuation.py"
+CONTINUATION_SPEC = importlib.util.spec_from_file_location("atlas_final_map_continuation_test_module", CONTINUATION_PATH)
+CONTINUATION = importlib.util.module_from_spec(CONTINUATION_SPEC)
+CONTINUATION_SPEC.loader.exec_module(CONTINUATION)
 
 
 def git(repo: Path, *args: str) -> str:
@@ -68,6 +278,94 @@ class AtlasCliTests(unittest.TestCase):
             self.assertEqual(result.returncode, expect, result.stderr)
         return result
 
+    def synthetic_native_final_worker(self, root: Path, phase: str, role: str, model: str,
+                                      request: dict[str, Any] | None = None, answer: str = "{}"):
+        """Build a labeled synthetic provider edge using the exact current native-register shape."""
+        job = root / "workers" / phase
+        job.mkdir(parents=True)
+        (job / "workspace").mkdir()
+        outputs = root / "outputs"
+        outputs.mkdir(exist_ok=True)
+        cli_path = root / "pinned-cli"
+        if not cli_path.exists():
+            cli_path.write_bytes(b"synthetic pinned CLI fingerprint")
+            cli_path.chmod(0o755)
+        thread_id = f"synthetic-{phase}-thread"
+        request = request or {"role": role, "prompt": f"synthetic exact prompt for {phase}", "schema": {"type": "object"},
+                   "task_sha256": "a" * 64, "source_identity_sha256": "b" * 64,
+                   "plan_sha256": "c" * 64, "history_tip_sha256": "d" * 64}
+        rows = [{"type": "thread.started", "thread_id": thread_id}, {"type": "turn.started"},
+                {"type": "item.completed", "item": {"type": "agent_message", "text": answer}},
+                {"type": "turn.completed"}]
+        files = {"answer.txt": answer.encode(),
+                 "argv.json": json.dumps([os.fspath(cli_path), "exec", "--ignore-user-config", "--ignore-rules",
+                    "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--model", model,
+                    "-c", 'model_reasoning_effort="high"', "-c", "project_doc_max_bytes=0", "-c",
+                    "features.shell_tool=false", "-c", 'web_search="disabled"', "--cd",
+                    os.fspath(job / "workspace"), "--json", "--output-last-message", os.fspath(job / "answer.txt"),
+                    "--output-schema", os.fspath(job / "cli-schema.json"), "-"]).encode(),
+                 "cli-schema.json": json.dumps(CONTINUATION.route_autorun._cli_schema(request["schema"])).encode(),
+                 "elapsed_ms.json": b'{"elapsed_ms": 1}',
+                 "events.jsonl": ("\n".join(json.dumps(row) for row in rows) + "\n").encode(),
+                 "prompt.txt": request["prompt"].encode(),
+                 "schema.json": json.dumps(request["schema"]).encode(), "stderr.txt": b""}
+        for name, raw in files.items():
+            (job / name).write_bytes(raw)
+        digests = {name: hashlib.sha256(raw).hexdigest() for name, raw in files.items()}
+        register = {"schema_version": 1, "kind": "completed-native-worker-turn", "worker_directory": phase,
+                    "role": role, "model": model, "thread_id": thread_id,
+                    "prompt_sha256": digests["prompt.txt"], "schema_sha256": digests["schema.json"],
+                    "argv_sha256": digests["argv.json"], "answer_sha256": digests["answer.txt"],
+                    "events_sha256": digests["events.jsonl"], "artifact_sha256": digests}
+        register_path = root / "workers" / f"{phase}.completion-register.json"
+        register_raw = (json.dumps(register, sort_keys=True, separators=(",", ":")) + "\n").encode()
+        register_path.write_bytes(register_raw)
+        register_sha = hashlib.sha256(register_raw).hexdigest()
+        result = {"role": role, "model": model, "thread_id": thread_id, "usage": {}, "elapsed_ms": 1,
+                  "artifact_dir": os.fspath(job.resolve()), "artifact_sha256": digests,
+                  "completion_register_path": os.fspath(register_path), "completion_register_sha256": register_sha}
+        (outputs / f"{phase}-worker.json").write_text(json.dumps(result), encoding="utf-8")
+        answer_ref = {"path": f"outputs/{phase}.txt", "sha256": hashlib.sha256(answer.encode()).hexdigest(),
+                      "bytes": len(answer.encode())}
+        (root / answer_ref["path"]).write_bytes(answer.encode())
+        event = {"type": f"{phase}_worker_completed", "payload": {"phase": phase, "role": role,
+                 "worker_thread_id": thread_id, "worker_artifact_sha256": digests,
+                 "answer_path": answer_ref["path"], "answer_sha256": answer_ref["sha256"],
+                 "completion_register_path": f"workers/{phase}.completion-register.json",
+                 "completion_register_sha256": register_sha}}
+        return request, result, event, register_path, register_sha, digests
+
+    def synthetic_native_admission(self, root: Path, cli_path: Path):
+        return (mock.patch.object(CONTINUATION.route_autorun, "CLI", os.fspath(cli_path)),
+                mock.patch.object(CONTINUATION.route_autorun, "CLI_SHA256", hashlib.sha256(cli_path.read_bytes()).hexdigest()),
+                mock.patch.object(CONTINUATION.route_autorun, "admit_terminal",
+                    side_effect=lambda rows, answer: {"accepted": True, "final_text": answer,
+                        "thread_id": rows[0]["thread_id"], "usage": {}}))
+
+    def test_captured104_stale_source_refusal_preserves_checkpoint(self):
+        """Captured104 is not rebound with a receipt from another checkpoint."""
+        captured = Path("/private/tmp/atlas-final-map-assembly-20261015/prototype5-proof/frozen-original104")
+        if not (captured / "events/000104.json").is_file():
+            self.skipTest("Immutable captured104 citation checkpoint unavailable")
+        source = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/task_continuation.py"
+        manifest = Path("/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json")
+        run = self.root / "captured104-read-only"
+        shutil.copytree(captured, run)
+        before = {p.relative_to(run).as_posix(): CONTINUATION._file_sha(p) for p in run.rglob("*") if p.is_file()}
+        command = [sys.executable, "-B", os.fspath(source), "resume", "--repo", "/Users/kamenkamenov/taggable-api",
+            "--db", "/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite",
+            "--task-file", "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt",
+            "--intake-run", "/private/tmp/atlas-discount-lifecycle-task-20261012/run", "--run-dir", os.fspath(run),
+            "--engine-manifest", os.fspath(manifest), "--prepare-only", "--adopt-final-map-feedback-executor"]
+        refused = subprocess.run(command, text=True, capture_output=True, check=False, timeout=180,
+                                 env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+        after = {p.relative_to(run).as_posix(): CONTINUATION._file_sha(p) for p in run.rglob("*") if p.is_file()}
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertTrue(any(word in refused.stderr.lower() for word in ("source", "transition", "executor")), refused.stderr)
+        self.assertEqual(after, before)
+        events = CONTINUATION._events(run)
+        self.assertEqual(events[-1]["type"], "final_map_revision_0002_review_completed")
+        self.assertEqual(events[-1]["payload"]["decision"], "rejected")
     def index(self):
         return json.loads(self.cli("index", "--repo", os.fspath(self.repo), "--db", os.fspath(self.db)).stdout)
 
@@ -4483,6 +4781,1908 @@ class Widget
         self.assertIn("stale against current map, source, or receipt", self.cli(*accept_args, expect=2).stderr)
         self.assertIn("stale against current map, source, or receipt", self.cli(*v2_accept_args, expect=2).stderr)
 
+    def test_captured_77_checkpoint_advances_to_deferred_final_map_only_after_all_routes(self):
+        """Use the actual immutable 77-event task checkpoint, not a synthesized success fixture."""
+        child = Path(os.environ.get("ATLAS_FINAL_MAP_CAPTURE", "/private/tmp/atlas-final-map-assembly-20261014/frozen-original77"))
+        if not (child / "events/000077.json").is_file():
+            self.skipTest("Immutable captured 77-event final-map fixture unavailable")
+        events = [json.loads(path.read_bytes()) for path in sorted((child / "events").glob("*.json"))]
+        plan = json.loads((child / "outputs/plan_author.json").read_bytes())
+        self.assertEqual(len(events), 77)
+        self.assertEqual(CONTINUATION._next_type(events, {"route_availability": []}, plan), "final_map_prepare")
+        self.assertEqual(len(CONTINUATION._accepted_route_ids(events)), len(plan["ordered_work"]))
+        self.assertEqual(len(plan["obligations"]), 6)
+        self.assertFalse(any(event.get("type") == "final_map_accepted" for event in events))
+
+    def test_synthetic_final_map_citation_and_obligation_corruption_is_rejected(self):
+        """Synthetic corrupt-output checks; native Luna/Sol judgment is proven separately."""
+        child = Path(os.environ.get("ATLAS_FINAL_MAP_CAPTURE", "/private/tmp/atlas-final-map-assembly-20261014/frozen-original77"))
+        if not (child / "events/000077.json").is_file():
+            self.skipTest("Immutable captured 77-event final-map fixture unavailable")
+        plan_path = child / "outputs/plan_author.json"
+        plan_raw = plan_path.read_bytes()
+        plan = json.loads(plan_raw)
+        evidence_id = "accepted-evidence-1"
+        request = {"evidence_ids": [evidence_id],
+                   "obligation_ids": [row["obligation_id"] for row in plan["obligations"]],
+                   "history_tip_sha256": "a" * 64}
+        context = {"task_sha256": plan["task_sha256"],
+                   "source_identity_sha256": plan["source_identity_sha256"]}
+        draft = {"schema_version": 1, "task_sha256": context["task_sha256"],
+                 "source_identity_sha256": context["source_identity_sha256"],
+                 "plan_sha256": hashlib.sha256(plan_raw).hexdigest(),
+                 "history_tip_sha256": request["history_tip_sha256"], "title": "Reusable purchase-flow map",
+                 "explanation": "A deliberately synthetic test draft with sufficient explanatory length for contract validation only, and no factual claim beyond the test fixture.",
+                 "findings": [{"finding_id": "finding-1", "statement": "A synthetic statement with adequate detail for the validator.",
+                               "evidence_refs": [evidence_id]}],
+                 "obligations": [{"obligation_id": row["obligation_id"],
+                                  "finding_ids": ["finding-1"] if i == 0 else [],
+                                  "uncertainties": [] if i == 0 else ["Synthetic test gap remains unresolved."]}
+                                 for i, row in enumerate(plan["obligations"])]}
+        CONTINUATION._validate_final_map(draft, request, context, plan_raw)
+        bad_citation = json.loads(json.dumps(draft))
+        bad_citation["findings"][0]["evidence_refs"] = ["unaccepted-evidence"]
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "exact accepted evidence citation"):
+            CONTINUATION._validate_final_map(bad_citation, request, context, plan_raw)
+        missing_obligation = json.loads(json.dumps(draft))
+        missing_obligation["obligations"].pop()
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "each original task obligation exactly once"):
+            CONTINUATION._validate_final_map(missing_obligation, request, context, plan_raw)
+
+    def test_synthetic_rejected_final_map_review_cannot_complete(self):
+        """Synthetic rejection-state check; preserves accepted investigations and refuses completion."""
+        child = Path(os.environ.get("ATLAS_FINAL_MAP_CAPTURE", "/private/tmp/atlas-final-map-assembly-20261014/frozen-original77"))
+        if not (child / "events/000077.json").is_file():
+            self.skipTest("Immutable captured 77-event final-map fixture unavailable")
+        events = [json.loads(path.read_bytes()) for path in sorted((child / "events").glob("*.json"))]
+        plan = json.loads((child / "outputs/plan_author.json").read_bytes())
+        events.append({"type": "final_map_review_completed", "payload": {"decision": "rejected"}})
+        self.assertEqual(CONTINUATION._next_type(events, {"route_availability": []}, plan), "final_map_feedback_prepare")
+
+    def test_synthetic_public_rejected_final_map_prepares_one_bounded_feedback_step(self):
+        """Synthetic routing proof: exact rejection selects one bounded correction, no worker call."""
+        child = Path(os.environ.get("ATLAS_FINAL_MAP_CAPTURE", "/private/tmp/atlas-final-map-assembly-20261014/frozen-original77"))
+        if not (child / "events/000077.json").is_file():
+            self.skipTest("Immutable captured 77-event final-map fixture unavailable")
+        events = [json.loads(path.read_bytes()) for path in sorted((child / "events").glob("*.json"))]
+        events.append({"type": "final_map_review_completed", "payload": {"decision": "rejected"}})
+        context = json.loads((child / "context.json").read_bytes())
+        plan = json.loads((child / "outputs/plan_author.json").read_bytes())
+        self.assertEqual(CONTINUATION._next_type(events, context, plan), "final_map_feedback_prepare")
+        real_next = CONTINUATION._next_type
+        calls = []
+        def bounded_next(*args):
+            calls.append(True)
+            if len(calls) > 1:
+                raise AssertionError("rejected final review reentered the dispatch loop")
+            return real_next(*args)
+        expected = {"status": "final_map_feedback_prepare", "task_complete": False}
+        with mock.patch.object(CONTINUATION, "_ensure_engine"), \
+             mock.patch.object(CONTINUATION, "_load", return_value=(context, events)), \
+             mock.patch.object(CONTINUATION, "_events", return_value=events), \
+             mock.patch.object(CONTINUATION, "_next_type", side_effect=bounded_next), \
+             mock.patch.object(CONTINUATION, "_prepare_final_map_feedback_revision") as prepare_feedback, \
+             mock.patch.object(CONTINUATION, "status", return_value=expected) as status_call, \
+             mock.patch.object(CONTINUATION, "_worker_value", side_effect=AssertionError("unexpected redispatch")) as worker:
+            result = CONTINUATION.resume("unused", "unused", "unused", "unused", str(child), prepare_only=True)
+        self.assertEqual(result, expected)
+        self.assertEqual(len(calls), 1)
+        prepare_feedback.assert_called_once()
+        status_call.assert_called_once()
+        worker.assert_not_called()
+
+    def test_synthetic_rejected_corrective_review_is_terminal(self):
+        """The one permitted corrective review cannot loop back to its author or reviewer."""
+        child = Path(os.environ.get("ATLAS_FINAL_MAP_CAPTURE", "/private/tmp/atlas-final-map-assembly-20261014/frozen-original77"))
+        if not (child / "events/000077.json").is_file():
+            self.skipTest("Immutable captured 77-event final-map fixture unavailable")
+        events = [json.loads(path.read_bytes()) for path in sorted((child / "events").glob("*.json"))]
+        events.extend([
+            {"type": "final_map_review_completed", "payload": {"decision": "rejected"}},
+            {"type": "final_map_feedback_revision_prepared", "payload": {"revision": 1}},
+            {"type": "final_map_revision_author_validated", "payload": {"revision": 1}},
+            {"type": "final_map_revision_review_input_prepared", "payload": {"revision": 1}},
+            {"type": "final_map_revision_review_completed", "payload": {"revision": 1, "decision": "rejected"}},
+        ])
+        context = json.loads((child / "context.json").read_bytes())
+        plan = json.loads((child / "outputs/plan_author.json").read_bytes())
+        self.assertEqual(CONTINUATION._next_type(events, context, plan), "final_map_rejected")
+        expected = {"status": "final_map_rejected", "task_complete": False}
+        with mock.patch.object(CONTINUATION, "_ensure_engine"), \
+             mock.patch.object(CONTINUATION, "_load", return_value=(context, events)), \
+             mock.patch.object(CONTINUATION, "_events", return_value=events), \
+             mock.patch.object(CONTINUATION, "_next_type", return_value="final_map_rejected"), \
+             mock.patch.object(CONTINUATION, "status", return_value=expected) as status_call, \
+             mock.patch.object(CONTINUATION, "_worker_value", side_effect=AssertionError("unexpected redispatch")) as worker:
+            result = CONTINUATION.resume("unused", "unused", "unused", "unused", str(child))
+        self.assertEqual(result, expected)
+        status_call.assert_called_once()
+        worker.assert_not_called()
+
+    def test_public_resume_finalizes_saved_accepted_review_once_for_both_branches(self):
+        """Captured 77/84 lineage: after accepted review commit, public resume verifies and finalizes once."""
+        capture_root = Path(os.environ.get("ATLAS_FINALIZATION_CAPTURE_ROOT",
+            "/private/tmp/atlas-final-map-assembly-20261015/prototype3-proof/accepted-review-finalization-defect-trial"))
+        if (not (capture_root / "native77-task/events/000079.json").is_file()
+                or not (capture_root / "native84-task/events/000086.json").is_file()):
+            self.skipTest("Prepared captured 77/84 final-map checkpoints unavailable")
+        for name, expected_count in (("native77-task", 79), ("native84-task", 86)):
+            self.assertEqual(len(list((capture_root / name / "events").glob("*.json"))), expected_count,
+                "Finalization regression requires the exact immutable prepared checkpoint")
+        repo = "/Users/kamenkamenov/taggable-api"
+        db = "/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite"
+        task_file = "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt"
+        intake_run = "/private/tmp/atlas-discount-lifecycle-task-20261012/run"
+
+        def pending_acceptance(branch, decision="accepted", tamper=False):
+            source = capture_root / ("native77-task" if branch == "initial" else "native84-task")
+            root = self.root / f"pending-{branch}-{decision}-{'tampered' if tamper else 'clean'}"
+            shutil.copytree(source, root)
+            plan, _ = CONTINUATION._read_json(root / "outputs/plan_author.json", "captured accepted plan")
+            context, _ = CONTINUATION._read_json(root / "context.json", "captured task context")
+            manifest, _ = CONTINUATION._read_json(root / "manifest.json", "captured run manifest")
+            context["strategy"] = manifest["strategy"]
+            revision = branch == "revision"
+            author_path = "inputs/final-map-author-revision-0001.json" if revision else "inputs/final-map-author.json"
+            author_request, _ = CONTINUATION._read_json(root / author_path, "captured author request")
+            evidence_id = author_request["evidence_ids"][0]
+            finding_id = "synthetic-finalization-finding"
+            draft = {"schema_version": 1, "task_sha256": author_request["task_sha256"],
+                "source_identity_sha256": author_request["source_identity_sha256"], "plan_sha256": author_request["plan_sha256"],
+                "history_tip_sha256": author_request["history_tip_sha256"], "title": "Synthetic resume proof map",
+                "explanation": "Synthetic test evidence exercises interrupted finalization only and makes no real-task completeness claim.",
+                "findings": [{"finding_id": finding_id, "statement": "Synthetic finding for production acceptance-boundary checks only.",
+                    "evidence_refs": [evidence_id]}],
+                "obligations": [{"obligation_id": row["obligation_id"], "finding_ids": [finding_id],
+                    "uncertainties": ["Synthetic evidence does not resolve factual adequacy."]} for row in plan["obligations"]]}
+            draft_raw = CONTINUATION._json_bytes(draft)
+            explanation_raw = draft["explanation"].encode("utf-8")
+            draft_path = "outputs/final-map-revision-0001.json" if revision else "outputs/final-map.json"
+            explanation_path = "outputs/final-map-revision-0001.txt" if revision else "outputs/final-map.txt"
+            draft_ref = CONTINUATION._artifact(root, draft_path, draft_raw)
+            explanation_ref = CONTINUATION._artifact(root, explanation_path, explanation_raw)
+            phase = "final_map_author_revision_0001" if revision else "final_map_author"
+            author_thread = f"synthetic-{branch}-author-thread"
+            CONTINUATION._append(root, f"{phase}_worker_completed", {"phase": phase, "worker_thread_id": author_thread})
+            validation_type = "final_map_revision_author_validated" if revision else "final_map_author_validated"
+            CONTINUATION._append(root, validation_type, {"task_sha256": context["task_sha256"],
+                "source_identity_sha256": context["source_identity_sha256"], "plan_sha256": author_request["plan_sha256"],
+                "history_tip_sha256": author_request["history_tip_sha256"], "map_sha256": hashlib.sha256(draft_raw).hexdigest()},
+                [draft_ref, explanation_ref])
+            current_events = CONTINUATION._events(root)
+            CONTINUATION._prepare_final_map_review(root, context, plan, current_events)
+            review_phase = "final_map_review_revision_0001" if revision else "final_map_review"
+            review_path = "inputs/final-map-review-revision-0001.json" if revision else "inputs/final-map-review.json"
+            review_request, review_request_raw = CONTINUATION._read_json(root / review_path, "prepared review request")
+            judgments = [{"obligation_id": row["obligation_id"],
+                "decision": ("supported" if decision == "accepted" else "gap_explicit"),
+                "finding_ids": ([finding_id] if decision == "accepted" else []),
+                "uncertainty": "Synthetic review judgment; no real acceptance is implied."}
+                for row in draft["obligations"]]
+            review = {"decision": decision, "reviewer_identity": review_request["reviewer_identity"],
+                "task_sha256": review_request["task_sha256"], "source_identity_sha256": review_request["source_identity_sha256"],
+                "plan_sha256": review_request["plan_sha256"], "map_sha256": review_request["map_sha256"],
+                "finding_link_policy": review_request["finding_link_policy"],
+                "obligation_judgments": judgments,
+                "basis": "Synthetic accepted decision exists only to test interrupted finalization recovery boundaries."}
+            review_raw = CONTINUATION._json_bytes(review)
+            review_artifact = "outputs/final-map-review-revision-0001.json" if revision else "outputs/final-map-review.json"
+            review_artifact_ref = CONTINUATION._artifact(root, review_artifact, review_raw)
+            review_thread = f"synthetic-{branch}-review-thread"
+            CONTINUATION._append(root, f"{review_phase}_worker_completed", {"phase": review_phase, "worker_thread_id": review_thread})
+            request_rel = review_path
+            CONTINUATION._append(root, "final_map_revision_review_completed" if revision else "final_map_review_completed",
+                {"decision": decision, "task_sha256": context["task_sha256"],
+                 "source_identity_sha256": context["source_identity_sha256"], "plan_sha256": review_request["plan_sha256"],
+                 "history_tip_sha256": review_request["history_tip_sha256"], "map_sha256": review_request["map_sha256"]},
+                [review_artifact_ref, {"path": request_rel, "sha256": hashlib.sha256(review_request_raw).hexdigest(),
+                                       "bytes": len(review_request_raw)}])
+            if tamper:
+                (root / ("outputs/final-map-preservation-review-revision-0001.json" if revision
+                         else "outputs/final-map-preservation-review.json")).write_bytes(b"tampered receipt")
+            return root, context, plan, author_thread, review_thread
+
+        for branch in ("initial", "revision"):
+            with self.subTest(branch=branch):
+                root, context, plan, _author_thread, _review_thread = pending_acceptance(branch)
+                verify_calls = []
+                def verify_native(_root, request, event, role, model, phase):
+                    verify_calls.append((role, phase))
+                    self.assertEqual(event.get("type"), phase + "_worker_completed")
+                    self.assertEqual(role, "luna_draft" if "author" in phase else "sol_review")
+                    self.assertEqual(model, "gpt-6-luna" if role == "luna_draft" else "gpt-6.1-sol")
+                def load_current(*_args, **_kwargs):
+                    return context, CONTINUATION._events(root)
+                status_args = (repo, db, task_file, intake_run, str(root))
+                with mock.patch.object(CONTINUATION, "_ensure_engine"), \
+                     mock.patch.object(CONTINUATION, "_load", side_effect=load_current), \
+                     mock.patch.object(CONTINUATION, "_verify_final_map_worker", side_effect=verify_native), \
+                     mock.patch.object(CONTINUATION, "_worker_value", side_effect=AssertionError("finalization redispatched a worker")):
+                    first = CONTINUATION.resume(*status_args, prepare_only=True)
+                    self.assertEqual(first["status"], "completed")
+                    accepted = [event for event in CONTINUATION._events(root) if event.get("type") == "final_map_accepted"]
+                    self.assertEqual(len(accepted), 1)
+                    snapshot = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                                for path in root.rglob("*") if path.is_file()}
+                    second = CONTINUATION.resume(*status_args, prepare_only=True)
+                    self.assertEqual(second["status"], "completed")
+                    self.assertEqual(snapshot, {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                        for path in root.rglob("*") if path.is_file()})
+                    self.assertEqual(len([event for event in CONTINUATION._events(root)
+                        if event.get("type") == "final_map_accepted"]), 1)
+                self.assertTrue(verify_calls)
+
+        rejected_root, rejected_context, _plan, _, _ = pending_acceptance("revision", decision="rejected")
+        rejected_context["strategy"] = CONTINUATION._read_json(rejected_root / "manifest.json", "captured manifest")[0]["strategy"]
+        rejected_args = ("/Users/kamenkamenov/taggable-api",
+            "/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite",
+            "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt",
+            "/private/tmp/atlas-discount-lifecycle-task-20261012/run", str(rejected_root))
+        with mock.patch.object(CONTINUATION, "_ensure_engine"), \
+             mock.patch.object(CONTINUATION, "_load", side_effect=lambda *_, **__: (rejected_context, CONTINUATION._events(rejected_root))), \
+             mock.patch.object(CONTINUATION, "_final_map_finalize", side_effect=AssertionError("rejected review finalized")), \
+             mock.patch.object(CONTINUATION, "_worker_value", side_effect=AssertionError("rejected review redispatched")):
+            rejected_status = CONTINUATION.resume(*rejected_args, prepare_only=True)
+        self.assertEqual(rejected_status["status"], "final_map_rejected")
+        self.assertFalse(any(event.get("type") == "final_map_accepted" for event in CONTINUATION._events(rejected_root)))
+
+        tampered_root, tampered_context, _, _, _ = pending_acceptance("initial", tamper=True)
+        tampered_context["strategy"] = CONTINUATION._read_json(tampered_root / "manifest.json", "captured manifest")[0]["strategy"]
+        tampered_args = ("/Users/kamenkamenov/taggable-api",
+            "/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite",
+            "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt",
+            "/private/tmp/atlas-discount-lifecycle-task-20261012/run", str(tampered_root))
+        with mock.patch.object(CONTINUATION, "_ensure_engine"), \
+             mock.patch.object(CONTINUATION, "_load", side_effect=lambda *_, **__: (tampered_context, CONTINUATION._events(tampered_root))), \
+             mock.patch.object(CONTINUATION, "_worker_value", side_effect=AssertionError("tampered review redispatched")):
+            with self.assertRaisesRegex(CONTINUATION.ContinuationError, "artifact changed"):
+                CONTINUATION.resume(*tampered_args, prepare_only=True)
+        self.assertFalse(any(json.loads(path.read_bytes()).get("type") == "final_map_accepted"
+            for path in sorted((tampered_root / "events").glob("*.json"))))
+
+    def test_synthetic_final_map_worker_artifact_tamper_is_rejected(self):
+        """Synthetic native-job artifact check; terminal admission is explicitly simulated."""
+        root = self.root
+        phase = "final_map_author"
+        job = root / "workers" / phase
+        request, result, event, register_path, register_sha, digests = self.synthetic_native_final_worker(
+            root, phase, "luna_draft", "gpt-6-luna")
+        cli_path = root / "pinned-cli"
+        patches = self.synthetic_native_admission(root, cli_path)
+        with patches[0], patches[1], patches[2]:
+            CONTINUATION._verify_final_map_worker(root, request, event, "luna_draft", "gpt-6-luna", phase)
+            (job / "schema.json").write_bytes(b'{"type":"string"}')
+            with self.assertRaisesRegex(CONTINUATION.ContinuationError, "artifact changed: schema.json"):
+                CONTINUATION._verify_final_map_worker(root, request, event, "luna_draft", "gpt-6-luna", phase)
+
+    def test_synthetic_native_orphan_recovery_uses_register_without_redispatch_for_both_roles(self):
+        """Synthetic provider edges exercise production recovery; terminal admission is simulated."""
+        for phase, role, model in (("final_map_author", "luna_draft", "gpt-6-luna"),
+                                   ("final_map_review", "sol_review", "gpt-6.1-sol"),
+                                   ("final_map_author_revision_0001", "luna_draft", "gpt-6-luna"),
+                                   ("final_map_review_revision_0001", "sol_review", "gpt-6.1-sol")):
+            with self.subTest(phase=phase):
+                root = self.root / phase
+                root.mkdir()
+                request, _result, _event, register, register_sha, _digests = self.synthetic_native_final_worker(
+                    root, phase, role, model)
+                (root / "outputs" / f"{phase}.txt").unlink()
+                (root / "outputs" / f"{phase}-worker.json").unlink()
+                fake_append = mock.Mock(side_effect=lambda _root, event_type, payload, refs: {
+                    "type": event_type, "payload": payload, "artifacts": refs})
+                patches = self.synthetic_native_admission(root, root / "pinned-cli")
+                with mock.patch.object(CONTINUATION, "_revalidate_bound_engine"), \
+                     mock.patch.object(CONTINUATION, "_events", return_value=[]), \
+                     mock.patch.object(CONTINUATION, "_final_map_request_binding", return_value=(request, {}, b"{}")), \
+                     mock.patch.object(CONTINUATION, "_append", fake_append), \
+                     mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=AssertionError("redispatch")) as dispatch, \
+                     patches[0], patches[1], patches[2]:
+                    value, event = CONTINUATION._worker_value(root, role, request["prompt"], request["schema"],
+                        phase, 10, {}, os.fspath(register), register_sha)
+                self.assertEqual(value, {})
+                self.assertEqual(event["type"], f"{phase}_worker_completed")
+                self.assertEqual(event["payload"]["recovered_from_register_sha256"], register_sha)
+                dispatch.assert_not_called()
+                fake_append.assert_called_once()
+                self.assertEqual(fake_append.call_args.args[1], f"{phase}_worker_completed")
+
+    def test_legacy_completed_worker_recovery_scope_remains_unchanged(self):
+        """The captured legacy-register lane remains restricted to its original Sol map-review phase."""
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "limited to the pending Sol map review"):
+            CONTINUATION._recover_completed_worker(self.root, {}, "luna_draft", "", {},
+                                                   "final_map_author", "", "")
+
+    def test_synthetic_cached_final_worker_tamper_refuses_before_consumption_for_both_roles(self):
+        """Synthetic cached completions: missing/tampered native files cannot reach validation or acceptance."""
+        for phase, role, model in (("final_map_author", "luna_draft", "gpt-6-luna"),
+                                   ("final_map_review", "sol_review", "gpt-6.1-sol"),
+                                   ("final_map_author_revision_0001", "luna_draft", "gpt-6-luna"),
+                                   ("final_map_review_revision_0001", "sol_review", "gpt-6.1-sol")):
+            with self.subTest(phase=phase):
+                root = self.root / phase
+                root.mkdir()
+                request, _result, event, _register, _register_sha, _digests = self.synthetic_native_final_worker(
+                    root, phase, role, model)
+                (root / "workers" / phase / "cli-schema.json").unlink()
+                patches = self.synthetic_native_admission(root, root / "pinned-cli")
+                with mock.patch.object(CONTINUATION, "_revalidate_bound_engine"), \
+                     mock.patch.object(CONTINUATION, "_events", return_value=[event]), \
+                     mock.patch.object(CONTINUATION, "_final_map_request_binding", return_value=(request, {}, b"{}")), \
+                     mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=AssertionError("redispatch")) as dispatch, \
+                     patches[0], patches[1], patches[2]:
+                    with self.assertRaisesRegex(CONTINUATION.ContinuationError, "missing files or contains an unexpected entry"):
+                        CONTINUATION._worker_value(root, role, request["prompt"], request["schema"], phase,
+                                                   10, {}, None, None)
+                dispatch.assert_not_called()
+                self.assertFalse((root / "outputs" / "final_map_accepted.json").exists())
+
+    def test_synthetic_fresh_final_worker_tamper_refuses_before_answer_artifacts_for_both_roles(self):
+        """Synthetic provider edges prove failed native integrity cannot write parent answer artifacts."""
+        for phase, role, model in (("final_map_author", "luna_draft", "gpt-6-luna"),
+                                   ("final_map_review", "sol_review", "gpt-6.1-sol"),
+                                   ("final_map_author_revision_0001", "luna_draft", "gpt-6-luna"),
+                                   ("final_map_review_revision_0001", "sol_review", "gpt-6.1-sol")):
+            with self.subTest(phase=phase):
+                root = self.root / phase
+                root.mkdir(); (root / "inputs").mkdir()
+                request, input_name = ({"role": role, "prompt": f"synthetic exact prompt for {phase}",
+                    "schema": {"type": "object"}, "task_sha256": "a" * 64,
+                    "source_identity_sha256": "b" * 64, "plan_sha256": "c" * 64,
+                    "history_tip_sha256": "d" * 64},
+                    {"final_map_author": "final-map-author.json", "final_map_review": "final-map-review.json",
+                     "final_map_author_revision_0001": "final-map-author-revision-0001.json",
+                     "final_map_review_revision_0001": "final-map-review-revision-0001.json"}[phase])
+                (root / "inputs" / input_name).write_text(json.dumps(request), encoding="utf-8")
+                (root / "pinned-cli").write_bytes(b"synthetic pinned CLI fingerprint")
+                (root / "pinned-cli").chmod(0o755)
+                def completed_then_tampered(worker_role, prompt, job_path, timeout_seconds, output_schema):
+                    _request, result, _event, _register, _sha, _digests = self.synthetic_native_final_worker(
+                        root, phase, role, model)
+                    (root / "outputs" / f"{phase}.txt").unlink()
+                    (root / "outputs" / f"{phase}-worker.json").unlink()
+                    (root / "workers" / phase / "cli-schema.json").unlink()
+                    return {**result, "final_text": "{}"}
+                patches = self.synthetic_native_admission(root, root / "pinned-cli")
+                with mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=completed_then_tampered) as dispatch, \
+                     mock.patch.object(CONTINUATION, "_append") as append, patches[0], patches[1], patches[2]:
+                    with self.assertRaisesRegex(CONTINUATION.ContinuationError, "missing files or contains an unexpected entry"):
+                        CONTINUATION._record_worker(root, role, request["prompt"], request["schema"], phase, 10)
+                dispatch.assert_called_once()
+                append.assert_not_called()
+                self.assertFalse((root / "outputs" / f"{phase}.txt").exists())
+                self.assertFalse((root / "outputs" / f"{phase}-worker.json").exists())
+
+    def test_synthetic_review_prompt_aligns_gap_with_rejection_and_supported_with_acceptance(self):
+        """Synthetic request/draft contract: unanswered obligations reject; fully supported obligations can pass."""
+        child = Path(os.environ.get("ATLAS_FINAL_MAP_CAPTURE", "/private/tmp/atlas-final-map-assembly-20261014/frozen-original77"))
+        if not (child / "events/000077.json").is_file():
+            self.skipTest("Immutable captured 77-event final-map fixture unavailable")
+        root = self.root
+        (root / "inputs").mkdir(); (root / "outputs").mkdir()
+        plan_path = child / "outputs/plan_author.json"
+        plan_raw = plan_path.read_bytes()
+        plan = json.loads(plan_raw)
+        context = {"task_sha256": plan["task_sha256"], "source_identity_sha256": plan["source_identity_sha256"],
+                   "task_text": Path(os.environ.get("ATLAS_FINAL_MAP_TASK", "/private/tmp/atlas-final-map-assembly-20261014/original-task.txt")).read_text()}
+        evidence_id = "accepted-source:evidence.json"
+        history_tip = "e" * 64
+        author_request = {"role": "luna_draft", "task_sha256": context["task_sha256"],
+            "source_identity_sha256": context["source_identity_sha256"], "plan_sha256": hashlib.sha256(plan_raw).hexdigest(),
+            "history_tip_sha256": history_tip, "evidence_ids": [evidence_id],
+            "obligation_ids": [row["obligation_id"] for row in plan["obligations"]],
+            "evidence": [{"evidence_id": evidence_id, "content": "synthetic evidence"}]}
+        draft = {"schema_version": 1, "task_sha256": context["task_sha256"],
+            "source_identity_sha256": context["source_identity_sha256"], "plan_sha256": author_request["plan_sha256"],
+            "history_tip_sha256": history_tip, "title": "Synthetic reviewed map",
+            "explanation": "This is a synthetic contract-only explanation with more than one hundred characters to exercise the exact validator without asserting any original task facts.",
+            "findings": [{"finding_id": "f1", "statement": "A sufficiently detailed synthetic finding for validator coverage.",
+                          "evidence_refs": [evidence_id]},
+                         {"finding_id": "f2", "statement": "A second sufficiently detailed synthetic finding for linkage validation.",
+                          "evidence_refs": [evidence_id]}],
+            "obligations": [{"obligation_id": row["obligation_id"], "finding_ids": ["f1" if index == 0 else "f2"],
+                             "uncertainties": ["A bounded implementation detail remains uncertain."]}
+                            for index, row in enumerate(plan["obligations"])]}
+        (root / "inputs/final-map-author.json").write_text(json.dumps(author_request), encoding="utf-8")
+        (root / "outputs/plan_author.json").write_bytes(plan_raw)
+        draft_raw = json.dumps(draft, sort_keys=True, separators=(",", ":")).encode()
+        (root / "outputs/final-map.json").write_bytes(draft_raw)
+        explanation_raw = draft["explanation"].encode("utf-8")
+        (root / "outputs/final-map.txt").write_bytes(explanation_raw)
+        validated = {"type": "final_map_author_validated", "payload": {"map_sha256": hashlib.sha256(draft_raw).hexdigest()},
+            "artifacts": [{"path": "outputs/final-map.json", "sha256": hashlib.sha256(draft_raw).hexdigest(), "bytes": len(draft_raw)},
+                          {"path": "outputs/final-map.txt", "sha256": hashlib.sha256(explanation_raw).hexdigest(), "bytes": len(explanation_raw)},
+                          {"path": "inputs/final-map-author.json", "sha256": hashlib.sha256((root / "inputs/final-map-author.json").read_bytes()).hexdigest(),
+                           "bytes": (root / "inputs/final-map-author.json").stat().st_size}]}
+        with mock.patch.object(CONTINUATION, "_events", return_value=[validated]), \
+             mock.patch.object(CONTINUATION, "_append", return_value={"type": "final_map_review_input_prepared"}):
+            CONTINUATION._prepare_final_map_review(root, context, plan, [validated])
+        # Simulate a crash after the receipt was committed but before the review request event.
+        request_path = root / "inputs/final-map-review.json"
+        request_path.unlink()
+        receipt_path = root / "outputs/final-map-preservation-review.json"
+        receipt_raw = receipt_path.read_bytes()
+        receipt = json.loads(receipt_raw)
+        receipt_event = {"type": "final_map_review_preservation_prepared",
+            "payload": {"receipt_sha256": hashlib.sha256(receipt_raw).hexdigest()},
+            "artifacts": [{"path": row["path"], "sha256": row["sha256"], "bytes": row["bytes"]}
+                          for row in receipt["artifacts"]]}
+        with mock.patch.object(CONTINUATION, "_events", return_value=[validated, receipt_event]), \
+             mock.patch.object(CONTINUATION, "_append", return_value={"type": "final_map_review_input_prepared"}) as append:
+            CONTINUATION._prepare_final_map_review(root, context, plan, [validated, receipt_event])
+        append.assert_called_once()
+        self.assertTrue(request_path.is_file())
+        request = json.loads((root / "inputs/final-map-review.json").read_bytes())
+        self.assertIn("set the overall decision to rejected", request["prompt"])
+        self.assertIn("Policy whole_map_known_findings_v1", request["prompt"])
+        self.assertIn("Assess separately whether the author made important relationships and synthesis clear", request["prompt"])
+        self.assertIn("reviewer findings must not silently repair the map", request["prompt"])
+        self.assertEqual(request["finding_link_policy"], "whole_map_known_findings_v1")
+        per_obligation = request["schema"]["properties"]["obligation_judgments"]["items"]["anyOf"]
+        self.assertEqual({branch["properties"]["obligation_id"]["const"] for branch in per_obligation},
+                         {row["obligation_id"] for row in draft["obligations"]})
+        all_finding_ids = {row["finding_id"] for row in draft["findings"]}
+        self.assertTrue(all(branch["properties"]["finding_ids"]["items"]["enum"] == sorted(all_finding_ids)
+                            for branch in per_obligation))
+        cli_schema = CONTINUATION.route_autorun._cli_schema(request["schema"])
+        cli_branches = cli_schema["properties"]["obligation_judgments"]["items"]["anyOf"]
+        self.assertEqual({branch["properties"]["obligation_id"]["const"] for branch in cli_branches},
+                         {row["obligation_id"] for row in draft["obligations"]})
+        empty_variant = CONTINUATION._final_map_judgment_variants([
+            {"obligation_id": "explicit_gap", "finding_ids": []}])[0]
+        self.assertEqual(empty_variant["properties"]["finding_ids"], {"type": "array", "maxItems": 0})
+        supported = {"decision": "accepted", "reviewer_identity": request["reviewer_identity"],
+            "task_sha256": request["task_sha256"], "source_identity_sha256": request["source_identity_sha256"],
+            "plan_sha256": request["plan_sha256"], "map_sha256": request["map_sha256"],
+            "finding_link_policy": request["finding_link_policy"],
+            "obligation_judgments": [{"obligation_id": row["obligation_id"], "decision": "supported",
+                "finding_ids": ["f1" if index == 0 else "f2"], "uncertainty": "A bounded implementation detail remains uncertain."}
+                for index, row in enumerate(plan["obligations"])], "basis": "Synthetic independent source judgment sufficient for contract validation."}
+        CONTINUATION._validate_final_map_review(supported, draft, request)
+        cross_link = json.loads(json.dumps(supported))
+        cross_link["obligation_judgments"][0]["finding_ids"] = ["f1", "f2"]
+        CONTINUATION._validate_final_map_review(cross_link, draft, request)
+        unknown_link = json.loads(json.dumps(supported))
+        unknown_link["obligation_judgments"][0]["finding_ids"] = ["not-in-map"]
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "obligation judgment is malformed"):
+            CONTINUATION._validate_final_map_review(unknown_link, draft, request)
+        # The exact historical no-policy request retains the prior authored-link subset rule.
+        legacy_request = {key: value for key, value in request.items() if key != "finding_link_policy"}
+        legacy_response = {key: value for key, value in supported.items() if key != "finding_link_policy"}
+        with self.assertRaisesRegex(CONTINUATION.FinalMapLinkageError, "links outside the exact obligation evidence"):
+            CONTINUATION._validate_final_map_review(legacy_response | {
+                "obligation_judgments": cross_link["obligation_judgments"]}, draft, legacy_request)
+        mixed_invalid = json.loads(json.dumps(cross_link))
+        mixed_invalid["obligation_judgments"][1]["decision"] = "supported"
+        mixed_invalid["obligation_judgments"][1]["finding_ids"] = []
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "lacks required obligation support"):
+            CONTINUATION._validate_final_map_review(mixed_invalid, draft, request)
+        gap = json.loads(json.dumps(supported))
+        gap["decision"] = "rejected"
+        gap["obligation_judgments"][0] = {"obligation_id": plan["obligations"][0]["obligation_id"],
+            "decision": "gap_explicit", "finding_ids": [], "uncertainty": "The captured evidence does not resolve this exact obligation."}
+        CONTINUATION._validate_final_map_review(gap, draft, request)
+        gap["decision"] = "accepted"
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "cannot complete a map with an unanswered original obligation"):
+            CONTINUATION._validate_final_map_review(gap, draft, request)
+
+    def test_invalid_completed_revision_review_has_one_append_only_retry_route(self):
+        plan = {"follow_up_work": [{"follow_up_id": "assemble_reusable_map", "execution_state": "deferred"}]}
+        context = {}
+        invalid = [{"type": "final_map_revision_review_linkage_rejected", "payload": {"decision": "rejected"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(invalid, context, plan),
+                         "final_map_revision_review_retry_prepare")
+        prepared = invalid + [{"type": "final_map_revision_review_retry_input_prepared"}]
+        self.assertEqual(CONTINUATION._final_map_next_type(prepared, context, plan),
+                         "final_map_review_revision_retry_0001")
+        accepted = prepared + [{"type": "final_map_revision_review_retry_completed",
+                                "payload": {"decision": "accepted"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(accepted, context, plan), "final_map_finalize")
+        accepted_binding = CONTINUATION._final_map_acceptance_review_binding(accepted[-1], accepted)
+        self.assertEqual(accepted_binding, {"review_phase": "final_map_review_revision_retry_0001", "revision": 1})
+        rejected = prepared + [{"type": "final_map_revision_review_retry_completed",
+                                "payload": {"decision": "rejected"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(rejected, context, plan),
+                         "final_map_feedback_revision_0002_prepare")
+        second = rejected + [{"type": "final_map_feedback_revision_0002_prepared"},
+            {"type": "final_map_revision_0002_author_validated"},
+            {"type": "final_map_revision_0002_review_input_prepared"}]
+        self.assertEqual(CONTINUATION._final_map_next_type(second, context, plan),
+                         "final_map_review_revision_0002")
+        second_rejected = second + [{"type": "final_map_revision_0002_review_completed",
+                                     "payload": {"decision": "rejected"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(second_rejected, context, plan), "final_map_citation_additions_prepare")
+        citation = second_rejected + [{"type": "final_map_citation_revision_prepared"},
+            {"type": "final_map_citation_author_validated"},
+            {"type": "final_map_citation_review_input_prepared"}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation, context, plan), "final_map_review_citation_0001")
+        citation_rejected = citation + [{"type": "final_map_citation_review_completed", "payload": {"decision": "rejected"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation_rejected, context, plan), "final_map_rejected")
+        citation_accepted = citation + [{"type": "final_map_citation_review_completed",
+            "payload": {"decision": "accepted", "review_phase": "final_map_review_citation_0001"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation_accepted, context, plan), "final_map_finalize")
+        self.assertEqual(CONTINUATION._final_map_acceptance_review_binding(citation_accepted[-1], citation_accepted),
+            {"review_phase": "final_map_review_citation_0001", "revision": 1})
+        # A prepared versioned attempt cannot silently fall back to the historical
+        # no-attempt binding; the exact legacy request above remains valid.
+        versioned = [{"type": "final_map_citation_additions_prepared", "payload": {"attempt": 1}},
+            {"type": "final_map_citation_additions_assembled", "payload": {"attempt": 1}},
+            {"type": "final_map_citation_review_input_prepared", "payload": {"attempt": 1}},
+            {"type": "final_map_citation_review_completed", "payload": {"decision": "accepted"}}]
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "missing its required attempt identity"):
+            CONTINUATION._citation_review_attempt(versioned, versioned[-1])
+        versioned[-1]["payload"]["attempt"] = 2
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "exact prepared and assembled attempt"):
+            CONTINUATION._citation_review_attempt(versioned, versioned[-1])
+        attempt_two_assembly = {"payload": {"attempt": 2, "proposal_sha256": "proposal-2",
+            "proposal_request_sha256": "request-2", "base_map_sha256": "base-2",
+            "catalogue_sha256": "catalogue", "assembly": "assembly-2"}}
+        review_two_request = {"citation_additions_provenance": {
+            key: attempt_two_assembly["payload"][key] for key in
+            ("attempt", "proposal_sha256", "proposal_request_sha256", "base_map_sha256", "catalogue_sha256", "assembly")}}
+        self.assertIsNone(CONTINUATION._require_citation_additions_provenance(review_two_request, attempt_two_assembly))
+        review_two_request["citation_additions_provenance"]["attempt"] = 1
+        review_two_request["citation_additions_provenance"]["proposal_sha256"] = "proposal-1"
+        with self.assertRaisesRegex(CONTINUATION.ContinuationError,
+                "mixes proposal or assembly provenance from another attempt"):
+            CONTINUATION._require_citation_additions_provenance(review_two_request, attempt_two_assembly)
+        self.assertEqual(CONTINUATION._final_map_next_type(second_rejected, context, plan), "final_map_citation_additions_prepare")
+        second_accepted = second[:-1] + [{"type": "final_map_revision_0002_review_completed",
+                                         "payload": {"decision": "accepted",
+                                                     "review_phase": "final_map_review_revision_0002"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(second_accepted, context, plan), "final_map_finalize")
+        self.assertEqual(CONTINUATION._final_map_acceptance_review_binding(second_accepted[-1], second_accepted),
+                         {"review_phase": "final_map_review_revision_0002", "revision": 2})
+
+    def test_captured106_historical_citation_request_keeps_its_exact_contract(self):
+        """The saved attempt-less full-map request remains verifiable as legacy evidence."""
+        fixture = Path("/private/tmp/atlas-final-map-assembly-20261015/prototype5-proof/frozen-original106-schema-failure")
+        if not (fixture / "events/000106.json").is_file():
+            self.skipTest("Immutable captured106 schema-failure fixture unavailable")
+        events = CONTINUATION._events(fixture)
+        self.assertEqual(events[-1]["type"], "final_map_citation_revision_prepared")
+        request, raw = CONTINUATION._read_json(fixture / "inputs/final-map-author-citation-0001.json", "historical author request")
+        context, _ = CONTINUATION._read_json(fixture / "context.json", "captured context")
+        plan, plan_raw = CONTINUATION._read_json(fixture / "outputs/plan_author.json", "captured plan")
+        base, _ = CONTINUATION._read_json(fixture / "outputs/final-map-revision-0002.json", "rejected base map")
+        self.assertNotIn("attempt", request)
+        self.assertEqual(CONTINUATION._sha(raw), CONTINUATION._CITATION_SCHEMA_FAILURE_REQUEST_SHA256)
+        self.assertEqual(request["schema"], CONTINUATION._legacy_final_map_citation_schema(
+            context, plan, base, request["evidence_ids"]))
+        self.assertEqual(events[-1]["payload"]["request_sha256"], CONTINUATION._sha(raw))
+        CONTINUATION._final_map_request_binding(fixture, context, "luna_draft", request["prompt"],
+            request["schema"], "final_map_author_citation_0001", allow_completed=True)
+        self.assertEqual(plan["task_sha256"], context["task_sha256"])
+        self.assertEqual(CONTINUATION._sha(plan_raw), request["plan_sha256"])
+
+    def test_captured106_native_schema_failure_is_retained_as_legacy_history(self):
+        """The rejected native schema attempt stays readable; current public success is tested on111."""
+        fixture = Path("/private/tmp/atlas-final-map-assembly-20261015/prototype5-proof/frozen-original106-schema-failure")
+        if not (fixture / "events/000106.json").is_file():
+            self.skipTest("Immutable captured106 schema-failure fixture unavailable")
+        events = CONTINUATION._events(fixture)
+        worker = fixture / "workers/final_map_author_citation_0001"
+        self.assertTrue((worker / "schema.json").is_file())
+        self.assertTrue((worker / "cli-schema.json").is_file())
+        self.assertTrue((worker / "stderr.txt").is_file())
+        request, _ = CONTINUATION._read_json(fixture / "inputs/final-map-author-citation-0001.json", "historical request")
+        self.assertNotIn("attempt", request)
+        self.assertEqual(events[-1]["type"], "final_map_citation_revision_prepared")
+        self.assertEqual(events[-1]["payload"].get("provider_dispatched"), False)
+        self.assertEqual(events[-1]["payload"]["request_sha256"],
+                         CONTINUATION._sha((fixture / "inputs/final-map-author-citation-0001.json").read_bytes()))
+
+    def test_citation_correction_changes_only_existing_findings_refs(self):
+        base = {"schema_version": 1, "task_sha256": "a" * 64, "source_identity_sha256": "b" * 64,
+            "plan_sha256": "c" * 64, "history_tip_sha256": "d" * 64, "title": "Map",
+            "explanation": "Same explanation preserved without edits.",
+            "findings": [{"finding_id": "one", "statement": "A supported statement long enough.",
+                "evidence_refs": ["e1"]}],
+            "obligations": [{"obligation_id": "o1", "finding_ids": ["one"], "uncertainties": []}]}
+        corrected = json.loads(json.dumps(base))
+        corrected["findings"][0]["evidence_refs"].append("e2")
+        self.assertTrue(CONTINUATION._final_map_citation_only_change(base, corrected, ["e1", "e2"]))
+        for mutate in (
+            lambda row: None,
+            lambda row: row["findings"][0].update(statement="Edited statement that should be protected."),
+            lambda row: row.update(explanation="A new explanation that is not permitted."),
+            lambda row: row["findings"][0].update(evidence_refs=["e2"]),
+            lambda row: row["findings"][0]["evidence_refs"].append("unknown"),
+            lambda row: row["findings"][0].update(finding_id="renamed"),
+            lambda row: row["obligations"][0]["finding_ids"].append("another-finding"),
+            lambda row: row["obligations"][0].update(uncertainties=["Changed uncertainty text."]),
+            lambda row: row["findings"].append({"finding_id": "new", "statement": "New statement long enough.", "evidence_refs": ["e2"]}),
+        ):
+            candidate = json.loads(json.dumps(base))
+            mutate(candidate)
+            self.assertFalse(CONTINUATION._final_map_citation_only_change(base, candidate, ["e1", "e2"]))
+        schema = CONTINUATION._final_map_citation_schema(
+            {"task_sha256": base["task_sha256"], "source_identity_sha256": base["source_identity_sha256"]},
+            {"obligations": [{"obligation_id": "o1"}]}, base, ["e1", "e2"])
+        self.assertEqual(schema["properties"]["title"], {"const": "Map"})
+        self.assertEqual(schema["properties"]["explanation"], {"const": base["explanation"]})
+        standard_obligations = CONTINUATION._final_map_schema(
+            {"task_sha256": base["task_sha256"], "source_identity_sha256": base["source_identity_sha256"]},
+            {"obligations": [{"obligation_id": "o1"}]}, ["e1", "e2"])["properties"]["obligations"]
+        self.assertEqual(schema["properties"]["obligations"], standard_obligations)
+        converted = CONTINUATION.route_autorun._cli_schema(schema)
+        from jsonschema import Draft202012Validator
+        Draft202012Validator.check_schema(schema)
+        Draft202012Validator.check_schema(converted)
+        self.assertEqual(schema["properties"]["obligations"]["type"], "array")
+        self.assertNotIn("enum", schema["properties"]["obligations"])
+        plan = {"follow_up_work": [{"follow_up_id": "assemble_reusable_map", "execution_state": "deferred"}]}
+        rejected = [{"type": "final_map_revision_0002_review_completed", "payload": {"decision": "rejected"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(rejected, {}, plan), "final_map_citation_additions_prepare")
+        citation = rejected + [{"type": "final_map_citation_revision_prepared"}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation, {}, plan), "final_map_author_citation_0001")
+        citation += [{"type": "final_map_citation_author_validated"}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation, {}, plan), "final_map_citation_review_prepare")
+        citation += [{"type": "final_map_citation_review_input_prepared"}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation, {}, plan), "final_map_review_citation_0001")
+        citation += [{"type": "final_map_citation_review_completed", "payload": {"decision": "rejected"}}]
+        self.assertEqual(CONTINUATION._final_map_next_type(citation, {}, plan), "final_map_rejected")
+        self.assertEqual(CONTINUATION._final_map_next_type(citation, {}, plan), "final_map_rejected")
+    def test_revision_review_binds_current_receipt_on_captured84_preparation(self):
+        """A captured rejected-84 state binds Sol's request to the corrected draft receipt."""
+        captured = Path(os.environ.get("ATLAS_FINAL_MAP_FEEDBACK_CAPTURE",
+            "/private/tmp/atlas-final-map-assembly-20261015/candidate-result/prototype3-frozen-final-84-copy"))
+        if not (captured / "events/000086.json").is_file():
+            self.skipTest("Prepared captured-84 feedback checkpoint unavailable")
+        root = self.root / "captured84-review-binding"
+        shutil.copytree(captured, root)
+        old_paths = ("outputs/final-map.json", "outputs/final-map-review.json",
+                     "inputs/final-map-author.json", "inputs/final-map-review.json")
+        old_hashes = {path: hashlib.sha256((root / path).read_bytes()).hexdigest() for path in old_paths}
+        plan, _plan_raw = CONTINUATION._read_json(root / "outputs/plan_author.json", "captured accepted plan")
+        context = {"task_sha256": plan["task_sha256"], "source_identity_sha256": plan["source_identity_sha256"],
+            "task_text": Path("/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt").read_text()}
+        author_request, _ = CONTINUATION._read_json(root / "inputs/final-map-author-revision-0001.json", "captured correction request")
+        evidence_id = author_request["evidence_ids"][0]
+        draft = {"schema_version": 1, "task_sha256": author_request["task_sha256"],
+            "source_identity_sha256": author_request["source_identity_sha256"], "plan_sha256": author_request["plan_sha256"],
+            "history_tip_sha256": author_request["history_tip_sha256"], "title": "Synthetic captured-state map",
+            "explanation": "Synthetic validation text only; this map exercises exact preservation receipt identity and makes no factual claims about the captured purchase flow.",
+            "findings": [{"finding_id": "captured-test-finding", "statement": "Synthetic citation used only to exercise exact review request binding.",
+                "evidence_refs": [evidence_id]}],
+            "obligations": [{"obligation_id": item, "finding_ids": ["captured-test-finding"],
+                "uncertainties": ["Synthetic fixture leaves factual adequacy unresolved."]}
+                for item in author_request["obligation_ids"]]}
+        draft_raw = CONTINUATION._json_bytes(draft)
+        explanation_raw = draft["explanation"].encode("utf-8")
+        draft_ref = CONTINUATION._artifact(root, "outputs/final-map-revision-0001.json", draft_raw)
+        explanation_ref = CONTINUATION._artifact(root, "outputs/final-map-revision-0001.txt", explanation_raw)
+        CONTINUATION._append(root, "final_map_revision_author_validated",
+            {"map_sha256": hashlib.sha256(draft_raw).hexdigest()}, [draft_ref, explanation_ref])
+        CONTINUATION._prepare_final_map_review(root, context, plan, CONTINUATION._events(root))
+        events = CONTINUATION._events(root)
+        review_request, _ = CONTINUATION._read_json(root / "inputs/final-map-review-revision-0001.json", "corrected review request")
+        current_path = root / "outputs/final-map-preservation-review-revision-0001.json"
+        historical_path = root / "outputs/final-map-preservation-revision-0001.json"
+        current, current_raw = CONTINUATION._read_json(current_path, "current corrected-map receipt")
+        historical_raw = historical_path.read_bytes()
+        current_sha = hashlib.sha256(current_raw).hexdigest()
+        historical_sha = hashlib.sha256(historical_raw).hexdigest()
+        self.assertNotEqual(current_sha, historical_sha)
+        revision_event = next(event for event in events if event.get("type") == "final_map_feedback_revision_prepared")
+        self.assertEqual(revision_event["payload"]["preservation_receipt_sha256"], historical_sha)
+        self.assertEqual(review_request["preservation_receipt_sha256"], current_sha)
+        self.assertEqual(review_request["map_sha256"], hashlib.sha256(draft_raw).hexdigest())
+        self.assertIn(json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2), review_request["prompt"])
+        self.assertIn(f"exact map SHA-256 is {hashlib.sha256(draft_raw).hexdigest()}", review_request["prompt"])
+        prepared = next(event for event in events if event.get("type") == "final_map_revision_review_input_prepared")
+        self.assertEqual(prepared["payload"]["preservation_receipt_sha256"], current_sha)
+        self.assertTrue(any(ref == {"path": current_path.relative_to(root).as_posix(), "sha256": current_sha,
+            "bytes": len(current_raw)} for ref in prepared["artifacts"]))
+        self.assertEqual(CONTINUATION._final_map_request_binding(root, context, "sol_review",
+            review_request["prompt"], review_request["schema"], "final_map_review_revision_0001")[0], review_request)
+        self.assertEqual(old_hashes, {path: hashlib.sha256((root / path).read_bytes()).hexdigest() for path in old_paths})
+
 
 if __name__ == "__main__":
     unittest.main()
+# Plain-task intake prototype checks use the captured task and real read-only Atlas case.
+import pytest as _pytest
+
+_INTAKE_CASE_ROOT = Path(os.environ.get("ATLAS_INTAKE_CASE_DIR", "/private/tmp/atlas-discount-lifecycle-task-20261012"))
+_INTAKE_TASK = _INTAKE_CASE_ROOT / "task.txt"
+_INTAKE_ENVELOPE_PATH = _INTAKE_CASE_ROOT / "envelope.json"
+try:
+    _INTAKE_ENVELOPE = json.loads(_INTAKE_ENVELOPE_PATH.read_text(encoding="utf-8")) if _INTAKE_ENVELOPE_PATH.is_file() else {}
+except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+    _INTAKE_ENVELOPE = {}
+_INTAKE_READ_ONLY = _INTAKE_ENVELOPE.get("read_only", []) if isinstance(_INTAKE_ENVELOPE, dict) else []
+_INTAKE_REPO = os.environ.get("ATLAS_INTAKE_REPO") or next((path for path in _INTAKE_READ_ONLY if path.endswith("taggable-api")), None)
+_INTAKE_DB = os.environ.get("ATLAS_INTAKE_DB") or next((path for path in _INTAKE_READ_ONLY if path.endswith("atlas.sqlite")), None)
+_INTAKE_CASE_AVAILABLE = _INTAKE_TASK.is_file() and bool(_INTAKE_REPO) and bool(_INTAKE_DB)
+_INTAKE_SCRIPTS = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts"
+sys.path.insert(0, os.fspath(_INTAKE_SCRIPTS))
+import task_intake as _task_intake
+
+
+def _intake_cli(*args):
+    return subprocess.run([sys.executable, os.fspath(_INTAKE_SCRIPTS / "task_intake.py"), *args],
+                          text=True, capture_output=True, check=False)
+
+
+def _frozen_intake_start(run_dir, repo=_INTAKE_REPO, db=_INTAKE_DB):
+    task_bytes = _INTAKE_TASK.read_bytes()
+    identity = _task_intake._source_identity(repo, db)
+    _task_intake._bind_or_start(run_dir, task_bytes, identity, _task_intake.DEFAULT_MAX_BYTES, create=True)
+
+
+def _intake_tree_bytes(run_dir):
+    return {path.relative_to(run_dir).as_posix(): path.read_bytes()
+            for path in run_dir.rglob("*") if path.is_file()}
+
+
+def _assert_real_intake_discovery(document):
+    assert document["status"] == "awaiting-scope-review"
+    assert document["semantic_scope_state"] == "unselected"
+    assert document["task_sha256"] == hashlib.sha256(_INTAKE_TASK.read_bytes()).hexdigest()
+    discovery = document["discovery"]
+    candidates = discovery["candidates"]
+    assert candidates
+    selection = discovery["candidate_selection"]
+    assert selection["included_candidates"] == len(candidates)
+    assert selection["total_candidates"] == len(candidates) + selection["omitted_candidates"]
+    assert len({candidate["controller_type_id"] for candidate in candidates}) > 1
+    for candidate in candidates:
+        assert candidate["fact_id"]
+        assert candidate["action_source"]["fact_id"] == candidate["fact_id"]
+        assert candidate["action_source"]["span"]
+        assert candidate["controller_source"]["fact_id"]
+        assert candidate["controller_source"]["span"]
+
+
+@_pytest.mark.skipif(not _INTAKE_CASE_AVAILABLE, reason="captured Atlas read-only case is unavailable")
+def test_plain_task_intake_preserves_stale_source_refusal_and_captured_discovery(tmp_path):
+    """Current source identity stays fail-closed; discovery assertions use its saved capture."""
+    run_dir = tmp_path / "intake-resume-case"
+    _frozen_intake_start(run_dir)
+    before = _intake_tree_bytes(run_dir)
+    resumed = _intake_cli("resume", "--repo", _INTAKE_REPO, "--db", _INTAKE_DB,
+                          "--task-file", os.fspath(_INTAKE_TASK), "--run-dir", os.fspath(run_dir))
+    assert resumed.returncode == 3
+    refused = json.loads(resumed.stdout)
+    assert refused["status"] == "refused"
+    assert refused["discovery"]["result"] == "refused"
+    assert refused["discovery"]["reason"] == "no_saved_snapshot_matches_current_extractor_and_checkout"
+    assert any("AGENTS.md" in mismatch.get("changed_paths", [])
+               for mismatch in refused["discovery"]["source_mismatches"])
+    after = _intake_tree_bytes(run_dir)
+    assert all(after.get(path) == value for path, value in before.items())
+    events = [json.loads(path.read_bytes()) for path in sorted((run_dir / "events").glob("*.json"))]
+    assert len(events) == 2
+    assert events[-1]["type"] == "discovery_completed"
+    assert events[-1]["payload"]["discovery"]["result"] == "refused"
+    captured = Path("/private/tmp/atlas-discount-lifecycle-task-20261012/operator-captures-v2/manifest/resume-stdout.json")
+    assert captured.is_file()
+    _assert_real_intake_discovery(json.loads(captured.read_text(encoding="utf-8")))
+
+
+@_pytest.mark.skipif(not _INTAKE_CASE_AVAILABLE, reason="captured Atlas read-only case is unavailable")
+def test_changed_task_bytes_are_refused_without_changing_frozen_intake(tmp_path):
+    run_dir = tmp_path / "changed-input-case"
+    _frozen_intake_start(run_dir)
+    changed = tmp_path / "changed-task.txt"
+    changed.write_bytes(_INTAKE_TASK.read_bytes() + b"\\n")
+    before = {path.name: path.read_bytes() for path in (run_dir / "events").glob("*.json")} if (run_dir / "events").exists() else {
+        path.name: path.read_bytes() for path in (run_dir / "task.txt", run_dir / "source-identity.json", run_dir / "manifest.json") if path.exists()
+    }
+    refused = _intake_cli("resume", "--repo", _INTAKE_REPO, "--db", _INTAKE_DB,
+                          "--task-file", os.fspath(changed), "--run-dir", os.fspath(run_dir))
+    assert refused.returncode == 2
+    assert "task bytes differ" in refused.stderr
+    if (run_dir / "events").exists():
+        after = {path.name: path.read_bytes() for path in (run_dir / "events").glob("*.json")}
+    else:
+        after = {path.name: path.read_bytes() for path in (run_dir / "task.txt", run_dir / "source-identity.json", run_dir / "manifest.json") if path.exists()}
+    assert after == before
+
+
+@_pytest.mark.skipif(not _INTAKE_CASE_AVAILABLE, reason="captured Atlas read-only case is unavailable")
+def test_changed_database_identity_is_refused_without_changing_frozen_intake(tmp_path):
+    run_dir = tmp_path / "changed-database-case"
+    database = tmp_path / "identity-only-database.sqlite"
+    database.write_bytes(b"first database identity")
+    _frozen_intake_start(run_dir, db=os.fspath(database))
+    before = _intake_tree_bytes(run_dir)
+    database.write_bytes(b"second database identity")
+    refused = _intake_cli("resume", "--repo", _INTAKE_REPO, "--db", os.fspath(database),
+                          "--task-file", os.fspath(_INTAKE_TASK), "--run-dir", os.fspath(run_dir))
+    assert refused.returncode == 2
+    assert "source identity changed" in refused.stderr
+    assert _intake_tree_bytes(run_dir) == before
+
+
+@_pytest.mark.skipif(not _INTAKE_CASE_AVAILABLE, reason="captured Atlas read-only case is unavailable")
+def test_changed_repository_identity_is_refused_without_changing_frozen_intake(tmp_path):
+    run_dir = tmp_path / "changed-repository-case"
+    _frozen_intake_start(run_dir)
+    alternate_repo = tmp_path / "other-checkout"
+    alternate_repo.mkdir()
+    subprocess.run(["git", "init", "--quiet", os.fspath(alternate_repo)], check=True)
+    subprocess.run(["git", "-C", os.fspath(alternate_repo), "-c", "user.name=Intake Test",
+                    "-c", "user.email=intake-test@example.invalid", "commit", "--quiet", "--allow-empty",
+                    "-m", "baseline"], check=True)
+    before = _intake_tree_bytes(run_dir)
+    refused = _intake_cli("resume", "--repo", os.fspath(alternate_repo), "--db", _INTAKE_DB,
+                          "--task-file", os.fspath(_INTAKE_TASK), "--run-dir", os.fspath(run_dir))
+    assert refused.returncode == 2
+    assert "source identity changed" in refused.stderr
+    assert _intake_tree_bytes(run_dir) == before
+
+
+@_pytest.mark.skipif(not _INTAKE_CASE_AVAILABLE, reason="captured Atlas read-only case is unavailable")
+def test_changed_discovery_byte_budget_is_refused_without_changing_frozen_intake(tmp_path):
+    run_dir = tmp_path / "changed-budget-case"
+    _frozen_intake_start(run_dir)
+    before = _intake_tree_bytes(run_dir)
+    refused = _intake_cli("resume", "--repo", _INTAKE_REPO, "--db", _INTAKE_DB,
+                          "--task-file", os.fspath(_INTAKE_TASK), "--run-dir", os.fspath(run_dir),
+                          "--max-bytes", "100")
+    assert refused.returncode == 2
+    assert "byte budget differs" in refused.stderr
+    assert _intake_tree_bytes(run_dir) == before
+
+
+def test_accepted_fit_actor_rebind_authenticates_live_inputs_before_writing(tmp_path, monkeypatch):
+    source = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/task_continuation.py"
+    scripts = str(source.parent)
+    sys.path.insert(0, scripts)
+    try:
+        spec = importlib.util.spec_from_file_location("accepted_fit_rebind_order_test", source)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    finally:
+        sys.path.remove(scripts)
+
+    manifest = tmp_path / "engine-manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    prior = {"path": "/saved/actor.py", "sha256": "a" * 64, "bytes": 10}
+    source_event = {"type": "continuation_executor_resumed", "event_sha256": "b" * 64,
+                    "payload": {"adoption_kind": "accepted_task_fit_worker", "executor": prior}}
+    events = [source_event]
+    loaded = []
+    writes = []
+
+    def reject_live_inputs(root, repo, db, task_file, intake_run):
+        loaded.append((repo, db, task_file, intake_run))
+        raise module.ContinuationError("requested task differs from the exact immutable intake task")
+
+    monkeypatch.setattr(module, "_load_verified_engine", lambda _root: None)
+    monkeypatch.setattr(module, "_verify_engine_transition", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(module, "_load", reject_live_inputs)
+    monkeypatch.setattr(module, "_executor_record", lambda: {"path": "/new/actor.py", "sha256": "c" * 64, "bytes": 10})
+    monkeypatch.setattr(module, "_next_task_fit_actor_archive", lambda *_args: writes.append("archive-path") or "inputs/engine-transition/resumed-executor-0001.py")
+    monkeypatch.setattr(module, "_artifact", lambda *_args: writes.append("artifact"))
+    monkeypatch.setattr(module, "_append", lambda *_args: writes.append("event"))
+
+    with unittest.TestCase().assertRaisesRegex(module.ContinuationError, "requested task differs"):
+        module._adopt_latest_accepted_fit_actor(
+            "/live/repo", "/live/db.sqlite", "/live/task.txt", "/live/intake",
+            os.fspath(tmp_path), os.fspath(manifest), b"manifest", tmp_path, events)
+
+    assert loaded == [("/live/repo", "/live/db.sqlite", "/live/task.txt", "/live/intake")]
+    assert writes == []
+
+
+@_pytest.mark.skipif(not (_INTAKE_CASE_AVAILABLE and Path(
+    "/private/tmp/atlas-next-investigation-task-20261013/remaining-drive-20261014/worker100-retry-correction/cases/event65-final/events/000065.json"
+).is_file()), reason="captured event65 source-bound checkpoint is unavailable")
+def test_event65_public_adoption_refuses_changed_caller_before_actor_write(tmp_path):
+    import shutil
+
+    source = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/task_continuation.py"
+    prefix = Path("/private/tmp/atlas-next-investigation-task-20261013/remaining-drive-20261014/worker100-retry-correction/cases/event65-final")
+    run_dir = tmp_path / "event65-run"
+    shutil.copytree(prefix, run_dir)
+    changed_task = tmp_path / "changed-task.txt"
+    task_bytes = _INTAKE_TASK.read_bytes()
+    changed_task.write_bytes(bytes([task_bytes[0] ^ 1]) + task_bytes[1:])
+    before = _intake_tree_bytes(run_dir)
+    before_dirs = sorted(path.relative_to(run_dir).as_posix() for path in run_dir.rglob("*") if path.is_dir())
+    command = [sys.executable, os.fspath(source), "resume", "--repo", _INTAKE_REPO,
+               "--db", _INTAKE_DB, "--task-file", os.fspath(changed_task),
+               "--intake-run", "/private/tmp/atlas-discount-lifecycle-task-20261012/run",
+               "--run-dir", os.fspath(run_dir), "--engine-manifest",
+               "/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json",
+               "--max-worker-calls", "1", "--timeout-seconds", "180", "--prepare-only",
+               "--adopt-checkpoint-executor"]
+    result = subprocess.run(command, text=True, capture_output=True, check=False, timeout=180,
+                            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    after = _intake_tree_bytes(run_dir)
+    after_dirs = sorted(path.relative_to(run_dir).as_posix() for path in run_dir.rglob("*") if path.is_dir())
+    assert result.returncode == 2
+    assert "requested task differs from the exact immutable intake task" in result.stderr
+    assert before == after
+    assert before_dirs == after_dirs
+    assert len(list((run_dir / "events").glob("*.json"))) == 65
+
+
+@_pytest.mark.skipif(not _INTAKE_CASE_AVAILABLE, reason="captured Atlas read-only case is unavailable")
+def test_development_probe_operator_failure_preserves_original_error_and_correction(tmp_path):
+    variant = tmp_path / "variant.json"
+    variant.write_text(json.dumps({"configuration": {"case_id": "approved-plain-task"}}), encoding="utf-8")
+    result_path = tmp_path / "result.json"
+    telemetry_path = tmp_path / "telemetry.jsonl"
+    env = os.environ.copy()
+    env.update({"EXPERIMENT_WORK_DIR": os.fspath(tmp_path),
+                "EXPERIMENT_INPUT_PATH": os.fspath(_INTAKE_TASK),
+                "EXPERIMENT_RESULT_PATH": os.fspath(result_path),
+                "EXPERIMENT_TELEMETRY_PATH": os.fspath(telemetry_path),
+                "EXPERIMENT_VARIANT_PATH": os.fspath(variant),
+                "EXPERIMENT_VARIANT_ID": "operator-failure-proof",
+                "ATLAS_INTAKE_INJECT_OPERATOR_FAILURE": "1"})
+    failed = subprocess.run([sys.executable, os.fspath(Path(__file__).resolve()),
+                             "--atlas-native-intake-experiment"], env=env,
+                            text=True, capture_output=True, check=False)
+    assert failed.returncode != 0
+    assert "RuntimeError: injected operator failure proof" in failed.stderr
+    records = [json.loads(line) for line in telemetry_path.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    assert records[0]["event"] == "operator_error"
+    assert "RuntimeError: injected operator failure proof" in records[0]["message"]
+    assert records[0]["correction"]
+    assert not result_path.exists()
+
+
+@_pytest.mark.skipif(not Path("/private/tmp/atlas-next-investigation-task-20261013/frozen-rejected-next-unit-v7-24").is_dir(),
+                    reason="captured rejected next-route checkpoint unavailable")
+def test_public_feedback_stale_source_refusal_preserves_saved_rejection_and_prefix(tmp_path):
+    """Preserve the historical rejection contract and refuse stale live identity without writes."""
+    admin = Path("/private/tmp/atlas-next-investigation-task-20261013")
+    frozen = admin / "frozen-rejected-next-unit-v7-24"
+    register_path = admin / "accepted-first-unit-register.json"
+    if not register_path.is_file():
+        _pytest.skip("accepted-prefix register unavailable")
+    register = json.loads(register_path.read_bytes())
+    run = tmp_path / "same-task-feedback"
+    shutil.copytree(frozen, run)
+    review_path = run / "outputs/map_review_c8015930ced6b2dd8402e4be_combined.json"
+    validation_path = run / "outputs/map_review_c8015930ced6b2dd8402e4be_validation.json"
+    review = json.loads(review_path.read_bytes())
+    validation = json.loads(validation_path.read_bytes())
+    events = [json.loads(path.read_bytes()) for path in sorted((run / "events").glob("*.json"))]
+    rejection = events[-1]
+    assert rejection["type"] == "route_mapping_review_validated"
+    assert rejection["payload"]["validation_result"] == validation["result"] == "rejected"
+    assert review["task_fit"]["decision"] == "accepted"
+    protected = {row["path"]: row["sha256"] for row in register["files"]}
+    before = {p.relative_to(run).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in run.rglob("*") if p.is_file()}
+    command = [sys.executable, "-B", os.fspath(Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/task_continuation.py"),
+        "resume", "--repo", _INTAKE_REPO, "--db", _INTAKE_DB,
+        "--task-file", "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt",
+        "--intake-run", "/private/tmp/atlas-discount-lifecycle-task-20261012/run", "--run-dir", os.fspath(run),
+        "--engine-manifest", "/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json",
+        "--max-worker-calls", "1", "--timeout-seconds", "180", "--prepare-only", "--adopt-feedback-executor"]
+    refused = subprocess.run(command, text=True, capture_output=True, check=False, timeout=180,
+                             env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    assert refused.returncode == 2
+    assert "source" in refused.stderr.lower()
+    after = {p.relative_to(run).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+             for p in run.rglob("*") if p.is_file()}
+    assert after == before
+    assert all(hashlib.sha256((run / rel).read_bytes()).hexdigest() == digest for rel, digest in protected.items())
+
+
+@_pytest.mark.skipif(not Path("/private/tmp/atlas-next-investigation-task-20261013/frozen-rejected-next-unit-v7-24").is_dir(),
+                    reason="captured rejected next-route checkpoint unavailable")
+def test_public_feedback_transition_refuses_changed_saved_review_before_writes(tmp_path):
+    import shutil
+    admin = Path("/private/tmp/atlas-next-investigation-task-20261013")
+    run = tmp_path / "tampered-feedback-source"
+    shutil.copytree(admin / "frozen-rejected-next-unit-v7-24", run)
+    source = Path(__file__).resolve().parents[1] / "skills/codebase-atlas-machinery/scripts/task_continuation.py"
+    changed = run / "outputs/map_review_c8015930ced6b2dd8402e4be_combined.json"
+    changed.write_bytes(changed.read_bytes() + b" ")
+    before = {str(p.relative_to(run)): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in run.rglob("*") if p.is_file()}
+    command = [sys.executable, "-B", os.fspath(source), "resume", "--repo", _INTAKE_REPO,
+               "--db", _INTAKE_DB, "--task-file", "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt",
+               "--intake-run", "/private/tmp/atlas-discount-lifecycle-task-20261012/run",
+               "--run-dir", os.fspath(run), "--engine-manifest",
+               "/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json",
+               "--max-worker-calls", "1", "--timeout-seconds", "180", "--prepare-only",
+               "--adopt-feedback-executor"]
+    refused = subprocess.run(command, text=True, capture_output=True, check=False)
+    assert refused.returncode == 2
+    assert "a committed continuation artifact changed" in refused.stderr
+    after = {str(p.relative_to(run)): hashlib.sha256(p.read_bytes()).hexdigest()
+             for p in run.rglob("*") if p.is_file()}
+    assert after == before
+    assert len(list((run / "events").glob("*.json"))) == 24
+    assert not (run / "inputs/engine-transition/route-feedback-executor.py").exists()
+
+# Opt-in worker76 adapter; public task-continuation CLI runs from this bundle-local tree.
+if __name__ == "atlas_next_dp_adapter" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "--atlas-dp-worker76":
+    import hashlib as _h, json as _j, os as _o, shutil as _sh, signal as _sig, subprocess as _sp, sys as _s, time as _t
+    from pathlib import Path as _P
+    _work=_P(_o.environ["EXPERIMENT_WORK_DIR"]).resolve(); _inp=_P(_o.environ["EXPERIMENT_INPUT_PATH"]).resolve(strict=True)
+    _out=_P(_o.environ["EXPERIMENT_RESULT_PATH"]); _tel=_P(_o.environ["EXPERIMENT_TELEMETRY_PATH"]); _variant=_o.environ["EXPERIMENT_VARIANT_ID"]
+    _sha=lambda b:_h.sha256(b).hexdigest()
+    _idxpath=_P(__file__).resolve().parents[2]/"capture-index-v1.json"
+    if not _idxpath.is_file(): _idxpath=_P("/private/tmp/atlas-next-investigation-task-20261013/probes/development-probe-next-v7/capture-index-v1.json")
+    _idxraw=_idxpath.read_bytes();
+    if _sha(_idxraw)!="256e1007b8ebf851a019dba4077f3b62ce0b2df6ce1f620f54fe335cb78fc64a": raise SystemExit("frozen capture index digest changed")
+    _idx=_j.loads(_idxraw); _inputsha=_sha(_inp.read_bytes())
+    _case=next((k for k,v in _idx["case_sha256"].items() if v==_inputsha),None)
+    if _case is None: raise SystemExit("case input hash is outside the frozen four-case set")
+    # Composition omits EXPERIMENT_VARIANT_PATH; bind optional configuration when present.
+    _cfgpath=_o.environ.get("EXPERIMENT_VARIANT_PATH"); _cfg=_j.loads(_P(_cfgpath).read_bytes()).get("configuration",{}) if _cfgpath else {}
+    if _cfg.get("case_id") not in (None,_case): raise SystemExit("variant case id differs from frozen input")
+    _srcroot=_P(__file__).resolve().parents[1]; _script=_srcroot/"skills/codebase-atlas-machinery/scripts/task_continuation.py"
+    _module_sha=_sha(_script.read_bytes()); _approach="local-v11-legacy-control" if _module_sha==_idx["control_sha256"] else "local-v11-candidate" if _module_sha==_idx["candidate_sha256"] else None
+    if _approach is None: raise SystemExit("bundle-local executor SHA is not an admitted local variant")
+    _fx=_idx["fixtures"][_case]; _fixture=_P(_fx["path"]).resolve(strict=True)
+    def _tree(r): return {str(p.relative_to(r)):_sha(p.read_bytes()) for p in r.rglob("*") if p.is_file()}
+    _ftree=_tree(_fixture)
+    if _sha(_j.dumps(_ftree,sort_keys=True,separators=(",",":")).encode())!=_fx["tree_sha256"]: raise SystemExit("frozen case-state tree changed")
+    _run=_work/"local-public-run"; _sh.copytree(_fixture,_run)
+    _repo=_idx["repo"]; _db=_idx["db"]; _task=_fx.get("task_file",_idx["task_file"]); _intake=_fx.get("intake_run",_idx["intake_run"]); _engine=_idx["engine_manifest"]
+    _protected={rel:digest for rel,digest in _ftree.items() if rel.startswith("events/") or rel in _fx.get("protected_files",[])}
+    def _base(cmd="resume"):
+        a=[_s.executable,"-B",str(_script),cmd,"--repo",_repo,"--db",_db,"--task-file",_task,"--intake-run",_intake,"--run-dir",str(_run),"--engine-manifest",_engine]
+        if cmd=="resume": a.extend(["--max-worker-calls","1","--timeout-seconds","180"])
+        return a
+    def _call(argv,timeout=200):
+        p=_sp.run(argv,text=True,capture_output=True,check=False,timeout=timeout,env={**_o.environ,"PYTHONDONTWRITEBYTECODE":"1"})
+        try: body=_j.loads(p.stdout)
+        except Exception:
+            try: body=_j.loads(p.stderr)
+            except Exception: body=None
+        return {"argv":argv,"returncode":p.returncode,"stdout":p.stdout,"stderr":p.stderr,"body":body}
+    def _events():
+        out=[]
+        for p in sorted((_run/"events").glob("*.json")):
+            try: out.append((_j.loads(p.read_text()),p))
+            except Exception: pass
+        return out
+    def _worker_inventory():
+        return {k:v for k,v in _tree(_run).items() if k.startswith("workers/") and ("completion-register" in k or k.endswith(("/answer.txt","/events.jsonl","/prompt.txt","/argv.json")))}
+    def _public(cmd,extra=()): return _call(_base(cmd)+list(extra))
+    try:
+        _raw={"case_id":_case,"case_input_sha256":_inputsha,"approach_id":_approach,"candidate_module_sha256":_module_sha,"executor":{"path":str(_script),"sha256":_module_sha,"bytes":_script.stat().st_size},"capture_index_sha256":_sha(_idxraw),"fixture_tree_sha256":_fx["tree_sha256"],"canonical_publication":False}
+        _pre_events=len(_events()); _workers_before=_worker_inventory(); _new_cmds=[]
+        if _case=="saved-task-integrity":
+            _before=_tree(_run); _taskpath=_P(_task).resolve(strict=True); _intakepath=_P(_intake).resolve(strict=True)
+            def _external(): return {str(p.relative_to(_intakepath)):_sha(p.read_bytes()) for p in _intakepath.rglob("*") if p.is_file()}
+            _external_before=_external(); _task_before=_sha(_taskpath.read_bytes()); _task_bytes=len(_taskpath.read_bytes())
+            _capture_bound=(_fx["events"]==16 and len(list((_run/"events").glob("*.json")))==16 and _task_before==_fx["expected_corrupt_task_sha256"] and _task_bytes==_fx["expected_corrupt_task_bytes"] and _sha(_P(_idx["task_file"]).read_bytes())==_idx["case_sha256"]["original-task"])
+            _raw["integrity_refusal"]=_public("resume",["--adopt-accepted-executor","--prepare-only"]); _new_cmds.append(_raw["integrity_refusal"])
+            _external_after=_external(); _task_after=_sha(_taskpath.read_bytes()); _run_after=_tree(_run)
+            _body=_raw["integrity_refusal"].get("body") or {}; _raw["integrity_refusal"].update({"constructed_mutation":_capture_bound,"captured_child_events":len(list((_run/"events").glob("*.json"))),"task_sha256_before":_task_before,"task_sha256_after":_task_after,"task_bytes_before":_task_bytes,"task_bytes_after":len(_taskpath.read_bytes()),"external_intake_before":_external_before,"external_intake_after":_external_after,"state_unchanged":_run_after==_before and _external_after==_external_before and _task_after==_task_before,"writes_before_refusal":int(_run_after!=_before or _external_after!=_external_before or _task_after!=_task_before),"expected_refusal_body":_body.get("error")=="bound task artifact length or hash is invalid","expected_returncode":_raw["integrity_refusal"].get("returncode")==2})
+        elif _case=="accepted-unit-no-advance":
+            _flag="--adopt-accepted-executor" if _fx["events"]==16 else "--adopt-checkpoint-executor"
+            _raw["public_command"]=_public("resume",[_flag,"--prepare-only"]); _new_cmds.append(_raw["public_command"])
+        elif _case=="interrupted-next-work" and _approach=="local-v11-candidate":
+            _raw["adoption"]=_public("resume",["--adopt-checkpoint-executor","--prepare-only"]); _new_cmds.append(_raw["adoption"])
+            _cmd=_base("resume"); _proc=_sp.Popen(_cmd,text=True,stdout=_sp.PIPE,stderr=_sp.PIPE,env={**_o.environ,"PYTHONDONTWRITEBYTECODE":"1"})
+            _accepted=_run/"events/000035.json"; _until=_t.monotonic()+100; _seen=False
+            while _t.monotonic()<_until:
+                if _accepted.is_file():
+                    _event=_j.loads(_accepted.read_bytes()); _payload=_event.get("payload",{})
+                    if _event.get("type")=="route_mapping_review_accepted" and _payload.get("route_fact_id")=="c8015930ced6b2dd8402e4be" and _payload.get("source_review")=="accepted" and _payload.get("task_fit")=="accepted":
+                        _seen=True; _proc.send_signal(_sig.SIGTERM); break
+                if _proc.poll() is not None: break
+                _t.sleep(.001)
+            try: _stdout,_stderr=_proc.communicate(timeout=4)
+            except _sp.TimeoutExpired: _proc.kill(); _stdout,_stderr=_proc.communicate()
+            _raw["interruption"]={"argv":_cmd,"returncode":_proc.returncode,"stdout":_stdout,"stderr":_stderr,"sigterm_after_event35":_seen,"accepted_event_sha256":_sha(_accepted.read_bytes()) if _accepted.is_file() else None}
+            # Resume the same interrupted public run in prepare-only mode, then repeat for idempotence.
+            _raw["resume_prepare"]=_public("resume",["--prepare-only"]); _new_cmds.append(_raw["resume_prepare"])
+            _after_resume=_tree(_run); _workers_after_resume=_worker_inventory(); _events_after_resume=len(_events())
+            _raw["resume_prepare_tree_sha256"]=_sha(_j.dumps(_after_resume,sort_keys=True,separators=(",",":")).encode())
+            _raw["resume_repeat"]=_public("resume",["--prepare-only"]); _new_cmds.append(_raw["resume_repeat"])
+            _after_repeat=_tree(_run); _raw["resume_repeat_unchanged"]=_after_repeat==_after_resume; _raw["resume_repeat_events_unchanged"]=len(_events())==_events_after_resume; _raw["resume_repeat_workers_unchanged"]=_worker_inventory()==_workers_after_resume; _raw["resume_repeat_tree_sha256"]=_sha(_j.dumps(_after_repeat,sort_keys=True,separators=(",",":")).encode())
+        else:
+            if _fx["events"]>=31:
+                _raw["adoption"]=_public("resume",["--adopt-checkpoint-executor","--prepare-only"]); _new_cmds.append(_raw["adoption"])
+                if _approach=="local-v11-candidate": _raw["public_command"]=_public("resume"); _new_cmds.append(_raw["public_command"])
+            else:
+                _raw["public_command"]=_public("resume",["--adopt-accepted-executor","--prepare-only"]); _new_cmds.append(_raw["public_command"])
+        _post=_tree(_run); _raw["protected_prefix_unchanged"]=all(_post.get(k)==v for k,v in _protected.items())
+        _all_events=_events(); _new_events=_all_events[_pre_events:]; _raw["appended_events"]=[{"relative_path":p.relative_to(_run).as_posix(),"sha256":_sha(p.read_bytes()),"payload":ev} for ev,p in _new_events]
+        _raw["event_types"]=[ev.get("type") for ev,p in _all_events]
+        _raw["worker_inventory_before"]=_workers_before; _workers_after=_worker_inventory(); _raw["worker_inventory_after"]=_workers_after
+        _raw["new_worker_files"]={k:v for k,v in _workers_after.items() if _workers_before.get(k)!=v}
+        _raw["new_worker_completions"]=sum(1 for ev,p in _new_events if str(ev.get("type","")).endswith("_worker_completed"))
+        _raw["provider_calls_observed"]=sum(1 for ev,p in _new_events if ev.get("payload",{}).get("provider_dispatched") is True)
+        # Expose only review/validation artifacts whose hashes are named by newly appended event payloads.
+        _refs={a.get("path"):a.get("sha256") for ev,p in _new_events for a in ev.get("artifacts",[]) if a.get("path")}
+        _raw["event_artifact_hashes"]=_refs
+        _raw["source_review"]={k:{"declared_sha256":v,"actual_sha256":_sha((_run/k).read_bytes()),"hash_matches":_sha((_run/k).read_bytes())==v,"value":_j.loads((_run/k).read_bytes())} for k,v in _refs.items() if "map_review" in k and "combined" in k and (_run/k).is_file()}
+        _raw["task_fit_review"]=_raw["source_review"]
+        _raw["new_validation"]={k:{"declared_sha256":v,"actual_sha256":_sha((_run/k).read_bytes()),"hash_matches":_sha((_run/k).read_bytes())==v,"value":_j.loads((_run/k).read_bytes())} for k,v in _refs.items() if "validation.json" in k and (_run/k).is_file()}
+        _raw["new_semantic_acceptance"]=[ev for ev,p in _new_events if ev.get("type")=="mapping_review_accepted"]
+        _successful=[c for c in _new_cmds if c.get("returncode")==0 and isinstance(c.get("body"),dict)]
+        _raw["final_status"]=_successful[-1]["body"] if _successful else None
+        _raw["task_complete"]=bool((_raw.get("final_status") or {}).get("task_complete"))
+        _raw["canonical_publication"]=bool((_raw.get("final_status") or {}).get("canonical_publication"))
+        _result={"schema_version":1,"variant_id":_variant,"status":"completed","outcome":{"raw":_raw},"metrics":{},"error":None}
+        _out.parent.mkdir(parents=True,exist_ok=True); _out.write_text(_j.dumps(_result,sort_keys=True)+"\n")
+        _tel.parent.mkdir(parents=True,exist_ok=True); _tel.write_text(_j.dumps({"schema_version":1,"sequence":1,"event":"work_completed","recorded_at":_t.strftime("%Y-%m-%dT%H:%M:%SZ",_t.gmtime()),"variant_id":_variant,"message":"Executed the local public continuation path on the bound captured case state.","evidence_sha256":_sha(_j.dumps(_raw,sort_keys=True).encode()),"observations":{"case_id":_case,"approach_id":_approach,"executor_sha256":_module_sha,"appended_event_count":len(_new_events),"provider_calls_observed":_raw["provider_calls_observed"],"new_worker_completions":_raw["new_worker_completions"]}},sort_keys=True)+"\n")
+        print(_j.dumps(_result,sort_keys=True)); raise SystemExit(0)
+    except Exception as _exc: raise SystemExit(f"worker76 local public adapter failed: {type(_exc).__name__}: {_exc}")
+def test_historical_acceptance_validator_only_rejects_acceptance_before_handoff():
+    """A later accepted citation-map finalization preserves the earlier actor handoff."""
+    handoff = {"type": "continuation_executor_resumed", "sequence": 101,
+               "payload": {"adoption_kind": "final_map_citation_accepted_review_finalize"}}
+    accepted_after = {"type": "final_map_accepted", "sequence": 102}
+    accepted_before = {"type": "final_map_accepted", "sequence": 100}
+    assert not CONTINUATION._final_acceptance_precedes_handoff([handoff, accepted_after], handoff)
+    assert CONTINUATION._final_acceptance_precedes_handoff([accepted_before, handoff], handoff)
+    assert CONTINUATION._final_acceptance_precedes_handoff(
+        [handoff, {"type": "final_map_accepted"}], {"type": "continuation_executor_resumed"})
+
+
+def test_citation_finalize_handoff_history_survives_later_acceptance():
+    """Synthetic consumer-boundary proof; native request/worker checks are patched, not claimed."""
+    with tempfile.TemporaryDirectory(dir="/private/tmp") as temp:
+        root = Path(temp)
+        context = {"task_sha256": "a" * 64, "source_identity_sha256": "b" * 64}
+        plan = {"obligations": []}
+        plan_raw = json.dumps(plan, sort_keys=True).encode()
+        base = {"schema_version": 1, "task_sha256": context["task_sha256"],
+                "source_identity_sha256": context["source_identity_sha256"], "plan_sha256": "c" * 64,
+                "history_tip_sha256": "d" * 64, "title": "Preserved", "explanation": "Preserved explanation.",
+                "findings": [{"finding_id": "f1", "statement": "A fixed supported statement.",
+                              "evidence_refs": ["e1"]}],
+                "obligations": []}
+        draft = json.loads(json.dumps(base))
+        draft["findings"][0]["evidence_refs"].append("e2")
+        review = {"decision": "accepted"}
+        request = {"prompt": "synthetic", "schema": {}}
+        author_request = {"synthetic": True}
+        catalogue = {"evidence": [{"evidence_id": "e1"}, {"evidence_id": "e2"}],
+                     "evidence_ids": ["e1", "e2"]}
+        values = {
+            "outputs/plan_author.json": plan,
+            "inputs/final-map-review-citation-0001.json": request,
+            "outputs/final-map-citation-0001.json": draft,
+            "outputs/final-map-review-citation-0001.json": review,
+            "outputs/final-map-revision-0002.json": base,
+            "inputs/final-map-author-revision-0002.json": catalogue,
+            "inputs/final-map-author-citation-0001.json": author_request,
+        }
+        raw = {}
+        for rel, value in values.items():
+            data = json.dumps(value, sort_keys=True).encode()
+            target = root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+            raw[rel] = data
+        archive = "inputs/engine-transition/resumed-executor-0005.py"
+        archive_bytes = b"synthetic installed executor bytes"
+        (root / archive).parent.mkdir(parents=True, exist_ok=True)
+        (root / archive).write_bytes(archive_bytes)
+        prior = {"path": "/candidate/old.py", "sha256": "e" * 64, "bytes": 2}
+        current = {"path": "/installed/task_continuation.py",
+                   "sha256": hashlib.sha256(archive_bytes).hexdigest(), "bytes": len(archive_bytes)}
+        source = {"type": "final_map_citation_review_completed", "sequence": 104,
+                  "event_sha256": "f" * 64, "payload": {"decision": "accepted",
+                  "map_sha256": hashlib.sha256(raw["outputs/final-map-citation-0001.json"]).hexdigest()}}
+        author_event = {"type": "final_map_author_citation_0001_worker_completed",
+                        "payload": {"worker_thread_id": "author-thread"}}
+        review_worker = {"type": "final_map_review_citation_0001_worker_completed",
+                         "payload": {"worker_thread_id": "review-thread", "answer_sha256": "1" * 64}}
+        refs = {
+            archive: current["sha256"],
+            "outputs/final-map-revision-0002.json": hashlib.sha256(raw["outputs/final-map-revision-0002.json"]).hexdigest(),
+            "outputs/final-map-citation-0001.json": hashlib.sha256(raw["outputs/final-map-citation-0001.json"]).hexdigest(),
+            "outputs/final-map-review-citation-0001.json": hashlib.sha256(raw["outputs/final-map-review-citation-0001.json"]).hexdigest(),
+            "inputs/final-map-review-citation-0001.json": hashlib.sha256(raw["inputs/final-map-review-citation-0001.json"]).hexdigest(),
+        }
+        handoff = {"type": "continuation_executor_resumed", "sequence": 105,
+            "previous_event_sha256": source["event_sha256"], "artifacts": [{"path": k, "sha256": v} for k, v in refs.items()],
+            "payload": {"source_event_sha256": source["event_sha256"],
+                "previous_executor": prior, "executor": current, "actor_archive_path": archive,
+                "adoption_kind": "final_map_citation_accepted_review_finalize",
+                "source_phase": "final_map_review_citation_0001", "task_sha256": context["task_sha256"],
+                "source_identity_sha256": context["source_identity_sha256"], "plan_sha256": hashlib.sha256(plan_raw).hexdigest(),
+                "map_sha256": refs["outputs/final-map-citation-0001.json"],
+                "base_map_sha256": refs["outputs/final-map-revision-0002.json"],
+                "review_sha256": refs["outputs/final-map-review-citation-0001.json"],
+                "request_sha256": refs["inputs/final-map-review-citation-0001.json"],
+                "response_sha256": review_worker["payload"]["answer_sha256"]}}
+        accepted_after = {"type": "final_map_accepted", "sequence": 106}
+        events = [source, author_event, review_worker, handoff, accepted_after]
+        def read_json(path, _label):
+            rel = Path(path).relative_to(root).as_posix()
+            return values[rel], raw[rel]
+        with mock.patch.object(CONTINUATION, "_read_json", side_effect=read_json), \
+             mock.patch.object(CONTINUATION, "_final_map_request_binding"), \
+             mock.patch.object(CONTINUATION, "_verify_final_map_worker"), \
+            mock.patch.object(CONTINUATION, "_validate_final_map"), \
+            mock.patch.object(CONTINUATION, "_validate_final_map_review"):
+            assert CONTINUATION._verify_task_fit_actor_handoffs(
+                root, events, context, plan_raw, prior, [handoff], current_executor=current)
+            before_unadmitted = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                                 for p in root.rglob("*") if p.is_file()}
+            unadmitted = {"path": "/unadmitted/task_continuation.py", "sha256": "9" * 64, "bytes": 21}
+            assert not CONTINUATION._verify_task_fit_actor_handoffs(
+                root, events, context, plan_raw, prior, [handoff], current_executor=unadmitted)
+            assert before_unadmitted == {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                                         for p in root.rglob("*") if p.is_file()}
+            bad_binding = json.loads(json.dumps(handoff))
+            bad_binding["payload"]["request_sha256"] = "0" * 64
+            assert not CONTINUATION._verify_task_fit_actor_handoffs(
+                root, [source, author_event, review_worker, bad_binding, accepted_after],
+                context, plan_raw, prior, [bad_binding], current_executor=current)
+            accepted_before = {"type": "final_map_accepted", "sequence": 103}
+            assert not CONTINUATION._verify_task_fit_actor_handoffs(
+                root, [accepted_before, source, author_event, review_worker, handoff, accepted_after],
+                context, plan_raw, prior, [handoff], current_executor=current)
+
+
+def test_historical_citation_finalizer_reads_the_legacy_artifact_family():
+    """An accepted attempt-less historical review stays on its immutable legacy paths."""
+    assert CONTINUATION._final_map_citation_artifact_paths(None) == (
+        "outputs/final-map-citation-0001.json", "outputs/final-map-citation-0001.txt",
+        "inputs/final-map-review-citation-0001.json", "outputs/final-map-review-citation-0001.json")
+    assert CONTINUATION._final_map_citation_artifact_paths(2) == CONTINUATION._citation_additions_paths(2)
+    with tempfile.TemporaryDirectory(dir="/private/tmp") as temp:
+        root = Path(temp)
+        plan = {"obligations": []}
+        context = {"task_sha256": "a" * 64, "source_identity_sha256": "b" * 64}
+        review_event = {"type": "final_map_citation_review_completed", "sequence": 2,
+            "event_sha256": "c" * 64, "payload": {"decision": "accepted",
+                "review_phase": "final_map_review_citation_0001"}}
+        prepared = {"type": "final_map_citation_review_input_prepared", "sequence": 1,
+                    "payload": {}}
+        values = {
+            "outputs/plan_author.json": plan,
+            "outputs/final-map-citation-0001.json": {"history_tip_sha256": "d" * 64},
+            "inputs/final-map-review-citation-0001.json": {"history_tip_sha256": "d" * 64},
+        }
+        for rel, value in values.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(json.dumps(value, sort_keys=True).encode())
+        for rel, raw in (("outputs/final-map-citation-0001.txt", b"saved legacy explanation"),
+                         ("outputs/final-map-review-citation-0001.json", b"{}")):
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+        expected = {"outputs/final-map-citation-0001.json", "outputs/final-map-citation-0001.txt",
+                    "outputs/final-map-review-citation-0001.json", "inputs/final-map-review-citation-0001.json"}
+        plan_path = root / "outputs/plan_author.json"
+        plan_path.parent.mkdir(parents=True, exist_ok=True)
+        plan_raw = json.dumps(plan, sort_keys=True).encode()
+        plan_path.write_bytes(plan_raw)
+        reads = []
+        def read_until_selected(path, label):
+            relative = Path(path).relative_to(root).as_posix()
+            reads.append(relative)
+            if relative == "outputs/plan_author.json":
+                return plan, plan_raw
+            raise CONTINUATION.ContinuationError("stop after observing selected historical draft")
+        accepted = {"type": "final_map_accepted", "payload": {"revision": 1,
+            "review_phase": "final_map_review_citation_0001"}}
+        with mock.patch.object(CONTINUATION, "_read_json", side_effect=read_until_selected):
+            assert not CONTINUATION._final_map_acceptance_valid(root, [prepared, review_event], context, plan, accepted)
+        assert reads == ["outputs/final-map-citation-0001.json"]
+        appended = []
+        with mock.patch.object(CONTINUATION, "_final_map_acceptance_valid", return_value=True), \
+             mock.patch.object(CONTINUATION, "_events", return_value=[prepared, review_event]), \
+             mock.patch.object(CONTINUATION, "_append", side_effect=lambda _root, _type, _payload, artifacts:
+                               appended.append(artifacts) or {"type": "final_map_accepted"}):
+            result = CONTINUATION._final_map_finalize(root, context, plan, [prepared, review_event])
+        assert result["type"] == "final_map_accepted"
+        assert {row["path"] for row in appended[0]} == expected
+
+
+@unittest.skipUnless(Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/prototype6/isolated-task-final2").is_dir(),
+                     "captured109 source-transition proof input unavailable")
+class Captured109ManagedSourceTransitionTests(unittest.TestCase):
+    """Public P7 admission, fail-closed receipts, and restart behavior on frozen109."""
+
+    proof_root = Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/prototype7")
+    captured_run = proof_root / "proofs/correction46-final/public109-final-actor/run"
+    legacy_receipt_run = Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/prototype6/isolated-task-final3")
+    frozen_root = Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/frozen109")
+    frozen_manifest = Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/frozen109-files.json")
+    task_file = Path("/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt")
+    intake = Path("/private/tmp/atlas-discount-lifecycle-task-20261012/run")
+    engine = Path("/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json")
+    repo_path = "/Users/kamenkamenov/taggable-api"
+    db_path = "/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite"
+
+    @staticmethod
+    def _tree(root):
+        return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in root.rglob("*") if path.is_file()}
+
+    def _command(self, run, action, *extra):
+        return [sys.executable, "-B", os.fspath(CONTINUATION_PATH), action,
+                "--repo", self.repo_path, "--db", self.db_path,
+                "--task-file", os.fspath(self.task_file), "--intake-run", os.fspath(self.intake),
+                "--run-dir", os.fspath(run), "--engine-manifest", os.fspath(self.engine), *extra]
+
+    def _public(self, run, action, *extra):
+        return subprocess.run(self._command(run, action, *extra), capture_output=True, text=True, timeout=90)
+
+    def _assert_frozen_prefix(self, run):
+        rows = json.loads(self.frozen_manifest.read_text())
+        for row in rows:
+            saved = run / row["path"]
+            self.assertTrue(saved.is_file(), row["path"])
+            self.assertEqual(saved.stat().st_size, row["bytes"], row["path"])
+            self.assertEqual(hashlib.sha256(saved.read_bytes()).hexdigest(), row["sha256"], row["path"])
+
+    def _fresh109(self, parent):
+        run = parent / "captured109-p7"
+        shutil.copytree(self.frozen_root, run)
+        shutil.copy2(self.legacy_receipt_run / "inputs/managed-source-transition-receipt.json",
+                     run / "inputs/managed-source-transition-receipt.json")
+        return run
+
+    def _admit_args(self, run):
+        index = run / "inputs/engine-transition/citation-schema-failure-files.json"
+        return ("--prepare-only", "--max-worker-calls", "1", "--adopt-final-map-feedback-executor",
+                "--citation-schema-failure-index", os.fspath(index),
+                "--citation-schema-failure-index-sha256", "6b7e417c9eff9b8e23266a0e55028ccc7882deeea1ed3c06a70ccb7367f07fb1")
+
+    def test_captured109_public_admission_preserves_legacy_retry_and_reenters_without_dispatch(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = self._fresh109(Path(temp))
+            self._assert_frozen_prefix(run)
+            before = self._tree(run)
+            unadmitted = self._public(run, "status")
+            self.assertEqual(unadmitted.returncode, 2)
+            self.assertIn("provided engine manifest differs from the immutable run binding",
+                          unadmitted.stderr.lower())
+            self.assertEqual(self._tree(run), before)
+
+            admitted = self._public(run, "resume", *self._admit_args(run))
+            self.assertEqual(admitted.returncode, 0, admitted.stderr)
+            status = json.loads(admitted.stdout)
+            self.assertEqual(status["events"], 111)
+            self.assertEqual(status["status"], "final_map_author_citation_schema_retry_0001")
+            self.assertNotEqual(status["source_identity_sha256"], status["operating_source_identity_sha256"])
+            self._assert_frozen_prefix(run)
+            after_admission = self._tree(run)
+            self.assertEqual(json.loads((run / "events/000111.json").read_text())["type"],
+                             "managed_instruction_source_transition_admitted")
+
+            repeated_status = self._public(run, "status")
+            self.assertEqual(repeated_status.returncode, 0, repeated_status.stderr)
+            repeated = self._public(run, "resume", "--prepare-only", "--max-worker-calls", "1")
+            self.assertEqual(repeated.returncode, 0, repeated.stderr)
+            self.assertEqual(self._tree(run), after_admission)
+            self._assert_frozen_prefix(run)
+
+    def test_captured109_interrupted_admission_replays_once_from_archived_actor(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = self._fresh109(Path(temp))
+            actor = json.loads((self.captured_run / "events/000110.json").read_text())
+            self.assertEqual(actor["type"], "continuation_executor_resumed")
+            self.assertEqual(actor["payload"]["adoption_kind"], "managed_instruction_source_transition")
+            self.assertEqual(actor["payload"]["executor"]["sha256"], CONTINUATION._sha(CONTINUATION_PATH.read_bytes()))
+            run.joinpath("events/000110.json").write_text(json.dumps(actor, sort_keys=True, separators=(",", ":")) + "\n")
+            archive_path = actor["payload"]["actor_archive_path"]
+            shutil.copy2(self.captured_run / archive_path, run / archive_path)
+            before = self._tree(run)
+            recorded_executor = Path(actor["payload"]["executor"]["path"])
+            self.assertEqual(recorded_executor.read_bytes(), CONTINUATION_PATH.read_bytes())
+            if recorded_executor.resolve() != CONTINUATION_PATH.resolve():
+                moved = self._public(run, "resume", *self._admit_args(run))
+                self.assertEqual(moved.returncode, 2, moved.stderr)
+                self.assertIn("P7 source handoff requires the exact admitted P6 actor and receipt checkpoint",
+                              moved.stderr)
+                self.assertEqual(self._tree(run), before)
+            command = self._command(run, "resume", *self._admit_args(run))
+            command[2] = os.fspath(recorded_executor)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(len(list((run / "events").glob("*.json"))), 111)
+            self.assertEqual(self._tree(run)["events/000110.json"], before["events/000110.json"])
+            self.assertEqual(json.loads((run / "events/000111.json").read_text())["type"],
+                             "managed_instruction_source_transition_admitted")
+            self.assertEqual(json.loads((run / "events/000111.json").read_text())["type"],
+                             "managed_instruction_source_transition_admitted")
+            self._assert_frozen_prefix(run)
+
+    def test_captured109_missing_malformed_tampered_and_wrong_base_receipts_refuse_without_writes(self):
+        mutations = {
+            "missing": lambda run, receipt: (run / "inputs/managed-source-transition-receipt.json").unlink(),
+            "malformed_reference": lambda run, receipt: receipt.__setitem__("repair_envelope", []),
+            "tampered_reference": lambda run, receipt: receipt["repair_envelope"].__setitem__("sha256", "0" * 64),
+            "wrong_base": lambda run, receipt: receipt["transition"].__setitem__(
+                "base_event_sha256", json.loads((run / "events/000108.json").read_text())["event_sha256"]),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temp:
+                run = Path(temp) / "receipt-case"
+                shutil.copytree(self.frozen_root, run)
+                receipt_path = run / "inputs/managed-source-transition-receipt.json"
+                shutil.copy2(self.legacy_receipt_run / "inputs/managed-source-transition-receipt.json", receipt_path)
+                receipt = json.loads(receipt_path.read_text())
+                mutate(run, receipt)
+                if receipt_path.exists():
+                    receipt_path.write_text(json.dumps(receipt, sort_keys=True, separators=(",", ":")) + "\n")
+                before = self._tree(run)
+                result = self._public(run, "status")
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertNotIn("AttributeError", result.stderr)
+                self.assertEqual(self._tree(run), before)
+
+
+class Captured111CitationAdditionsTests(unittest.TestCase):
+    """Captured P7 proposal path: deterministic preservation and bounded routing."""
+
+    frozen = Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/frozen111")
+    manifest = Path("/private/tmp/atlas-discount-lifecycle-task-20261012/completed-worker-recovery-v2/current-engine-manifest.json")
+    repo = "/Users/kamenkamenov/taggable-api"
+    db = "/Users/kamenkamenov/memory-knowledge/.atlas-state/taggable-api/current-final/atlas.sqlite"
+    task = "/private/tmp/atlas-discount-lifecycle-task-20261012/task.txt"
+    intake = "/private/tmp/atlas-discount-lifecycle-task-20261012/run"
+
+    def _new_run(self, parent: Path) -> Path:
+        run = parent.resolve() / "captured111-p7"
+        shutil.copytree(self.frozen, run)
+        return run
+
+    @classmethod
+    def setUpClass(cls):
+        # This captured protocol test must load the exact modules named by its
+        # immutable engine manifest.  The test module's legacy import path may
+        # already have loaded same-named modules from the candidate checkout.
+        requested, raw, engine_root = CONTINUATION._validate_engine_manifest(cls.manifest)
+        for name, relative in {
+            "csharp_facts": "csharp_facts.py", "atlas": "atlas.py",
+            "route_coordinator": "route_coordinator.py", "route_batch": "route_batch.py",
+            "route_autorun": "route_autorun.py", "task_intake": "task_intake.py",
+            "runtime_index_launch": "runtime_index_launch.py", "atlas_workspace": "atlas_workspace.py",
+            "question_coordinator": "question_coordinator.py", "compiler_index_launch": "compiler_index_launch.py",
+            "atlas_launch": "atlas_launch.py", "route_batch_autorun": "route_batch_autorun.py",
+            "route_batch_launch": "route_batch_launch.py",
+        }.items():
+            present = sys.modules.get(name)
+            expected = (engine_root / relative).resolve()
+            if present is not None and Path(getattr(present, "__file__", "")).resolve() != expected:
+                sys.modules.pop(name, None)
+        CONTINUATION.atlas = None
+        CONTINUATION.route_autorun = None
+        CONTINUATION.route_batch = None
+        CONTINUATION.route_coordinator = None
+        CONTINUATION.task_intake = None
+        CONTINUATION._load_verified_engine(engine_root)
+        CONTINUATION._ENGINE_MANIFEST_RAW = raw
+        CONTINUATION._ENGINE_MANIFEST_PATH = cls.manifest.resolve(strict=True)
+        CONTINUATION._ENGINE_ROOT = engine_root
+        CONTINUATION._ENGINE_BOUND = True
+
+    @staticmethod
+    def _tree_hashes(root: Path):
+        return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in root.rglob("*") if path.is_file()}
+
+    def _make_native_worker(self, run, phase, role, model, request, answer):
+        return AtlasCliTests.synthetic_native_final_worker(self, run, phase, role, model, request, answer)
+
+    def _resume_from_distinct_executor_path(self, run, args, native_check, temp_root, attempt):
+        safe_root = Path(tempfile.mkdtemp(prefix=f"atlas-p7-relocated-{attempt}-", dir="/private/tmp"))
+        unadmitted_path = safe_root / "unadmitted-task_continuation.py"
+        shutil.copy2(CONTINUATION_PATH, unadmitted_path)
+        unadmitted_spec = importlib.util.spec_from_file_location(f"unadmitted_continuation_{attempt}", unadmitted_path)
+        unadmitted = importlib.util.module_from_spec(unadmitted_spec)
+        unadmitted_spec.loader.exec_module(unadmitted)
+        before_unadmitted = self._tree_hashes(run)
+        with mock.patch.object(unadmitted.route_autorun, "run_worker",
+                side_effect=AssertionError("unadmitted executor must not dispatch a provider")):
+            with self.assertRaises(unadmitted.ContinuationError):
+                unadmitted.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest))
+        self.assertEqual(self._tree_hashes(run), before_unadmitted)
+        relocated_path = safe_root / "task_continuation.py"
+        shutil.copy2(CONTINUATION_PATH, relocated_path)
+        spec = importlib.util.spec_from_file_location(f"relocated_continuation_{attempt}", relocated_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with (mock.patch.object(module, "_verify_final_map_native_job", side_effect=native_check),
+              mock.patch.object(module.route_autorun, "run_worker",
+                side_effect=AssertionError("accepted review reentry must not dispatch a provider"))):
+            result = module.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest),
+                                   adopt_final_map_feedback_executor=True)
+        handoff = next(event for event in reversed(module._events(run))
+            if event.get("type") == "continuation_executor_resumed")
+        self.assertEqual(handoff["payload"]["adoption_kind"], "final_map_citation_accepted_review_finalize")
+        self.assertEqual(handoff["payload"]["attempt"], attempt)
+        self.assertEqual(handoff["payload"]["executor"]["path"], os.fspath(relocated_path.resolve()))
+        self.assertNotEqual(handoff["payload"]["previous_executor"]["path"],
+                            handoff["payload"]["executor"]["path"])
+        return module, result, safe_root
+
+    def test_revision2_rejection_selects_additions_producer_without_transition_gate(self):
+        """The source-bound repair fixes the existing citation producer, not only P7 admission."""
+        with tempfile.TemporaryDirectory() as temp:
+            run = self._new_run(Path(temp))
+            context, events = CONTINUATION._load(run, self.repo, self.db, self.task, self.intake)
+            plan, _ = CONTINUATION._read_json(run / "outputs/plan_author.json", "captured accepted plan")
+            without_transition = [event for event in events if not (
+                event.get("type") == "continuation_executor_resumed"
+                and event.get("payload", {}).get("adoption_kind") == "final_map_citation_additions_p7")]
+            second_rejection = next(event for event in without_transition
+                if event.get("type") == "final_map_revision_0002_review_completed")
+            clean_producer_history = [event for event in without_transition
+                if event.get("sequence", 0) <= second_rejection.get("sequence", 0)]
+            self.assertEqual(CONTINUATION._final_map_next_type(clean_producer_history, context, plan),
+                "final_map_citation_additions_prepare")
+            # The source-bound saved full-map schema-recovery request remains a
+            # readable legacy continuation until explicit P7 handoff supersedes it.
+            self.assertEqual(CONTINUATION._final_map_next_type(without_transition, context, plan),
+                "final_map_author_citation_schema_retry_0001")
+
+    def test_empty_proposal_consumes_one_slot_then_saved_attempt2_recovers_without_dispatch(self):
+        """Malformed attempt one is bounded; attempt two survives a saved-worker interruption."""
+        with tempfile.TemporaryDirectory() as temp:
+            run = self._new_run(Path(temp))
+            args = (self.repo, self.db, self.task, self.intake, os.fspath(run))
+            CONTINUATION.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest),
+                prepare_only=True, adopt_final_map_feedback_executor=True)
+            calls = []
+            original_native_check = CONTINUATION._verify_final_map_native_job
+
+            def native_check(root, request, role, model, phase, expected,
+                             thread_id, register_path, register_sha, artifact_dir):
+                if not (phase.startswith("final_map_author_citation_additions_")
+                        or phase.startswith("final_map_review_citation_")):
+                    return original_native_check(root, request, role, model, phase, expected,
+                        thread_id, register_path, register_sha, artifact_dir)
+                module = CONTINUATION.route_autorun
+                cli_path = run / "pinned-cli"
+                old_cli, old_sha = module.CLI, module.CLI_SHA256
+                module.CLI = os.fspath(cli_path)
+                module.CLI_SHA256 = hashlib.sha256(cli_path.read_bytes()).hexdigest()
+                try:
+                    return original_native_check(root, request, role, model, phase, expected,
+                        thread_id, register_path, register_sha, artifact_dir)
+                finally:
+                    module.CLI, module.CLI_SHA256 = old_cli, old_sha
+
+            def edge(role, prompt, job_path, timeout_seconds, output_schema):
+                phase = Path(job_path).name
+                attempt = int(phase.rsplit("_", 1)[1])
+                map_path, _text_path, review_request_path, _review_path = CONTINUATION._citation_additions_paths(attempt)
+                request_path = run / f"inputs/final-map-citation-additions-{attempt:04d}.json"
+                request, _ = CONTINUATION._read_json(request_path, "attempt-bound addition request")
+                if phase.startswith("final_map_author_citation_additions_"):
+                    if attempt == 1:
+                        value = {"schema_version": 1, "base_map_sha256": request["base_map_sha256"],
+                            "catalogue_sha256": request["catalogue_sha256"], "additions": []}
+                    else:
+                        base, _ = CONTINUATION._read_json(run / "outputs/final-map-revision-0002.json", "base map")
+                        finding = base["findings"][0]
+                        evidence_id = next(item for item in request["evidence_ids"]
+                            if item not in finding["evidence_refs"])
+                        value = {"schema_version": 1, "base_map_sha256": request["base_map_sha256"],
+                            "catalogue_sha256": request["catalogue_sha256"],
+                            "additions": [{"finding_id": finding["finding_id"], "evidence_ids": [evidence_id]}]}
+                    answer = json.dumps(value, sort_keys=True)
+                    model = "gpt-6-luna"
+                else:
+                    review_request, _ = CONTINUATION._read_json(run / review_request_path, "independent review request")
+                    draft, _ = CONTINUATION._read_json(run / map_path, "assembled map")
+                    judgments = [{"obligation_id": row["obligation_id"], "decision": "supported",
+                        "finding_ids": row["finding_ids"], "uncertainty": "Synthetic review edge."}
+                        for row in draft["obligations"]]
+                    answer = json.dumps({"decision": "accepted", "reviewer_identity": review_request["reviewer_identity"],
+                        "task_sha256": review_request["task_sha256"],
+                        "source_identity_sha256": review_request["source_identity_sha256"],
+                        "plan_sha256": review_request["plan_sha256"], "map_sha256": review_request["map_sha256"],
+                        "finding_link_policy": review_request["finding_link_policy"],
+                        "obligation_judgments": judgments,
+                        "basis": "Synthetic review edge for saved-worker recovery; it makes no factual judgment."}, sort_keys=True)
+                    model = "gpt-6.1-sol"
+                calls.append(phase)
+                _req, result, _event, _register, _sha, _digests = self._make_native_worker(
+                    run, phase, role, model, request if model == "gpt-6-luna" else review_request, answer)
+                for path in (run / "outputs" / f"{phase}.txt", run / "outputs" / f"{phase}-worker.json"):
+                    path.unlink(missing_ok=True)
+                return {**result, "final_text": answer}
+
+            with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                 mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=edge):
+                first = CONTINUATION.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest))
+            self.assertEqual(calls, ["final_map_author_citation_additions_0001"])
+            rejected = next(event for event in CONTINUATION._events(run)
+                if event.get("type") == "final_map_citation_additions_rejected")
+            self.assertEqual(rejected["payload"]["attempt"], 1)
+            self.assertEqual(first["status"], "final_map_citation_additions_prepare")
+            with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check):
+                prepared = CONTINUATION.resume(*args, max_worker_calls=1,
+                    engine_manifest=os.fspath(self.manifest), prepare_only=True)
+            self.assertEqual(prepared["status"], "final_map_author_citation_additions_0002")
+            context, _ = CONTINUATION._load(run, self.repo, self.db, self.task, self.intake)
+            request, _ = CONTINUATION._read_json(
+                run / "inputs/final-map-citation-additions-0002.json", "attempt two request")
+            phase = "final_map_author_citation_additions_0002"
+            # Save the provider-complete event separately from the consumer to model interruption.
+            with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                 mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=edge):
+                CONTINUATION._record_worker(run, "luna_draft", request["prompt"], request["schema"], phase, 30)
+            with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                 mock.patch.object(CONTINUATION.route_autorun, "run_worker",
+                    side_effect=AssertionError("saved attempt two must not be redispatched")):
+                recovered = CONTINUATION.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest))
+            self.assertEqual(recovered["status"], "final_map_citation_review_prepare")
+            with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                 mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=edge):
+                accepted = CONTINUATION.resume(*args, max_worker_calls=2, engine_manifest=os.fspath(self.manifest))
+            self.assertEqual(accepted["status"], "completed")
+            self.assertTrue(accepted["task_complete"])
+            before_repeat = self._tree_hashes(run)
+            with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check):
+                again = CONTINUATION.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest))
+            self.assertTrue(again["task_complete"])
+            self.assertEqual(before_repeat, self._tree_hashes(run))
+
+    def test_captured111_additions_proposal_assembles_and_routes_review_with_repeat_safety(self):
+        """External model edges are labeled synthetic; public consumer/review/finalize stay real."""
+        if not (self.frozen / "events/000111.json").is_file():
+            self.skipTest("Immutable captured111 checkpoint unavailable")
+        original_native_check = CONTINUATION._verify_final_map_native_job
+
+        selected_case = os.environ.get("ATLAS_CITATION_ADDITIONS_CASE")
+        decisions = (selected_case,) if selected_case else ("accepted", "rejected")
+        self.assertTrue(set(decisions) <= {"accepted", "rejected"})
+        for decision in decisions:
+            with self.subTest(decision=decision), tempfile.TemporaryDirectory() as temp:
+                run = self._new_run(Path(temp))
+                args = (self.repo, self.db, self.task, self.intake, os.fspath(run))
+                first = CONTINUATION.resume(*args, max_worker_calls=1, engine_manifest=os.fspath(self.manifest),
+                    prepare_only=True, adopt_final_map_feedback_executor=True)
+                self.assertEqual(first["status"], "final_map_author_citation_additions_0001")
+                request, request_raw = CONTINUATION._read_json(
+                    run / "inputs/final-map-citation-additions-0001.json", "captured P7 additions request")
+                self.assertNotIn("uniqueItems", json.dumps(request["schema"]))
+                before_repeat = self._tree_hashes(run)
+                repeated = CONTINUATION.resume(*args, max_worker_calls=1,
+                    engine_manifest=os.fspath(self.manifest), prepare_only=True)
+                self.assertEqual(repeated["status"], "final_map_author_citation_additions_0001")
+                self.assertEqual(before_repeat, self._tree_hashes(run))
+
+                simulated_calls = []
+                def provider_edge(role, prompt, job_path, timeout_seconds, output_schema):
+                    phase = Path(job_path).name
+                    attempt = int(phase.rsplit("_", 1)[1])
+                    map_path, _explanation_path, review_request_path, _review_path = \
+                        CONTINUATION._citation_additions_paths(attempt)
+                    if phase.startswith("final_map_author_citation_additions_"):
+                        request, _ = CONTINUATION._read_json(
+                            run / f"inputs/final-map-citation-additions-{attempt:04d}.json", "simulated proposal request")
+                        base, _ = CONTINUATION._read_json(
+                            run / "outputs/final-map-revision-0002.json", "preserved P6 base map")
+                        finding = base["findings"][0]
+                        used = set(finding["evidence_refs"])
+                        previous_map = run / f"outputs/final-map-citation-{attempt-1:04d}.json"
+                        if attempt > 1 and previous_map.is_file():
+                            previous, _ = CONTINUATION._read_json(previous_map, "preserved prior attempt map")
+                            used.update(previous["findings"][0]["evidence_refs"])
+                        evidence_id = next(item for item in request["evidence_ids"] if item not in used)
+                        answer_value = {"schema_version": 1,
+                            "base_map_sha256": request["base_map_sha256"],
+                            "catalogue_sha256": request["catalogue_sha256"],
+                            "additions": [{"finding_id": finding["finding_id"], "evidence_ids": [evidence_id]}]}
+                        answer = json.dumps(answer_value, ensure_ascii=False, sort_keys=True)
+                        model = "gpt-6-luna"
+                    elif phase.startswith("final_map_review_citation_"):
+                        request, _ = CONTINUATION._read_json(
+                            run / review_request_path, "simulated complete-map review request")
+                        draft, _ = CONTINUATION._read_json(
+                            run / map_path, "code-assembled full map")
+                        judgments = []
+                        for obligation in draft["obligations"]:
+                            self.assertTrue(obligation["finding_ids"],
+                                "captured case should keep every original obligation explicitly linked")
+                            judgments.append({"obligation_id": obligation["obligation_id"],
+                                "decision": "supported", "finding_ids": obligation["finding_ids"],
+                                "uncertainty": "Synthetic review edge; factual adequacy is not assessed here."})
+                        answer_value = {"decision": "accepted" if attempt > 1 else decision,
+                            "reviewer_identity": request["reviewer_identity"],
+                            "task_sha256": request["task_sha256"],
+                            "source_identity_sha256": request["source_identity_sha256"],
+                            "plan_sha256": request["plan_sha256"],
+                            "map_sha256": request["map_sha256"],
+                            "finding_link_policy": request["finding_link_policy"],
+                            "obligation_judgments": judgments,
+                            "basis": "Synthetic external-edge response for code-path verification only; no factual Sol judgment is claimed."}
+                        answer = json.dumps(answer_value, ensure_ascii=False, sort_keys=True)
+                        model = "gpt-6.1-sol"
+                    else:
+                        raise AssertionError(f"unexpected simulated external edge: {phase}")
+                    simulated_calls.append(phase)
+                    _req, result, _event, _register, _register_sha, _digests = self._make_native_worker(
+                        run, phase, role, model, request, answer)
+                    (run / "outputs" / f"{phase}.txt").unlink()
+                    (run / "outputs" / f"{phase}-worker.json").unlink()
+                    return {**result, "final_text": answer}
+
+                def native_check(root, request, role, model, phase, expected,
+                                 thread_id, register_path, register_sha, artifact_dir):
+                    if not (phase.startswith("final_map_author_citation_additions_")
+                            or phase.startswith("final_map_review_citation_")):
+                        return original_native_check(root, request, role, model, phase, expected,
+                            thread_id, register_path, register_sha, artifact_dir)
+                    module = CONTINUATION.route_autorun
+                    cli_path = run / "pinned-cli"
+                    old_cli, old_sha = module.CLI, module.CLI_SHA256
+                    module.CLI = os.fspath(cli_path)
+                    module.CLI_SHA256 = hashlib.sha256(cli_path.read_bytes()).hexdigest()
+                    try:
+                        return original_native_check(root, request, role, model, phase, expected,
+                            thread_id, register_path, register_sha, artifact_dir)
+                    finally:
+                        module.CLI, module.CLI_SHA256 = old_cli, old_sha
+
+                if decision == "accepted":
+                    # Save a genuine-shaped native completion, then interrupt before the
+                    # proposal consumer. Reentry must consume it without another edge call.
+                    context, _ = CONTINUATION._load(run, self.repo, self.db, self.task, self.intake)
+                    phase = "final_map_author_citation_additions_0001"
+                    request, _ = CONTINUATION._read_json(
+                        run / "inputs/final-map-citation-additions-0001.json", "interrupted proposal request")
+                    with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=provider_edge):
+                        _value, interrupted_worker = CONTINUATION._record_worker(run, "luna_draft",
+                            request["prompt"], request["schema"], phase, 30)
+                    self.assertIn("final_map_author_citation_additions_0001_worker_completed",
+                        [event.get("type") for event in CONTINUATION._events(run)])
+                    with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(CONTINUATION.route_autorun, "run_worker",
+                            side_effect=AssertionError("saved proposal must not be redispatched")):
+                        recovered = CONTINUATION.resume(*args, max_worker_calls=1,
+                            engine_manifest=os.fspath(self.manifest))
+                    self.assertEqual(recovered["status"], "final_map_citation_review_prepare")
+                    with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=provider_edge), \
+                         mock.patch.object(CONTINUATION, "_final_map_finalize",
+                            side_effect=CONTINUATION.ContinuationError("saved accepted review interruption")):
+                        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "saved accepted review interruption"):
+                            CONTINUATION.resume(*args, max_worker_calls=2,
+                                engine_manifest=os.fspath(self.manifest))
+                    relocated_module, status, relocated_root = self._resume_from_distinct_executor_path(
+                        run, args, native_check, temp, attempt=1)
+                else:
+                    with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=provider_edge):
+                        status = CONTINUATION.resume(*args, max_worker_calls=2, engine_manifest=os.fspath(self.manifest))
+                self.assertEqual(interrupted_worker.get("payload", {}).get("phase") if decision == "accepted" else None,
+                    "final_map_author_citation_additions_0001" if decision == "accepted" else None)
+
+
+                events = CONTINUATION._events(run)
+                assembled_event = next(item for item in events
+                    if item.get("type") == "final_map_citation_additions_assembled")
+                proposal, _ = CONTINUATION._read_json(
+                    run / "outputs/final-map-citation-additions-0001.json", "simulated proposal result")
+                base, _ = CONTINUATION._read_json(
+                    run / "outputs/final-map-revision-0002.json", "preserved P6 base map")
+                assembled, _ = CONTINUATION._read_json(
+                    run / "outputs/final-map-citation-0001.json", "deterministic P7 assembly")
+                self.assertEqual(assembled_event["payload"]["proposal_sha256"],
+                    hashlib.sha256(CONTINUATION._json_bytes(proposal)).hexdigest())
+                self.assertEqual(assembled["findings"][1:], base["findings"][1:])
+                protected = json.loads(json.dumps(assembled))
+                old = json.loads(json.dumps(base))
+                for row in protected["findings"]:
+                    row["evidence_refs"] = []
+                for row in old["findings"]:
+                    row["evidence_refs"] = []
+                self.assertEqual(protected, old, "all parsed values except citation refs must be preserved")
+                review_event = next(item for item in events
+                    if item.get("type") == "final_map_citation_review_completed")
+                self.assertEqual(review_event["payload"]["decision"], decision)
+                self.assertEqual(simulated_calls,
+                    ["final_map_author_citation_additions_0001", "final_map_review_citation_0001"])
+                self.assertFalse(status["task_complete"] if decision == "rejected" else False)
+                if decision == "accepted":
+                    self.assertEqual(status["status"], "completed")
+                    self.assertTrue(status["task_complete"])
+                    with mock.patch.object(relocated_module, "_verify_final_map_native_job", side_effect=native_check):
+                        finalized = relocated_module.resume(*args, max_worker_calls=1,
+                            engine_manifest=os.fspath(self.manifest))
+                    self.assertTrue(finalized["task_complete"])
+                    stable = self._tree_hashes(run)
+                    with mock.patch.object(relocated_module, "_verify_final_map_native_job", side_effect=native_check):
+                        again = relocated_module.resume(*args, max_worker_calls=1,
+                            engine_manifest=os.fspath(self.manifest))
+                    self.assertTrue(again["task_complete"])
+                    self.assertEqual(stable, self._tree_hashes(run))
+                    shutil.rmtree(relocated_root)
+                else:
+                    self.assertEqual(status["status"], "final_map_citation_additions_prepare")
+                    first_map, first_raw = CONTINUATION._read_json(
+                        run / "outputs/final-map-citation-0001.json", "preserved rejected attempt map")
+                    first_review, first_review_raw = CONTINUATION._read_json(
+                        run / "outputs/final-map-review-citation-0001.json", "preserved rejected attempt review")
+                    with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check):
+                        second_prepared = CONTINUATION.resume(*args, max_worker_calls=1,
+                            engine_manifest=os.fspath(self.manifest), prepare_only=True)
+                    self.assertEqual(second_prepared["status"], "final_map_author_citation_additions_0002")
+                    second_request, _ = CONTINUATION._read_json(
+                        run / "inputs/final-map-citation-additions-0002.json", "second bounded proposal request")
+                    self.assertEqual(second_request["prior_review_sha256"],
+                        hashlib.sha256(first_review_raw).hexdigest())
+                    self.assertIn("ACTIONABLE FEEDBACK FROM THE PRIOR BOUNDED ATTEMPT", second_request["prompt"])
+                    with mock.patch.object(CONTINUATION, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(CONTINUATION.route_autorun, "run_worker", side_effect=provider_edge), \
+                         mock.patch.object(CONTINUATION, "_final_map_finalize",
+                            side_effect=CONTINUATION.ContinuationError("saved accepted review interruption")):
+                        with self.assertRaisesRegex(CONTINUATION.ContinuationError, "saved accepted review interruption"):
+                            CONTINUATION.resume(*args, max_worker_calls=2,
+                                engine_manifest=os.fspath(self.manifest))
+                    relocated_module, accepted, relocated_root = self._resume_from_distinct_executor_path(
+                        run, args, native_check, temp, attempt=2)
+                    self.assertEqual(accepted["status"], "completed")
+                    self.assertTrue(accepted["task_complete"])
+                    self.assertEqual(simulated_calls[-2:],
+                        ["final_map_author_citation_additions_0002", "final_map_review_citation_0002"])
+                    self.assertEqual((run / "outputs/final-map-citation-0001.json").read_bytes(), first_raw)
+                    self.assertEqual((run / "outputs/final-map-review-citation-0001.json").read_bytes(), first_review_raw)
+                    # Alter only review 2's provenance to cite attempt 1. The
+                    # deterministic verifier must reject the cross-attempt chain.
+                    review2_path = run / "inputs/final-map-review-citation-0002.json"
+                    original_review2_raw = review2_path.read_bytes()
+                    review2, _ = CONTINUATION._read_json(review2_path, "attempt two review request")
+                    review1, _ = CONTINUATION._read_json(
+                        run / "inputs/final-map-review-citation-0001.json", "attempt one review request")
+                    review2["citation_additions_provenance"] = review1["citation_additions_provenance"]
+                    review2_path.write_bytes(CONTINUATION._json_bytes(review2))
+                    try:
+                        bound_context, _ = CONTINUATION._read_json(run / "context.json", "bound captured context")
+                        plan_raw = (run / "outputs/plan_author.json").read_bytes()
+                        with self.assertRaisesRegex(CONTINUATION.ContinuationError,
+                                "a committed continuation artifact changed"):
+                            CONTINUATION._verified_citation_additions_review(
+                                run, CONTINUATION._events(run), bound_context, plan_raw, 2)
+                    finally:
+                        review2_path.write_bytes(original_review2_raw)
+                    with mock.patch.object(relocated_module, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(relocated_module.route_autorun, "run_worker",
+                            side_effect=AssertionError("attempt two finalization must not dispatch")):
+                        finalized = relocated_module.resume(*args, max_worker_calls=1,
+                            engine_manifest=os.fspath(self.manifest))
+                    self.assertTrue(finalized["task_complete"])
+                    stable = self._tree_hashes(run)
+                    with mock.patch.object(relocated_module, "_verify_final_map_native_job", side_effect=native_check), \
+                         mock.patch.object(relocated_module.route_autorun, "run_worker",
+                            side_effect=AssertionError("completed attempt two must not dispatch")):
+                        again = relocated_module.resume(*args, max_worker_calls=1,
+                            engine_manifest=os.fspath(self.manifest))
+                    self.assertTrue(again["task_complete"])
+                    self.assertEqual(stable, self._tree_hashes(run))
+                    shutil.rmtree(relocated_root)
+
+    def test_captured111_proposal_refusals_name_the_offending_boundary(self):
+        run = self.frozen
+        request, _ = CONTINUATION._read_json(
+            run / "inputs/final-map-citation-additions-0001.json", "captured P7 request") if \
+            (run / "inputs/final-map-citation-additions-0001.json").is_file() else (None, None)
+        if request is None:
+            # The frozen111 prefix predates P7; use the exact prepared request from its public isolated copy.
+            prepared = Path("/private/tmp/atlas-final-map-assembly-20261015/resumption-repairs-20261015/prototype7/isolated-task-p7-final")
+            request, _ = CONTINUATION._read_json(
+                prepared / "inputs/final-map-citation-additions-0001.json", "publicly prepared P7 request")
+            run = prepared
+        base, _ = CONTINUATION._read_json(run / "outputs/final-map-revision-0002.json", "captured citation base")
+        good = {"schema_version": 1, "base_map_sha256": request["base_map_sha256"],
+            "catalogue_sha256": request["catalogue_sha256"], "additions": [{
+                "finding_id": base["findings"][0]["finding_id"],
+                "evidence_ids": [next(item for item in request["evidence_ids"]
+                    if item not in base["findings"][0]["evidence_refs"])]}]}
+        cases = [
+            ({**good, "additions": []}, "at least one finding-reference addition"),
+            ({**good, "base_map_sha256": "0" * 64}, "expected base="),
+            ({**good, "additions": [{"finding_id": ["bad"], "evidence_ids": ["x"]}]}, "finding_id=['bad'] is unknown"),
+            ({**good, "additions": [{"finding_id": good["additions"][0]["finding_id"],
+                "evidence_ids": ["outside-catalogue"]}]}, "outside the admitted catalogue"),
+            ({**good, "additions": [{"finding_id": good["additions"][0]["finding_id"],
+                "evidence_ids": [good["additions"][0]["evidence_ids"][0]] * 2}]}, "repeat evidence IDs"),
+        ]
+        for proposal, message in cases:
+            with self.subTest(message=message):
+                with self.assertRaises(CONTINUATION.ContinuationError) as raised:
+                    CONTINUATION._validate_citation_additions(proposal, request, base)
+                self.assertIn(message, str(raised.exception))

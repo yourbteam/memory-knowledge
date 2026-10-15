@@ -36,6 +36,15 @@ SOURCE_CALL_GRAPH_CAPS = {
     "compatibility_records": 2_000_000,
 }
 RUNTIME_OBSERVATION_SCHEMA_VERSION = 1
+# Immutable historical producer source retained in this repository's Git object database.
+# Historical receipts are accepted only after retrieving and rehashing both exact files.
+_HISTORICAL_RUNTIME_PRODUCER_COMMIT = "b2638808b349279a8e411d229271dc637d460b3c"
+_HISTORICAL_RUNTIME_PRODUCER_FILES = {
+    "atlas_source": ("skills/codebase-atlas-machinery/scripts/atlas.py",
+                     "5741d95f58b03c03c630f22c4faa21f7d223b8eb1936249ff0083223dade09cd"),
+    "runtime_launcher_source": ("skills/codebase-atlas-machinery/scripts/runtime_index_launch.py",
+                                "df292798c0cf5f3a3f23839ebf210041397cf9968c64c09427a55c9bb355133c"),
+}
 RUNTIME_PROFILE_OVERRIDES = {
     "local-storage": {
         "interface_type": "Taggable.Api.Infrastructure.AdminTourManagement.ITourAssetStorage",
@@ -4742,6 +4751,36 @@ def _runtime_no_symlink_path(path: Path, *, label: str) -> Path:
     return absolute.resolve(strict=True)
 
 
+def _historical_runtime_producer_identity(atlas_source: Path) -> dict[str, dict[str, str]]:
+    launcher_source = atlas_source.parent / "runtime_index_launch.py"
+    return {
+        name: {"path": (atlas_source if name == "atlas_source" else launcher_source).as_posix(),
+               "sha256": digest}
+        for name, (_git_path, digest) in _HISTORICAL_RUNTIME_PRODUCER_FILES.items()
+    }
+
+
+def _historical_runtime_producer_archive_matches(atlas_source: Path) -> bool:
+    git_root = next((parent for parent in atlas_source.parents if (parent / ".git").exists()), None)
+    if git_root is None:
+        return False
+    launcher_source = atlas_source.parent / "runtime_index_launch.py"
+    for name, (git_path, expected_sha256) in _HISTORICAL_RUNTIME_PRODUCER_FILES.items():
+        current_path = atlas_source if name == "atlas_source" else launcher_source
+        if current_path.resolve() != (git_root / git_path).resolve():
+            return False
+        try:
+            archived = subprocess.run(
+                ["git", "-C", str(git_root), "show", f"{_HISTORICAL_RUNTIME_PRODUCER_COMMIT}:{git_path}"],
+                capture_output=True, check=False, timeout=10,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return False
+        if archived.returncode != 0 or hashlib.sha256(archived.stdout).hexdigest() != expected_sha256:
+            return False
+    return True
+
+
 def _runtime_require_under(path: Path, roots: list[Path], *, label: str) -> Path:
     checked = _runtime_no_symlink_path(path, label=label)
     for root in roots:
@@ -4776,6 +4815,7 @@ def _runtime_identity_projection(value: object, replacements: list[tuple[str, st
 def _runtime_validate_result(
     result: object, profile: str, spec: dict[str, object], interface_name: str, candidate_name: str,
     snapshot: dict[str, object], repo_root: Path, supplement: dict[str, object], artifact_root: Path,
+    *, allow_historical_producer: bool = False,
 ) -> dict[str, object]:
     top_fields = {"schema_version", "operation_nonce", "profile", "profile_inputs", "capture",
                   "termination", "process", "input_identity", "input_identity_projection", "input_sha256"}
@@ -4862,7 +4902,11 @@ def _runtime_validate_result(
         "runtime_launcher_source": {"path": launcher_source.as_posix(), "sha256": hashlib.sha256(launcher_source.read_bytes()).hexdigest()},
     }
     if producer_identity != expected_producers:
-        raise AtlasError("runtime observation producer source identity is stale or mismatched")
+        historical_expected = _historical_runtime_producer_identity(atlas_source)
+        if not allow_historical_producer or producer_identity != historical_expected:
+            raise AtlasError("runtime observation producer source identity is stale or mismatched")
+        if not _historical_runtime_producer_archive_matches(atlas_source):
+            raise AtlasError("historical runtime producer archive failed its pinned hash check")
     artifact_root = _runtime_no_symlink_dir(artifact_root, label="artifact root")
     observer_path = _runtime_no_symlink_path(Path(str(observer_assembly.get("path"))), label="observer assembly")
     try:
@@ -5432,6 +5476,7 @@ def _current_runtime_observations(db_path: Path, snapshot: dict[str, object], re
             reconstructed, str(profile), spec, str(binding.get("interface_type")),
             candidate_name, snapshot, repo_root, supplement,
             _runtime_artifact_root(db_path, row_snapshot, project_path, binding.get("interface_type"), repo_root),
+            allow_historical_producer=True,
         )
         if _canonical_json(checked) != _canonical_json(payload):
             raise AtlasError("saved runtime observation source/profile projection differs from current validation")
@@ -6058,6 +6103,109 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
                 if registration.get("runtime_DI_selection_proven") is not False:
                     raise AtlasError("compiler registration must remain labeled runtime-unproven")
         compiler_snippets = _source_texts(repo_root, compiler_refs)
+    # Expose method bodies only when bound to this route's verified compiler graph.
+    compiler_method_snippets: list[dict[str, object]] = []
+    compiler_method_scope: dict[str, object] | None = None
+    if compiler_relations:
+        method_fact_lists: dict[str, list[dict[str, object]]] = {}
+        for fact in facts:
+            if isinstance(fact, dict) and fact.get("kind") == "method_declaration" and isinstance(fact.get("id"), str):
+                method_fact_lists.setdefault(fact["id"], []).append(fact)
+        selected_refs: dict[str, dict[str, object]] = {}
+        route_graph_records = []
+        matched_relation_keys: set[int] = set()
+        for supplement in supplements:
+            call_graph = supplement.get("source_call_graph")
+            if not isinstance(call_graph, dict):
+                continue
+            roots = [item for item in call_graph.get("roots", [])
+                     if isinstance(item, dict) and item.get("route_fact_id") == route["id"]]
+            edges = call_graph.get("edges", [])
+            nodes = call_graph.get("nodes", [])
+            if not roots:
+                continue
+            if not isinstance(edges, list) or not isinstance(nodes, list):
+                raise AtlasError("verified compiler graph has malformed source-call nodes or edges")
+            node_by_id = {item.get("id"): item for item in nodes if isinstance(item, dict) and isinstance(item.get("id"), str)}
+            if len(node_by_id) != len(nodes):
+                raise AtlasError("verified compiler graph contains duplicate or malformed method node IDs")
+            outgoing: dict[str, list[dict[str, object]]] = {}
+            for edge in edges:
+                if not isinstance(edge, dict):
+                    raise AtlasError("verified compiler graph contains a malformed edge")
+                outgoing.setdefault(str(edge.get("caller_node_id")), []).append(edge)
+            for relation in compiler_relations:
+                relation_id = relation.get("lexical_implementation_fact_id")
+                matching_roots = [item for item in roots
+                                  if item.get("lexical_implementation_method_fact_id") == relation_id
+                                  and item.get("root_method") == relation.get("implementation_method")
+                                  and item.get("implementation_type") == relation.get("implementation_type")
+                                  and len(method_fact_lists.get(relation_id, [])) == 1
+                                  and method_fact_lists[relation_id][0].get("source") == item.get("root_source")]
+                if not matching_roots:
+                    continue
+                if len(matching_roots) != 1:
+                    raise AtlasError("compiler route relation does not bind one exact source-call root")
+                matched_relation_keys.add(id(relation))
+                root_record = matching_roots[0]
+                root_node_id = root_record.get("root_node_id")
+                if not isinstance(root_node_id, str) or root_node_id not in node_by_id:
+                    raise AtlasError("compiler route root does not identify one saved source-call method node")
+                pending = [root_node_id]
+                reachable: set[str] = set()
+                supported_edges: list[dict[str, object]] = []
+                while pending:
+                    node_id = pending.pop()
+                    if node_id in reachable:
+                        continue
+                    reachable.add(node_id)
+                    for edge in outgoing.get(node_id, []):
+                        if edge.get("compiler_binding_confirmed") is True and edge.get("dispatch_kind") in {"static_source", "non_virtual_instance_source", "interface_implementation_source"}:
+                            supported_edges.append(edge)
+                            callee = edge.get("callee_node_id")
+                            if isinstance(callee, str):
+                                pending.append(callee)
+                chosen = {root_node_id}
+                chosen.update(edge["callee_node_id"] for edge in supported_edges
+                              if isinstance(edge.get("callee_node_id"), str))
+                for node_id in chosen:
+                    node = node_by_id.get(node_id)
+                    if not isinstance(node, dict):
+                        raise AtlasError("supported compiler source-call node is missing")
+                    fact_id, source = node.get("lexical_method_fact_id"), node.get("source")
+                    matches = method_fact_lists.get(fact_id, []) if isinstance(fact_id, str) else []
+                    fact = matches[0] if len(matches) == 1 else None
+                    if (not isinstance(fact, dict) or fact.get("source") != source
+                            or not isinstance(source, dict)):
+                        raise AtlasError("compiler source-call node does not join one exact saved lexical method fact")
+                    prior = selected_refs.get(fact_id)
+                    if prior is not None and prior != source:
+                        raise AtlasError("compiler method fact has conflicting graph source identity")
+                    selected_refs[fact_id] = source
+                route_graph_records.append({
+                    "route_fact_id": route["id"],
+                    "compiler_root_node_id": root_node_id,
+                    "compiler_root_fact_id": relation_id,
+                    "selected_method_fact_ids": sorted(node_by_id[node_id]["lexical_method_fact_id"] for node_id in chosen),
+                    "supported_reachable_method_fact_ids": sorted({
+                        node_by_id[node_id]["lexical_method_fact_id"] for node_id in reachable
+                        if isinstance(node_by_id[node_id].get("lexical_method_fact_id"), str)}),
+                    "supported_edge_count": len(supported_edges),
+                    "other_reachable_edge_count": sum(len(outgoing.get(node_id, [])) for node_id in reachable) - len(supported_edges),
+                })
+        if len(matched_relation_keys) != len(compiler_relations):
+            raise AtlasError("compiler route relations do not all join one verified source-call graph root")
+        refs = [(fact_id, source) for fact_id, source in sorted(selected_refs.items())]
+        compiler_method_snippets = _source_texts(repo_root, refs)
+        compiler_method_scope = {
+            "scope": "verified_route_handler_and_supported_reachable_method_bodies",
+            "source_call_graph_records": route_graph_records,
+            "methods_are_ordinary_lexical_source_facts": True,
+            "runtime_route_reachability_proven": False,
+            "runtime_DI_selection_proven": False,
+        }
+        mandatory_snippets = sorted([*mandatory_snippets, *compiler_method_snippets],
+                                    key=lambda item: (os.fsencode(item["path"]), item["span"]["start_offset"], item["span"]["end_offset"], item["fact_id"]))
     runtime_candidate_evidence: list[dict[str, object]] = []
     if runtime_observations:
         observed_interfaces = {str(item.get("binding", {}).get("interface_type")) for item in runtime_observations}
@@ -6177,6 +6325,8 @@ def evidence_pack(db_arg: str, repo_arg: str, route_fact_id: str, max_bytes: int
                           "limitations": graph.get("limitations", []), "traversal_note": "All cross-file relationships are lexical candidates; no receiver, registration, overload, or invocation is resolved."},
         "budget": {"limit": max_bytes, "unit": "ASCII stdout bytes, a conservative byte proxy; not measured model tokens or prompt overhead", "stdout_bytes_including_newline": 0}
     }
+    if compiler_method_scope is not None:
+        document["compiler_method_source_scope"] = compiler_method_scope
     if compiler_relations:
         document["compiler_relationships"] = compiler_relations
         document["compiler_source_snippets"] = compiler_snippets
