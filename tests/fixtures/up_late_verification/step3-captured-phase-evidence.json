@@ -1,0 +1,29 @@
+{
+  "application_run_id": "up-run-8a59ae9415da",
+  "historical_late_verification_event_id": "acad156c-e043-4d3a-9842-002ec8277536",
+  "historical_memory_ledger_run_id": "ecaa5310-1778-444d-b470-3981b0362fc8",
+  "phases": {
+    "compose-final-brief": {
+      "phase_id": "compose-final-brief",
+      "status": "completed"
+    },
+    "convene-final-brief-board": {
+      "phase_id": "convene-final-brief-board",
+      "status": "completed"
+    },
+    "final-brief-board-gate": {
+      "output": "Passed: the Step 3 pair survives the CFO and Journalist attacks before the final-brief hard stop: nothing critical stands against it and neither adversary blocks it.",
+      "phase_id": "final-brief-board-gate",
+      "status": "completed"
+    },
+    "final-brief-gate": {
+      "output": "Refused: material unknowns remain in the brief -- these required fields are still parked rather than established: business problem / organizational objective, priority audiences & current state, decision-maker & approval path, baseline data & measurement access, constraints, guardrails & AI permissions, budget, timeline & markets. Fill each with its source before strategy work can begin..",
+      "phase_id": "final-brief-gate",
+      "status": "blocked"
+    }
+  },
+  "projection_schema": "captured-up-phase-evidence/v1",
+  "projection_scope": "phase_id/status for final-brief composition and board; exact board-gate and final-gate output strings",
+  "source_artifact_path": "Tasks/bteam-step3-clean-20261005/state/up-run-8a59ae9415da.json",
+  "source_artifact_sha256": "06b3f6827a8a3565f39a98c678676b4d9d0b0f69d3b0711e3fb22a01a1d491c3"
+}

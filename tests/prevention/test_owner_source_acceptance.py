@@ -19,6 +19,8 @@ from scripts import (
     prevention_source_probes,
 )
 
+pytestmark = pytest.mark.usefixtures("owner_historical_root")
+
 
 def test_discovery_promotion_fixture_task_identity_binds_ephemeral_root(
     tmp_path: Path,
@@ -70,25 +72,48 @@ def test_acceptance_repository_binding_returns_canonical_root_through_symlink(
     )
 
 
-def test_binding_validation_can_read_canonical_source_from_clean_worktree(
+def test_binding_validation_maps_only_declared_roots_and_preserves_byte_hashes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    owner_historical_root: Path,
 ):
     canonical_root = tmp_path / "canonical"
+    historical_root = tmp_path / "synthetic-historical-checkout"
     source_root = tmp_path / "clean-worktree"
-    canonical_path = canonical_root / "scripts/source.py"
-    source_path = source_root / "scripts/source.py"
+    source_path = source_root / "scripts/prevention_source_probes.py"
     source_path.parent.mkdir(parents=True)
-    source_path.write_text("approved bytes\n", encoding="utf-8")
-    binding = {
-        "path": str(canonical_path),
-        "sha256": prevention_contract.sha256_bytes(source_path.read_bytes()),
+    source_bytes = prevention_owner_acceptance.PROVIDER_PATH.read_bytes()
+    source_path.write_bytes(source_bytes)
+    source_hash = prevention_contract.sha256_bytes(source_path.read_bytes())
+    canonical_binding = {
+        "path": str(canonical_root / "scripts/prevention_source_probes.py"),
+        "sha256": source_hash,
+    }
+    historical_binding = {
+        "path": str(historical_root / "scripts/prevention_source_probes.py"),
+        "sha256": source_hash,
+    }
+    unknown_binding = {
+        "path": "/another-checkout/scripts/prevention_source_probes.py",
+        "sha256": source_hash,
     }
     monkeypatch.setenv("MK_PREVENTION_CANONICAL_ROOT", str(canonical_root))
     monkeypatch.setenv("MK_PREVENTION_SOURCE_ROOT", str(source_root))
+    monkeypatch.setenv("MK_PREVENTION_HISTORICAL_ROOT", str(historical_root))
+    assert owner_historical_root.is_absolute()
 
-    assert prevention_owner_acceptance._binding_current(binding)
-    source_path.write_text("drifted bytes\n", encoding="utf-8")
-    assert not prevention_owner_acceptance._binding_current(binding)
+    assert prevention_owner_acceptance._binding_path(
+        historical_binding["path"], use_source_root=True
+    ) == source_path
+    assert prevention_owner_acceptance._binding_current(canonical_binding)
+    assert prevention_owner_acceptance._binding_current(historical_binding)
+    assert prevention_owner_acceptance._binding_path(
+        unknown_binding["path"], use_source_root=True
+    ) == Path(unknown_binding["path"])
+    assert not Path(unknown_binding["path"]).is_file()
+    assert not prevention_owner_acceptance._binding_current(unknown_binding)
+    source_path.write_bytes(source_bytes + b"drifted\n")
+    assert not prevention_owner_acceptance._binding_current(canonical_binding)
+    assert not prevention_owner_acceptance._binding_current(historical_binding)
 
 
 class _CapturedEdge:

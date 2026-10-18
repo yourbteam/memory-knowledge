@@ -1,10 +1,10 @@
 {
-  "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+  "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
   "contract_version": 1,
   "entries": [
     {
       "adapter_id": "_prepare_agent_heartbeat",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -35,7 +35,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -66,7 +66,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -96,7 +96,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -122,7 +122,7 @@
     },
     {
       "adapter_id": "_prepare_blocker_backlog_reconciliation",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -154,7 +154,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -182,7 +182,7 @@
     },
     {
       "adapter_id": "_prepare_callcenter_provision",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -210,7 +210,7 @@
     },
     {
       "adapter_id": "_prepare_claude_auth",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -255,7 +255,7 @@
     },
     {
       "adapter_id": "_prepare_commit_push",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [
           "approved_paths",
@@ -301,7 +301,7 @@
     },
     {
       "adapter_id": "_prepare_convergence_checkpoint",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -334,7 +334,7 @@
     },
     {
       "adapter_id": "_prepare_convergence_review",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [
           "request"
@@ -369,7 +369,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_bootstrap",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [
           "spec"
@@ -422,7 +422,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_reconciliation",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -458,7 +458,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_promotion",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [
           "changed_artifacts"
@@ -515,7 +515,7 @@
     },
     {
       "adapter_id": "_prepare_github_refresh",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -549,7 +549,7 @@
     },
     {
       "adapter_id": "_prepare_goal_declaration",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [
           "goal_answers"
@@ -583,7 +583,7 @@
     },
     {
       "adapter_id": "_prepare_greenfield",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -646,7 +646,7 @@
     },
     {
       "adapter_id": "_prepare_greenfield_recreate",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -693,7 +693,7 @@
     },
     {
       "adapter_id": "_prepare_local_multimodal_benchmark",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [
           "benchmark_spec"
@@ -736,7 +736,7 @@
     },
     {
       "adapter_id": "_prepare_local_image",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -797,7 +797,7 @@
     },
     {
       "adapter_id": "_prepare_mawf_blocker",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -844,7 +844,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -893,7 +893,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -942,7 +942,7 @@
     },
     {
       "adapter_id": "_prepare_remote_onboarding",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -992,7 +992,7 @@
     },
     {
       "adapter_id": "_prepare_scoped_context",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1033,7 +1033,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1068,7 +1068,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1097,7 +1097,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1124,7 +1124,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1151,7 +1151,7 @@
     },
     {
       "adapter_id": "_prepare_taggable_reload",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1184,7 +1184,7 @@
     },
     {
       "adapter_id": "_prepare_workflow_client_regeneration",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1218,7 +1218,7 @@
     },
     {
       "adapter_id": "_prepare_workflow_phase_resume",
-      "adapter_source_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+      "adapter_source_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1227,7 +1227,50 @@
       "contract_version": 1,
       "entrypoint": "scripts/run_client_regeneration.py --client <client> --resume-run <persisted-run-id> --from-phase <first-unfinished-phase>",
       "entrypoint_source_receipt": "scripts/run_client_regeneration.py --client <client> --resume-run <persisted-run-id> --from-phase <first-unfinished-phase>",
-      "optional_inputs": [],
+      "optional_inputs": [
+        "client_answers_path",
+        "corrected_topic_policies_path",
+        "debrief_feedback_path",
+        "final_brief_feedback_path",
+        "gate_approvals_path",
+        "step10_admission_path",
+        "step10_altitude_check_path",
+        "step10_held_by",
+        "step10_hold_reason",
+        "step11_altitude_check_path",
+        "step11_clean_task_dir",
+        "step11_held_by",
+        "step11_writer_call_budget_path",
+        "step11_writer_call_extension_from",
+        "step11_writer_call_limit",
+        "step11_writer_input_path",
+        "step12_altitude_check_path",
+        "step12_task_dir",
+        "step1_clean_task_dir",
+        "step1_signed_reply_path",
+        "step2_clean_task_dir",
+        "step3_clean_task_dir",
+        "step4_clean_task_dir",
+        "step4_primary_research_path",
+        "step5_clean_task_dir",
+        "step6_clean_task_dir",
+        "step6_feedback_path",
+        "step6_held_by",
+        "step7_clean_task_dir",
+        "step7_feedback_path",
+        "step7_held_by",
+        "step8_clean_task_dir",
+        "step8_held_by",
+        "step9_altitude_check_path",
+        "step9_decided_by",
+        "step9_earned_pipeline",
+        "step9_held_by",
+        "step9_native_writer_call_limit",
+        "step9_native_writer_continuation",
+        "step9_native_writer_extend_to",
+        "step9_newsroom_model",
+        "step9_rehearsal_task_dir"
+      ],
       "required_inputs": [
         "client",
         "first_unfinished_phase",
@@ -1240,7 +1283,49 @@
         "client",
         "source_run_id",
         "first_unfinished_phase",
-        "reopen_completed_phase"
+        "reopen_completed_phase",
+        "client_answers_path",
+        "debrief_feedback_path",
+        "final_brief_feedback_path",
+        "gate_approvals_path",
+        "corrected_topic_policies_path",
+        "step11_writer_input_path",
+        "step11_writer_call_budget_path",
+        "step11_writer_call_limit",
+        "step11_writer_call_extension_from",
+        "step9_rehearsal_task_dir",
+        "step1_clean_task_dir",
+        "step1_signed_reply_path",
+        "step2_clean_task_dir",
+        "step3_clean_task_dir",
+        "step4_clean_task_dir",
+        "step4_primary_research_path",
+        "step5_clean_task_dir",
+        "step6_clean_task_dir",
+        "step6_held_by",
+        "step6_feedback_path",
+        "step7_clean_task_dir",
+        "step7_held_by",
+        "step7_feedback_path",
+        "step8_clean_task_dir",
+        "step8_held_by",
+        "step9_held_by",
+        "step11_held_by",
+        "step10_held_by",
+        "step10_hold_reason",
+        "step9_altitude_check_path",
+        "step9_newsroom_model",
+        "step9_earned_pipeline",
+        "step9_decided_by",
+        "step11_clean_task_dir",
+        "step10_admission_path",
+        "step10_altitude_check_path",
+        "step11_altitude_check_path",
+        "step12_task_dir",
+        "step12_altitude_check_path",
+        "step9_native_writer_call_limit",
+        "step9_native_writer_continuation",
+        "step9_native_writer_extend_to"
       ],
       "sequence_id": "workflow-resume-from-phase-live-confirmation",
       "verification_case_ids": [

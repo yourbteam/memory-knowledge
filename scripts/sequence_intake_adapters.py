@@ -8,6 +8,7 @@ import hashlib
 import os
 import re
 import shlex
+import subprocess
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import datetime
@@ -1772,6 +1773,48 @@ GREENFIELD_RECREATE_SPEC = {
     ],
 }
 
+# Step 2 clean-copy route: interview and debrief only, through the human gate.
+STEP2_ALLOWED_PHASES = (
+    "prepare-controlled-topic-policy-inputs", "ingest-leadership-interview",
+    "gate-interview-answers", "compose-debrief-write-up", "debrief-gate",
+)
+
+STEP3_ALLOWED_PHASES = (
+    "compose-final-brief", "convene-final-brief-board",
+    "final-brief-board-gate", "final-brief-gate",
+)
+
+STEP4_ALLOWED_PHASES = (
+    "compose-research-insight-pack", "research-gate",
+)
+STEP4_NATIVE_PARTS = frozenset((
+    "buckets", "personas", "audits", "reputation_reads", "scans", "pestle",
+    "stakeholder_map", "patterns", "benchmarks", "pyramid", "ownable_space",
+    "executive_summary", "query_logic", "definitions",
+))
+
+STEP5_ALLOWED_PHASES = (
+    "compose-insight-cards", "convene-insight-mini-board",
+    "insight-mini-board-gate", "insight-gate",
+)
+STEP5_RECORDED_SOURCE = "accepted-step5-source"
+STEP6_RECORDED_SOURCE = "held-step6-source"
+STEP7_RECORDED_SOURCE = "held-step6-for-step7"
+STEP8_RECORDED_SOURCE = "held-step7-for-step8"
+STEP9_RECORDED_SOURCE = "held-step8-for-step9"
+STEP10_RECORDED_SOURCE = "held-step9-for-step10"
+STEP11_RECORDED_SOURCE = "accepted-step10-for-step11"
+
+# Step 12 copy route (D53): the phases after Step 11's annual-review-gate in
+# workflows/cd-s-002-corporate-communications-strategy.yaml, through the roadmap gate.
+STEP12_ALLOWED_PHASES = (
+    "assemble-step-dossier", "step-dossier-gate", "map-the-method", "method-map-gate",
+    "read-governance", "governance-gate", "check-language-standard",
+    "language-standard-gate", "shared-concepts-gate", "convene-review-board",
+    "review-board-gate", "certify-the-work", "certification-gate",
+    "compose-tactical-roadmap", "roadmap-gate",
+)
+
 WORKFLOW_PHASE_RESUME_SPEC = {
     "schema_version": script_intake.SCHEMA_VERSION,
     "fields": [
@@ -1789,22 +1832,406 @@ WORKFLOW_PHASE_RESUME_SPEC = {
         _semantic_field(
             "source_run_id", "Persisted source run identity",
             "One exact run identity.", "up-run-123",
-            "Use the non-completed source run.", "string", required=True,
+            ("Use the non-completed source run, accepted-step5-source for Step 5, "
+             "held-step6-source for Step 6, or held-step6-for-step7 for the current "
+             "Step 7 source and recorded closeout, or held-step7-for-step8 for the "
+             "current Step 8 source and recorded closeout, or held-step8-for-step9 "
+             "for the current Step 9 source and recorded closeout, or held-step9-for-step10 "
+             "for the current Step 10 source and review-only closeout, or "
+             "accepted-step10-for-step11 for the current accepted Step 10 pair and Step 11 closeout."),
+            "string", required=True,
         ),
         _semantic_field(
-            "first_unfinished_phase", "First unfinished phase",
+            "first_unfinished_phase", "Phase to resume or reopen",
             "One exact phase identity.", "compose-llm-strategy-brief",
-            "Use the boundary reported by persisted state.", "string",
+            "Use the first unfinished phase, or the completed phase named for an approved reopen.", "string",
             required=True,
         ),
         _semantic_field(
             "reopen_completed_phase", "Re-open a phase that already completed",
             "Answer yes or no.", "no",
             (
-                "Answer yes only when that phase's own logic changed and must run again; "
+                "Answer yes only when that phase's logic changed or recorded Step 4 "
+                "interview evidence must enter its completed compose; "
                 "it discards that phase and every phase after it."
             ),
             "boolean", required=True,
+        ),
+        _semantic_field(
+            "client_answers_path",
+            "Client interview answers arriving after the run settled",
+            "One existing file path, or leave blank.",
+            "Tasks/bteam-corporate-demo/inputs/leadership-interview-answers.json",
+            (
+                "Supply only when resuming prepare-controlled-topic-policy-inputs or "
+                "ingest-leadership-interview with answers the settled run never had; the "
+                "driver refuses it at any other phase."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "debrief_feedback_path",
+            "Reviewer's typed debrief decisions",
+            "One existing file path, or leave blank.",
+            "Tasks/vivacom-corporate-demo/state/up-run-1.debrief-feedback-decisions.json",
+            (
+                "Supply only when resuming a gate phase with a reviewer's feedback round; "
+                "the driver refuses it elsewhere."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "final_brief_feedback_path",
+            "Typed decisions on the Step 3 pair",
+            "One existing file path, or leave blank.",
+            "Tasks/vivacom-corporate-demo/state/up-run-1.final-brief-feedback-decisions.json",
+            (
+                "Supply only when resuming a gate phase with a feedback round on the "
+                "Client Intake Brief and Measurement Brief pair; the driver refuses it "
+                "elsewhere."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "gate_approvals_path",
+            "Typed gate approvals",
+            "One existing file path, or leave blank.",
+            "Tasks/vivacom-corporate-demo/state/gate-approvals.json",
+            (
+                "Supply only when resuming a gate phase with typed approvals; the driver "
+                "refuses it elsewhere."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "corrected_topic_policies_path",
+            "Corrected controlled-topic policy set",
+            "One existing file path, or leave blank.",
+            "Tasks/vivacom-corporate-demo/controlled-topic-policies.json",
+            (
+                "Supply only when resuming prepare-controlled-topic-policy-inputs with a "
+                "corrected owner policy set; the driver refuses it at any other phase."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step11_writer_input_path",
+            "Source-bound Step 11 writer input file",
+            "One existing file path, or leave blank.",
+            "Tasks/vivacom-corporate-demo/state/step11-writer-input.json",
+            (
+                "Supply together with the shared writer call-budget file and positive call "
+                "limit, only when resuming compose-annual-review. These three settings "
+                "cannot be combined with another optional resume input file."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step11_writer_call_budget_path",
+            "Shared Step 11 writer call-budget file",
+            "One existing file path, or leave blank.",
+            "Tasks/vivacom-corporate-demo/state/step11-writer-call-budget.json",
+            (
+                "Supply together with the source-bound writer input file and positive call "
+                "limit, only when resuming compose-annual-review. These three settings "
+                "cannot be combined with another optional resume input file."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step11_writer_call_limit",
+            "Step 11 writer call limit",
+            "One positive whole number, or leave blank.",
+            "12",
+            (
+                "Supply together with the source-bound writer input file and shared call- "
+                "budget file, only when resuming compose-annual-review. These three "
+                "settings cannot be combined with another optional resume input file."
+            ),
+            "integer", required=False, minimum=1,
+        ),
+        _semantic_field(
+            "step11_writer_call_extension_from",
+            "Previous Step 11 writer call limit",
+            "One positive whole number, or leave blank.",
+            "80",
+            (
+                "Supply only when explicitly extending an existing shared Step 11 writer "
+                "ledger. The new call limit above must be greater; the existing reservations "
+                "remain spent. Leave blank for an ordinary resume."
+            ),
+            "integer", required=False, minimum=1,
+        ),
+        _semantic_field(
+            "step9_rehearsal_task_dir",
+            "Isolated client rehearsal copy folder",
+            "One copy folder path, or leave blank.",
+            "Tasks/bteam-rehearsal-demo",
+            ("Supply alone for an ordinary automatic Step 9 or Step 11 writer resume, "
+             "or with the Step 9 writer call limit or saved-cache continuation choice. "
+             "The copy must be "
+             "Tasks/<client>-rehearsal-demo; the official client folder is refused."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step1_clean_task_dir",
+            "Isolated Step 1 review copy folder",
+            "The matching client copy folder, or leave blank.",
+            "Tasks/bteam-step1-clean-demo",
+            ("Use with one signed Step 1 Word reply to reopen only the completed "
+             "operator review in this client's isolated copy."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step1_signed_reply_path",
+            "Signed Step 1 operator reply",
+            "One existing signed Word reply, or leave blank.",
+            "/Users/kamenkamenov/Downloads/BTeam_Step1_Operator_Review_SIGNED.docx",
+            ("Use only with the matching Step 1 copy. The harness reads the Word reply "
+             "and binds its decisions to the selected source run."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step2_clean_task_dir",
+            "Fresh Step 2 clean-copy folder",
+            "The exact dated client copy folder, or leave blank.",
+            "Tasks/bteam-step2-clean-20261004",
+            ("Use for an ordinary Step 2 resume from the selected clean Step 1 run, "
+             "or for a debrief-gate feedback or approval round. The controller "
+             "keeps the run and local Drive staging in this client's copy."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step3_clean_task_dir",
+            "Fresh Step 3 clean-copy folder",
+            "The exact source-run-named client copy folder, or leave blank.",
+            "Tasks/bteam-step3-clean-3f239e371b7a",
+            ("Use for an ordinary Step 3 resume from the exact held Step 2 pages, "
+             "or for a final-brief-gate feedback or approval round. The controller "
+             "keeps artifacts and Drive staging in this client's copy."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step4_clean_task_dir",
+            "Fresh Step 4 clean-copy folder",
+            "The source-run-named client copy folder, or leave blank.",
+            "Tasks/bteam-step4-clean-91d7941f46dd",
+            ("Use after a passed Step 3 gate for the ordinary Step 4 writer or its research gate. "
+             "The driver prepares an absent copy and refuses stale or blocked Step 3 sources."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step4_primary_research_path",
+            "Recorded Step 4 interview evidence arriving after the draft",
+            "One JSON file inside this Step 4 copy's record folder, or leave blank.",
+            "Tasks/bteam-step4-clean-91d7941f46dd/record/primary-research-up-run-example.json",
+            (
+                "Supply only when reopening a completed Step 4 research compose whose "
+                "research gate records primary research as missing. The controller binds "
+                "the file to the exact saved run; the harness validates its dipstick."
+            ),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step5_clean_task_dir",
+            "Fresh Step 5 clean-copy folder",
+            "The exact manifest-checked client copy folder, or leave blank.",
+            "Tasks/bteam-step5-clean-20261005",
+            ("Use for the ordinary Step 5 writer and its review gates. The controller "
+             "keeps state, artifacts and Drive staging in this client's copy."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step6_clean_task_dir", "Fresh Step 6 clean-copy folder",
+            "The exact manifest-checked client copy folder, or leave blank.",
+            "Tasks/bteam-step6-clean-20261006",
+            "Use for the ordinary Step 6 writer and strategy gate; files remain inside the copy.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step6_held_by", "Step 6 reviewer holding this page",
+            "Name the person who explicitly reviewed and held the exact saved Step 6 page, or leave blank.",
+            "Kamen", "The controller records a content-bound hold; when both clients are held, "
+            "the harness builds or verifies the Maria ZIP.", "string", required=False,
+        ),
+        _semantic_field(
+            "step6_feedback_path", "Typed Step 6 part feedback",
+            "One existing typed JSON file in the copy, or leave blank.",
+            "Tasks/bteam-step6-clean-20261006/record/step6-feedback.json",
+            "Use only at compose-strategy-one-pager for a source-bound Step 6 feedback round.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step7_clean_task_dir", "Fresh Step 7 clean-copy folder",
+            "The exact manifest-checked client copy folder, or leave blank for a new start.",
+            "Tasks/bteam-step7-clean-03060ad9afb1",
+            "Use for a saved Step 7 child or feedback. A new start uses held-step6-for-step7 with this blank.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step7_held_by", "Step 7 reviewer holding this page",
+            "Name the person who reviewed and held the exact saved Step 7 page, or leave blank.",
+            "Kamen", "The controller records the exact hold and closes the Maria ZIP when both clients are held.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step7_feedback_path", "Typed Step 7 section feedback",
+            "One existing typed JSON file in the copy, or leave blank.",
+            "Tasks/bteam-step7-clean-03060ad9afb1/record/step7-feedback.json",
+            "Use only at compose-message-architecture for source-bound Step 7 feedback.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step8_clean_task_dir", "Fresh Step 8 clean-copy folder",
+            "The exact manifest-checked client copy folder, or leave blank for a new start.",
+            "Tasks/bteam-step8-clean-b2224d839ce5",
+            "Use for a saved Step 8 child or feedback. A new start uses held-step7-for-step8 with this blank.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step8_held_by", "Step 8 reviewer holding this page",
+            "Name the person who reviewed and held the exact saved Step 8 page, or leave blank.",
+            "Kamen", "The controller records the exact hold and closes the Maria ZIP when both clients are held.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step9_held_by", "Step 9 reviewer holding this toolkit",
+            "Name the person who reviewed and held the exact saved Step 9 toolkit, or leave blank.",
+            "Kamen", "The controller records a content-bound hold and closes the Maria ZIP when both clients are held.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step11_held_by", "Step 11 reviewer holding both current pages",
+            "Name the person who explicitly reviewed and held the exact current Step 11 pair, or leave blank.",
+            "Kamen Kamenov", "The harness binds the hold to both saved pages and resumes only the gate.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step10_held_by", "Step 10 reviewer holding the accepted pair",
+            "Name the person who explicitly holds the admitted Step 10 pages for this Step 11 copy, or leave blank.",
+            "Kamen Kamenov", "Used only when the current Step 11 copy waits at the Step 10 measurement gate.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step10_hold_reason", "Reason for the Step 10 hold",
+            "Give the holder's explicit reason for this exact accepted pair, or leave blank.",
+            "requirements met", "The exact source and reason are recorded before resuming the gate.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step9_altitude_check_path", "Step 9 toolkit altitude holder check",
+            "One existing JSON holder check in this Step 9 copy's record folder, or leave blank.",
+            "Tasks/bteam-step9-clean-a291af445ac4/record/toolkit-altitude-check.json",
+            "Use only when the toolkit ship gate explicitly requires a named holder decision.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step9_newsroom_model", "Step 9 newsroom model decision",
+            "One of Maria's three newsroom choices, or leave blank when no new decision is being made.",
+            "A phased build that stands the newsroom up before the platform leans on it",
+            "Choose exactly: A full always-on newsroom; A lighter founder-plus-agency cadence; or A phased build that stands the newsroom up before the platform leans on it.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step9_earned_pipeline", "Step 9 earned-pipeline decision",
+            "Name who produces the earned pipeline and at what cadence, or leave blank.",
+            "United Partners produces a weekly earned pipeline",
+            "A named human decision is required before the toolkit writer runs; no producer or cadence is inferred.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step9_decided_by", "Person making both Step 9 operating decisions",
+            "One person's name, or leave blank when no new decision is being made.",
+            "Kamen Kamenov",
+            "The person must have made both answers; the harness records recommendation standing.",
+            "string", required=False,
+        ),
+        _semantic_field(
+            "step11_clean_task_dir",
+            "Fresh Step 11 clean-copy folder",
+            "The exact dated client copy folder, or leave blank.",
+            "Tasks/bteam-step11-clean-20261002",
+            ("Use only for Maria's accepted v9 Step 10 page admission, its holder check, "
+             "or the subsequent automatic Step 11 writer resume. The controller refuses "
+             "the official and earlier rehearsal folders."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step10_admission_path",
+            "Accepted Step 10 admission request",
+            "One existing typed JSON file in the clean copy, or leave blank.",
+            "Tasks/bteam-step11-clean-20261002/record/step10-admission.json",
+            "Supply only when reopening compose-measurement-framework in the clean copy.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step10_altitude_check_path",
+            "Step 10 holder check",
+            "One existing typed JSON file in the clean copy, or leave blank.",
+            "Tasks/bteam-step11-clean-20261002/record/measurement-altitude-check.json",
+            "Supply only when resuming the first unfinished measurement-gate in the clean copy.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step11_altitude_check_path",
+            "Step 11 annual-review holder check",
+            "One existing typed JSON file in the clean copy, or leave blank.",
+            "Tasks/bteam-step11-clean-20261002/record/annual-review-altitude-check.json",
+            "Supply only when resuming the first unfinished annual-review-gate in the clean copy.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step12_task_dir",
+            "Step 12 copy folder",
+            "The exact dated client copy folder, or leave blank.",
+            "Tasks/bteam-step12-20261010",
+            ("Use only to resume Step 12 (assemble-step-dossier through the roadmap gate) in a "
+             "Tasks/<client>-step12-<YYYYMMDD> copy that holds state/ and record/. The "
+             "controller refuses the official, rehearsal and clean Step 11 folders."),
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step12_altitude_check_path",
+            "Step 12 roadmap holder check",
+            "One existing typed JSON file in the Step 12 copy, or leave blank.",
+            "Tasks/bteam-step12-20261010/record/roadmap-altitude-check.json",
+            "Supply only when resuming the first unfinished roadmap-gate in the Step 12 copy.",
+            "path", required=False,
+        ),
+        _semantic_field(
+            "step9_native_writer_call_limit",
+            "Step 9 writer call limit for this client",
+            "One whole number from 1 to 150, or leave blank.",
+            "60",
+            ("Supply with the Step 9 rehearsal copy folder for a new native-writer request. "
+             "Leave blank when continuing a saved blocked request so its call limit and cache "
+             "remain unchanged."),
+            "integer", required=False, minimum=1, maximum=150,
+        ),
+        _semantic_field(
+            "step9_native_writer_continuation",
+            "Continue the saved Step 9 writer cache",
+            "Answer yes or no.",
+            "no",
+            ("Answer yes only when the selected run in the exact Tasks/<client>-rehearsal-demo "
+             "copy has a persisted Step 9 native-writer request and matching cache budget, and "
+             "compose-execution-toolkit is its first unfinished blocked or failed phase, or "
+             "a stale interrupted running phase recovered under the copy lock. The "
+             "driver checks the root identity, budget ceiling, latest continuation leaf and "
+             "copy/client identity before dispatch. Yes preserves the saved request, used calls "
+             "and cached parts; it does not re-open the phase."),
+            "boolean", required=False,
+        ),
+        _semantic_field(
+            "step9_native_writer_extend_to",
+            "Extend the saved Step 9 writer ceiling",
+            "Leave blank, enter 60 for the historical B Team 30/30 run, or enter 150 for a latest failed 60/60 rehearsal child.",
+            "60",
+            ("Supply only with saved-cache continuation for failed run "
+             "up-run-9e6d9c40be19 in Tasks/bteam-rehearsal-demo. This raises the saved 30-call "
+             "ceiling to 60 while retaining the 30 calls already used and the existing cache. "
+             "For a 60/60 child, 150 keeps all 60 spent calls and the same cache."),
+            "integer", required=False, minimum=60, maximum=150,
         ),
     ],
 }
@@ -3994,17 +4421,98 @@ def _prepare_greenfield_recreate(
     )
 
 
+def _workflow_resume_live_environment(
+    python: str,
+    *,
+    drive_staging_root: Path | None = None,
+    agent_max_attempts: str = "3",
+) -> dict[str, str]:
+    """Build the shared live environment used by registered workflow resumes."""
+    environment = {
+        "PYTHONPATH": "src:.",
+        "UP_HARNESS_AGENT_COMMAND": f"{python} scripts/codex_role_command.py",
+        "UP_HARNESS_AGENT_MAX_ATTEMPTS": agent_max_attempts,
+        "UP_HARNESS_AGENT_TIMEOUT_SECONDS": "600",
+        "UP_HARNESS_CODEX_TIMEOUT_SECONDS": "600",
+    }
+    if drive_staging_root is not None:
+        environment.update({
+            "UP_HARNESS_GOOGLE_DRIVE_ROOT": str(drive_staging_root),
+            "UP_HARNESS_GOOGLE_DRIVE_ACCESS_TOKEN": "",
+            "UP_HARNESS_GOOGLE_DRIVE_PARENT_ID": "",
+        })
+    return environment
+
+
 def _prepare_workflow_phase_resume(
     answers: Mapping[str, Any],
     _artifact_paths: Mapping[str, str],
     repository_roots: Mapping[str, str],
 ) -> dict[str, Any]:
+    answers = {"step1_clean_task_dir": None, "step1_signed_reply_path": None,
+               "step2_clean_task_dir": None, "step3_clean_task_dir": None,
+               "step4_clean_task_dir": None, "step4_primary_research_path": None,
+               "step5_clean_task_dir": None,
+               "step6_clean_task_dir": None, "step6_feedback_path": None,
+               "step6_held_by": None,
+               "step7_clean_task_dir": None, "step7_feedback_path": None,
+               "step7_held_by": None,
+               "step8_clean_task_dir": None, "step8_held_by": None,
+               "step9_held_by": None, "step9_altitude_check_path": None,
+               "step9_newsroom_model": None, "step9_earned_pipeline": None,
+               "step9_decided_by": None,
+               "step11_clean_task_dir": None, "step11_held_by": None,
+               "step10_held_by": None, "step10_hold_reason": None, "step10_admission_path": None,
+               "step10_altitude_check_path": None, "step11_altitude_check_path": None,
+               "step12_task_dir": None, "step12_altitude_check_path": None, **answers}
     expected = {
         "repository_key", "client", "source_run_id",
         "first_unfinished_phase", "reopen_completed_phase",
+        "corrected_topic_policies_path", "client_answers_path",
+        "debrief_feedback_path", "final_brief_feedback_path", "gate_approvals_path",
+        "step11_writer_input_path", "step11_writer_call_budget_path",
+        "step11_writer_call_limit", "step11_writer_call_extension_from",
+        "step9_rehearsal_task_dir", "step9_native_writer_call_limit",
+        "step9_native_writer_continuation",
+        "step9_native_writer_extend_to",
+        "step1_clean_task_dir", "step1_signed_reply_path",
+        "step2_clean_task_dir", "step3_clean_task_dir", "step4_clean_task_dir",
+        "step4_primary_research_path",
+        "step5_clean_task_dir", "step6_clean_task_dir", "step6_feedback_path", "step6_held_by",
+        "step7_clean_task_dir", "step7_feedback_path", "step7_held_by",
+        "step11_clean_task_dir", "step11_held_by", "step10_held_by", "step10_hold_reason",
+        "step10_admission_path", "step10_altitude_check_path",
+        "step8_clean_task_dir", "step8_held_by",
+        "step9_held_by", "step9_altitude_check_path",
+        "step9_newsroom_model", "step9_earned_pipeline", "step9_decided_by",
+        "step11_altitude_check_path", "step12_task_dir", "step12_altitude_check_path",
     }
     if set(answers) != expected:
-        raise AdapterError("answer-fields-do-not-match-workflow-phase-resume")
+        raise AdapterError(
+            "answer-fields-do-not-match-workflow-phase-resume: got "
+            f"{sorted(answers)}, want exactly {sorted(expected)}. Re-run the intake so "
+            "every listed question is answered (a blank answer satisfies the optional "
+            "corrected_topic_policies_path)."
+        )
+    if answers["step6_held_by"] not in (None, "") and answers["source_run_id"] != STEP6_RECORDED_SOURCE:
+        raise AdapterError("Step 6 spoken hold requires the recorded Step 6 route")
+    if answers["step7_held_by"] not in (None, "") and answers["source_run_id"] != STEP7_RECORDED_SOURCE:
+        raise AdapterError("Step 7 spoken hold requires the recorded Step 7 route")
+    if answers["step8_held_by"] not in (None, "") and answers["source_run_id"] != STEP8_RECORDED_SOURCE:
+        raise AdapterError("Step 8 spoken hold requires the recorded Step 8 route")
+    if answers["step9_held_by"] not in (None, "") and answers["source_run_id"] != STEP9_RECORDED_SOURCE:
+        raise AdapterError("Step 9 spoken hold requires the recorded Step 9 route")
+    if answers["step11_held_by"] not in (None, "") and answers["source_run_id"] != STEP11_RECORDED_SOURCE:
+        raise AdapterError("Step 11 spoken hold requires the recorded Step 11 route")
+    if any(answers[key] not in (None, "") for key in ("step10_held_by", "step10_hold_reason")) \
+            and answers["source_run_id"] != STEP11_RECORDED_SOURCE:
+        raise AdapterError("Step 10 hold for Step 11 requires the recorded Step 11 route")
+    if answers["step9_altitude_check_path"] not in (None, "") and answers["source_run_id"] != STEP9_RECORDED_SOURCE:
+        raise AdapterError("Step 9 holder check requires the recorded Step 9 route")
+    if any(answers[key] not in (None, "") for key in (
+            "step9_newsroom_model", "step9_earned_pipeline", "step9_decided_by")) \
+            and answers["source_run_id"] != STEP9_RECORDED_SOURCE:
+        raise AdapterError("Step 9 operating decisions require the recorded Step 9 route")
     repository_key, repository = _registered_repository(
         answers, repository_roots,
     )
@@ -4024,15 +4532,2143 @@ def _prepare_workflow_phase_resume(
         # change without regenerating the whole run. Added 2026-07-28 after a corrected
         # publication check could not be exercised any other way.
         argv.append("--rerun-completed")
-    environment = {
-        "PYTHONPATH": "src",
-        "UP_HARNESS_AGENT_COMMAND": (
-            f"{python} scripts/codex_role_command.py"
-        ),
-        "UP_HARNESS_AGENT_MAX_ATTEMPTS": "3",
-        "UP_HARNESS_AGENT_TIMEOUT_SECONDS": "600",
-        "UP_HARNESS_CODEX_TIMEOUT_SECONDS": "600",
-    }
+    step9_dir = answers["step9_rehearsal_task_dir"]
+    step9_limit = answers["step9_native_writer_call_limit"]
+    step9_continuation = answers["step9_native_writer_continuation"] is True
+    step9_extend_to = answers["step9_native_writer_extend_to"]
+    step9_supplied = (
+        step9_dir is not None or step9_limit is not None or step9_continuation
+        or step9_extend_to is not None
+    )
+    clean_dir_answer = answers["step11_clean_task_dir"]
+    clean_admission = answers["step10_admission_path"]
+    clean_altitude = answers["step10_altitude_check_path"]
+    clean_annual_altitude = answers["step11_altitude_check_path"]
+    clean_supplied = any(value is not None for value in (
+        clean_dir_answer, clean_admission, clean_altitude, clean_annual_altitude,
+    ))
+    clean_writer_supplied = any(answers[key] is not None for key in (
+        "step11_writer_input_path", "step11_writer_call_budget_path",
+        "step11_writer_call_limit", "step11_writer_call_extension_from",
+    ))
+    step1_dir: Path | None = None
+    if answers["step1_clean_task_dir"] is not None or answers["step1_signed_reply_path"] is not None:
+        if answers["step1_clean_task_dir"] is None or answers["step1_signed_reply_path"] is None:
+            raise AdapterError("step1-signed-review-needs-copy-and-reply")
+        client = _required_text(answers, "client")
+        if client not in ("bteam", "vivacom"):
+            raise AdapterError("step1-signed-review-client-mismatch")
+        expected_step1 = Path(repository).resolve() / "Tasks" / f"{client}-step1-clean-demo"
+        supplied_step1 = Path(_required_text(answers, "step1_clean_task_dir"))
+        if not supplied_step1.is_absolute():
+            supplied_step1 = Path(repository, supplied_step1)
+        step1_dir = supplied_step1.resolve()
+        if step1_dir != expected_step1 or not (step1_dir / "state").is_dir() or not (step1_dir / "record").is_dir():
+            raise AdapterError("step1-signed-review-copy-mismatch")
+        if (_required_text(answers, "first_unfinished_phase") != "operator-review-of-pre-engagement-pack"
+                or answers["reopen_completed_phase"] is not True):
+            raise AdapterError("step1-signed-review-needs-completed-review-reopen")
+        other_inputs = ("corrected_topic_policies_path", "client_answers_path",
+                        "debrief_feedback_path", "final_brief_feedback_path", "gate_approvals_path",
+                        "step11_writer_input_path", "step11_writer_call_budget_path",
+                        "step11_writer_call_limit", "step11_writer_call_extension_from",
+                        "step9_rehearsal_task_dir", "step9_native_writer_call_limit",
+                        "step9_native_writer_continuation", "step9_native_writer_extend_to",
+                        "step2_clean_task_dir", "step3_clean_task_dir", "step4_clean_task_dir",
+                        "step5_clean_task_dir", "step6_clean_task_dir", "step6_feedback_path",
+                        "step7_clean_task_dir", "step7_feedback_path", "step8_clean_task_dir",
+                        "step11_clean_task_dir", "step10_admission_path", "step10_altitude_check_path",
+                        "step11_altitude_check_path", "step12_task_dir", "step12_altitude_check_path")
+        if any(answers[key] not in (None, False) for key in other_inputs):
+            raise AdapterError("step1-signed-review-exclusive-route")
+        selected_id = _required_text(answers, "source_run_id")
+        if not re.fullmatch(r"up-run-[a-z0-9]+", selected_id):
+            raise AdapterError("step1-signed-review-source-mismatch")
+        try:
+            source = json.loads((step1_dir / "state" / f"{selected_id}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError, TypeError):
+            raise AdapterError("step1-signed-review-source-missing") from None
+        source_inputs = (source.get("context") or {}).get("inputs") or {}
+        if (source.get("run_id") != selected_id
+                or source.get("status") != "blocked"
+                or source_inputs.get("client_code") != {"bteam": "BTM", "vivacom": "VIV"}[client]
+                or source_inputs.get("client_name") != {"bteam": "The B Team", "vivacom": "Vivacom"}[client]
+                or source_inputs.get("stop_after_phase") != "operator-review-of-pre-engagement-pack"
+                or (source.get("phases") or {}).get("operator-review-of-pre-engagement-pack", {}).get("status") != "completed"):
+            raise AdapterError("step1-signed-review-source-mismatch")
+        reply_path = Path(_required_text(answers, "step1_signed_reply_path"))
+        if not reply_path.is_absolute():
+            reply_path = Path(repository, reply_path)
+        reply_path = reply_path.resolve()
+        if reply_path.suffix.lower() != ".docx" or not reply_path.is_file():
+            raise AdapterError("step1-signed-review-word-reply-missing")
+        argv.extend(["--task-dir", str(step1_dir), "--operator-review-reply-file", str(reply_path)])
+    step2_dir_answer = answers["step2_clean_task_dir"]
+    step2_dir: Path | None = None
+    if step2_dir_answer is not None:
+        client = _required_text(answers, "client")
+        expected_step2 = Path(repository).resolve() / "Tasks" / f"{client}-step2-clean-20261004"
+        supplied_step2 = Path(_required_text(answers, "step2_clean_task_dir"))
+        if not supplied_step2.is_absolute():
+            supplied_step2 = Path(repository, supplied_step2)
+        step2_dir = supplied_step2.resolve()
+        source_id = _required_text(answers, "source_run_id")
+        current_name = re.fullmatch(rf"{re.escape(client)}-step2-clean-([0-9a-f]{{12}})", step2_dir.name)
+        current_copy = (step2_dir.parent == (Path(repository).resolve() / "Tasks")
+                        and current_name is not None)
+        if step2_dir != expected_step2 and not current_copy:
+            raise AdapterError("step2-clean-copy-missing-or-mismatched")
+        if current_copy:
+            root_source_id = f"up-run-{current_name.group(1)}"
+            if not re.fullmatch(r"up-run-[a-z0-9]+", source_id):
+                raise AdapterError("step2-clean-copy-source-run-mismatch")
+            source = (Path(repository).resolve() / "Tasks" / f"{client}-step1-clean-demo")
+            source_state = source / "state" / f"{root_source_id}.json"
+            if not source_state.is_file():
+                raise AdapterError("step2-clean-copy-source-state-missing")
+            source_sha = hashlib.sha256(source_state.read_bytes()).hexdigest()
+            if step2_dir.is_dir():
+                manifest_path = step2_dir / "record" / "step2-clean-copy.json"
+                try:
+                    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    raise AdapterError("step2-clean-copy-manifest-missing-or-invalid") from exc
+                try:
+                    copy_root = step2_dir.resolve(strict=True)
+                    state_root = (step2_dir / "state").resolve(strict=True)
+                except OSError:
+                    raise AdapterError("step2-clean-copy-needs-state-and-record") from None
+                if state_root != copy_root / "state" or not state_root.is_dir():
+                    raise AdapterError("step2-clean-copy-state-outside-copy")
+                copied_state = state_root / f"{root_source_id}.json"
+                if (not isinstance(manifest, dict)
+                        or manifest.get("schema") != "step2-clean-copy/v2"
+                        or manifest.get("client") != client
+                        or manifest.get("source_task_dir") != str(source)
+                        or manifest.get("source_run_id") != root_source_id
+                        or manifest.get("source_run_sha256") != source_sha
+                        or not copied_state.is_file()
+                        or hashlib.sha256(copied_state.read_bytes()).hexdigest() != source_sha):
+                    raise AdapterError("step2-clean-copy-manifest-mismatch")
+                def read_copy_state(run_id: str) -> dict:
+                    if not re.fullmatch(r"up-run-[a-z0-9]+", run_id):
+                        raise AdapterError("step2-clean-copy-lineage-mismatch")
+                    candidate = state_root / f"{run_id}.json"
+                    try:
+                        state_path = candidate.resolve(strict=True)
+                        state_path.relative_to(state_root)
+                        if (state_path.parent != state_root
+                                or state_path.name != f"{run_id}.json"):
+                            raise ValueError("state path is not a direct child")
+                        state = json.loads(state_path.read_text(encoding="utf-8"))
+                    except (OSError, UnicodeDecodeError, ValueError, TypeError):
+                        raise AdapterError("step2-clean-copy-lineage-mismatch") from None
+                    if not isinstance(state, dict) or state.get("run_id") != run_id:
+                        raise AdapterError("step2-clean-copy-lineage-mismatch")
+                    return state
+
+                cursor_id = source_id
+                seen: set[str] = set()
+                cursor = read_copy_state(cursor_id)
+                while cursor_id != root_source_id:
+                    if cursor_id in seen or len(seen) >= 100:
+                        raise AdapterError("step2-clean-copy-lineage-mismatch")
+                    seen.add(cursor_id)
+                    parent_id = cursor.get("parent_run_id")
+                    if not isinstance(parent_id, str):
+                        raise AdapterError("step2-clean-copy-lineage-mismatch")
+                    cursor_id = parent_id
+                    cursor = read_copy_state(cursor_id)
+            elif source_id != root_source_id:
+                raise AdapterError("step2-clean-copy-source-run-mismatch")
+            elif (_required_text(answers, "first_unfinished_phase")
+                  != "prepare-controlled-topic-policy-inputs"):
+                raise AdapterError("step2-clean-copy-missing-before-later-phase")
+        elif not step2_dir.is_dir():
+            raise AdapterError("step2-clean-copy-missing-or-mismatched")
+        if step2_dir.is_dir() and (not (step2_dir / "state").is_dir()
+                                   or not (step2_dir / "record").is_dir()):
+            raise AdapterError("step2-clean-copy-needs-state-and-record")
+        if _required_text(answers, "first_unfinished_phase") not in STEP2_ALLOWED_PHASES:
+            raise AdapterError("step2-clean-copy-phase-outside-step2")
+        if (step9_supplied or clean_supplied or clean_writer_supplied
+                or answers["step3_clean_task_dir"] is not None
+                or answers["step4_clean_task_dir"] is not None
+                or answers["step5_clean_task_dir"] is not None
+                or answers["step12_task_dir"] is not None
+                or answers["step12_altitude_check_path"] is not None
+                or any(answers[key] is not None for key in (
+                    "final_brief_feedback_path", "step10_admission_path",
+                    "step10_altitude_check_path", "step11_altitude_check_path",
+                ))):
+            raise AdapterError("step2-clean-copy-exclusive-with-other-routes")
+        phase = _required_text(answers, "first_unfinished_phase")
+        for key in ("client_answers_path", "corrected_topic_policies_path",
+                    "debrief_feedback_path", "gate_approvals_path"):
+            raw = answers[key]
+            if raw is None:
+                continue
+            selected = Path(raw)
+            if not selected.is_absolute():
+                selected = Path(repository, selected)
+            selected = selected.resolve()
+            if (selected.parent != step2_dir / "record" or not selected.is_file()):
+                raise AdapterError(f"step2-clean-copy-input-must-be-in-record:{key}")
+            if key in ("debrief_feedback_path", "gate_approvals_path") and phase != "debrief-gate":
+                raise AdapterError(f"step2-clean-copy-gate-input-needs-debrief-gate:{key}")
+        argv.extend(["--task-dir", str(step2_dir)])
+    step3_dir_answer = answers["step3_clean_task_dir"]
+    step3_dir: Path | None = None
+    if step3_dir_answer is not None:
+        client = _required_text(answers, "client")
+        supplied_step3 = Path(_required_text(answers, "step3_clean_task_dir"))
+        if not supplied_step3.is_absolute():
+            supplied_step3 = Path(repository, supplied_step3)
+        step3_dir = supplied_step3.resolve()
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        source_run_id = _required_text(answers, "source_run_id")
+        named_root = re.fullmatch(
+            rf"{re.escape(client)}-step3-clean-([0-9a-f]{{12}})", step3_dir.name
+        )
+        root_run_id = f"up-run-{named_root.group(1)}" if named_root else source_run_id
+        expected_step3 = tasks_dir / f"{client}-step3-clean-{root_run_id.removeprefix('up-run-')}"
+        legacy_step3 = tasks_dir / f"{client}-step3-clean-20261005"
+        if step3_dir not in {expected_step3, legacy_step3} or (
+            step3_dir != legacy_step3 and named_root is None
+        ):
+            raise AdapterError("step3-clean-copy-missing-or-mismatched")
+        phase = _required_text(answers, "first_unfinished_phase")
+        if phase not in STEP3_ALLOWED_PHASES:
+            raise AdapterError("step3-clean-copy-phase-outside-step3")
+        staging_only = (
+            step3_dir.is_dir()
+            and all(child.name == "drive-staging" and child.is_dir() and not child.is_symlink()
+                    for child in step3_dir.iterdir())
+        )
+        unprepared_step3 = not step3_dir.is_dir() or staging_only
+        if unprepared_step3:
+            if (step3_dir != expected_step3 or phase != "compose-final-brief"
+                    or source_run_id != root_run_id):
+                raise AdapterError("step3-clean-copy-missing-or-mismatched")
+            # The ordinary driver prepares this copy and validates the current
+            # accepted Step 2 receipt before any model work.
+        elif not (step3_dir / "state").is_dir() or not (step3_dir / "record" / "step3-clean-copy.json").is_file():
+            raise AdapterError("step3-clean-copy-needs-state-and-record")
+        if step3_dir == legacy_step3:
+            if phase == "compose-final-brief":
+                raise AdapterError("step3-clean-copy-old-source-cannot-start-new-compose")
+        elif not unprepared_step3:
+            try:
+                manifest = json.loads((step3_dir / "record" / "step3-clean-copy.json").read_text(encoding="utf-8"))
+                receipt_name = manifest["step2_package_receipt"]
+                if (not re.fullmatch(r"maria-step2-pack-[0-9a-f]{16}-receipt\.json", receipt_name)
+                        or not re.fullmatch(r"up-run-[0-9a-f]{12}", source_run_id)):
+                    raise AdapterError("step3-clean-copy-source-or-receipt-mismatch")
+                receipt_path = tasks_dir / "step2-rule-controller" / receipt_name
+                receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                source_dir = Path(repository).resolve() / manifest["source_task_dir"]
+                source_path = source_dir / "state" / f"{root_run_id}.json"
+                if (manifest.get("schema") != "step3-clean-copy/v3"
+                        or manifest.get("client") != client
+                        or manifest.get("source_run_id") != root_run_id
+                        or source_dir.parent != tasks_dir
+                        or receipt.get("runs", {}).get(client) != root_run_id
+                        or receipt.get("page_pair_sha256", {}).get(client) != manifest.get("step2_page_pair_sha256")
+                        or hashlib.sha256(receipt_path.read_bytes()).hexdigest() != manifest.get("step2_package_receipt_sha256")
+                        or hashlib.sha256(source_path.read_bytes()).hexdigest() != manifest.get("source_run_sha256")):
+                    raise AdapterError("step3-clean-copy-source-or-receipt-mismatch")
+                # The copy is named for its Step 2 source, while a gate resume selects a
+                # later Step 3 child. Prove that child descends from the admitted root.
+                cursor = source_run_id
+                visited: set[str] = set()
+                while cursor != root_run_id:
+                    if cursor in visited or not re.fullmatch(r"up-run-[0-9a-f]{12}", cursor):
+                        raise AdapterError("step3-clean-copy-child-lineage-mismatch")
+                    visited.add(cursor)
+                    child_path = step3_dir / "state" / f"{cursor}.json"
+                    if not child_path.is_file():
+                        raise AdapterError("step3-clean-copy-child-lineage-mismatch")
+                    child = json.loads(child_path.read_text(encoding="utf-8"))
+                    if child.get("run_id") != cursor:
+                        raise AdapterError("step3-clean-copy-child-lineage-mismatch")
+                    cursor = str(child.get("parent_run_id") or "")
+            except AdapterError:
+                raise
+            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise AdapterError("step3-clean-copy-source-or-receipt-mismatch") from exc
+        if (step2_dir is not None or step9_supplied or clean_supplied or clean_writer_supplied
+                or answers["step4_clean_task_dir"] is not None
+                or answers["step5_clean_task_dir"] is not None
+                or answers["step12_task_dir"] is not None
+                or any(answers[key] is not None for key in (
+                    "client_answers_path", "corrected_topic_policies_path",
+                    "debrief_feedback_path", "step10_admission_path",
+                    "step10_altitude_check_path", "step11_altitude_check_path",
+                    "step12_altitude_check_path"))):
+            raise AdapterError("step3-clean-copy-exclusive-with-other-routes")
+        for key in ("final_brief_feedback_path", "gate_approvals_path"):
+            raw = answers[key]
+            if raw is None:
+                continue
+            selected = Path(raw)
+            if not selected.is_absolute():
+                selected = Path(repository, selected)
+            selected = selected.resolve()
+            if selected.parent != step3_dir / "record" or not selected.is_file():
+                raise AdapterError(f"step3-clean-copy-input-must-be-in-record:{key}")
+            if phase != "final-brief-gate":
+                raise AdapterError(f"step3-clean-copy-gate-input-needs-final-brief-gate:{key}")
+        argv.extend(["--task-dir", str(step3_dir)])
+    step4_dir_answer = answers["step4_clean_task_dir"]
+    step4_primary_path_answer = answers["step4_primary_research_path"]
+    step4_dir: Path | None = None
+    step5_handoff_dir: Path | None = None
+    step6_handoff_dir: Path | None = None
+    step7_handoff_dir: Path | None = None
+    step8_handoff_dir: Path | None = None
+    step9_handoff_dir: Path | None = None
+    if answers["source_run_id"] == STEP5_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        phase = _required_text(answers, "first_unfinished_phase")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or phase != "compose-insight-cards"
+                or answers["reopen_completed_phase"] is not False
+                or other_inputs):
+            raise AdapterError(
+                "accepted Step 5 source starts only its first compose with no other route inputs: "
+                + ", ".join(other_inputs)
+            )
+        try:
+            source_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step5_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", client],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise AdapterError(f"{client}: recorded Step 5 source check could not run") from exc
+        if source_check.returncode != 0:
+            raise AdapterError(
+                f"{client}: recorded Step 5 route could not be selected; "
+                "inspect the accepted source and saved copy before starting"
+            )
+        try:
+            route = json.loads(source_check.stdout)
+            run_id = route["run_id"]
+            root_id = route["source_run_id"]
+            selected_dir = Path(route["task_dir"])
+            target = Path(route["copy_dir"])
+            selected_phase = route["phase"]
+        except (ValueError, KeyError, TypeError):
+            raise AdapterError(f"{client}: recorded Step 5 route result is invalid") from None
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        expected_target = tasks_dir / f"{client}-step5-clean-{root_id.removeprefix('up-run-')}"
+        source_name = selected_dir.name
+        if (not re.fullmatch(r"up-run-[0-9a-f]{12}", run_id)
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", root_id)
+                or selected_phase not in STEP5_ALLOWED_PHASES
+                or target != expected_target
+                or selected_dir.parent != tasks_dir
+                or (run_id != root_id and selected_dir != target)
+                or (run_id == root_id and source_name != f"{client}-corporate-demo"
+                    and not re.fullmatch(rf"{re.escape(client)}-step4-clean-[0-9a-f]{{12}}", source_name))):
+            raise AdapterError(f"{client}: recorded Step 5 route has the wrong identity")
+        if route.get("status") != "ready":
+            if route.get("status") == "held":
+                other = "vivacom" if client == "bteam" else "bteam"
+                try:
+                    other_check = subprocess.run(
+                        [python, str(Path(repository, "scripts/prepare_step5_clean_copy.py")),
+                         "--resolve-recorded-route", "--client", other],
+                        cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                        capture_output=True, text=True, timeout=30,
+                    )
+                    other_route = json.loads(other_check.stdout) if other_check.returncode == 0 else {}
+                except (OSError, subprocess.TimeoutExpired, ValueError, TypeError) as exc:
+                    raise AdapterError(f"{other}: recorded Step 5 hold could not be checked") from exc
+                if other_route.get("status") != "held":
+                    raise AdapterError(
+                        f"{client}: Step 5 is held; {other} is "
+                        f"{other_route.get('status', 'unavailable')}; both holds are needed for the Maria ZIP"
+                    )
+                return _script_payload(
+                    sequence_id="workflow-resume-from-phase-live-confirmation",
+                    profile="resume",
+                    argv=[python, "-m", "up_harness.step5_maria_package", "--close-recorded"],
+                    repository_key=repository_key,
+                    repository_root=repository,
+                    effectful=True,
+                    operation="resume",
+                    environment={"PYTHONPATH": "src:.",
+                                 "UP_HARNESS_GOOGLE_DRIVE_ACCESS_TOKEN": "",
+                                 "UP_HARNESS_GOOGLE_DRIVE_PARENT_ID": ""},
+                )
+            if route.get("status") in {"complete", "awaiting-human"}:
+                raise AdapterError(f"{client}: Step 5 is already {route['status']} at {selected_phase}; no writer resume is needed")
+            raise AdapterError(f"{client}: recorded Step 5 route has an invalid status")
+        argv[argv.index("--resume-run") + 1] = run_id
+        argv[argv.index("--from-phase") + 1] = selected_phase
+        argv.extend(["--task-dir", str(selected_dir)])
+        step5_handoff_dir = target
+    if answers["source_run_id"] == STEP6_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        phase = _required_text(answers, "first_unfinished_phase")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase", "step6_held_by"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or phase != "compose-strategy-one-pager"
+                or answers["reopen_completed_phase"] is not False
+                or other_inputs):
+            raise AdapterError("held Step 6 source requires only client and first compose")
+        check = subprocess.run(
+            [python, str(Path(repository, "scripts/prepare_step6_clean_copy.py")),
+             "--resolve-recorded-route", "--client", client],
+            cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+            capture_output=True, text=True, timeout=30,
+        )
+        if check.returncode != 0:
+            raise AdapterError(f"{client}: current held Step 5 source could not be selected")
+        try:
+            route = json.loads(check.stdout)
+            run_id = route["run_id"]
+            source_id = route["source_run_id"]
+            selected_dir = Path(route["task_dir"])
+            target = Path(route["copy_dir"])
+            selected_phase = route["phase"]
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AdapterError(f"{client}: recorded Step 6 route is invalid") from exc
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        expected_target = tasks_dir / f"{client}-step6-clean-{source_id.removeprefix('up-run-')}"
+        if (not re.fullmatch(r"up-run-[0-9a-f]{12}", run_id)
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", source_id)
+                or selected_phase not in {"compose-strategy-one-pager", "strategy-approach-gate"}
+                or target != expected_target or selected_dir.parent != tasks_dir
+                or (run_id != source_id and selected_dir != target)):
+            raise AdapterError(f"{client}: recorded Step 6 route has the wrong identity")
+        held_by = answers["step6_held_by"]
+        if route["status"] == "awaiting-human":
+            if not isinstance(held_by, str) or not held_by.strip():
+                raise AdapterError(f"{client}: the Step 6 page needs an explicit named hold")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step6_review_hold", "--recorded",
+                      "--client", client, "--held-by", held_by.strip(), "--confirmed-held"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] == "held":
+            if held_by not in (None, ""):
+                raise AdapterError(f"{client}: Step 6 is already held; no new hold is needed")
+            other = "vivacom" if client == "bteam" else "bteam"
+            other_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step6_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", other],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if other_check.returncode != 0:
+                raise AdapterError(f"{other}: recorded Step 6 hold could not be checked")
+            if json.loads(other_check.stdout).get("status") != "held":
+                raise AdapterError(f"{client}: both Step 6 pages must be held before ZIP closeout")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step6_maria_package", "--close-recorded"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] != "ready" or held_by not in (None, ""):
+            raise AdapterError(f"{client}: Step 6 is {route['status']}; a writer resume cannot record a hold")
+        argv[argv.index("--resume-run") + 1] = run_id
+        argv[argv.index("--from-phase") + 1] = selected_phase
+        argv.extend(["--task-dir", str(selected_dir)])
+        step6_handoff_dir = target
+    if answers["source_run_id"] == STEP7_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        phase = _required_text(answers, "first_unfinished_phase")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase", "step7_held_by"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or phase != "compose-big-idea"
+                or answers["reopen_completed_phase"] is not False
+                or other_inputs):
+            raise AdapterError("held Step 6 source for Step 7 requires only client and first compose")
+        check = subprocess.run(
+            [python, str(Path(repository, "scripts/prepare_step7_clean_copy.py")),
+             "--resolve-recorded-route", "--client", client],
+            cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+            capture_output=True, text=True, timeout=30,
+        )
+        if check.returncode != 0:
+            raise AdapterError(f"{client}: current held Step 6 source for Step 7 could not be selected")
+        try:
+            route = json.loads(check.stdout)
+            run_id = route["run_id"]
+            source_id = route["source_run_id"]
+            selected_dir = Path(route["task_dir"])
+            target = Path(route["copy_dir"])
+            selected_phase = route["phase"]
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AdapterError(f"{client}: recorded Step 7 route is invalid") from exc
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        expected_target = tasks_dir / f"{client}-step7-clean-{source_id.removeprefix('up-run-')}"
+        if (not re.fullmatch(r"up-run-[0-9a-f]{12}", run_id)
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", source_id)
+                or selected_phase not in {"compose-big-idea", "big-idea-gate",
+                                          "compose-message-architecture", "narrative-gate"}
+                or target != expected_target or selected_dir.parent != tasks_dir
+                or (run_id != source_id and selected_dir != target)):
+            raise AdapterError(f"{client}: recorded Step 7 route has the wrong identity")
+        held_by = answers["step7_held_by"]
+        if route["status"] == "awaiting-human":
+            if not isinstance(held_by, str) or not held_by.strip():
+                raise AdapterError(f"{client}: the Step 7 page needs an explicit named hold")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step7_review_hold", "--recorded",
+                      "--client", client, "--held-by", held_by.strip(), "--confirmed-held"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] == "held":
+            if held_by not in (None, ""):
+                raise AdapterError(f"{client}: Step 7 is already held; no new hold is needed")
+            other = "vivacom" if client == "bteam" else "bteam"
+            other_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step7_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", other],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if other_check.returncode != 0 or json.loads(other_check.stdout).get("status") != "held":
+                raise AdapterError(f"{client}: both Step 7 pages must be held before ZIP closeout")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step7_maria_package", "--close-recorded"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] != "ready" or held_by not in (None, ""):
+            raise AdapterError(f"{client}: Step 7 is {route['status']}; a writer resume cannot record a hold")
+        argv[argv.index("--resume-run") + 1] = run_id
+        argv[argv.index("--from-phase") + 1] = selected_phase
+        argv.extend(["--task-dir", str(selected_dir)])
+        if route.get("reopen_completed_phase") is True:
+            if (run_id == source_id or selected_dir != target
+                    or selected_phase != "compose-message-architecture"):
+                raise AdapterError(f"{client}: Step 7 completed-phase route is invalid")
+            argv.append("--rerun-completed")
+        step7_handoff_dir = target
+    if answers["source_run_id"] == STEP8_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        phase = _required_text(answers, "first_unfinished_phase")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase", "step8_held_by"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or phase != "compose-communications-platform"
+                or answers["reopen_completed_phase"] is not False
+                or other_inputs):
+            raise AdapterError("held Step 7 source for Step 8 requires only client and first compose")
+        check = subprocess.run(
+            [python, str(Path(repository, "scripts/prepare_step8_clean_copy.py")),
+             "--resolve-recorded-route", "--client", client],
+            cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+            capture_output=True, text=True, timeout=30,
+        )
+        if check.returncode != 0:
+            raise AdapterError(f"{client}: current held Step 7 source for Step 8 could not be selected")
+        try:
+            route = json.loads(check.stdout)
+            run_id = route["run_id"]
+            source_id = route["source_run_id"]
+            selected_dir = Path(route["task_dir"])
+            target = Path(route["copy_dir"])
+            selected_phase = route["phase"]
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AdapterError(f"{client}: recorded Step 8 route is invalid") from exc
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        expected_target = tasks_dir / f"{client}-step8-clean-{source_id.removeprefix('up-run-')}"
+        if (not re.fullmatch(r"up-run-[0-9a-f]{12}", run_id)
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", source_id)
+                or selected_phase not in {"compose-communications-platform", "platform-architecture-gate"}
+                or target != expected_target or selected_dir.parent != tasks_dir
+                or (run_id != source_id and selected_dir != target)):
+            raise AdapterError(f"{client}: recorded Step 8 route has the wrong identity")
+        held_by = answers["step8_held_by"]
+        if route["status"] == "awaiting-human":
+            if not isinstance(held_by, str) or not held_by.strip():
+                raise AdapterError(f"{client}: the Step 8 page needs an explicit named hold")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step8_review_hold", "--recorded",
+                      "--client", client, "--held-by", held_by.strip(), "--confirmed-held"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] == "held":
+            if held_by not in (None, ""):
+                raise AdapterError(f"{client}: Step 8 is already held; no new hold is needed")
+            other = "vivacom" if client == "bteam" else "bteam"
+            other_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step8_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", other],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if other_check.returncode != 0 or json.loads(other_check.stdout).get("status") != "held":
+                raise AdapterError(f"{client}: both Step 8 pages must be held before ZIP closeout")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step8_maria_package", "--close-recorded"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] != "ready" or held_by not in (None, ""):
+            raise AdapterError(f"{client}: Step 8 is {route['status']}; a writer resume cannot record a hold")
+        argv[argv.index("--resume-run") + 1] = run_id
+        argv[argv.index("--from-phase") + 1] = selected_phase
+        argv.extend(["--task-dir", str(selected_dir)])
+        if route.get("reopen_completed_phase") is True:
+            if (run_id == source_id or selected_dir != target
+                    or selected_phase != "compose-communications-platform"):
+                raise AdapterError(f"{client}: Step 8 completed-phase route is invalid")
+            argv.append("--rerun-completed")
+        step8_handoff_dir = target
+    if answers["source_run_id"] == STEP11_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase", "step11_held_by",
+                       "step10_held_by", "step10_hold_reason", "step11_writer_call_limit"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or answers["first_unfinished_phase"] != "compose-annual-review"
+                or answers["reopen_completed_phase"] is not False or other_inputs):
+            raise AdapterError("recorded-step11-route-needs-client-and-no-manual-paths")
+        check = subprocess.run(
+            [python, str(Path(repository, "scripts/prepare_step11_clean_copy.py")),
+             "--resolve-recorded-route", "--client", client],
+            cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+            capture_output=True, text=True, timeout=45,
+        )
+        if check.returncode != 0:
+            raise AdapterError(f"{client}: current accepted Step 10 source for Step 11 could not be selected")
+        try:
+            route = json.loads(check.stdout)
+            target = Path(route["copy_dir"])
+            selected = Path(route["task_dir"])
+            status = route["status"]
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AdapterError(f"{client}: recorded Step 11 route is invalid") from exc
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        if (target.parent != tasks_dir
+                or not re.fullmatch(rf"{re.escape(client)}-step11-clean-(?:20261002|[0-9a-f]{{12}})", target.name)
+                or selected.parent != tasks_dir
+                or status not in {"needs-copy", "ready", "awaiting-step10-hold", "awaiting-human",
+                                  "awaiting-writer-budget", "feedback-pending", "held"}
+                or (status != "needs-copy" and selected != target)):
+            raise AdapterError(f"{client}: recorded Step 11 route has the wrong source or copy identity")
+        if status == "feedback-pending":
+            outstanding = route.get("feedback_state")
+            if (not isinstance(outstanding, list) or not outstanding
+                    or any(not isinstance(note, dict)
+                           or not re.fullmatch(r"[0-9a-f]{64}", str(note.get("note_sha256", "")))
+                           or any(not isinstance(note.get(key), list)
+                                  or any(not isinstance(item, str) or not item
+                                         for item in note[key])
+                                  for key in ("needs_routing", "needs_approval", "needs_other_work"))
+                           for note in outstanding)):
+                raise AdapterError(f"{client}: recorded Step 11 feedback state is invalid")
+            actions = []
+            for note in outstanding:
+                for key, verb in (("needs_routing", "route"),
+                                  ("needs_approval", "approve"),
+                                  ("needs_other_work", "complete non-page work for")):
+                    if note[key]:
+                        actions.append(f"{verb} {', '.join(note[key])}")
+            if not actions:
+                raise AdapterError(f"{client}: recorded Step 11 feedback state is empty")
+            raise AdapterError(
+                f"{client}: Step 11 feedback is still open; {'; '.join(actions)} "
+                "before resume or ZIP closeout")
+        writer_limit = answers["step11_writer_call_limit"]
+        if status == "awaiting-writer-budget":
+            usage = route.get("writer_call_budget")
+            if (not route.get("feedback") or not isinstance(usage, dict)
+                    or type(usage.get("limit")) is not int
+                    or type(usage.get("reserved_calls")) is not int
+                    or usage["reserved_calls"] < usage["limit"]):
+                raise AdapterError(f"{client}: recorded Step 11 budget route is invalid")
+            if (type(writer_limit) is not int or writer_limit <= usage["limit"]):
+                raise AdapterError(
+                    f"{client}: Step 11 writer budget is "
+                    f"{usage['reserved_calls']}/{usage['limit']}; supply an explicitly approved "
+                    "higher step11_writer_call_limit")
+        elif writer_limit is not None:
+            raise AdapterError(f"{client}: a higher writer limit is due only for exhausted Step 11 feedback")
+        held_by = answers["step11_held_by"]
+        step10_holder = answers["step10_held_by"]
+        step10_reason = answers["step10_hold_reason"]
+        if status != "awaiting-step10-hold" and (step10_holder not in (None, "")
+                                                 or step10_reason not in (None, "")):
+            raise AdapterError(f"{client}: Step 10 hold is due only at the measurement gate")
+        if held_by not in (None, "") and (status != "awaiting-human"
+                                          or not isinstance(held_by, str)
+                                          or not held_by.strip()):
+            raise AdapterError(f"{client}: a Step 11 hold is due only for the current saved page pair")
+        if status == "awaiting-human":
+            if held_by in (None, ""):
+                raise AdapterError(f"{client}: current Step 11 pages need an explicit named hold")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step11_review_hold", "--recorded",
+                      "--client", client, "--held-by", held_by.strip(), "--confirmed-held"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if status == "held":
+            other = "vivacom" if client == "bteam" else "bteam"
+            other_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step11_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", other],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=45,
+            )
+            if other_check.returncode != 0 or json.loads(other_check.stdout).get("status") != "held":
+                raise AdapterError(f"{client}: both Step 11 pairs must be held before ZIP closeout")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step11_maria_package", "--close-recorded"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if status == "awaiting-step10-hold":
+            if (held_by not in (None, "") or not isinstance(step10_holder, str)
+                    or not step10_holder.strip() or not isinstance(step10_reason, str)
+                    or not step10_reason.strip()):
+                raise AdapterError(f"{client}: Step 10 hold needs an explicit named holder and reason")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step11_review_hold", "--recorded-step10",
+                      "--client", client, "--held-by", step10_holder.strip(),
+                      "--reason", step10_reason.strip(), "--confirmed-held"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        command = [python, str(Path(repository, "scripts/prepare_step11_clean_copy.py")),
+                   "--resume-recorded", "--client", client]
+        if held_by not in (None, ""):
+            command += ["--held-by", held_by.strip()]
+        if writer_limit is not None:
+            command += ["--writer-call-limit", str(writer_limit)]
+        return _script_payload(
+            sequence_id="workflow-resume-from-phase-live-confirmation",
+            profile="resume", repository_key=repository_key,
+            repository_root=repository, effectful=True, operation="resume",
+            argv=command, environment=_workflow_resume_live_environment(
+                python, drive_staging_root=target / "drive-staging", agent_max_attempts="1",
+            ),
+        )
+    if answers["source_run_id"] == STEP10_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        phase = _required_text(answers, "first_unfinished_phase")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or phase not in {"compose-measurement-framework", "measurement-gate"}
+                or answers["reopen_completed_phase"] is not False or other_inputs):
+            raise AdapterError("held-step9-source-for-step10-needs-first-compose-only")
+        check = subprocess.run(
+            [python, str(Path(repository, "scripts/prepare_step9_clean_copy.py")),
+             "--resolve-step10-route", "--client", client],
+            cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+            capture_output=True, text=True, timeout=45,
+        )
+        if check.returncode != 0:
+            raise AdapterError(f"{client}: current held Step 9 source for Step 10 could not be selected")
+        try:
+            route = json.loads(check.stdout)
+            run_id = route["run_id"]
+            source_id = route["source_run_id"]
+            selected_phase = route["phase"]
+            selected_dir = Path(route["task_dir"])
+            target = Path(route["copy_dir"])
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AdapterError(f"{client}: recorded Step 10 route is invalid") from exc
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        expected_target = tasks_dir / f"{client}-step9-clean-{route['step8_root_run_id'].removeprefix('up-run-')}"
+        if (route.get("status") != "ready"
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", source_id)
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", run_id)
+                or selected_phase not in {"compose-measurement-framework", "measurement-gate"}
+                or target != expected_target or selected_dir != target):
+            raise AdapterError(f"{client}: Step 10 route is not the current held Step 9 source")
+        argv[argv.index("--resume-run") + 1] = run_id
+        argv[argv.index("--from-phase") + 1] = selected_phase
+        argv.extend(["--task-dir", str(target)])
+        return _script_payload(
+            sequence_id="workflow-resume-from-phase-live-confirmation",
+            profile="resume", repository_key=repository_key,
+            repository_root=repository, effectful=True, operation="resume",
+            argv=argv, environment=_workflow_resume_live_environment(
+                python, drive_staging_root=target / "drive-staging",
+                agent_max_attempts="1",
+            ),
+        )
+    if answers["source_run_id"] == STEP9_RECORDED_SOURCE:
+        client = _required_text(answers, "client")
+        phase = _required_text(answers, "first_unfinished_phase")
+        base_fields = {"repository_key", "client", "source_run_id",
+                       "first_unfinished_phase", "reopen_completed_phase",
+                       "step9_held_by", "step9_altitude_check_path",
+                       "step9_newsroom_model", "step9_earned_pipeline", "step9_decided_by"}
+        other_inputs = [key for key in sorted(expected - base_fields)
+                        if answers[key] not in (None, False)]
+        if (client not in {"bteam", "vivacom"}
+                or phase != "compose-execution-toolkit"
+                or answers["reopen_completed_phase"] is not False
+                or other_inputs):
+            raise AdapterError("held Step 8 source for Step 9 requires only client and first compose")
+        check = subprocess.run(
+            [python, str(Path(repository, "scripts/prepare_step9_clean_copy.py")),
+             "--resolve-recorded-route", "--client", client],
+            cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+            capture_output=True, text=True, timeout=30,
+        )
+        if check.returncode != 0:
+            raise AdapterError(f"{client}: current held Step 8 source for Step 9 could not be selected")
+        try:
+            route = json.loads(check.stdout)
+            run_id = route["run_id"]
+            source_id = route["source_run_id"]
+            selected_dir = Path(route["task_dir"])
+            target = Path(route["copy_dir"])
+            selected_phase = route["phase"]
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AdapterError(f"{client}: recorded Step 9 route is invalid") from exc
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        expected_target = tasks_dir / f"{client}-step9-clean-{source_id.removeprefix('up-run-')}"
+        if (not re.fullmatch(r"up-run-[0-9a-f]{12}", run_id)
+                or not re.fullmatch(r"up-run-[0-9a-f]{12}", source_id)
+                or selected_phase not in {"compose-execution-toolkit", "toolkit-ship-gate"}
+                or target != expected_target or selected_dir.parent != tasks_dir
+                or (run_id != source_id and selected_dir != target)):
+            raise AdapterError(f"{client}: recorded Step 9 route has the wrong identity")
+        held_by = answers["step9_held_by"]
+        altitude_path = answers["step9_altitude_check_path"]
+        decision_values = [answers[key] for key in (
+            "step9_newsroom_model", "step9_earned_pipeline", "step9_decided_by")]
+        deciding = any(value not in (None, "") for value in decision_values)
+        if deciding and (not all(isinstance(value, str) and value.strip()
+                                 for value in decision_values)
+                         or held_by not in (None, "") or altitude_path not in (None, "")):
+            raise AdapterError(f"{client}: both Step 9 decisions and their named decider are required together")
+        if route["status"] == "awaiting-human":
+            if (not isinstance(held_by, str) or not held_by.strip()
+                    or altitude_path not in (None, "") or deciding):
+                raise AdapterError(f"{client}: the Step 9 toolkit needs an explicit named hold")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step9_review_hold", "--recorded",
+                      "--client", client, "--held-by", held_by.strip(), "--confirmed-held"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] == "held":
+            if held_by not in (None, "") or altitude_path not in (None, "") or deciding:
+                raise AdapterError(f"{client}: Step 9 is already held; no new input is needed")
+            other = "vivacom" if client == "bteam" else "bteam"
+            other_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step9_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", other],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if other_check.returncode != 0 or json.loads(other_check.stdout).get("status") != "held":
+                raise AdapterError(f"{client}: both Step 9 toolkits must be held before ZIP closeout")
+            return _script_payload(
+                sequence_id="workflow-resume-from-phase-live-confirmation",
+                profile="resume", repository_key=repository_key,
+                repository_root=repository, effectful=True, operation="resume",
+                argv=[python, "-m", "up_harness.step9_maria_package", "--close-recorded"],
+                environment={"PYTHONPATH": "src:."},
+            )
+        if route["status"] != "ready" or held_by not in (None, ""):
+            raise AdapterError(f"{client}: Step 9 is {route['status']}; a writer resume cannot record a hold")
+        recorded = False
+        if not deciding and altitude_path in (None, ""):
+            standing_check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step9_clean_copy.py")),
+                 "--admit-decision-reopen", "--client", client],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if standing_check.returncode == 0:
+                try:
+                    standing_proof = json.loads(standing_check.stdout)
+                    recorded = set(standing_proof.get("recorded_events") or {}) == {
+                        "newsroom_model", "earned_led_resourcing"}
+                except (ValueError, TypeError):
+                    raise AdapterError(f"{client}: Step 9 recorded decision proof is unreadable")
+        if deciding or recorded:
+            proof = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step9_clean_copy.py")),
+                 "--admit-decision-reopen", "--client", client],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if proof.returncode != 0:
+                raise AdapterError(f"{client}: Step 9 saved stop is not eligible for operating decisions")
+            try:
+                decision_mode = json.loads(proof.stdout)["mode"]
+            except (ValueError, KeyError, TypeError) as exc:
+                raise AdapterError(f"{client}: Step 9 decision admission returned invalid proof") from exc
+            if decision_mode not in {"resume", "reopen"} or (
+                    decision_mode == "resume" and selected_phase != "compose-execution-toolkit") or (
+                    decision_mode == "reopen" and selected_phase != "toolkit-ship-gate"):
+                raise AdapterError(f"{client}: Step 9 decision proof differs from its saved phase")
+            selected_phase = "compose-execution-toolkit"
+            if decision_mode == "reopen":
+                argv.append("--rerun-completed")
+            if recorded:
+                argv.append("--step9-use-recorded-decisions")
+            else:
+                argv.extend(["--step9-newsroom-model", decision_values[0].strip(),
+                             "--step9-earned-pipeline", decision_values[1].strip(),
+                             "--step9-decided-by", decision_values[2].strip()])
+        if altitude_path not in (None, ""):
+            supplied = Path(altitude_path)
+            if not supplied.is_absolute():
+                supplied = Path(repository, supplied)
+            expected_check = target / "record/toolkit-altitude-check.json"
+            if selected_phase != "toolkit-ship-gate" or supplied.resolve() != expected_check or not supplied.is_file():
+                raise AdapterError(f"{client}: Step 9 holder check must belong to the current toolkit gate")
+            argv.extend(["--altitude-check-file", str(supplied)])
+        argv[argv.index("--resume-run") + 1] = run_id
+        argv[argv.index("--from-phase") + 1] = selected_phase
+        argv.extend(["--task-dir", str(selected_dir)])
+        step9_handoff_dir = target
+    if step4_primary_path_answer is not None and step4_dir_answer is None:
+        raise AdapterError("step4-primary-evidence-requires-clean-copy")
+    if step4_dir_answer is not None:
+        client = _required_text(answers, "client")
+        supplied_step4 = Path(_required_text(answers, "step4_clean_task_dir"))
+        if not supplied_step4.is_absolute():
+            supplied_step4 = Path(repository, supplied_step4)
+        step4_dir = supplied_step4.resolve()
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        legacy_step4 = tasks_dir / f"{client}-step4-clean-20261005"
+        current_step4 = (step4_dir.parent == tasks_dir and
+                         re.fullmatch(rf"{re.escape(client)}-step4-clean-[0-9a-f]{{12}}",
+                                      step4_dir.name) is not None)
+        if step4_dir != legacy_step4 and not current_step4:
+            raise AdapterError("step4-clean-copy-missing-or-mismatched")
+        if (step2_dir is not None or step3_dir is not None or step9_supplied
+                or clean_supplied or clean_writer_supplied
+                or answers["step5_clean_task_dir"] is not None
+                or answers["step12_task_dir"] is not None
+                or any(answers[key] is not None for key in (
+                    "client_answers_path", "corrected_topic_policies_path",
+                    "debrief_feedback_path", "final_brief_feedback_path",
+                    "step10_admission_path", "step10_altitude_check_path",
+                    "step11_altitude_check_path", "step12_altitude_check_path"))):
+            raise AdapterError("step4-clean-copy-exclusive-with-other-routes")
+        phase = _required_text(answers, "first_unfinished_phase")
+        step5_handoff = phase in STEP5_ALLOWED_PHASES
+        if phase not in STEP4_ALLOWED_PHASES and not step5_handoff:
+            raise AdapterError("step4-clean-copy-needs-first-unfinished-step4-phase")
+        contract_refresh = (
+            phase == "compose-research-insight-pack"
+            and answers["reopen_completed_phase"] is True
+            and step4_primary_path_answer is None
+            and current_step4
+        )
+        if step4_primary_path_answer is None and not contract_refresh:
+            if answers["reopen_completed_phase"] is not False:
+                raise AdapterError("step4-clean-copy-needs-first-unfinished-step4-phase")
+        elif step4_primary_path_answer is not None and (phase != "compose-research-insight-pack"
+              or answers["reopen_completed_phase"] is not True
+              or not current_step4):
+            raise AdapterError("step4-primary-evidence-needs-current-compose-reopen")
+        selected_id = _required_text(answers, "source_run_id")
+        staging_only = (
+            step4_dir.is_dir()
+            and all(child.name == "drive-staging" and child.is_dir() and not child.is_symlink()
+                    for child in step4_dir.iterdir())
+        )
+        unprepared_step4 = not step4_dir.is_dir() or staging_only
+        if (step4_primary_path_answer is not None or contract_refresh) and unprepared_step4:
+            raise AdapterError("step4-primary-evidence-needs-saved-research")
+        if unprepared_step4:
+            if (not current_step4 or phase != "compose-research-insight-pack"
+                    or not re.fullmatch(r"up-run-[0-9a-f]{12}", selected_id)
+                    or step4_dir.name != f"{client}-step4-clean-{selected_id.removeprefix('up-run-')}"):
+                raise AdapterError("step4-clean-copy-missing-or-mismatched")
+            # The ordinary driver verifies the current passed Step 3 source and
+            # prepares the copy before any model work.
+            argv.extend(["--task-dir", str(step4_dir)])
+        else:
+            if not (step4_dir / "state").is_dir():
+                raise AdapterError("step4-clean-copy-missing-or-mismatched")
+        manifest_path = step4_dir / "record" / "step4-clean-copy.json"
+        if not unprepared_step4:
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                root_source_id = manifest["source_run_id"]
+                root_state_path = step4_dir / "state" / f"{root_source_id}.json"
+                root_state_bytes = root_state_path.read_bytes()
+                root_state = json.loads(root_state_bytes)
+            except (OSError, ValueError, KeyError, TypeError):
+                raise AdapterError("step4-clean-copy-manifest-invalid") from None
+            if (manifest.get("schema") != ("step4-clean-copy/v1" if step4_dir == legacy_step4
+                                           else "step4-clean-copy/v2")
+                    or manifest.get("client") != client
+                    or manifest.get("first_step4_phase") != "compose-research-insight-pack"
+                    or manifest.get("stop_after_phase") != "research-gate"
+                    or manifest.get("clean_state_sha256") != hashlib.sha256(root_state_bytes).hexdigest()
+                    or root_state.get("run_id") != root_source_id
+                    or (current_step4 and step4_dir.name !=
+                        f"{client}-step4-clean-{root_source_id.removeprefix('up-run-')}")
+                    or root_state.get("workflow_name") != "cd-s-002-corporate-communications-strategy"
+                    or (root_state.get("context") or {}).get("inputs", {}).get("client_name") !=
+                        {"bteam": "The B Team", "vivacom": "Vivacom"}[client]
+                    or (root_state.get("context") or {}).get("inputs", {}).get("client_code") !=
+                        {"bteam": "BTM", "vivacom": "VIV"}[client]
+                    or (root_state.get("context") or {}).get("inputs", {}).get("stop_after_phase") != "research-gate"
+                    or (root_state.get("phases") or {}).get("final-brief-gate", {}).get("status") != "completed"):
+                raise AdapterError("step4-clean-copy-manifest-mismatch")
+            if current_step4:
+                source_task_dir = manifest.get("source_task_dir")
+                if not isinstance(source_task_dir, str) or not source_task_dir:
+                    raise AdapterError("step4-clean-copy-manifest-mismatch")
+                source_dir = (Path(repository).resolve() / source_task_dir).resolve()
+                source_path = source_dir / "state" / f"{root_source_id}.json"
+                step3_manifest_path = source_dir / "record" / "step3-clean-copy.json"
+                try:
+                    source_matches = (
+                        source_dir.parent == tasks_dir
+                        and re.fullmatch(rf"{re.escape(client)}-step3-clean-[0-9a-f]{{12}}",
+                                         source_dir.name) is not None
+                        and manifest.get("source_sha256") ==
+                        hashlib.sha256(source_path.read_bytes()).hexdigest()
+                        and manifest.get("step3_manifest_sha256") ==
+                        hashlib.sha256(step3_manifest_path.read_bytes()).hexdigest()
+                    )
+                except OSError:
+                    source_matches = False
+                if not source_matches:
+                    raise AdapterError("step4-clean-copy-manifest-mismatch")
+        if phase == "compose-research-insight-pack":
+            if step4_dir == legacy_step4:
+                raise AdapterError("step4-clean-copy-old-source-cannot-start-new-compose")
+            if step4_primary_path_answer is not None and selected_id == root_source_id:
+                raise AdapterError("step4-primary-evidence-needs-saved-research")
+            if not unprepared_step4 and selected_id != root_source_id:
+                try:
+                    selected = json.loads(
+                        (step4_dir / "state" / f"{selected_id}.json").read_text(encoding="utf-8")
+                    )
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step4-clean-copy-compose-source-invalid") from None
+                cursor = selected
+                seen: set[str] = set()
+                while cursor.get("run_id") != root_source_id:
+                    cursor_id = cursor.get("run_id")
+                    parent_id = cursor.get("parent_run_id")
+                    if (not isinstance(cursor_id, str) or cursor_id in seen
+                            or not isinstance(parent_id, str) or len(seen) >= 100):
+                        raise AdapterError("step4-clean-copy-compose-lineage-mismatch")
+                    seen.add(cursor_id)
+                    try:
+                        cursor = json.loads(
+                            (step4_dir / "state" / f"{parent_id}.json").read_text(encoding="utf-8")
+                        )
+                    except (OSError, ValueError, TypeError):
+                        raise AdapterError("step4-clean-copy-compose-lineage-mismatch") from None
+                ledger = (
+                    (((selected.get("context") or {}).get("up") or {})
+                     .get("cd_s_002") or {}).get("step4_part_ledger")
+                )
+                used = ledger.get("writer_calls_used") if isinstance(ledger, dict) else None
+                limit = ledger.get("writer_call_limit") if isinstance(ledger, dict) else None
+                terminal_status = selected.get("status")
+                if step4_primary_path_answer is not None or contract_refresh:
+                    parts = ledger.get("parts") if isinstance(ledger, dict) else None
+                    gate = (selected.get("phases") or {}).get("research-gate") or {}
+                    saved_pack = (((selected.get("context") or {}).get("up") or {})
+                                  .get("cd_s_002") or {}).get("research_pack")
+                    source_tier = ((selected.get("context") or {}).get("inputs") or {}).get(
+                        "engagement_tier")
+                    source_version = (saved_pack or {}).get("step4_contract_version")
+                    missing_primary_gate = (
+                        source_version == 3
+                        and "requires conducted primary_research" in str(gate.get("output") or "")
+                    ) or (
+                        source_version == 4
+                        and ((gate.get("ledger") or {}).get("primary_research_status") == "pending")
+                    )
+                    if (selected.get("run_id") != selected_id
+                            or terminal_status != "blocked"
+                            or (selected.get("phases") or {}).get(
+                                "compose-research-insight-pack", {}).get("status") != "completed"
+                            or gate.get("status") != "blocked"
+                            or not missing_primary_gate
+                            or not isinstance(saved_pack, dict)
+                            or saved_pack.get("depth") != source_tier
+                            or (source_version == 4 and source_tier not in {
+                                "sme", "standard", "enterprise", "regulated"})
+                            or "primary_research" in saved_pack
+                            or not isinstance(ledger, dict) or ledger.get("version") != 1
+                            or not isinstance(parts, dict) or set(parts) != STEP4_NATIVE_PARTS
+                            or any(not isinstance(row, dict) or row.get("status") != "passed"
+                                   for row in parts.values())
+                            or (ledger.get("document_check") or {}).get("status") != "passed"
+                            or type(used) is not int or type(limit) is not int
+                            or used < 0 or limit <= 0 or used > limit):
+                        raise AdapterError("step4-primary-evidence-source-not-reviewable")
+                    if contract_refresh:
+                        if source_version != 3 or source_tier not in {
+                                "standard-enterprise", "enterprise", "regulated"}:
+                            raise AdapterError("step4-contract-refresh-source-not-legacy")
+                    if source_tier == "standard-enterprise":
+                        standing_tier = (Path(repository).resolve() / "Tasks" /
+                                         "bteam-corporate-demo" / "engagement-tier.json")
+                        try:
+                            ruling = json.loads(standing_tier.read_text(encoding="utf-8"))
+                        except (OSError, ValueError, TypeError):
+                            raise AdapterError("step4-standard-tier-ruling-missing") from None
+                        if client != "bteam" or ruling.get("engagement_tier") != "standard":
+                            raise AdapterError("step4-standard-tier-ruling-mismatch")
+                        argv.extend(["--engagement-tier", "standard"])
+                elif (selected.get("run_id") != selected_id
+                      or terminal_status not in {"failed", "blocked"}
+                      or (selected.get("phases") or {}).get(
+                          "compose-research-insight-pack", {}).get("status") != terminal_status
+                      or not isinstance(ledger, dict) or ledger.get("version") != 1
+                      or not isinstance(ledger.get("parts"), dict) or not ledger["parts"]
+                      or type(used) is not int or type(limit) is not int
+                      or used < 0 or limit <= 0 or used > limit):
+                    raise AdapterError("step4-clean-copy-compose-source-not-resumable")
+            if answers["gate_approvals_path"] is not None:
+                raise AdapterError("step4-clean-copy-compose-has-no-gate-input")
+        elif step5_handoff:
+            if (phase != "compose-insight-cards"
+                    or answers["reopen_completed_phase"] is not False
+                    or not re.fullmatch(r"up-run-[0-9a-f]{12}", selected_id)):
+                raise AdapterError("step5-clean-copy-needs-passed-step4-selection")
+            selected_path = (step4_dir / "state" / f"{selected_id}.json").resolve()
+            if selected_path.parent != (step4_dir / "state").resolve():
+                raise AdapterError("step5-clean-copy-source-outside-step4-copy")
+            try:
+                selected = json.loads(selected_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError, TypeError):
+                raise AdapterError("step5-clean-copy-source-missing") from None
+            expected_name = {"bteam": "The B Team", "vivacom": "Vivacom"}[client]
+            expected_code = {"bteam": "BTM", "vivacom": "VIV"}[client]
+            selected_inputs = (selected.get("context") or {}).get("inputs") or {}
+            selected_gate = (selected.get("phases") or {}).get("research-gate") or {}
+            if (selected.get("run_id") != selected_id
+                    or selected.get("workflow_name") != "cd-s-002-corporate-communications-strategy"
+                    or selected_inputs.get("client_name") != expected_name
+                    or selected_inputs.get("client_code") != expected_code
+                    or selected_gate.get("status") != "completed"
+                    or (selected_gate.get("ledger") or {}).get("status") != "passed"):
+                raise AdapterError("step5-clean-copy-source-not-passed-for-client")
+            cursor = selected
+            seen: set[str] = set()
+            while cursor.get("run_id") != root_source_id:
+                cursor_id = cursor.get("run_id")
+                parent_id = cursor.get("parent_run_id")
+                if (not isinstance(cursor_id, str) or cursor_id in seen
+                        or not isinstance(parent_id, str) or len(seen) >= 100):
+                    raise AdapterError("step5-clean-copy-source-lineage-mismatch")
+                seen.add(cursor_id)
+                try:
+                    cursor = json.loads(
+                        (step4_dir / "state" / f"{parent_id}.json").read_text(encoding="utf-8")
+                    )
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step5-clean-copy-source-lineage-mismatch") from None
+                ancestor_inputs = (cursor.get("context") or {}).get("inputs") or {}
+                if (cursor.get("run_id") != parent_id
+                        or ancestor_inputs.get("client_name") != expected_name
+                        or ancestor_inputs.get("client_code") != expected_code):
+                    raise AdapterError("step5-clean-copy-source-lineage-mismatch")
+            step5_handoff_dir = (Path(repository).resolve() / "Tasks" /
+                                 f"{client}-step5-clean-{selected_id.removeprefix('up-run-')}")
+        else:
+            try:
+                selected = json.loads(
+                    (step4_dir / "state" / f"{selected_id}.json").read_text(encoding="utf-8")
+                )
+            except (OSError, ValueError, TypeError):
+                raise AdapterError("step4-clean-copy-gate-source-missing") from None
+            cursor = selected
+            seen: set[str] = set()
+            while cursor.get("run_id") != root_source_id:
+                cursor_id = cursor.get("run_id")
+                parent_id = cursor.get("parent_run_id")
+                if (not isinstance(cursor_id, str) or cursor_id in seen
+                        or not isinstance(parent_id, str) or len(seen) >= 100):
+                    raise AdapterError("step4-clean-copy-gate-lineage-mismatch")
+                seen.add(cursor_id)
+                try:
+                    cursor = json.loads(
+                        (step4_dir / "state" / f"{parent_id}.json").read_text(encoding="utf-8")
+                    )
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step4-clean-copy-gate-lineage-mismatch") from None
+            gate_status = (selected.get("phases") or {}).get("research-gate", {}).get("status")
+            step4_ledger = (
+                (((selected.get("context") or {}).get("up") or {})
+                 .get("cd_s_002") or {}).get("step4_part_ledger")
+            )
+            resumable_failed_gate = (
+                selected.get("status") == "failed"
+                and gate_status == "failed"
+                and isinstance(step4_ledger, dict)
+                and step4_ledger.get("version") == 1
+                and isinstance(step4_ledger.get("parts"), dict)
+                and bool(step4_ledger["parts"])
+            )
+            if (selected.get("run_id") != selected_id
+                    or (gate_status not in ("blocked", "running")
+                        and not resumable_failed_gate)):
+                raise AdapterError("step4-clean-copy-gate-source-not-blocked-at-gate")
+            approval = answers["gate_approvals_path"]
+            if approval is not None:
+                approval_path = Path(approval)
+                if not approval_path.is_absolute():
+                    approval_path = Path(repository, approval_path)
+                if approval_path.resolve().parent != step4_dir / "record" or not approval_path.is_file():
+                    raise AdapterError("step4-clean-copy-gate-input-must-be-in-record")
+        if not unprepared_step4:
+            argv.extend(["--task-dir", str(step4_dir)])
+        if step4_primary_path_answer is not None:
+            primary_path = Path(_required_text(answers, "step4_primary_research_path"))
+            if not primary_path.is_absolute():
+                primary_path = Path(repository, primary_path)
+            primary_path = primary_path.resolve()
+            if (primary_path != step4_dir / "record" / f"primary-research-{selected_id}.json"
+                    or not primary_path.is_file()):
+                raise AdapterError("step4-primary-evidence-file-must-bind-to-source")
+            argv.extend(["--step4-primary-research-file", str(primary_path)])
+    step5_dir_answer = answers["step5_clean_task_dir"]
+    step5_dir: Path | None = None
+    if step5_dir_answer is not None:
+        client = _required_text(answers, "client")
+        tasks_dir = Path(repository).resolve() / "Tasks"
+        legacy_step5 = tasks_dir / f"{client}-step5-clean-20261005"
+        supplied_step5 = Path(_required_text(answers, "step5_clean_task_dir"))
+        if not supplied_step5.is_absolute():
+            supplied_step5 = Path(repository, supplied_step5)
+        step5_dir = supplied_step5.resolve()
+        current_step5_match = re.fullmatch(
+            rf"{re.escape(client)}-step5-clean-([0-9a-f]{{12}})", step5_dir.name,
+        ) if step5_dir.parent == tasks_dir else None
+        current_step5 = current_step5_match is not None
+        if ((step5_dir != legacy_step5 and not current_step5) or not step5_dir.is_dir()):
+            raise AdapterError("step5-clean-copy-missing-or-mismatched")
+        if (step2_dir is not None or step3_dir is not None or step4_dir is not None
+                or step9_supplied or clean_supplied or clean_writer_supplied
+                or answers["step12_task_dir"] is not None
+                or any(answers[key] is not None for key in (
+                    "client_answers_path", "corrected_topic_policies_path",
+                    "debrief_feedback_path", "final_brief_feedback_path",
+                    "gate_approvals_path", "step10_admission_path",
+                    "step10_altitude_check_path", "step11_altitude_check_path",
+                    "step12_altitude_check_path"))):
+            raise AdapterError("step5-clean-copy-exclusive-with-other-routes")
+        phase = _required_text(answers, "first_unfinished_phase")
+        reopen_step5 = answers["reopen_completed_phase"] is True
+        if phase not in STEP5_ALLOWED_PHASES:
+            raise AdapterError("step5-clean-copy-needs-first-unfinished-step5-phase")
+        manifest_path = step5_dir / "record" / "step5-clean-copy.json"
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            root_source_id = manifest["source_run_id"]
+            root_state_path = step5_dir / "state" / f"{root_source_id}.json"
+            root_state_bytes = root_state_path.read_bytes()
+            root_state = json.loads(root_state_bytes)
+        except (OSError, ValueError, KeyError, TypeError):
+            raise AdapterError("step5-clean-copy-manifest-invalid") from None
+        root_inputs = (root_state.get("context") or {}).get("inputs") or {}
+        root_up = (((root_state.get("context") or {}).get("up") or {})
+                   .get("cd_s_002") or {})
+        source_hold = root_up.get("step4_review_hold")
+        hold_sha = None
+        if source_hold is not None:
+            hold_sha = hashlib.sha256(
+                (json.dumps(source_hold, ensure_ascii=False, sort_keys=True,
+                            separators=(",", ":")) + "\n").encode()
+            ).hexdigest()
+        research_gate = (root_state.get("phases") or {}).get("research-gate") or {}
+        admission = manifest.get("source_admission")
+        gate_status = (research_gate.get("ledger") or {}).get("status")
+        recorded_accepted_step5 = current_step5 and manifest.get("schema") in {
+            "step5-clean-copy/v3", "step5-clean-copy/v4"}
+        valid_schema = ((current_step5 and manifest.get("schema") in {
+                            "step5-clean-copy/v2", "step5-clean-copy/v3",
+                            "step5-clean-copy/v4"})
+                        or (not current_step5 and manifest.get("schema") == "step5-clean-copy/v1"))
+        if (not valid_schema
+                or manifest.get("client") != client
+                or manifest.get("first_phase") != "compose-insight-cards"
+                or manifest.get("stop_after_phase") != "insight-gate"
+                or manifest.get("writer_call_limit") != 60
+                or manifest.get("clean_state_sha256") != hashlib.sha256(root_state_bytes).hexdigest()
+                or root_state.get("run_id") != root_source_id
+                or root_inputs.get("stop_after_phase") != "insight-gate"
+                or root_inputs.get("step5_writer_call_limit") != 60
+                or research_gate.get("status") != "completed"
+                or (not current_step5 and admission not in {"passed", "held"})
+                or (not current_step5 and gate_status != admission)
+                or (not current_step5 and admission == "held" and (
+                    not isinstance(source_hold, dict)
+                    or source_hold.get("verdict") != "held"
+                    or manifest.get("source_review_hold_sha256") != hold_sha
+                ))
+                or (not current_step5 and admission == "passed"
+                    and manifest.get("source_review_hold_sha256") is not None)):
+            raise AdapterError("step5-clean-copy-manifest-mismatch")
+        if recorded_accepted_step5:
+            # The harness owns accepted-source admission for both historical
+            # and current clean Step 4 sources. Do not mirror it here.
+            repo_root = Path(repository).resolve()
+            verifier = repo_root / "scripts/prepare_step5_clean_copy.py"
+            interpreter = repo_root / ".venv/bin/python"
+            try:
+                checked = subprocess.run(
+                    [str(interpreter), str(verifier), "--client", client,
+                     "--verify-copy", str(step5_dir)],
+                    cwd=repo_root, capture_output=True, text=True, timeout=30,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                raise AdapterError("step5-clean-copy-accepted-admission-unavailable") from None
+            if checked.returncode != 0:
+                raise AdapterError("step5-clean-copy-accepted-admission-refused")
+        elif current_step5:
+            repo_root = Path(repository).resolve()
+            source_relative = Path(str(manifest.get("source_state_path") or ""))
+            if (source_relative.is_absolute() or ".." in source_relative.parts
+                    or len(source_relative.parts) != 4
+                    or source_relative.parts[0] != "Tasks"
+                    or not re.fullmatch(rf"{re.escape(client)}-step4-clean-[0-9a-f]{{12}}",
+                                        source_relative.parts[1])
+                    or source_relative.parts[2] != "state"
+                    or source_relative.stem != root_source_id
+                    or source_relative.suffix != ".json"):
+                raise AdapterError("step5-clean-copy-manifest-mismatch")
+            source_candidate = repo_root / source_relative
+            source_path = source_candidate.resolve()
+            if source_path != source_candidate:
+                raise AdapterError("step5-clean-copy-manifest-mismatch")
+            source_step4_dir = source_path.parents[1]
+            try:
+                source_bytes = source_path.read_bytes()
+                source_state = json.loads(source_bytes)
+                step4_manifest_bytes = (source_step4_dir / "record" / "step4-clean-copy.json").read_bytes()
+                step4_manifest = json.loads(step4_manifest_bytes)
+                step4_root_id = step4_manifest["source_run_id"]
+                step4_root_bytes = (source_step4_dir / "state" / f"{step4_root_id}.json").read_bytes()
+                step4_root = json.loads(step4_root_bytes)
+                step3_relative = Path(step4_manifest["source_task_dir"])
+                if (step3_relative.is_absolute() or ".." in step3_relative.parts
+                        or len(step3_relative.parts) != 2 or step3_relative.parts[0] != "Tasks"
+                        or not re.fullmatch(rf"{re.escape(client)}-step3-clean-[0-9a-f]{{12}}",
+                                            step3_relative.parts[1])):
+                    raise ValueError("unsafe Step 3 source")
+                source_step3_dir = (repo_root / step3_relative).resolve()
+                step3_manifest_bytes = (source_step3_dir / "record" / "step3-clean-copy.json").read_bytes()
+                step3_manifest = json.loads(step3_manifest_bytes)
+                step3_root_id = step3_manifest["source_run_id"]
+                step3_source_bytes = (source_step3_dir / "state" / f"{step4_root_id}.json").read_bytes()
+                step3_source = json.loads(step3_source_bytes)
+            except (OSError, ValueError, TypeError, KeyError):
+                raise AdapterError("step5-clean-copy-source-missing") from None
+            expected_name = {"bteam": "The B Team", "vivacom": "Vivacom"}[client]
+            expected_code = {"bteam": "BTM", "vivacom": "VIV"}[client]
+            source_inputs = (source_state.get("context") or {}).get("inputs") or {}
+            source_gate = (source_state.get("phases") or {}).get("research-gate") or {}
+            if (step5_dir.name != f"{client}-step5-clean-{root_source_id.removeprefix('up-run-')}"
+                    or manifest.get("source_task_dir") != source_relative.parent.parent.as_posix()
+                    or manifest.get("step4_manifest_sha256") != hashlib.sha256(step4_manifest_bytes).hexdigest()
+                    or manifest.get("source_state_sha256") != hashlib.sha256(source_bytes).hexdigest()
+                    or manifest.get("source_admission") != "passed"
+                    or manifest.get("source_review_hold_sha256") is not None
+                    or step4_manifest.get("schema") != "step4-clean-copy/v2"
+                    or step4_manifest.get("client") != client
+                    or source_step4_dir.name != f"{client}-step4-clean-{step4_root_id.removeprefix('up-run-')}"
+                    or step4_manifest.get("clean_state_sha256") != hashlib.sha256(step4_root_bytes).hexdigest()
+                    or step4_root.get("run_id") != step4_root_id
+                    or step4_manifest.get("first_step4_phase") != "compose-research-insight-pack"
+                    or step4_manifest.get("stop_after_phase") != "research-gate"
+                    or step4_manifest.get("source_sha256") != hashlib.sha256(step3_source_bytes).hexdigest()
+                    or step4_manifest.get("step3_manifest_sha256") != hashlib.sha256(step3_manifest_bytes).hexdigest()
+                    or step3_manifest.get("client") != client
+                    or step3_manifest.get("source_run_id") != step3_root_id
+                    or source_step3_dir.name != f"{client}-step3-clean-{step3_root_id.removeprefix('up-run-')}"
+                    or step3_source.get("run_id") != step4_root_id
+                    or source_state.get("run_id") != root_source_id
+                    or source_state.get("workflow_name") != "cd-s-002-corporate-communications-strategy"
+                    or source_inputs.get("client_name") != expected_name
+                    or source_inputs.get("client_code") != expected_code
+                    or source_gate.get("status") != "completed"
+                    or (source_gate.get("ledger") or {}).get("status") != "passed"):
+                raise AdapterError("step5-clean-copy-manifest-mismatch")
+            cursor = source_state
+            seen_source: set[str] = set()
+            while cursor.get("run_id") != step4_root_id:
+                cursor_id, parent_id = cursor.get("run_id"), cursor.get("parent_run_id")
+                if (not isinstance(cursor_id, str) or cursor_id in seen_source
+                        or not isinstance(parent_id, str) or len(seen_source) >= 100):
+                    raise AdapterError("step5-clean-copy-source-lineage-mismatch")
+                seen_source.add(cursor_id)
+                try:
+                    cursor = json.loads((source_step4_dir / "state" / f"{parent_id}.json").read_text(encoding="utf-8"))
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step5-clean-copy-source-lineage-mismatch") from None
+                ancestor_inputs = (cursor.get("context") or {}).get("inputs") or {}
+                if (cursor.get("run_id") != parent_id
+                        or ancestor_inputs.get("client_name") != expected_name
+                        or ancestor_inputs.get("client_code") != expected_code):
+                    raise AdapterError("step5-clean-copy-source-lineage-mismatch")
+        selected_id = _required_text(answers, "source_run_id")
+        try:
+            selected_path = (step5_dir / "state" / f"{selected_id}.json").resolve(strict=True)
+            selected_path.relative_to((step5_dir / "state").resolve(strict=True))
+            if selected_path.parent != (step5_dir / "state").resolve(strict=True):
+                raise ValueError("state is outside copy")
+            selected = json.loads(selected_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, TypeError):
+            if phase == "compose-insight-cards" and selected_id == root_source_id:
+                selected = root_state
+            else:
+                raise AdapterError("step5-clean-copy-resume-source-missing") from None
+        cursor = selected
+        seen: set[str] = set()
+        while cursor.get("run_id") != root_source_id:
+            cursor_id = cursor.get("run_id")
+            parent_id = cursor.get("parent_run_id")
+            if (not isinstance(cursor_id, str) or cursor_id in seen
+                    or not isinstance(parent_id, str) or len(seen) >= 100):
+                raise AdapterError("step5-clean-copy-lineage-mismatch")
+            seen.add(cursor_id)
+            try:
+                cursor_path = (step5_dir / "state" / f"{parent_id}.json").resolve(strict=True)
+                cursor_path.relative_to((step5_dir / "state").resolve(strict=True))
+                if cursor_path.parent != (step5_dir / "state").resolve(strict=True):
+                    raise ValueError("parent is outside copy")
+                cursor = json.loads(cursor_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError, TypeError):
+                raise AdapterError("step5-clean-copy-lineage-mismatch") from None
+            if cursor.get("run_id") != parent_id:
+                raise AdapterError("step5-clean-copy-lineage-mismatch")
+            if current_step5:
+                ancestor_inputs = (cursor.get("context") or {}).get("inputs") or {}
+                if (ancestor_inputs.get("client_name") != {"bteam": "The B Team", "vivacom": "Vivacom"}[client]
+                        or ancestor_inputs.get("client_code") != {"bteam": "BTM", "vivacom": "VIV"}[client]):
+                    raise AdapterError("step5-clean-copy-lineage-mismatch")
+        if selected.get("run_id") != selected_id:
+            raise AdapterError("step5-clean-copy-lineage-mismatch")
+        selected_inputs = (selected.get("context") or {}).get("inputs") or {}
+        if (current_step5 and (
+                selected_inputs.get("client_name") != {"bteam": "The B Team", "vivacom": "Vivacom"}[client]
+                or selected_inputs.get("client_code") != {"bteam": "BTM", "vivacom": "VIV"}[client])):
+            raise AdapterError("step5-clean-copy-lineage-mismatch")
+        step5_up = (((selected.get("context") or {}).get("up") or {})
+                    .get("cd_s_002") or {})
+        part_ledger = step5_up.get("step5_part_ledger") or {}
+        board_ledger = step5_up.get("step5_mini_board_ledger") or {}
+        part_calls = part_ledger.get("writer_calls_used", 0)
+        board_calls = board_ledger.get("writer_calls_used", 0)
+        if current_step5 and (type(part_calls) is not int or type(board_calls) is not int
+                or part_calls < 0 or board_calls < 0 or part_calls + board_calls > 60):
+            raise AdapterError("step5-clean-copy-call-budget-invalid")
+        selected_phase = (selected.get("phases") or {}).get(phase) or {}
+        if selected_id == root_source_id:
+            if phase != "compose-insight-cards" or reopen_step5:
+                raise AdapterError("step5-clean-copy-compose-needs-manifest-source")
+            if any(path.stem != root_source_id for path in (step5_dir / "state").glob("up-run-*.json")):
+                raise AdapterError("step5-clean-copy-root-has-saved-descendants")
+        else:
+            allowed_statuses = {"completed"} if reopen_step5 else {"blocked", "failed", "running"}
+            if selected_phase.get("status") not in allowed_statuses:
+                raise AdapterError("step5-clean-copy-source-not-resumable")
+        argv.extend(["--task-dir", str(step5_dir)])
+    STEP6_ALLOWED_PHASES = {"compose-strategy-one-pager", "strategy-approach-gate"}
+    step6_dir_answer = answers["step6_clean_task_dir"]
+    step6_dir: Path | None = None
+    if step6_dir_answer is not None:
+        client = _required_text(answers, "client")
+        expected_step6 = Path(repository).resolve() / "Tasks" / f"{client}-step6-clean-20261006"
+        supplied_step6 = Path(_required_text(answers, "step6_clean_task_dir"))
+        if not supplied_step6.is_absolute():
+            supplied_step6 = Path(repository, supplied_step6)
+        step6_dir = supplied_step6.resolve()
+        if step6_dir != expected_step6 or not step6_dir.is_dir():
+            raise AdapterError("step6-clean-copy-missing-or-mismatched")
+        if (step2_dir is not None or step3_dir is not None or step4_dir is not None
+                or step9_supplied or clean_supplied or clean_writer_supplied
+                or answers["step12_task_dir"] is not None
+                or any(answers[key] is not None for key in (
+                    "client_answers_path", "corrected_topic_policies_path",
+                    "debrief_feedback_path", "final_brief_feedback_path",
+                    "gate_approvals_path", "step10_admission_path",
+                    "step10_altitude_check_path", "step11_altitude_check_path",
+                    "step12_altitude_check_path"))):
+            raise AdapterError("step6-clean-copy-exclusive-with-other-routes")
+        phase = _required_text(answers, "first_unfinished_phase")
+        reopen_step6 = answers["reopen_completed_phase"] is True
+        if phase not in STEP6_ALLOWED_PHASES:
+            raise AdapterError("step6-clean-copy-needs-first-unfinished-step6-phase")
+        manifest_path = step6_dir / "record" / "step6-clean-copy.json"
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            root_source_id = manifest["source_run_id"]
+            root_state_path = step6_dir / "state" / f"{root_source_id}.json"
+            root_state_bytes = root_state_path.read_bytes()
+            root_state = json.loads(root_state_bytes)
+        except (OSError, ValueError, KeyError, TypeError):
+            raise AdapterError("step6-clean-copy-manifest-invalid") from None
+        root_inputs = (root_state.get("context") or {}).get("inputs") or {}
+        root_up = (((root_state.get("context") or {}).get("up") or {})
+                   .get("cd_s_002") or {})
+        source_hold = root_up.get("step5_review_hold")
+        hold_sha = None
+        if source_hold is not None:
+            hold_sha = hashlib.sha256(
+                (json.dumps(source_hold, ensure_ascii=False, sort_keys=True,
+                            separators=(",", ":")) + "\n").encode()
+            ).hexdigest()
+        research_gate = (root_state.get("phases") or {}).get("insight-gate") or {}
+        admission = manifest.get("source_admission")
+        gate_status = (research_gate.get("ledger") or {}).get("status")
+        if (manifest.get("schema") != "step6-clean-copy/v1"
+                or manifest.get("client") != client
+                or manifest.get("first_phase") != "compose-strategy-one-pager"
+                or manifest.get("stop_after_phase") != "strategy-approach-gate"
+                or manifest.get("writer_call_limit") != 60
+                or manifest.get("clean_state_sha256") != hashlib.sha256(root_state_bytes).hexdigest()
+                or root_state.get("run_id") != root_source_id
+                or root_inputs.get("stop_after_phase") != "strategy-approach-gate"
+                or root_inputs.get("step6_writer_call_limit") != 60
+                or research_gate.get("status") != "completed"
+                or admission not in {"passed", "held"}
+                or gate_status != admission
+                or (admission == "held" and (
+                    not isinstance(source_hold, dict)
+                    or source_hold.get("verdict") != "held"
+                    or manifest.get("source_review_hold_sha256") != hold_sha
+                ))
+                or (admission == "passed"
+                    and manifest.get("source_review_hold_sha256") is not None)):
+            raise AdapterError("step6-clean-copy-manifest-mismatch")
+        selected_id = _required_text(answers, "source_run_id")
+        if phase == "compose-strategy-one-pager" and selected_id == root_source_id:
+            if reopen_step6:
+                raise AdapterError("step6-clean-copy-compose-needs-manifest-source")
+        else:
+            try:
+                selected = json.loads(
+                    (step6_dir / "state" / f"{selected_id}.json").read_text(encoding="utf-8")
+                )
+            except (OSError, ValueError, TypeError):
+                raise AdapterError("step6-clean-copy-resume-source-missing") from None
+            cursor = selected
+            seen: set[str] = set()
+            while cursor.get("run_id") != root_source_id:
+                cursor_id = cursor.get("run_id")
+                parent_id = cursor.get("parent_run_id")
+                if (not isinstance(cursor_id, str) or cursor_id in seen
+                        or not isinstance(parent_id, str) or len(seen) >= 100):
+                    raise AdapterError("step6-clean-copy-lineage-mismatch")
+                seen.add(cursor_id)
+                try:
+                    cursor = json.loads(
+                        (step6_dir / "state" / f"{parent_id}.json").read_text(encoding="utf-8")
+                    )
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step6-clean-copy-lineage-mismatch") from None
+            selected_phase = (selected.get("phases") or {}).get(phase) or {}
+            allowed_statuses = {"completed"} if reopen_step6 else {"blocked", "failed", "running"}
+            if (selected.get("run_id") != selected_id
+                    or selected_phase.get("status") not in allowed_statuses):
+                raise AdapterError("step6-clean-copy-source-not-resumable")
+        if step5_dir is not None:
+            raise AdapterError("step6-clean-copy-exclusive-with-step5-route")
+        feedback = answers["step6_feedback_path"]
+        if feedback is not None:
+            feedback_path = Path(feedback)
+            if not feedback_path.is_absolute():
+                feedback_path = Path(repository, feedback_path)
+            if (phase != "compose-strategy-one-pager" or feedback_path.resolve().parent != step6_dir / "record"
+                    or not feedback_path.is_file()):
+                raise AdapterError("step6-feedback-must-target-compose-and-record")
+            argv.extend(["--step6-feedback-file", str(feedback_path.resolve())])
+        argv.extend(["--task-dir", str(step6_dir)])
+    elif answers["step6_feedback_path"] is not None:
+        raise AdapterError("step6-feedback-requires-its-clean-copy")
+
+    step7_dir_answer = answers["step7_clean_task_dir"]
+    step7_dir: Path | None = None
+    if step7_dir_answer is not None:
+        client = _required_text(answers, "client")
+        expected_step7 = Path(repository).resolve() / "Tasks" / f"{client}-step7-clean-20261006"
+        supplied_step7 = Path(_required_text(answers, "step7_clean_task_dir"))
+        if not supplied_step7.is_absolute():
+            supplied_step7 = Path(repository, supplied_step7)
+        step7_dir = supplied_step7.resolve()
+        current_step7 = (step7_dir.parent == Path(repository).resolve() / "Tasks"
+                         and re.fullmatch(rf"{re.escape(client)}-step7-clean-[0-9a-f]{{12}}",
+                                          step7_dir.name) is not None)
+        if (step7_dir != expected_step7 and not current_step7) or not step7_dir.is_dir():
+            raise AdapterError("step7-clean-copy-missing-or-mismatched")
+        if current_step7:
+            check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step7_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", client],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if check.returncode != 0:
+                raise AdapterError("step7-current-copy-source-invalid")
+            current_route = json.loads(check.stdout)
+            if Path(current_route.get("copy_dir", "")) != step7_dir:
+                raise AdapterError("step7-current-copy-source-mismatch")
+        if (step2_dir is not None or step3_dir is not None or step4_dir is not None
+                or step5_dir is not None or step6_dir is not None or step9_supplied
+                or clean_supplied or clean_writer_supplied or answers["step12_task_dir"] is not None
+                or any(answers[key] is not None for key in (
+                    "client_answers_path", "corrected_topic_policies_path",
+                    "debrief_feedback_path", "final_brief_feedback_path", "gate_approvals_path",
+                    "step10_admission_path", "step10_altitude_check_path",
+                    "step11_altitude_check_path", "step12_altitude_check_path"))):
+            raise AdapterError("step7-clean-copy-exclusive-with-other-routes")
+        phase = _required_text(answers, "first_unfinished_phase")
+        if phase not in {"compose-big-idea", "big-idea-gate",
+                         "compose-message-architecture", "narrative-gate"}:
+            raise AdapterError("step7-clean-copy-phase-outside-step7")
+        try:
+            manifest = json.loads((step7_dir / "record/step7-clean-copy.json").read_text())
+            root_source_id = manifest["source_run_id"]
+            root_state_path = step7_dir / "state" / f"{root_source_id}.json"
+            root_state_bytes = root_state_path.read_bytes()
+            root_state = json.loads(root_state_bytes)
+        except (OSError, ValueError, KeyError, TypeError):
+            raise AdapterError("step7-clean-copy-manifest-invalid") from None
+        root_inputs = (root_state.get("context") or {}).get("inputs") or {}
+        root_up = (((root_state.get("context") or {}).get("up") or {}).get("cd_s_002") or {})
+        admission = root_inputs.get("step7_source_admission") or {}
+        source_hold = root_up.get("step6_review_hold") or {}
+        hold_sha = hashlib.sha256((json.dumps(source_hold, ensure_ascii=False,
+            sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
+        gate = (root_state.get("phases") or {}).get("strategy-approach-gate") or {}
+        if (manifest.get("schema") !=
+                ("step7-clean-copy/v2" if current_step7 else "step7-clean-copy/v1")
+                or manifest.get("client") != client
+                or manifest.get("first_phase") != "compose-big-idea"
+                or manifest.get("stop_after_phase") != "narrative-gate"
+                or manifest.get("writer_call_limit") != 60
+                or manifest.get("clean_state_sha256") != hashlib.sha256(root_state_bytes).hexdigest()
+                or root_state.get("run_id") != root_source_id
+                or root_inputs.get("stop_after_phase") != "narrative-gate"
+                or root_inputs.get("step7_writer_call_limit") != 60
+                or gate.get("status") != "completed"
+                or (gate.get("ledger") or {}).get("status") != "passed"
+                or admission.get("schema") != "step7-held-step6-source/v1"
+                or admission.get("source_run_id") != root_source_id
+                or admission.get("source_state_sha256") != manifest.get("source_state_sha256")
+                or admission.get("step6_hold_sha256") != hold_sha
+                or manifest.get("source_review_hold_sha256") != hold_sha
+                or source_hold.get("verdict") != "held"):
+            raise AdapterError("step7-clean-copy-manifest-mismatch")
+        selected_id = _required_text(answers, "source_run_id")
+        reopen_step7 = answers["reopen_completed_phase"] is True
+        if phase == "compose-big-idea" and selected_id == root_source_id:
+            if reopen_step7:
+                raise AdapterError("step7-clean-copy-compose-needs-manifest-source")
+        else:
+            try:
+                selected = json.loads((step7_dir / "state" / f"{selected_id}.json").read_text())
+            except (OSError, ValueError, TypeError):
+                raise AdapterError("step7-clean-copy-resume-source-missing") from None
+            cursor = selected
+            seen: set[str] = set()
+            while cursor.get("run_id") != root_source_id:
+                cursor_id, parent_id = cursor.get("run_id"), cursor.get("parent_run_id")
+                if (not isinstance(cursor_id, str) or cursor_id in seen
+                        or not isinstance(parent_id, str) or len(seen) >= 100):
+                    raise AdapterError("step7-clean-copy-lineage-mismatch")
+                seen.add(cursor_id)
+                try:
+                    cursor = json.loads((step7_dir / "state" / f"{parent_id}.json").read_text())
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step7-clean-copy-lineage-mismatch") from None
+            selected_phase = (selected.get("phases") or {}).get(phase) or {}
+            allowed = {"completed"} if reopen_step7 else {"blocked", "failed", "running"}
+            if selected.get("run_id") != selected_id or selected_phase.get("status") not in allowed:
+                raise AdapterError("step7-clean-copy-source-not-resumable")
+        feedback = answers["step7_feedback_path"]
+        if feedback is not None:
+            feedback_path = Path(feedback)
+            if not feedback_path.is_absolute():
+                feedback_path = Path(repository, feedback_path)
+            if (phase != "compose-message-architecture"
+                    or feedback_path.resolve().parent != step7_dir / "record"
+                    or not feedback_path.is_file()):
+                raise AdapterError("step7-feedback-must-target-compose-and-record")
+            argv.extend(["--step7-feedback-file", str(feedback_path.resolve())])
+        argv.extend(["--task-dir", str(step7_dir)])
+    elif answers["step7_feedback_path"] is not None:
+        raise AdapterError("step7-feedback-requires-its-clean-copy")
+
+    step8_dir_answer = answers["step8_clean_task_dir"]
+    step8_dir: Path | None = None
+    if step8_dir_answer is not None:
+        client = _required_text(answers, "client")
+        expected_step8 = Path(repository).resolve() / "Tasks" / f"{client}-step8-clean-20261006"
+        supplied_step8 = Path(_required_text(answers, "step8_clean_task_dir"))
+        if not supplied_step8.is_absolute():
+            supplied_step8 = Path(repository, supplied_step8)
+        step8_dir = supplied_step8.resolve()
+        current_step8 = (step8_dir.parent == Path(repository).resolve() / "Tasks"
+                         and re.fullmatch(rf"{re.escape(client)}-step8-clean-[0-9a-f]{{12}}",
+                                          step8_dir.name) is not None)
+        if (step8_dir != expected_step8 and not current_step8) or not step8_dir.is_dir():
+            raise AdapterError("step8-clean-copy-missing-or-mismatched")
+        if current_step8:
+            check = subprocess.run(
+                [python, str(Path(repository, "scripts/prepare_step8_clean_copy.py")),
+                 "--resolve-recorded-route", "--client", client],
+                cwd=repository, env={**os.environ, "PYTHONPATH": "src:."},
+                capture_output=True, text=True, timeout=30,
+            )
+            if check.returncode != 0:
+                raise AdapterError("step8-current-copy-source-invalid")
+            current_route = json.loads(check.stdout)
+            if Path(current_route.get("copy_dir", "")) != step8_dir:
+                raise AdapterError("step8-current-copy-source-mismatch")
+        if (step2_dir is not None or step3_dir is not None or step4_dir is not None
+                or step5_dir is not None or step6_dir is not None or step7_dir is not None
+                or step9_supplied or clean_supplied or clean_writer_supplied
+                or answers["step11_clean_task_dir"] is not None
+                or answers["step12_task_dir"] is not None
+                or any(answers[key] is not None for key in (
+                    "corrected_topic_policies_path", "client_answers_path",
+                    "debrief_feedback_path", "final_brief_feedback_path", "gate_approvals_path",
+                    "step6_feedback_path", "step7_feedback_path", "step10_admission_path",
+                    "step10_altitude_check_path", "step11_altitude_check_path",
+                    "step12_altitude_check_path"))):
+            raise AdapterError("step8-clean-copy-exclusive-with-other-routes")
+        phase = _required_text(answers, "first_unfinished_phase")
+        if phase not in {"compose-communications-platform", "platform-architecture-gate"}:
+            raise AdapterError("step8-clean-copy-phase-outside-step8")
+        try:
+            manifest = json.loads((step8_dir / "record/step8-clean-copy.json").read_text())
+            root_source_id = manifest["source_run_id"]
+            root_state_bytes = (step8_dir / "state" / f"{root_source_id}.json").read_bytes()
+            root_state = json.loads(root_state_bytes)
+        except (OSError, ValueError, KeyError, TypeError):
+            raise AdapterError("step8-clean-copy-manifest-invalid") from None
+        root_inputs = (root_state.get("context") or {}).get("inputs") or {}
+        root_up = (((root_state.get("context") or {}).get("up") or {}).get("cd_s_002") or {})
+        admission = root_inputs.get("step8_source_admission") or {}
+        source_hold = root_up.get("step7_review_hold") or {}
+        hold_sha = hashlib.sha256((json.dumps(source_hold, ensure_ascii=False,
+            sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
+        gate = (root_state.get("phases") or {}).get("narrative-gate") or {}
+        if (manifest.get("schema") != "step8-clean-copy/v1"
+                or manifest.get("client") != client
+                or manifest.get("first_phase") != "compose-communications-platform"
+                or manifest.get("stop_after_phase") != "platform-architecture-gate"
+                or manifest.get("writer_call_limit") != 60
+                or manifest.get("clean_state_sha256") != hashlib.sha256(root_state_bytes).hexdigest()
+                or root_state.get("run_id") != root_source_id
+                or root_inputs.get("stop_after_phase") != "platform-architecture-gate"
+                or root_inputs.get("step8_writer_call_limit") != 60
+                or gate.get("status") != "completed"
+                or (gate.get("ledger") or {}).get("status") != "passed"
+                or admission.get("schema") != "step8-held-step7-source/v1"
+                or admission.get("source_run_id") != root_source_id
+                or admission.get("source_state_sha256") != manifest.get("source_state_sha256")
+                or admission.get("step7_hold_sha256") != hold_sha
+                or manifest.get("source_review_hold_sha256") != hold_sha
+                or source_hold.get("verdict") != "held"):
+            raise AdapterError("step8-clean-copy-manifest-mismatch")
+        selected_id = _required_text(answers, "source_run_id")
+        reopen_step8 = answers["reopen_completed_phase"] is True
+        if phase == "compose-communications-platform" and selected_id == root_source_id:
+            if reopen_step8:
+                raise AdapterError("step8-clean-copy-compose-needs-manifest-source")
+        else:
+            try:
+                selected = json.loads((step8_dir / "state" / f"{selected_id}.json").read_text())
+            except (OSError, ValueError, TypeError):
+                raise AdapterError("step8-clean-copy-resume-source-missing") from None
+            cursor = selected
+            seen: set[str] = set()
+            while cursor.get("run_id") != root_source_id:
+                cursor_id, parent_id = cursor.get("run_id"), cursor.get("parent_run_id")
+                if (not isinstance(cursor_id, str) or cursor_id in seen
+                        or not isinstance(parent_id, str) or len(seen) >= 100):
+                    raise AdapterError("step8-clean-copy-lineage-mismatch")
+                seen.add(cursor_id)
+                try:
+                    cursor = json.loads((step8_dir / "state" / f"{parent_id}.json").read_text())
+                except (OSError, ValueError, TypeError):
+                    raise AdapterError("step8-clean-copy-lineage-mismatch") from None
+            selected_phase = (selected.get("phases") or {}).get(phase) or {}
+            allowed = {"completed"} if reopen_step8 else {"blocked", "failed", "running"}
+            if selected.get("run_id") != selected_id or selected_phase.get("status") not in allowed:
+                raise AdapterError("step8-clean-copy-source-not-resumable")
+        argv.extend(["--task-dir", str(step8_dir)])
+
+    step12_dir_answer = answers["step12_task_dir"]
+    step12_altitude = answers["step12_altitude_check_path"]
+    step12_dir: Path | None = None
+    if step12_dir_answer is not None or step12_altitude is not None:
+        # Step 12 copy route (D53): same design as the clean-step11 route above.
+        if step12_dir_answer is None:
+            raise AdapterError("step12-requires-its-own-copy-folder")
+        if any(value is not None for value in (
+                clean_admission, clean_altitude, clean_annual_altitude)):
+            raise AdapterError("step12-one-gate-input-at-a-time")
+        if (step9_supplied or clean_supplied or clean_writer_supplied
+                or step5_dir is not None
+                or any(answers[key] is not None for key in (
+                    "client_answers_path", "debrief_feedback_path", "final_brief_feedback_path",
+                    "gate_approvals_path", "corrected_topic_policies_path"))):
+            raise AdapterError("step12-exclusive-with-other-resume-inputs")
+        client = _required_text(answers, "client")
+        tasks_root = Path(repository).resolve() / "Tasks"
+        supplied_step12 = Path(_required_text(answers, "step12_task_dir"))
+        if not supplied_step12.is_absolute():
+            supplied_step12 = Path(repository, supplied_step12)
+        step12_dir = supplied_step12.resolve()
+        if step12_dir.parent != tasks_root:
+            raise AdapterError("step12-copy-folder-outside-tasks")
+        if not re.fullmatch(rf"{re.escape(client)}-step12-\d{{8}}", step12_dir.name):
+            raise AdapterError("step12-copy-folder-name-mismatch")
+        if not step12_dir.is_dir():
+            raise AdapterError("step12-copy-folder-missing")
+        if not (step12_dir / "state").is_dir() or not (step12_dir / "record").is_dir():
+            raise AdapterError("step12-copy-folder-needs-state-and-record")
+        selected_phase = _required_text(answers, "first_unfinished_phase")
+        if selected_phase not in STEP12_ALLOWED_PHASES:
+            raise AdapterError("step12-phase-not-allowed")
+        if answers["reopen_completed_phase"] is not False:
+            raise AdapterError("step12-must-resume-first-unfinished-phase")
+        if step12_altitude is not None:
+            if selected_phase != "roadmap-gate":
+                raise AdapterError("step12-holder-check-needs-roadmap-gate")
+            altitude_path = Path(_required_text(answers, "step12_altitude_check_path"))
+            if not altitude_path.is_absolute():
+                altitude_path = Path(repository, altitude_path)
+            if (altitude_path.resolve() != step12_dir / "record" / "roadmap-altitude-check.json"
+                    or not altitude_path.is_file()):
+                raise AdapterError("step12-holder-check-file-mismatch")
+            argv.extend(["--task-dir", str(step12_dir), "--altitude-check-file", str(altitude_path)])
+        else:
+            argv.extend(["--task-dir", str(step12_dir)])
+    if clean_supplied:
+        if step9_supplied or clean_dir_answer is None:
+            raise AdapterError("clean-step11-requires-its-own-copy-folder")
+        client = _required_text(answers, "client")
+        expected_clean = Path(repository).resolve() / "Tasks" / f"{client}-step11-clean-20261002"
+        supplied_clean = Path(_required_text(answers, "step11_clean_task_dir"))
+        if not supplied_clean.is_absolute():
+            supplied_clean = Path(repository, supplied_clean)
+        if supplied_clean.resolve() != expected_clean:
+            raise AdapterError("clean-step11-copy-folder-mismatch")
+        if any(answers[key] is not None for key in (
+            "client_answers_path", "debrief_feedback_path", "final_brief_feedback_path",
+            "gate_approvals_path", "corrected_topic_policies_path",
+        )):
+            raise AdapterError("clean-step11-exclusive-with-other-resume-inputs")
+        if sum(value is not None for value in (clean_admission, clean_altitude, clean_annual_altitude)) > 1:
+            raise AdapterError("clean-step11-one-gate-input-at-a-time")
+        if clean_writer_supplied and (clean_admission is not None or clean_altitude is not None
+                                      or clean_annual_altitude is not None):
+            raise AdapterError("clean-step11-writer-needs-compose-only")
+        selected_phase = _required_text(answers, "first_unfinished_phase")
+        if clean_admission is not None:
+            if selected_phase != "compose-measurement-framework" or answers["reopen_completed_phase"] is not True or clean_altitude is not None:
+                raise AdapterError("clean-step11-admission-needs-step10-compose-reopen")
+            admission_path = Path(_required_text(answers, "step10_admission_path"))
+            if not admission_path.is_absolute():
+                admission_path = Path(repository, admission_path)
+            if admission_path.resolve() != expected_clean / "record" / "step10-admission.json" or not admission_path.is_file():
+                raise AdapterError("clean-step11-admission-file-mismatch")
+            argv.extend(["--task-dir", str(expected_clean), "--step10-admission-file", str(admission_path)])
+        elif clean_altitude is not None:
+            if selected_phase != "measurement-gate" or answers["reopen_completed_phase"] is not False:
+                raise AdapterError("clean-step11-holder-check-needs-measurement-gate")
+            altitude_path = Path(_required_text(answers, "step10_altitude_check_path"))
+            if not altitude_path.is_absolute():
+                altitude_path = Path(repository, altitude_path)
+            if altitude_path.resolve() != expected_clean / "record" / "measurement-altitude-check.json" or not altitude_path.is_file():
+                raise AdapterError("clean-step11-holder-check-file-mismatch")
+            argv.extend(["--task-dir", str(expected_clean), "--altitude-check-file", str(altitude_path)])
+        elif clean_annual_altitude is not None:
+            if selected_phase != "annual-review-gate" or answers["reopen_completed_phase"] is not False:
+                raise AdapterError("clean-step11-holder-check-needs-annual-review-gate")
+            altitude_path = Path(_required_text(answers, "step11_altitude_check_path"))
+            if not altitude_path.is_absolute():
+                altitude_path = Path(repository, altitude_path)
+            if (altitude_path.resolve() != expected_clean / "record" / "annual-review-altitude-check.json"
+                    or not altitude_path.is_file()):
+                raise AdapterError("clean-step11-annual-holder-check-file-mismatch")
+            argv.extend(["--task-dir", str(expected_clean), "--altitude-check-file", str(altitude_path)])
+        else:
+            if (selected_phase != "compose-annual-review"
+                    or (answers["reopen_completed_phase"] is True and not clean_writer_supplied)):
+                raise AdapterError("clean-step11-automatic-writer-needs-annual-review")
+            if clean_writer_supplied:
+                input_path = Path(_required_text(answers, "step11_writer_input_path"))
+                budget_path = Path(_required_text(answers, "step11_writer_call_budget_path"))
+                if not input_path.is_absolute():
+                    input_path = Path(repository, input_path)
+                if not budget_path.is_absolute():
+                    budget_path = Path(repository, budget_path)
+                try:
+                    writer_input = json.loads(input_path.read_text(encoding="utf-8"))
+                    writer_source = writer_input["source_run_id"]
+                except (OSError, ValueError, KeyError, TypeError):
+                    raise AdapterError("clean-step11-writer-input-or-budget-mismatch") from None
+                if not isinstance(writer_source, str) or not writer_source.startswith("up-run-"):
+                    raise AdapterError("clean-step11-writer-input-or-budget-mismatch")
+                expected_budget = expected_clean / "state" / f"step11-writer-budget-{writer_source}.json"
+                if (input_path.resolve().parent != expected_clean / "record"
+                        or not input_path.name.startswith("step11-writer-input")
+                        or input_path.suffix != ".json" or not input_path.is_file()
+                        or budget_path.resolve() != expected_budget
+                        or not budget_path.is_file()):
+                    raise AdapterError("clean-step11-writer-input-or-budget-mismatch")
+            argv.extend(["--task-dir", str(expected_clean)])
+    if step9_supplied:
+        if step9_dir is None:
+            raise AdapterError("step9-rehearsal-requires-copy-folder")
+        generic_copy_resume = (
+            step9_limit is None and not step9_continuation and step9_extend_to is None
+        )
+        selected_phase = _required_text(answers, "first_unfinished_phase")
+        allowed_phases = ("compose-execution-toolkit", "compose-annual-review") if generic_copy_resume else ("compose-execution-toolkit",)
+        if selected_phase not in allowed_phases:
+            raise AdapterError("rehearsal-copy-needs-step9-or-step11-compose")
+        if any(answers[key] is not None for key in (
+            "client_answers_path", "debrief_feedback_path", "final_brief_feedback_path",
+            "gate_approvals_path", "corrected_topic_policies_path",
+            "step11_writer_input_path", "step11_writer_call_budget_path",
+            "step11_writer_call_limit", "step11_writer_call_extension_from",
+        )):
+            raise AdapterError("step9-rehearsal-exclusive-with-other-resume-inputs")
+        client = _required_text(answers, "client")
+        expected_dir = Path(repository).resolve() / "Tasks" / f"{client}-rehearsal-demo"
+        supplied_dir = Path(_required_text(answers, "step9_rehearsal_task_dir"))
+        if not supplied_dir.is_absolute():
+            supplied_dir = Path(repository, supplied_dir)
+        if supplied_dir.resolve() != expected_dir:
+            raise AdapterError("step9-rehearsal-copy-folder-mismatch")
+        if generic_copy_resume:
+            if answers["reopen_completed_phase"] is not False:
+                raise AdapterError("automatic-writer-copy-resume-needs-first-unfinished-phase")
+            argv.extend(["--task-dir", str(expected_dir)])
+        elif step9_continuation:
+            if answers["reopen_completed_phase"] is not False:
+                raise AdapterError("step9-continuation-must-preserve-blocked-phase")
+            if step9_extend_to is not None:
+                if (type(step9_extend_to) is not int or step9_extend_to not in (60, 150)
+                        or (step9_extend_to == 60 and (answers["client"] != "bteam"
+                             or answers["source_run_id"] != "up-run-9e6d9c40be19"))):
+                    raise AdapterError("step9-budget-extension-selected-run-mismatch")
+                if step9_limit is not None:
+                    raise AdapterError("step9-extension-must-use-extend-to-only")
+                argv.extend([
+                    "--task-dir", str(expected_dir),
+                    "--step9-native-writer-continue",
+                    "--step9-native-writer-extend-to", str(step9_extend_to),
+                ])
+            else:
+                if step9_limit is not None:
+                    raise AdapterError("step9-continuation-must-reuse-saved-call-limit")
+                argv.extend([
+                    "--task-dir", str(expected_dir),
+                    "--step9-native-writer-continue",
+                ])
+        else:
+            if step9_extend_to is not None:
+                raise AdapterError("step9-budget-extension-requires-saved-cache-continuation")
+            if step9_limit is None:
+                raise AdapterError("step9-rehearsal-requires-copy-and-call-limit")
+            if answers["reopen_completed_phase"] is not True:
+                raise AdapterError("step9-rehearsal-must-reopen-compose")
+            if type(step9_limit) is not int or not 1 <= step9_limit <= 150:
+                raise AdapterError("invalid-step9-native-writer-call-limit")
+            argv.extend([
+                "--task-dir", str(expected_dir),
+                "--step9-native-writer-call-limit", str(step9_limit),
+            ])
+    step11_writer_keys = (
+        "step11_writer_input_path",
+        "step11_writer_call_budget_path",
+        "step11_writer_call_limit",
+    )
+    step11_writer_values = [answers.get(key) for key in step11_writer_keys]
+    step11_writer_supplied = any(value is not None for value in step11_writer_values)
+    if step11_writer_supplied:
+        if not all(value is not None for value in step11_writer_values):
+            raise AdapterError(
+                "step11-writer-input-requires-input-budget-and-limit: supply all three "
+                "Step 11 writer settings together or leave all three blank."
+            )
+        first_unfinished_phase = _required_text(
+            answers, "first_unfinished_phase",
+        )
+        if first_unfinished_phase != "compose-annual-review":
+            raise AdapterError(
+                "step11-writer-input-needs-compose-annual-review: supplied while "
+                f"resuming {first_unfinished_phase!r}; resume at "
+                "'compose-annual-review' or leave all three settings blank."
+            )
+        other_resume_inputs = (
+            "client_answers_path",
+            "debrief_feedback_path",
+            "final_brief_feedback_path",
+            "gate_approvals_path",
+            "corrected_topic_policies_path",
+        )
+        supplied_other_inputs = [
+            key for key in other_resume_inputs if answers.get(key) is not None
+        ]
+        if supplied_other_inputs:
+            raise AdapterError(
+                "step11-writer-input-exclusive-with-other-resume-inputs: "
+                "Step 11 writer settings cannot be combined with "
+                f"{', '.join(supplied_other_inputs)}. Leave those input files blank."
+            )
+        call_limit = answers["step11_writer_call_limit"]
+        if (
+            not isinstance(call_limit, int)
+            or isinstance(call_limit, bool)
+            or call_limit < 1
+        ):
+            raise AdapterError("invalid-step11-writer-call-limit")
+    extension_from = answers["step11_writer_call_extension_from"]
+    if extension_from is not None:
+        if not step11_writer_supplied:
+            raise AdapterError("step11-writer-extension-requires-writer-settings")
+        if (
+            not isinstance(extension_from, int)
+            or isinstance(extension_from, bool)
+            or extension_from < 1
+            or extension_from >= call_limit
+        ):
+            raise AdapterError("invalid-step11-writer-call-extension")
+    if answers.get("corrected_topic_policies_path") is not None:
+        # A corrected owner policy set rides only the resume that re-runs its own prepare
+        # phase. Added 2026-08-22 after a mid-sentence allowed-fact excerpt blocked a run
+        # whose corrected set had no way back in.
+        if _required_text(answers, "first_unfinished_phase") != (
+            "prepare-controlled-topic-policy-inputs"
+        ):
+            raise AdapterError(
+                "corrected-topic-policies-need-their-own-phase: the corrected policy set "
+                f"was supplied while resuming "
+                f"{_required_text(answers, 'first_unfinished_phase')!r}, but it is valid "
+                "only when resuming 'prepare-controlled-topic-policy-inputs'. Leave the "
+                "answer blank, or resume at that phase."
+            )
+        argv.extend([
+            "--controlled-topic-policies-file",
+            _required_text(answers, "corrected_topic_policies_path"),
+        ])
+    if answers.get("client_answers_path") is not None:
+        # Answers that surfaced after the run settled ride only the resume that re-enters
+        # at their first consuming phase. Added 2026-08-22 for the B-team owners' interview,
+        # found in a legacy document after the run had reached its debrief gate.
+        if _required_text(answers, "first_unfinished_phase") not in (
+            "prepare-controlled-topic-policy-inputs",
+            "ingest-leadership-interview",
+        ):
+            raise AdapterError(
+                "client-answers-need-their-consuming-phase: the answers file was supplied "
+                f"while resuming {_required_text(answers, 'first_unfinished_phase')!r}, but "
+                "it is valid only when resuming 'prepare-controlled-topic-policy-inputs' or "
+                "'ingest-leadership-interview'. Leave the answer blank, or resume at one of "
+                "those phases."
+            )
+        argv.extend([
+            "--client-answers-file",
+            _required_text(answers, "client_answers_path"),
+        ])
+    for key, flag in (
+        ("debrief_feedback_path", "--debrief-feedback-file"),
+        ("final_brief_feedback_path", "--final-brief-feedback-file"),
+        ("gate_approvals_path", "--gate-approvals-file"),
+    ):
+        if answers.get(key) is None:
+            continue
+        # A reviewer's round and her closure enter at the gate holding the document.
+        # Added 2026-08-22 for the first real Step 2 replies.
+        if "gate" not in _required_text(answers, "first_unfinished_phase"):
+            raise AdapterError(
+                f"{key.replace('_', '-')}-needs-a-gate-phase: supplied while resuming "
+                f"{_required_text(answers, 'first_unfinished_phase')!r}, but it is valid "
+                "only when resuming a gate phase. Leave the answer blank, or resume at the "
+                "gate."
+            )
+        argv.extend([flag, _required_text(answers, key)])
+    if step11_writer_supplied:
+        argv.extend([
+            "--step11-writer-input-file",
+            _required_text(answers, "step11_writer_input_path"),
+            "--step11-writer-call-budget-file",
+            _required_text(answers, "step11_writer_call_budget_path"),
+            "--step11-writer-call-limit",
+            str(call_limit),
+        ])
+        if extension_from is not None:
+            argv.extend([
+                "--step11-writer-call-extension-from", str(extension_from),
+            ])
+    drive_staging_root = None
+    if (step1_dir is not None or step2_dir is not None or step3_dir is not None or step4_dir is not None
+            or step5_handoff_dir is not None or step5_dir is not None or step6_handoff_dir is not None or step6_dir is not None or step7_handoff_dir is not None or step7_dir is not None
+            or step9_handoff_dir is not None or step8_handoff_dir is not None or step8_dir is not None
+            or step9_supplied or clean_supplied
+            or step12_dir is not None):
+        drive_staging_root = ((step9_handoff_dir or step8_handoff_dir or step7_handoff_dir or step6_handoff_dir or step5_handoff_dir or step1_dir or step2_dir or step3_dir or step4_dir or step5_dir or step6_dir or step7_dir or step8_dir or step12_dir or (expected_clean if clean_supplied else expected_dir)) / "drive-staging")
+    environment = _workflow_resume_live_environment(
+        python, drive_staging_root=drive_staging_root,
+        agent_max_attempts="2" if step1_dir is not None else ("1" if drive_staging_root is not None else "3"),
+    )
+    if step1_dir is not None:
+        # A signed review re-enters the general model-reading/amendment seam. Its
+        # stateless JSON role may retry one malformed response, with both attempts
+        # logged; later writer-copy routes keep their one-attempt call accounting.
+        environment["UP_HARNESS_AGENT_MAX_ATTEMPTS"] = "2"
     return _script_payload(
         sequence_id="workflow-resume-from-phase-live-confirmation",
         profile="resume",
@@ -4636,10 +7272,26 @@ def intake_spec(
 ) -> Mapping[str, Any]:
     if sequence_id not in ADAPTER_REGISTRY:
         raise AdapterUnavailable(f"sequence-not-registered:{sequence_id}")
+    if ADAPTER_REGISTRY[sequence_id] is None:
+        raise AdapterUnavailable(f"sequence-not-runnable-through-intake:{sequence_id}")
     try:
         spec = deepcopy(INTAKE_SPECS[sequence_id])
     except KeyError as exc:
         raise AdapterUnavailable(f"adapter-not-implemented:{sequence_id}") from exc
+    if sequence_id == "workflow-resume-from-phase-live-confirmation":
+        for field in spec["fields"]:
+            if field["id"] == "step8_held_by":
+                field["when"] = {"field": "source_run_id", "equals": STEP8_RECORDED_SOURCE}
+            elif field["id"] in {"step9_held_by", "step9_altitude_check_path",
+                                  "step9_newsroom_model", "step9_earned_pipeline",
+                                  "step9_decided_by"}:
+                field["when"] = {"field": "source_run_id", "equals": STEP9_RECORDED_SOURCE}
+            elif field["id"] in {"step11_held_by", "step10_held_by", "step10_hold_reason"}:
+                field["when"] = {"field": "source_run_id", "equals": STEP11_RECORDED_SOURCE}
+            elif field["id"] not in {"repository_key", "client", "source_run_id"}:
+                field["when"] = {"field": "source_run_id",
+                                 "not_in": [STEP8_RECORDED_SOURCE, STEP9_RECORDED_SOURCE,
+                                           STEP10_RECORDED_SOURCE, STEP11_RECORDED_SOURCE]}
     repository_fields = [
         field for field in spec["fields"]
         if (
@@ -4671,7 +7323,7 @@ def prepare(
     except KeyError as exc:
         raise AdapterUnavailable(f"sequence-not-registered:{sequence_id}") from exc
     if adapter is None:
-        raise AdapterUnavailable(f"adapter-not-implemented:{sequence_id}")
+        raise AdapterUnavailable(f"sequence-not-runnable-through-intake:{sequence_id}")
     return adapter(answers, artifact_paths, repository_roots)
 
 
@@ -4683,11 +7335,24 @@ def collect_and_prepare(
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
+    spec = intake_spec(sequence_id, repository_roots=repository_roots)
     answers = script_intake.collect(
-        intake_spec(sequence_id, repository_roots=repository_roots),
+        spec,
         input_fn=input_fn,
         output_fn=output_fn,
     )
+    if (sequence_id == "workflow-resume-from-phase-live-confirmation"
+            and answers.get("source_run_id") in {STEP8_RECORDED_SOURCE, STEP9_RECORDED_SOURCE,
+                                                  STEP10_RECORDED_SOURCE, STEP11_RECORDED_SOURCE}):
+        for field in spec["fields"]:
+            if field["id"] not in answers:
+                answers[field["id"]] = False if field["type"] == "boolean" else None
+        answers["first_unfinished_phase"] = (
+            "compose-communications-platform" if answers["source_run_id"] == STEP8_RECORDED_SOURCE
+            else ("compose-execution-toolkit" if answers["source_run_id"] == STEP9_RECORDED_SOURCE
+                  else ("compose-annual-review" if answers["source_run_id"] == STEP11_RECORDED_SOURCE
+                        else "compose-measurement-framework")))
+        answers["reopen_completed_phase"] = False
     return prepare(
         sequence_id,
         answers,

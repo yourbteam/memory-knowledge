@@ -239,6 +239,12 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
         # the environment hashes instead.
         {"environment_artifact_hashes"},
     ),
+    "late_verification_recorded": (
+        {"run_id", "subject_id", "lineage_id", "source_bundle_hash", "outcome", "quality",
+         "evidence", "blocker_ids", "correction_ids", "changed_artifact_hashes",
+         "target_run_close_event_id", "evidence_artifacts", "late_reason"},
+        {"environment_artifact_hashes"},
+    ),
     "blocker_transitioned": (
         {"run_id", "blocker_id", "from_status", "to_status"},
         {"verification_event_id", "remaining_work", "supersession_evidence", "non_gap_evidence",
@@ -900,6 +906,130 @@ def _active_correction_artifacts_preserved(
     return saw_artifact
 
 
+def _validate_late_verification_correction_chain(
+    events: list[dict[str, Any]], successor: dict[str, Any],
+    selected: list[dict[str, Any]], runs: dict[str, dict[str, Any]],
+    blocker_occurrences: dict[str, str], blockers: dict[str, str],
+) -> None:
+    """Bind late proof to active corrections carried through an authenticated run chain."""
+    run_id = successor["run_id"]
+    chain: list[str] = []
+    cursor: str | None = run_id
+    while cursor is not None:
+        if cursor in chain or cursor not in runs:
+            raise WorkMemoryError("late-verification-predecessor-chain-invalid", 3)
+        chain.append(cursor)
+        cursor = runs[cursor]["start"].get("predecessor_run_id")
+    chain.reverse()
+    if len(chain) < 2:
+        raise WorkMemoryError("late-verification-successor-required", 3)
+    starts = {item: runs[item]["start"] for item in chain}
+    task_id = starts[run_id].get("task_id")
+    for item in chain:
+        start = starts[item]
+        if (
+            start.get("subject_id") != successor["subject_id"]
+            or start.get("lineage_id") != successor["lineage_id"]
+            or start.get("task_id") != task_id
+        ):
+            raise WorkMemoryError("late-verification-predecessor-binding-mismatch", 3)
+    superseded = {
+        value for event in events if event["event_type"] == "correction_recorded"
+        for value in _superseded_correction_ids(event)
+    }
+    all_corrections = {
+        event["correction_id"]: event for event in events
+        if event["event_type"] == "correction_recorded"
+    }
+    active_selected = [item for item in selected if item["correction_id"] not in superseded]
+    if len(active_selected) != len(selected):
+        raise WorkMemoryError("late-verification-correction-superseded", 3)
+    for correction in selected:
+        if correction["run_id"] not in chain[:-1]:
+            raise WorkMemoryError("late-verification-correction-outside-ancestry", 3)
+        blocker_id = correction["blocker_id"]
+        if (
+            correction["subject_id"] != successor["subject_id"]
+            or correction["lineage_id"] != successor["lineage_id"]
+            or blockers.get(blocker_id) != "fixed-awaiting-verification"
+            or correction["occurrence_id"] != blocker_occurrences.get(blocker_id)
+        ):
+            raise WorkMemoryError("late-verification-correction-occurrence-mismatch", 3)
+    for blocker_id in {item["blocker_id"] for item in selected}:
+        occurrence_id = blocker_occurrences.get(blocker_id)
+        active_ids = {
+            item["correction_id"] for item in all_corrections.values()
+            if item["blocker_id"] == blocker_id
+            and item["occurrence_id"] == occurrence_id
+            and item["correction_id"] not in superseded
+        }
+        selected_ids = {
+            item["correction_id"] for item in selected
+            if item["blocker_id"] == blocker_id
+        }
+        if selected_ids != active_ids:
+            raise WorkMemoryError("late-verification-active-correction-set-mismatch", 3)
+
+    # Reconstruct each run's ordered correction transitions, including several
+    # successive corrections in one run and carried corrections from its parent.
+    inherited_ids = list(starts[chain[0]].get("verifies_correction_ids", []))
+    current_bundle_hash = starts[chain[0]]["source_bundle_hash"]
+    transitioned_corrections: set[str] = set(inherited_ids)
+    for index, parent_id in enumerate(chain[:-1]):
+        child_id = chain[index + 1]
+        parent_start = starts[parent_id]
+        if parent_start["source_bundle_hash"] != current_bundle_hash:
+            raise WorkMemoryError("late-verification-run-bundle-chain-invalid", 3)
+        run_rows = [
+            item for item in events if item.get("run_id") == parent_id
+        ]
+        carried_ids = list(parent_start.get("verifies_correction_ids", []))
+        recorded_new_ids: list[str] = []
+        for row in run_rows:
+            if row["event_type"] == "correction_recorded":
+                correction = row
+                if correction["correction_id"] not in carried_ids:
+                    recorded_new_ids.append(correction["correction_id"])
+            if row["event_type"] != "bundle_transition_recorded" or row.get("transition_reason") != "correction":
+                continue
+            correction_ids = row.get("correction_ids", [])
+            expected_ids = [*carried_ids, *recorded_new_ids]
+            if (
+                row["lineage_id"] != successor["lineage_id"]
+                or row["old_bundle_hash"] != current_bundle_hash
+                or correction_ids != expected_ids
+                or not recorded_new_ids
+            ):
+                raise WorkMemoryError("late-verification-bundle-transition-chain-invalid", 3)
+            for correction_id in correction_ids:
+                correction = all_corrections.get(correction_id)
+                if correction is None or correction["lineage_id"] != successor["lineage_id"]:
+                    raise WorkMemoryError("late-verification-transition-correction-mismatch", 3)
+                if correction_id in recorded_new_ids and correction["run_id"] != parent_id:
+                    raise WorkMemoryError("late-verification-transition-correction-mismatch", 3)
+            transitioned_corrections.update(recorded_new_ids)
+            carried_ids = correction_ids
+            recorded_new_ids = []
+            current_bundle_hash = row["new_bundle_hash"]
+        if recorded_new_ids or starts[child_id]["source_bundle_hash"] != current_bundle_hash:
+            raise WorkMemoryError("late-verification-run-bundle-chain-invalid", 3)
+        if list(starts[child_id].get("verifies_correction_ids", [])) != carried_ids:
+            raise WorkMemoryError("late-verification-correction-membership-mismatch", 3)
+    if not {item["correction_id"] for item in selected} <= transitioned_corrections:
+        raise WorkMemoryError("late-verification-final-bundle-mismatch", 3)
+    final_hashes = {
+        (item["repository_key"], item["path"]): item["sha256"]
+        for item in starts[run_id]["source_bundle"]
+    }
+    for correction in selected:
+        for artifact, expected_hash in zip(
+            correction["changed_artifacts"], correction["changed_artifact_hashes"], strict=True,
+        ):
+            identity = _artifact_identity(artifact)
+            if final_hashes.get(identity) != expected_hash:
+                raise WorkMemoryError("late-verification-source-bundle-mismatch", 3)
+
+
 def _failed_retry_verification(
     events: Sequence[dict[str, Any]], *, run_id: str, blocker_id: str,
     occurrence_id: str, supersedes_correction_ids: Iterable[str],
@@ -1410,6 +1540,31 @@ def _validate_event_values(event: dict[str, Any]) -> None:
         )
         if not investigation_proof and not correction_proof:
             raise WorkMemoryError("incomplete-verification-binding", 2)
+    elif kind == "late_verification_recorded":
+        require_uuid(event["target_run_close_event_id"], "target-run-close-event-id")
+        if event["outcome"] != "passed" or event["quality"] != "same-path":
+            raise WorkMemoryError("invalid-late-verification-result", 2)
+        if not isinstance(event["late_reason"], str) or not event["late_reason"].strip():
+            raise WorkMemoryError("late-verification-reason-required", 2)
+        blockers = _require_list(event, "blocker_ids", nonempty=True)
+        corrections = _require_list(event, "correction_ids", nonempty=True)
+        hashes = _require_list(event, "changed_artifact_hashes")
+        if len(blockers) != len(corrections) or len(set(blockers)) != len(blockers) or len(set(corrections)) != len(corrections):
+            raise WorkMemoryError("paired-correction-blocker-required", 2)
+        for value in hashes:
+            _require_hash(value, "changed-artifact-hash")
+        for value in _optional_list(event, "environment_artifact_hashes"):
+            _require_hash(value, "environment-artifact-hash")
+        artifacts = _require_list(event, "evidence_artifacts", nonempty=True)
+        identities = set()
+        for artifact in artifacts:
+            if not isinstance(artifact, dict) or set(artifact) != {"repository_key", "path", "sha256"}:
+                raise WorkMemoryError("invalid-late-verification-artifact", 2)
+            identity = _artifact_identity({"repository_key": artifact["repository_key"], "path": artifact["path"]})
+            _require_hash(artifact["sha256"], "evidence-artifact-sha256")
+            if Path(identity[1]).is_absolute() or ".." in Path(identity[1]).parts or identity in identities:
+                raise WorkMemoryError("invalid-late-verification-artifact", 2)
+            identities.add(identity)
     elif kind == "blocker_transitioned":
         if "verification_event_id" in event:
             require_uuid(event["verification_event_id"], "verification-event-id")
@@ -1880,7 +2035,7 @@ def _validate_correction_preservation_records(
     verifications = {
         event["event_id"]: (index, event)
         for index, event in enumerate(events)
-        if event["event_type"] == "verification_recorded"
+        if event["event_type"] in {"verification_recorded", "late_verification_recorded"}
     }
     superseded = {
         correction_id
@@ -2063,6 +2218,8 @@ def validate_lifecycle(
     failed_verification_reopens: dict[str, set[str]] = {}
     corrections: dict[str, dict[str, Any]] = {}
     verifications: dict[str, dict[str, Any]] = {}
+    late_verifications: dict[str, dict[str, Any]] = {}
+    late_verification_pairs: set[tuple[str, str]] = set()
     pre_run_corrections: dict[str, dict[str, Any]] = {}
     superseded_pre_run_corrections: set[str] = set()
     pre_run_verifications: dict[str, dict[str, Any]] = {}
@@ -2090,6 +2247,13 @@ def validate_lifecycle(
             if (
                 runs[run_id]["terminal"] is not None
                 and event["event_id"] not in legacy_post_terminal_event_ids
+                and kind != "late_verification_recorded"
+                and not (
+                    kind == "blocker_transitioned"
+                    and event.get("to_status") in {"verified", "closed"}
+                    and event.get("verification_event_id")
+                    in runs[run_id].get("late_verification_ids", set())
+                )
             ):
                 raise WorkMemoryError("event-after-terminal", 3)
         if kind in {"blocker_opened", "pre_run_blocker_opened"}:
@@ -2298,6 +2462,45 @@ def validate_lifecycle(
                 raise WorkMemoryError("clean-verification-after-correction", 3)
             verifications[event["event_id"]] = event
             runs[run_id]["verifications"].append(event)
+        elif kind == "late_verification_recorded":
+            start = runs[run_id]["start"]
+            terminal = runs[run_id]["terminal"]
+            if (
+                terminal is None or terminal["event_type"] != "run_closed"
+                or terminal["result"] != "passed"
+                or terminal["event_id"] != event["target_run_close_event_id"]
+                or event["subject_id"] != start["subject_id"]
+                or event["lineage_id"] != start["lineage_id"]
+                or event["source_bundle_hash"] != start["source_bundle_hash"]
+                or event["event_id"] in verifications
+                or not start.get("predecessor_run_id")
+                or set(event["correction_ids"]) != set(start.get("verifies_correction_ids", []))
+            ):
+                raise WorkMemoryError("late-verification-successor-binding-mismatch", 3)
+            selected = [corrections.get(correction_id) for correction_id in event["correction_ids"]]
+            if any(item is None for item in selected):
+                raise WorkMemoryError("late-verification-correction-not-found", 3)
+            if [item["blocker_id"] for item in selected] != event["blocker_ids"]:
+                raise WorkMemoryError("late-verification-blocker-mismatch", 3)
+            expected_hashes = [value for item in selected for value in item["changed_artifact_hashes"]]
+            expected_environment = [value for item in selected for value in item.get("environment_artifact_hashes", [])]
+            if (
+                event["changed_artifact_hashes"] != expected_hashes
+                or event.get("environment_artifact_hashes", []) != expected_environment
+            ):
+                raise WorkMemoryError("late-verification-artifact-hash-mismatch", 3)
+            _validate_late_verification_correction_chain(
+                events, start, selected, runs, blocker_occurrences, blockers,
+            )
+            verifications[event["event_id"]] = event
+            late_verifications[event["event_id"]] = event
+            runs[run_id]["verifications"].append(event)
+            runs[run_id].setdefault("late_verification_ids", set()).add(event["event_id"])
+            for blocker_id in event["blocker_ids"]:
+                pair = (run_id, blocker_id)
+                if pair in late_verification_pairs:
+                    raise WorkMemoryError("duplicate-late-verification", 3)
+                late_verification_pairs.add(pair)
         elif kind == "operation_context_recorded":
             start = runs[run_id]["start"]
             if (
@@ -2382,6 +2585,28 @@ def validate_lifecycle(
             links.add(event["link_id"])
         elif kind == "blocker_transitioned":
             current = blockers.get(event["blocker_id"])
+            if runs[run_id]["terminal"] is not None:
+                verification = late_verifications.get(event.get("verification_event_id"))
+                if (
+                    event.get("to_status") not in {"verified", "closed"}
+                    or verification is None
+                    or verification["run_id"] != run_id
+                    or event["blocker_id"] not in verification["blocker_ids"]
+                    or (run_id, event["blocker_id"]) not in late_verification_pairs
+                    or (
+                        event["to_status"] == "verified"
+                        and event.get("from_status") != "fixed-awaiting-verification"
+                    )
+                    or (
+                        event["to_status"] == "closed"
+                        and (
+                            event.get("from_status") != "verified"
+                            or blocker_verified_evidence.get(event["blocker_id"])
+                            != event.get("verification_event_id")
+                        )
+                    )
+                ):
+                    raise WorkMemoryError("invalid-post-terminal-blocker-transition", 3)
             if current != event["from_status"]:
                 raise WorkMemoryError("blocker-from-status-mismatch", 3)
             valid = {
@@ -4182,7 +4407,7 @@ def _cmd_select_for_task(args: argparse.Namespace) -> dict[str, Any]:
         }
         verified_runs = {
             event["run_id"] for event in events
-            if event["event_type"] == "verification_recorded"
+            if event["event_type"] in {"verification_recorded", "late_verification_recorded"}
             and event["run_id"] in starts and event["outcome"] == "passed"
             and event["quality"] == "same-path"
             and event["source_bundle_hash"] == bundle_hash
@@ -4225,7 +4450,7 @@ def _cmd_select_for_task(args: argparse.Namespace) -> dict[str, Any]:
     eligible: list[dict[str, Any]] = []
     for verification in events:
         if (
-            verification["event_type"] != "verification_recorded"
+            verification["event_type"] not in {"verification_recorded", "late_verification_recorded"}
             or verification["outcome"] != "passed" or verification["quality"] != "same-path"
             or verification["source_bundle_hash"] != bundle_hash
         ):
@@ -5431,7 +5656,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
                 verification_quality = next(
                     (
                         event["quality"] for event in reversed(related)
-                        if event["event_type"] == "verification_recorded"
+                        if event["event_type"] in {"verification_recorded", "late_verification_recorded"}
                     ),
                     "none",
                 )
@@ -5668,7 +5893,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             (
                 event["quality"]
                 for event in reversed(related)
-                if event["event_type"] == "verification_recorded"
+                if event["event_type"] in {"verification_recorded", "late_verification_recorded"}
             ),
             "none",
         )
@@ -5761,7 +5986,7 @@ def cmd_preserve_corrections(args: argparse.Namespace) -> dict[str, Any]:
         raise WorkMemoryError("preservation-target-transition-mismatch", 3)
     target_verification_entry = next((
         (index, ledger_event) for index, ledger_event in enumerate(events)
-        if ledger_event["event_type"] == "verification_recorded"
+        if ledger_event["event_type"] in {"verification_recorded", "late_verification_recorded"}
         and ledger_event["event_id"] == args.target_verification_event_id
     ), None)
     if target_verification_entry is None:
@@ -5871,6 +6096,143 @@ def cmd_verify(args: argparse.Namespace) -> dict[str, Any]:
     )
     result = transact({"schema_version": 1, "expected_ledger_hash": None, "events": [event]})
     return {**result, "event_id": event["event_id"], "changed_artifact_hashes": artifact_hashes}
+
+
+def cmd_verify_late(args: argparse.Namespace) -> dict[str, Any]:
+    """Record same-path evidence for a passed, already-closed successor run."""
+    events, _ = load_ledger()
+    start, related = _run_state(events, args.run_id)
+    target_close = next((
+        item for item in related
+        if item["event_type"] == "run_closed"
+        and item["event_id"] == args.target_run_close_event_id
+    ), None)
+    if target_close is None or target_close["result"] != "passed":
+        raise WorkMemoryError("late-verification-passed-close-required", 3)
+    blockers, correction_ids = args.blocker_id or [], args.correction_id or []
+    if not blockers or len(blockers) != len(correction_ids):
+        raise WorkMemoryError("paired-correction-blocker-required", 2)
+    corrections_by_id = {
+        item["correction_id"]: item for item in events
+        if item["event_type"] == "correction_recorded"
+    }
+    try:
+        selected = [corrections_by_id[item] for item in correction_ids]
+    except KeyError as exc:
+        raise WorkMemoryError("correction-not-found", 3) from exc
+    if (
+        len(set(blockers)) != len(blockers)
+        or len(set(correction_ids)) != len(correction_ids)
+        or [item["blocker_id"] for item in selected] != blockers
+        or set(correction_ids) != set(start.get("verifies_correction_ids", []))
+    ):
+        raise WorkMemoryError("late-verification-correction-binding-mismatch", 3)
+    roots = _repo_roots(snapshot=start.get("repository_roots"))
+    final_bundle = {
+        (item["repository_key"], item["path"]): item["sha256"]
+        for item in start["source_bundle"]
+    }
+    for correction in selected:
+        for artifact, expected_hash in zip(
+            correction["changed_artifacts"], correction["changed_artifact_hashes"], strict=True,
+        ):
+            identity = _artifact_identity(artifact)
+            if identity[0] not in roots or identity not in final_bundle:
+                raise WorkMemoryError("late-verification-correction-artifact-not-in-bundle", 3)
+            actual = sha256_bytes(_safe_file(roots[identity[0]], identity[1]).read_bytes())
+            if actual != expected_hash:
+                raise WorkMemoryError("late-verification-correction-artifact-hash-mismatch", 3)
+        environment = correction.get("environment_artifacts", [])
+        if environment:
+            actual_artifacts, actual_hashes = _rehash_recorded_environment_artifacts(
+                environment, repository_roots=start.get("repository_roots"),
+            )
+            if (
+                actual_artifacts != environment
+                or actual_hashes != correction.get("environment_artifact_hashes", [])
+            ):
+                raise WorkMemoryError("late-verification-environment-artifact-hash-mismatch", 3)
+    evidence_artifacts = []
+    seen_artifacts = set()
+    for raw in args.evidence_artifact:
+        try:
+            artifact = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise WorkMemoryError("invalid-late-verification-artifact", 2) from exc
+        if not isinstance(artifact, dict) or set(artifact) != {"repository_key", "path", "sha256"}:
+            raise WorkMemoryError("invalid-late-verification-artifact", 2)
+        identity = _artifact_identity({
+            "repository_key": artifact["repository_key"], "path": artifact["path"],
+        })
+        if identity in seen_artifacts or identity[0] not in roots:
+            raise WorkMemoryError("late-verification-repository-root-not-found", 3)
+        seen_artifacts.add(identity)
+        digest = sha256_bytes(_safe_file(roots[identity[0]], identity[1]).read_bytes())
+        if digest != artifact["sha256"]:
+            raise WorkMemoryError("late-verification-evidence-artifact-hash-mismatch", 3)
+        evidence_artifacts.append(artifact)
+    if not evidence_artifacts:
+        raise WorkMemoryError("late-verification-evidence-required", 2)
+    artifact_hashes = [value for item in selected for value in item["changed_artifact_hashes"]]
+    environment_hashes = [
+        value for item in selected for value in item.get("environment_artifact_hashes", [])
+    ]
+    verification = _event(
+        "late_verification_recorded", args.event_id, run_id=args.run_id,
+        subject_id=start["subject_id"], lineage_id=start["lineage_id"],
+        source_bundle_hash=start["source_bundle_hash"], outcome="passed", quality="same-path",
+        evidence=args.evidence, blocker_ids=blockers, correction_ids=correction_ids,
+        changed_artifact_hashes=artifact_hashes,
+        target_run_close_event_id=args.target_run_close_event_id,
+        evidence_artifacts=evidence_artifacts, late_reason=args.late_reason,
+        **({"environment_artifact_hashes": environment_hashes} if environment_hashes else {}),
+    )
+    event_index = _event_index(events)
+    existing = event_index.get(verification["event_id"])
+    if existing is not None:
+        verification["recorded_at_utc"] = existing["recorded_at_utc"]
+        if existing != verification:
+            raise WorkMemoryError("event-id-conflict", 3)
+    batch = [verification]
+    transition_ids = []
+    for blocker_id in blockers:
+        for source, target, extras in (
+            ("fixed-awaiting-verification", "verified", {}),
+            ("verified", "closed", {"remaining_work": "none"}),
+        ):
+            transition_id = str(uuid.uuid5(
+                uuid.UUID(verification["event_id"]), f"{blocker_id}:{source}:{target}",
+            ))
+            transition = _event(
+                "blocker_transitioned", transition_id, run_id=args.run_id,
+                blocker_id=blocker_id, from_status=source, to_status=target,
+                verification_event_id=verification["event_id"], **extras,
+            )
+            prior = event_index.get(transition_id)
+            if prior is not None:
+                transition["recorded_at_utc"] = prior["recorded_at_utc"]
+                if prior != transition:
+                    raise WorkMemoryError("late-verification-retry-batch-mismatch", 3)
+            batch.append(transition)
+            transition_ids.append(transition_id)
+    if existing is None and any(item in event_index for item in transition_ids):
+        raise WorkMemoryError("late-verification-retry-batch-mismatch", 3)
+    if existing is not None:
+        linked_ids = {item["event_id"] for item in batch[1:]}
+        linked_existing = {
+            item["event_id"] for item in events
+            if item["event_type"] == "blocker_transitioned"
+            and item.get("verification_event_id") == verification["event_id"]
+        }
+        if linked_existing != linked_ids:
+            raise WorkMemoryError("late-verification-retry-batch-mismatch", 3)
+    result = transact({"schema_version": 1, "expected_ledger_hash": None, "events": batch})
+    return {
+        **result, "event_id": verification["event_id"],
+        "transition_event_ids": transition_ids,
+        "changed_artifact_hashes": artifact_hashes,
+        **({"already_recorded": True} if existing is not None else {}),
+    }
 
 
 def cmd_verify_and_close(args: argparse.Namespace) -> dict[str, Any]:
@@ -6087,7 +6449,7 @@ def cmd_run_close(args: argparse.Namespace) -> dict[str, Any]:
     start, related = _run_state(events, args.run_id)
     corrections = [event for event in related if event["event_type"] == "correction_recorded"]
     blockers = sorted({event["blocker_id"] for event in related if "blocker_id" in event})
-    verifications = [event for event in related if event["event_type"] == "verification_recorded"]
+    verifications = [event for event in related if event["event_type"] in {"verification_recorded", "late_verification_recorded"}]
     transitions = [event for event in events if event["event_type"] == "bundle_transition_recorded" and event.get("run_id") == args.run_id]
     event = _event(
         "run_closed", args.event_id, run_id=args.run_id, subject_id=start["subject_id"],
@@ -6144,7 +6506,7 @@ def _run_records(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     closed = [record for record in records if record["terminal"] and record["terminal"]["event_type"] == "run_closed"]
-    verification_events = [event for record in closed for event in record["events"] if event["event_type"] == "verification_recorded"]
+    verification_events = [event for record in closed for event in record["events"] if event["event_type"] in {"verification_recorded", "late_verification_recorded"}]
     corrections = [event for record in closed for event in record["events"] if event["event_type"] == "correction_recorded"]
     fingerprints: dict[str, set[str]] = defaultdict(set)
     blocker_fingerprints = {
@@ -6436,6 +6798,17 @@ def build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--quality", choices=["proxy", "same-path"], required=True); verify.add_argument("--evidence", required=True)
     verify.add_argument("--blocker-id", action="append"); verify.add_argument("--correction-id", action="append"); verify.add_argument("--event-id")
     verify.set_defaults(func=cmd_verify)
+    verify_late = sub.add_parser("verify-late")
+    verify_late.add_argument("--run-id", required=True)
+    verify_late.add_argument("--target-run-close-event-id", required=True)
+    verify_late.add_argument("--blocker-id", action="append", required=True)
+    verify_late.add_argument("--correction-id", action="append", required=True)
+    verify_late.add_argument("--evidence-artifact", action="append", required=True,
+                             help="JSON object with repository_key, path, and expected sha256")
+    verify_late.add_argument("--evidence", required=True)
+    verify_late.add_argument("--late-reason", required=True)
+    verify_late.add_argument("--event-id", required=True)
+    verify_late.set_defaults(func=cmd_verify_late)
     close = sub.add_parser("run-close")
     close.add_argument("--run-id", required=True); close.add_argument("--result", choices=["passed", "failed"], required=True); close.add_argument("--event-id")
     close.add_argument("--observer", choices=["auto", "enabled", "disabled"], default="auto")

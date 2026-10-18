@@ -7,6 +7,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -31,6 +32,24 @@ except ModuleNotFoundError:
 
 
 ALLOWED_SOURCES = {"sequence_doc", "discovery_log", "script", "tool_help"}
+PYTHON_MODULE = re.compile(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*")
+
+
+def invoked_python_module_source(command_tokens: Sequence[str], repository_root: Path) -> Path | None:
+    """Resolve a direct ``python -m module`` to one file without importing it."""
+    if len(command_tokens) < 3 or Path(command_tokens[0]).name not in {"python", "python3"}:
+        return None
+    if command_tokens[1] != "-m":
+        return None
+    module = command_tokens[2]
+    if not PYTHON_MODULE.fullmatch(module):
+        raise ValueError("invalid-python-module-command")
+    relative = Path(*module.split("."))
+    candidates = [base / relative.with_suffix(".py") for base in (repository_root, repository_root / "src")]
+    matches = [path.resolve() for path in candidates if path.is_file()]
+    if len(matches) != 1:
+        raise ValueError("python-module-source-ambiguous")
+    return matches[0]
 CORRECTION_DIRECT_PREFIX = ("python3", "scripts/work_memory.py", "correct")
 CORRECTION_BOOTSTRAP_PREFIX = ("python3", "scripts/work_memory_bootstrap.py", "correct")
 CORRECTION_LAUNCHER_PREFIX = (
