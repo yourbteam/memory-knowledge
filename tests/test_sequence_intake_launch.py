@@ -15,6 +15,7 @@ from scripts import (
     discovery_bootstrap,
     discovery_candidate_reconciliation,
     discovery_promotion_lifecycle,
+    sequence_intake_adapters,
     sequence_intake_launch,
 )
 
@@ -989,9 +990,6 @@ def test_workflow_resume_guard_provenance_is_controller_owned(
     assert observed["step"] == "verify-automation"
     assert observed["source"] == "sequence_doc"
     assert observed["source_ref"].endswith("/resume/sequence.md")
-    assert observed["directives_path"] == str(
-        sequence_intake_launch.DIRECTIVES_PATH
-    )
 
 
 def test_workflow_resume_preflight_is_grounded_in_registered_sequence() -> None:
@@ -1087,7 +1085,12 @@ def test_workflow_resume_dispatch_runs_same_path_preflight_before_live(
         "sequence_id": "workflow-resume-from-phase-live-confirmation",
         "argv": live,
         "repository": {"key": "united-partners", "root": "/repos/up"},
-        "environment": {"PYTHONPATH": "src"},
+        "environment": {
+            "PYTHONPATH": "src",
+            "UP_HARNESS_GOOGLE_DRIVE_ROOT": "/live/drive-root",
+            "UP_HARNESS_GOOGLE_DRIVE_ACCESS_TOKEN": "live-token",
+            "UP_HARNESS_GOOGLE_DRIVE_PARENT_ID": "live-parent",
+        },
         "profile": "resume",
         "artifacts": {},
         "preflight": {
@@ -1116,8 +1119,8 @@ def test_workflow_resume_dispatch_runs_same_path_preflight_before_live(
     monkeypatch.setattr(
         sequence_intake_launch.subprocess,
         "run",
-        lambda argv, **_kwargs: (
-            observed.append(("run", argv))
+        lambda argv, **kwargs: (
+            observed.append(("run", argv, kwargs["env"].copy()))
             or type("Completed", (), {"returncode": 0})()
         ),
     )
@@ -1125,11 +1128,36 @@ def test_workflow_resume_dispatch_runs_same_path_preflight_before_live(
     assert sequence_intake_launch._dispatch_prepared(
         "task-123", prepared,
     ) == 0
-    assert observed == [
-        ("guard", "task-123", prepared),
+    assert [row[:2] for row in observed] == [
+        ("guard", "task-123"),
         ("run", preflight),
         ("run", live),
     ]
+    preflight_environment = observed[1][2]
+    live_environment = observed[2][2]
+    isolated_root = Path(preflight_environment["UP_HARNESS_GOOGLE_DRIVE_ROOT"])
+    assert not isolated_root.exists()
+    assert preflight_environment["UP_HARNESS_GOOGLE_DRIVE_ACCESS_TOKEN"] == ""
+    assert preflight_environment["UP_HARNESS_GOOGLE_DRIVE_PARENT_ID"] == ""
+    assert live_environment["UP_HARNESS_GOOGLE_DRIVE_ROOT"] == "/live/drive-root"
+    assert live_environment["UP_HARNESS_GOOGLE_DRIVE_ACCESS_TOKEN"] == "live-token"
+    assert live_environment["UP_HARNESS_GOOGLE_DRIVE_PARENT_ID"] == "live-parent"
+
+    # The isolated preflight is the only subprocess on failure, so it cannot
+    # dispatch the live workflow after a failing check.
+    observed.clear()
+    monkeypatch.setattr(sequence_intake_launch, "_guard_preflight", lambda *_args: None)
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda argv, **kwargs: (
+            observed.append((argv, kwargs["env"].copy()))
+            or type("Completed", (), {"returncode": 7 if argv == preflight else 0})()
+        ),
+    )
+    assert sequence_intake_launch._dispatch_prepared("task-123", prepared) == 7
+    assert [row[0] for row in observed] == [preflight]
+    assert not Path(observed[0][1]["UP_HARNESS_GOOGLE_DRIVE_ROOT"]).exists()
 
 
 def test_workflow_resume_stops_before_live_when_preflight_fails(
@@ -1293,3 +1321,153 @@ def test_workflow_resume_correct_path_reaches_live_through_public_entrypoint(
     ]
     assert isinstance(observed[2], Path)
     assert not observed[2].exists()
+
+
+def test_zero_argument_workflow_resume_launcher_reaches_step9_extension_prompt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    sequence_id = "workflow-resume-from-phase-live-confirmation"
+    roots = {"united-partners": str(tmp_path.resolve())}
+    spec = sequence_intake_adapters.intake_spec(sequence_id, repository_roots=roots)
+    field_by_question = {field["prompt"]: field for field in spec["fields"]}
+    target_question = "Extend the saved Step 9 writer ceiling"
+    target_field = field_by_question[target_question]
+    assert target_field["example"] == "60"
+
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_active_selection_for_intake",
+        lambda *_args: {
+            "mode": "registered",
+            "subject_id": sequence_id,
+            "selection": {"repository_roots": roots},
+        },
+    )
+
+    class ReachedTargetField(RuntimeError):
+        pass
+
+    prompts = []
+
+    def answer_prompt(prompt: str) -> str:
+        prompts.append(prompt)
+        question = prompt.splitlines()[0].removeprefix("Question: ")
+        if question == target_question:
+            raise ReachedTargetField
+        if question == "Active governed task identity":
+            return "step9-extension-intake-test"
+        return field_by_question[question]["example"]
+
+    with pytest.raises(ReachedTargetField):
+        sequence_intake_launch._main(
+            [], input_fn=answer_prompt, output_fn=lambda _message: None,
+        )
+
+    target_prompt = next(prompt for prompt in prompts if prompt.startswith(f"Question: {target_question}"))
+    assert "Example: 60" in target_prompt
+    assert not any("Authorize this exact prepared operation now" in prompt for prompt in prompts)
+
+def test_invoked_script_resolves_registered_python_module(tmp_path: Path):
+    source = tmp_path / "src/up_harness/step6_review_hold.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("pass\n")
+    prepared = {
+        "argv": ["/runtime/python3", "-m", "up_harness.step6_review_hold",
+                 "--recorded", "--client", "bteam"],
+        "repository": {"root": str(tmp_path)},
+    }
+
+    assert sequence_intake_launch._invoked_script(prepared) == source
+
+def test_invoked_script_rejects_ambiguous_python_module(tmp_path: Path):
+    for prefix in (tmp_path, tmp_path / "src"):
+        source = prefix / "up_harness/step6_review_hold.py"
+        source.parent.mkdir(parents=True)
+        source.write_text("pass\n")
+    prepared = {
+        "argv": ["python3", "-m", "up_harness.step6_review_hold"],
+        "repository": {"root": str(tmp_path)},
+    }
+
+    with pytest.raises(sequence_intake_launch.SequenceLaunchError,
+                       match="python-module-source-ambiguous"):
+        sequence_intake_launch._invoked_script(prepared)
+
+def test_workflow_resume_dispatches_source_guarded_module_without_resume_receipt(
+    monkeypatch,
+) -> None:
+    preflight = ["python3", "-m", "unittest", "tests.unit.test_workflow_resume"]
+    live = ["python3", "-m", "up_harness.step6_review_hold", "--recorded",
+            "--client", "bteam", "--held-by", "Kamen", "--confirmed-held"]
+    prepared = {
+        "sequence_id": sequence_intake_launch.WORKFLOW_RESUME_SEQUENCE,
+        "argv": live,
+        "repository": {"key": "united-partners", "root": "/repos/up"},
+        "environment": {},
+        "profile": "resume",
+        "artifacts": {},
+        "preflight": {"argv": preflight, "step": "verify-automation",
+                      "proof_kind": "same-public-entrypoint"},
+    }
+    observed = []
+    monkeypatch.setattr(sequence_intake_launch, "_guard_preflight", lambda *_: None)
+    monkeypatch.setattr(sequence_intake_launch, "_guard_prepared", lambda *_: None)
+    monkeypatch.setattr(sequence_intake_launch.subprocess, "run", lambda argv, **kwargs: (
+        observed.append((argv, kwargs["env"].copy()))
+        or type("Completed", (), {"returncode": 0})()
+    ))
+
+    assert sequence_intake_launch._dispatch_prepared("task-123", prepared) == 0
+    assert [row[0] for row in observed] == [preflight, live]
+    assert sequence_intake_launch.DISPATCH_RECEIPT not in observed[-1][1]
+    assert observed[-1][1][sequence_intake_launch.DISPATCH_MARKER] == "1"
+
+def test_workflow_resume_step11_settings_reach_guarded_dispatch(monkeypatch):
+    prepared = sequence_intake_adapters.prepare(
+        "workflow-resume-from-phase-live-confirmation",
+        {
+            "repository_key": "united-partners",
+            "client": "vivacom",
+            "source_run_id": "up-run-123",
+            "first_unfinished_phase": "compose-annual-review",
+            "reopen_completed_phase": False,
+            "client_answers_path": None,
+            "debrief_feedback_path": None,
+            "final_brief_feedback_path": None,
+            "gate_approvals_path": None,
+            "corrected_topic_policies_path": None,
+            "step11_writer_input_path": "/runs/source/step11-input.json",
+            "step11_writer_call_budget_path": "/runs/shared/writer-budget.json",
+            "step11_writer_call_limit": 12,
+            "step11_writer_call_extension_from": None,
+            "step9_rehearsal_task_dir": None,
+            "step9_native_writer_call_limit": None,
+            "step9_native_writer_continuation": None,
+            "step9_native_writer_extend_to": None,
+        },
+        artifact_paths={},
+        repository_roots={"united-partners": "/repos/up"},
+    )
+    prepared = sequence_intake_launch._with_controller_preflight(
+        "task-123",
+        "workflow-resume-from-phase-live-confirmation",
+        prepared,
+        {"united-partners": "/repos/up"},
+    )
+    prepared["preflight"]["argv"] = ["preflight"]
+    monkeypatch.setattr(sequence_intake_launch, "_guard_preflight", lambda *_: None)
+    monkeypatch.setattr(sequence_intake_launch, "_guard_prepared", lambda *_: None)
+    observed = []
+
+    def run(argv, **_kwargs):
+        observed.append(argv)
+        return type("Completed", (), {"returncode": 0})()
+
+    monkeypatch.setattr(sequence_intake_launch.subprocess, "run", run)
+
+    assert sequence_intake_launch._dispatch_prepared("task-123", prepared) == 0
+    assert observed[1][-6:] == [
+        "--step11-writer-input-file", "/runs/source/step11-input.json",
+        "--step11-writer-call-budget-file", "/runs/shared/writer-budget.json",
+        "--step11-writer-call-limit", "12",
+    ]

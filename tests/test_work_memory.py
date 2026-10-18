@@ -2264,6 +2264,309 @@ def test_persisted_event_after_terminal_loads_but_new_append_still_fails():
         )
 
 
+def _late_verification_fixture(tmp_path: Path):
+    records = corrected_successor_events()
+    start_a, opened, correction, transition, awaiting, close_a = records[:6]
+    start_b, _verification, _verified, _closed, close_b = records[6:]
+    root = tmp_path / "repo"
+    root.mkdir()
+    evidence = root / "saved-state.json"
+    evidence.write_text('{"phase":"expected-gate-hold"}\n')
+    artifact = root / "scripts/deploy.sh"
+    artifact.parent.mkdir()
+    artifact.write_text("same corrected artifact\n")
+    artifact_hash = work_memory.sha256_bytes(artifact.read_bytes())
+    records[2]["changed_artifact_hashes"] = [artifact_hash]
+    records[3]["changed_artifact_hashes"] = [artifact_hash]
+    records[6]["source_bundle"][0]["sha256"] = artifact_hash
+    for start in (start_a, start_b):
+        start["repository_roots"] = {"memory-knowledge": str(root)}
+    close_b["verification_quality"] = "none"
+    return [start_a, opened, correction, transition, awaiting, close_a, start_b, close_b], root, evidence
+
+
+def test_verify_late_appends_audit_and_both_closures_atomically_and_retries_idempotently(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    current, root, evidence = _late_verification_fixture(tmp_path)
+    correction = next(item for item in current if item["event_type"] == "correction_recorded")
+    target = next(item for item in current if item["event_type"] == "run_closed" and item["result"] == "passed")
+    monkeypatch.setattr(work_memory, "ROOT", root)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, work_memory.sha256_bytes(b"")))
+    calls = []
+
+    def transact(request):
+        calls.append(request)
+        existing = b"".join(work_memory.canonical_bytes(item) for item in current)
+        new_bytes, _, result = work_memory.stage_event_batch(existing, request)
+        current[:] = work_memory.parse_ledger_bytes(new_bytes)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    args = SimpleNamespace(
+        run_id=target["run_id"], target_run_close_event_id=target["event_id"],
+        blocker_id=[correction["blocker_id"]], correction_id=[correction["correction_id"]],
+        evidence_artifact=[json.dumps({"repository_key": "memory-knowledge", "path": evidence.name,
+                                  "sha256": work_memory.sha256_bytes(evidence.read_bytes())})],
+        evidence="Saved successor evidence reached the expected gate.",
+        late_reason="Verification was recorded after the passed run close.",
+        event_id=str(uuid.uuid4()),
+    )
+
+    first = work_memory.cmd_verify_late(args)
+    second = work_memory.cmd_verify_late(args)
+
+    assert first["event_id"] == second["event_id"] == args.event_id
+    assert second["already_recorded"] is True
+    assert len(calls) == 2
+    assert len(calls[0]["events"]) == 3
+    assert [item["event_type"] for item in calls[0]["events"]] == [
+        "late_verification_recorded", "blocker_transitioned", "blocker_transitioned",
+    ]
+    assert calls[0]["events"][0]["evidence_artifacts"][0]["sha256"] == (
+        work_memory.sha256_bytes(evidence.read_bytes())
+    )
+    assert [item["event_id"] for item in calls[0]["events"]] == [
+        item["event_id"] for item in calls[1]["events"]
+    ]
+    args.evidence = "Conflicting retry must not alter the first audit."
+    with pytest.raises(work_memory.WorkMemoryError, match="event-id-conflict"):
+        work_memory.cmd_verify_late(args)
+    assert len(calls) == 2
+    assert current[-3]["target_run_close_event_id"] == target["event_id"]
+    assert current[-2]["to_status"] == "verified"
+    assert current[-1]["to_status"] == "closed"
+    assert sum(item["event_type"] == "run_closed" for item in current) == 2
+
+
+def test_verify_late_cli_admits_captured_step3_phase_projection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    fixture_path = (
+        Path(__file__).parent / "fixtures/up_late_verification/"
+        "step3-captured-phase-evidence.json"
+    )
+    captured_bytes = fixture_path.read_bytes()
+    assert work_memory.sha256_bytes(captured_bytes) == (
+        "a0c936a0bd8dd68edd40a963f8acbaaf400efd7c01949b9a271b7665e50403ab"
+    )
+    captured = json.loads(captured_bytes)
+    assert captured["source_artifact_sha256"] == (
+        "06b3f6827a8a3565f39a98c678676b4d9d0b0f69d3b0711e3fb22a01a1d491c3"
+    )
+    assert captured["application_run_id"] == "up-run-8a59ae9415da"
+    assert captured["application_run_id"] != captured["historical_memory_ledger_run_id"]
+    phases = captured["phases"]
+    assert phases["compose-final-brief"]["status"] == "completed"
+    assert phases["convene-final-brief-board"]["status"] == "completed"
+    assert phases["final-brief-board-gate"]["status"] == "completed"
+    assert phases["final-brief-board-gate"]["output"].startswith("Passed:")
+    assert phases["final-brief-gate"]["status"] == "blocked"
+    assert phases["final-brief-gate"]["output"].startswith("Refused:")
+
+    current, root, _ = _late_verification_fixture(tmp_path)
+    projection_path = root / "Tasks/bteam-step3-clean-20261005/state/phase-evidence.json"
+    projection_path.parent.mkdir(parents=True)
+    projection_path.write_bytes(captured_bytes)
+    task_id = "captured-up-step3"
+    claim = event(
+        "task_writer_claimed", task_id=task_id, writer_thread_id=WRITER_A,
+        ownership_generation=1,
+    )
+    owner_state = {
+        "writer_thread_id": WRITER_A,
+        "ownership_generation": 1,
+        "ownership_event_id": claim["event_id"],
+    }
+    for start in (item for item in current if item["event_type"] == "run_started"):
+        start.update(
+            task_id=task_id,
+            **work_memory._ownership_receipt_fields(task_id, owner_state),
+        )
+    current.insert(0, claim)
+    correction = next(item for item in current if item["event_type"] == "correction_recorded")
+    close = next(
+        item for item in current
+        if item["event_type"] == "run_closed" and item["result"] == "passed"
+    )
+    ledger = root / "operations/work-memory/events.jsonl"
+    ledger.parent.mkdir(parents=True)
+    ledger.write_bytes(b"".join(work_memory.canonical_bytes(item) for item in current))
+    monkeypatch.setattr(work_memory, "ROOT", root)
+    monkeypatch.setattr(work_memory, "STATE_ROOT", root)
+    monkeypatch.setattr(work_memory, "LEDGER", ledger)
+    monkeypatch.setattr(work_memory, "BLOCKER_VIEW", root / "operations/blockers/BLOCKERS.md")
+
+    evidence_sha256 = work_memory.sha256_bytes(captured_bytes)
+    event_id = str(uuid.uuid4())
+    result = work_memory.main([
+        "verify-late",
+        "--run-id", close["run_id"],
+        "--target-run-close-event-id", close["event_id"],
+        "--blocker-id", correction["blocker_id"],
+        "--correction-id", correction["correction_id"],
+        "--evidence-artifact", json.dumps({
+            "repository_key": "memory-knowledge",
+            "path": "Tasks/bteam-step3-clean-20261005/state/phase-evidence.json",
+            "sha256": evidence_sha256,
+        }),
+        "--evidence", (
+            "Captured Step 3 state shows final brief completed, the board gate passed, "
+            "and the intended human final-brief gate held."
+        ),
+        "--late-reason", "The already-passed successor close preceded its separate audit.",
+        "--event-id", event_id,
+    ])
+    assert result == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["event_id"] == event_id
+    admitted = work_memory.parse_ledger_bytes(ledger.read_bytes())
+    audit = next(item for item in admitted if item["event_id"] == event_id)
+    assert audit["target_run_close_event_id"] == close["event_id"]
+    assert audit["evidence_artifacts"][0]["sha256"] == evidence_sha256
+    assert audit["evidence_artifacts"][0]["sha256"] != captured["source_artifact_sha256"]
+    assert close in admitted
+    assert admitted[-2]["to_status"] == "verified"
+    assert admitted[-1]["to_status"] == "closed"
+
+
+@pytest.mark.parametrize(
+    "tamper", ["artifact", "missing", "duplicate", "path-escape", "unknown-root", "close", "failed", "abandoned"],
+)
+def test_verify_late_rejects_changed_artifact_or_wrong_terminal_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tamper: str,
+):
+    current, root, evidence = _late_verification_fixture(tmp_path)
+    correction = next(item for item in current if item["event_type"] == "correction_recorded")
+    target = next(item for item in current if item["event_type"] == "run_closed" and item["result"] == "passed")
+    monkeypatch.setattr(work_memory, "ROOT", root)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, work_memory.sha256_bytes(b"")))
+    calls = []
+    monkeypatch.setattr(work_memory, "transact", lambda request: calls.append(request))
+    args = SimpleNamespace(
+        run_id=target["run_id"], target_run_close_event_id=target["event_id"],
+        blocker_id=[correction["blocker_id"]], correction_id=[correction["correction_id"]],
+        evidence_artifact=[json.dumps({"repository_key": "memory-knowledge", "path": evidence.name,
+                                  "sha256": work_memory.sha256_bytes(evidence.read_bytes())})],
+        evidence="saved evidence", late_reason="recorded later", event_id=str(uuid.uuid4()),
+    )
+    if tamper == "artifact":
+        evidence.write_text("changed")
+    elif tamper == "missing":
+        evidence.unlink()
+    elif tamper == "duplicate":
+        args.evidence_artifact.append(args.evidence_artifact[0])
+    elif tamper == "path-escape":
+        args.evidence_artifact = [json.dumps({
+            "repository_key": "memory-knowledge", "path": "../outside.json",
+            "sha256": work_memory.sha256_bytes(evidence.read_bytes()),
+        })]
+    elif tamper == "unknown-root":
+        args.evidence_artifact = [json.dumps({
+            "repository_key": "unknown-repository", "path": evidence.name,
+            "sha256": work_memory.sha256_bytes(evidence.read_bytes()),
+        })]
+    elif tamper == "close":
+        args.target_run_close_event_id = str(uuid.uuid4())
+    elif tamper == "failed":
+        target["result"] = "failed"
+    else:
+        current.remove(target)
+        current.append(event(
+            "run_abandoned", run_id=target["run_id"], subject_id=target["subject_id"],
+            lineage_id=target["lineage_id"], completed_at_utc="2026-01-01T00:04:00Z",
+            reason="test abandon",
+        ))
+    with pytest.raises(work_memory.WorkMemoryError):
+        work_memory.cmd_verify_late(args)
+    assert calls == []
+
+
+def _late_correction_chain_fixture():
+    events = corrected_successor_events()
+    start_a, opened, correction, transition, awaiting, close_a, start_b = events[:7]
+    blocker_two = "blk-" + "2" * 24
+    occurrence_two = str(uuid.uuid4())
+    correction_two_id = str(uuid.uuid4())
+    opened_two = event(
+        "blocker_opened", run_id=start_a["run_id"], blocker_id=blocker_two,
+        occurrence_id=occurrence_two, fingerprint="2" * 64,
+        subject_id="sequence", lineage_id="lineage", step_id="deploy",
+        surface="deploy", symptom="second failed check", evidence="exit 1",
+        impact="blocked", boundary="script", status="open",
+    )
+    correction_two = event(
+        "correction_recorded", run_id=start_a["run_id"], blocker_id=blocker_two,
+        occurrence_id=occurrence_two, correction_id=correction_two_id,
+        subject_id="sequence", lineage_id="lineage", step_id="deploy",
+        changed_artifacts=correction["changed_artifacts"],
+        changed_artifact_hashes=correction["changed_artifact_hashes"],
+        reusable_behavior_changed=True, solution=correction["solution"],
+        primary_correction_id=correction["correction_id"],
+    )
+    transition["correction_ids"] = [correction["correction_id"], correction_two_id]
+    start_b["verifies_correction_ids"] = [correction["correction_id"], correction_two_id]
+    runs = {
+        start_a["run_id"]: {"start": start_a},
+        start_b["run_id"]: {"start": start_b},
+    }
+    events.insert(2, opened_two)
+    events.insert(4, correction_two)
+    return events, [correction, correction_two], runs, blocker_two, occurrence_two
+
+
+def test_late_verification_chain_accepts_multiple_corrections_in_one_run():
+    events, selected, runs, blocker_two, occurrence_two = _late_correction_chain_fixture()
+    blockers = {
+        selected[0]["blocker_id"]: "fixed-awaiting-verification",
+        blocker_two: "fixed-awaiting-verification",
+    }
+    occurrences = {
+        selected[0]["blocker_id"]: selected[0]["occurrence_id"],
+        blocker_two: occurrence_two,
+    }
+
+    successor = next(
+        value["start"] for value in runs.values()
+        if value["start"].get("predecessor_run_id")
+    )
+    work_memory._validate_late_verification_correction_chain(
+        events, successor, selected, runs, occurrences, blockers,
+    )
+
+
+@pytest.mark.parametrize("tamper", ["sibling", "missing-transition", "forged-intermediate", "unrecorded-overwrite"])
+def test_late_verification_chain_rejects_unproven_correction_history(tamper: str):
+    events, selected, runs, blocker_two, occurrence_two = _late_correction_chain_fixture()
+    blockers = {
+        selected[0]["blocker_id"]: "fixed-awaiting-verification",
+        blocker_two: "fixed-awaiting-verification",
+    }
+    occurrences = {
+        selected[0]["blocker_id"]: selected[0]["occurrence_id"],
+        blocker_two: occurrence_two,
+    }
+    successor = next(
+        value["start"] for value in runs.values()
+        if value["start"].get("predecessor_run_id")
+    )
+    if tamper == "sibling":
+        successor["predecessor_run_id"] = str(uuid.uuid4())
+    elif tamper == "missing-transition":
+        events[:] = [item for item in events if item["event_type"] != "bundle_transition_recorded"]
+    elif tamper == "forged-intermediate":
+        next(item for item in events if item["event_type"] == "bundle_transition_recorded")[
+            "old_bundle_hash"
+        ] = "f" * 64
+    else:
+        successor["source_bundle"] = []
+
+    with pytest.raises(work_memory.WorkMemoryError):
+        work_memory._validate_late_verification_correction_chain(
+            events, successor, selected, runs, occurrences, blockers,
+        )
+
+
 def test_fixed_transition_requires_correction_for_current_occurrence():
     events = corrected_successor_events()
     run_id = str(uuid.uuid4())

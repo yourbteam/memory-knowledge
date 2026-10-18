@@ -90,6 +90,17 @@ def _binding_path(path_value: str, *, use_source_root: bool) -> Path:
     if use_source_root and source_root_value and canonical_root_value:
         repository_root = Path(source_root_value)
         canonical_root = Path(canonical_root_value)
+    path = Path(path_value)
+    historical_root_value = os.environ.get("MK_PREVENTION_HISTORICAL_ROOT")
+    if path.is_absolute() and historical_root_value:
+        historical_root = Path(historical_root_value)
+        if historical_root.is_absolute() and historical_root != Path("/"):
+            try:
+                relative = path.relative_to(historical_root)
+            except ValueError:
+                pass
+            else:
+                return repository_root / relative
     return resolve_repository_source_path(
         path_value,
         repository_root=repository_root,

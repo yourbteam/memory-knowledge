@@ -422,6 +422,8 @@ def _with_controller_preflight(
     result = dict(prepared)
     if sequence_id != "workflow-resume-from-phase-live-confirmation":
         return result
+    if _is_recorded_review_finalization(result):
+        return result
     repository = prepared.get("repository")
     if (
         not isinstance(repository, Mapping)
@@ -462,6 +464,47 @@ def _with_controller_preflight(
         "guard_step": "verify-automation",
     }
     return result
+
+
+def _is_recorded_review_finalization(prepared: Mapping[str, Any]) -> bool:
+    """Identify exact saved-page hold and ZIP commands that validate their own inputs."""
+    repository = prepared.get("repository")
+    if (prepared.get("sequence_id") != WORKFLOW_RESUME_SEQUENCE
+            or prepared.get("profile") != "resume"
+            or not isinstance(repository, Mapping)
+            or repository.get("key") != "united-partners"
+            or not isinstance(repository.get("root"), str)
+            or not Path(repository["root"]).is_absolute()
+            or prepared.get("environment") != {"PYTHONPATH": "src:."}
+            or prepared.get("artifacts") != {}):
+        return False
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    argv = prepared.get("argv")
+    if not isinstance(argv, list):
+        return False
+    if (len(argv) == 11
+            and argv[:5] == [python, "-m", "up_harness.step11_review_hold",
+                                "--recorded-step10", "--client"]
+            and argv[5] in {"bteam", "vivacom"}
+            and argv[6] == "--held-by" and isinstance(argv[7], str) and bool(argv[7].strip())
+            and argv[8] == "--reason" and isinstance(argv[9], str) and bool(argv[9].strip())
+            and argv[10] == "--confirmed-held"):
+        return True
+    for step in ("step7", "step8", "step11"):
+        if argv == [python, "-m", f"up_harness.{step}_maria_package", "--close-recorded"]:
+            return True
+        if (len(argv) == 9
+                and argv[:5] == [python, "-m", f"up_harness.{step}_review_hold",
+                                     "--recorded", "--client"]
+                and argv[5] in {"bteam", "vivacom"}
+                and argv[6] == "--held-by"
+                and isinstance(argv[7], str) and bool(argv[7].strip())
+                and argv[8] == "--confirmed-held"):
+            return True
+    return False
 
 
 def _required_argv_value(argv: Sequence[str], option: str) -> str:
@@ -668,6 +711,12 @@ def _invoked_script(prepared: Mapping[str, Any]) -> Path:
     ):
         argv = argv[2:]
         executable = Path(argv[0]).name if isinstance(argv[0], str) else ""
+    try:
+        module_source = sequence_guard.invoked_python_module_source(argv, repository_root)
+    except ValueError as error:
+        raise SequenceLaunchError(str(error)) from error
+    if module_source is not None:
+        return module_source
     script_tokens = (
         argv[1:2]
         if executable in {"python", "python3", "bash", "sh", "zsh"}
@@ -756,6 +805,15 @@ def _guard_preflight(task_id: str, prepared: Mapping[str, Any]) -> None:
     preflight = prepared.get("preflight")
     repository = prepared.get("repository")
     context = prepared.get("controller_context")
+    if _is_recorded_review_finalization(prepared):
+        if preflight is not None or context is not None:
+            raise SequenceLaunchError("workflow-resume-review-preflight-invalid")
+        selection, _, _ = work_memory.load_receipt(task_id, "selection")
+        if (selection.get("subject_id") != WORKFLOW_RESUME_SEQUENCE
+                or _repository_roots(selection).get("united-partners")
+                != repository["root"]):
+            raise SequenceLaunchError("workflow-resume-selection-context-mismatch")
+        return
     if (
         prepared.get("sequence_id")
         != "workflow-resume-from-phase-live-confirmation"
@@ -921,31 +979,48 @@ def _dispatch_prepared(task_id: str, prepared: Mapping[str, Any]) -> int:
         prepared.get("sequence_id")
         == WORKFLOW_RESUME_SEQUENCE
     ):
-        preflight = prepared["preflight"]
-        result = subprocess.run(
-            preflight["argv"],
+        preflight = prepared.get("preflight")
+        if preflight is not None:
+            with tempfile.TemporaryDirectory(prefix="workflow-resume-preflight-drive-") as drive_root:
+                preflight_environment = environment.copy()
+                preflight_environment["UP_HARNESS_GOOGLE_DRIVE_ROOT"] = drive_root
+                preflight_environment["UP_HARNESS_GOOGLE_DRIVE_ACCESS_TOKEN"] = ""
+                preflight_environment["UP_HARNESS_GOOGLE_DRIVE_PARENT_ID"] = ""
+                result = subprocess.run(
+                    preflight["argv"],
+                    cwd=repository["root"],
+                    env=preflight_environment,
+                    check=False,
+                    shell=False,
+                )
+            if result.returncode != 0:
+                return result.returncode
+        resume_script = (
+            Path(repository["root"]) / "scripts/run_client_regeneration.py"
+        ).resolve()
+        if len(argv) >= 2 and Path(argv[1]).resolve() == resume_script:
+            receipt_path, receipt_hash = _workflow_resume_dispatch_receipt(
+                task_id, prepared,
+            )
+            environment[DISPATCH_MARKER] = receipt_hash
+            environment[DISPATCH_RECEIPT] = str(receipt_path)
+            try:
+                return subprocess.run(
+                    argv,
+                    cwd=repository["root"],
+                    env=environment,
+                    check=False,
+                    shell=False,
+                ).returncode
+            finally:
+                receipt_path.unlink(missing_ok=True)
+        return subprocess.run(
+            argv,
             cwd=repository["root"],
             env=environment,
             check=False,
             shell=False,
-        )
-        if result.returncode != 0:
-            return result.returncode
-        receipt_path, receipt_hash = _workflow_resume_dispatch_receipt(
-            task_id, prepared,
-        )
-        environment[DISPATCH_MARKER] = receipt_hash
-        environment[DISPATCH_RECEIPT] = str(receipt_path)
-        try:
-            return subprocess.run(
-                argv,
-                cwd=repository["root"],
-                env=environment,
-                check=False,
-                shell=False,
-            ).returncode
-        finally:
-            receipt_path.unlink(missing_ok=True)
+        ).returncode
     return subprocess.run(
         argv,
         cwd=repository["root"],

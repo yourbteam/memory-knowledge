@@ -172,21 +172,15 @@ def _validate_spec(spec: Mapping[str, Any]) -> list[Mapping[str, Any]]:
                 or condition.get("field") not in seen
                 or set(condition) not in (
                     {"field", "equals"},
+                    {"field", "not_equals"},
                     {"field", "in"},
+                    {"field", "not_in"},
                 )
                 or (
-                    ("equals" in condition) == ("in" in condition)
-                )
-                or (
-                    "equals" in condition
-                    and set(condition) != {"field", "equals"}
-                )
-                or (
-                    "in" in condition
+                    ("in" in condition or "not_in" in condition)
                     and (
-                        set(condition) != {"field", "in"}
-                        or not isinstance(condition["in"], list)
-                        or not condition["in"]
+                        not isinstance(condition.get("in", condition.get("not_in")), list)
+                        or not condition.get("in", condition.get("not_in"))
                     )
                 )
             ):
@@ -202,8 +196,14 @@ def _is_active(field: Mapping[str, Any], answers: Mapping[str, Any]) -> bool:
     if condition is None:
         return True
     value = answers.get(condition["field"], MISSING)
+    if value is MISSING:
+        return False
     if "equals" in condition:
         return value == condition["equals"]
+    if "not_equals" in condition:
+        return value != condition["not_equals"]
+    if "not_in" in condition:
+        return value not in condition["not_in"]
     return value in condition["in"]
 
 

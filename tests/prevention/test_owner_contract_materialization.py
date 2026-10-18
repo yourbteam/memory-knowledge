@@ -8,6 +8,8 @@ import pytest
 from scripts import prevention_adapters, prevention_contract_materializer, prevention_registry
 from scripts.prevention_contract import canonical_bytes, sha256_bytes
 
+pytestmark = pytest.mark.usefixtures("owner_historical_root")
+
 
 def _policy_evidence(owner_id, contract, *, kind, probe_result="SATISFIED"):
     profile = contract["observables"][0]["profile"]
@@ -130,6 +132,65 @@ def test_selected_owner_materialization_can_read_sources_from_clean_worktree(
     assert adapter["sha256"] == sha256_bytes(
         (source_root / "scripts/sequence_intake_adapters.py").read_bytes()
     )
+
+
+def test_approved_commit_push_source_correction_binds_exact_current_sources(
+    tmp_path: Path,
+):
+    source_path = (
+        prevention_contract_materializer.PROPOSALS / "commit-push-main.json"
+    )
+    proposal = json.loads(source_path.read_text(encoding="utf-8"))
+    proposals = tmp_path / "proposals"
+    proposals.mkdir()
+    (proposals / source_path.name).write_bytes(source_path.read_bytes())
+    canonical_root = Path(proposal["trusted_roots"]["memory-knowledge"])
+    source_root = tmp_path / "candidate"
+    for key, value in proposal["source"].items():
+        if not key.endswith("_path"):
+            continue
+        try:
+            relative = Path(value).relative_to(canonical_root)
+        except ValueError:
+            continue
+        target = source_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(
+            (prevention_contract_materializer.ROOT / relative).read_bytes()
+        )
+
+    owner = prevention_contract_materializer.materialize(
+        proposals,
+        owner_ids=("commit-push-main",),
+        source_root=source_root,
+    )["owners"][0]
+    sources = {Path(item["path"]).name: item for item in owner["implementation_sources"]}
+    decision_id = "commit-push-main-up-preparation-reconciliation-20261018"
+    for source_name, baseline_key, approved_key in (
+        ("script_intake.py", "intake_sha256", "intake_approved_post_correction_sha256"),
+        (
+            "sequence_intake_adapters.py", "sequence_intake_adapter_sha256",
+            "sequence_intake_adapter_approved_post_correction_sha256",
+        ),
+    ):
+        source = sources[source_name]
+        assert source["sha256"] == proposal["source"][approved_key]
+        assert source["approved_pre_correction_sha256"] == proposal["source"][baseline_key]
+        assert source["approved_post_correction_sha256"] == proposal["source"][approved_key]
+        assert source["source_correction_decision_id"] == decision_id
+
+    (source_root / "scripts/script_intake.py").write_text(
+        "mutated after approved source snapshot\n", encoding="utf-8",
+    )
+    with pytest.raises(
+        prevention_contract_materializer.MaterializationError,
+        match="source-correction-not-approved",
+    ):
+        prevention_contract_materializer.materialize(
+            proposals,
+            owner_ids=("commit-push-main",),
+            source_root=source_root,
+        )
 
 
 def test_source_root_can_be_limited_to_one_owner(monkeypatch, tmp_path: Path):
@@ -311,16 +372,30 @@ def test_registry_separates_availability_from_executable_admission():
         row["owner_contract_sha256"] == row["executable_contract_sha256"]
         for row in available
     )
+    commit_owner = next(
+        row for row in available
+        if row["owner_sequence_id"] == "commit-push-main"
+    )
+    unaffected_owners = [
+        row for row in available
+        if row["owner_sequence_id"] != "commit-push-main"
+    ]
+    assert len(unaffected_owners) == 9
     assert all(
         row["executable_contract"]["execution_admission"]["contract_verification"]
         == "VERIFIED"
-        for row in available
+        for row in unaffected_owners
     )
+    assert commit_owner["executable_contract"]["execution_admission"] == {
+        "contract_verification": "UNVERIFIED",
+        "dispatch_admission": "CLOSED",
+        "reason_code": "OWNER_PROOF_UNVERIFIED:owner-proof-binding-drift",
+    }
     assert sum(
         row["executable_contract"]["execution_admission"]["dispatch_admission"]
         == "STANDALONE"
-        for row in available
-    ) == 9
+        for row in unaffected_owners
+    ) == 8
     parent_gated = next(
         row for row in available
         if row["owner_sequence_id"] == "mawf-playbook-blocker-reentry"

@@ -110,6 +110,13 @@
       "approved_by": "Kamen",
       "approved_at_utc": "2026-08-24",
       "reason": "bind the exact semantically reconciled adapter that combines the later Info Intake implementation with main's approved .NET deployment environment behavior, and the feature's newer zero-argument commit/push sequence document, during the explicitly approved branch integration"
+    },
+    "up_preparation_reconciliation_20261018": {
+      "decision_id": "commit-push-main-up-preparation-reconciliation-20261018",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-10-18",
+      "reason": "Approved to continue. Reduce the fixtures, resolve the remaining test portability issues and reconcile the memory-knowledge events so both repos are ready to commit and push."
     }
   },
   "authority_decisions_required": [],
@@ -277,15 +284,15 @@
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
     "implementation_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
     "implementation_source_correction_decision_id": "commit-push-main-full-suite-reconciliation-source-correction-20260820",
-    "intake_approved_post_correction_sha256": "30c7bb16106ade703e7226655b9c569711cb728e0cbe48bd7694c91862a7b5fc",
+    "intake_approved_post_correction_sha256": "60815fd0f680ee10ff9762ae2f9ce24a4b47c9c9f76fce57b827f35cf48bd2ec",
     "intake_path": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
-    "intake_source_correction_decision_id": "commit-push-main-full-suite-reconciliation-source-correction-20260820",
+    "intake_source_correction_decision_id": "commit-push-main-up-preparation-reconciliation-20261018",
     "sequence_approved_post_correction_sha256": "5ac9666d52b6f205c5a69eba77628fc18edda76aa88358a90f1b89fe4438032a",
-    "sequence_intake_adapter_approved_post_correction_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
+    "sequence_intake_adapter_approved_post_correction_sha256": "7c1a8639b82c7c54eec8224925b924e00134c2782d7503ca8c520f1433fd3dc5",
     "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
     "sequence_intake_adapter_sha256": "71d625802d503eef10ab67ca08446cead079d287dac08d4e30b8f394a0691f57",
-    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-main-integration-source-correction-20260824",
+    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-up-preparation-reconciliation-20261018",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/commit-push-main/sequence.md",
     "sequence_sha256": "08706c31a48e96f58e2119fdbc16d9a79c72f22fa84f830d708cf7dca4e319dd",
     "sequence_source_correction_decision_id": "commit-push-main-main-integration-source-correction-20260824",

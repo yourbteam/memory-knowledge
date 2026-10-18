@@ -242,6 +242,26 @@ def cmd_atom_closeout(args: argparse.Namespace) -> dict[str, Any]:
     return atom_closeout(Path(args.atom_run))
 
 
+def cmd_historical_status(args: argparse.Namespace) -> dict[str, Any]:
+    try:
+        from scripts import reconcile_up_legacy_events
+    except ImportError:  # direct script execution
+        import reconcile_up_legacy_events  # type: ignore
+
+    active_path = args.active_ledger.expanduser().resolve() if args.active_ledger else work_memory.LEDGER
+    directory = work_memory.ROOT / "operations/work-memory/legacy-up-20261018"
+    try:
+        return reconcile_up_legacy_events.historical_status(
+            active_path=active_path,
+            archive_path=directory / ("events" + ".jsonl.gz"),
+            manifest_path=directory / "manifest.json",
+            run_id=args.run_id,
+            blocker_id=args.blocker_id,
+        )
+    except (ValueError, OSError, EOFError) as exc:
+        raise work_memory.WorkMemoryError(f"historical-query-refused:{exc}", 3) from exc
+
+
 def cmd_open(args: argparse.Namespace) -> dict[str, Any]:
     events, _ = work_memory.load_ledger()
     run_route = args.run_id is not None or args.subject_id is not None
@@ -686,6 +706,15 @@ def build_parser() -> argparse.ArgumentParser:
     closeout = sub.add_parser("atom-closeout")
     closeout.add_argument("--atom-run", required=True)
     closeout.set_defaults(func=cmd_atom_closeout)
+    historical = sub.add_parser("historical-status")
+    target = historical.add_mutually_exclusive_group(required=True)
+    target.add_argument("--run-id")
+    target.add_argument("--blocker-id")
+    historical.add_argument(
+        "--active-ledger", type=Path,
+        help="explicit event-ledger path for isolated or alternate repository state",
+    )
+    historical.set_defaults(func=cmd_historical_status)
     return parser
 
 

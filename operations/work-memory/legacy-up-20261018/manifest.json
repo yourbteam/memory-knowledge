@@ -1,0 +1,13 @@
+{
+  "active_ledger_at_capture_sha256": "6a469582f4296dfd802c96b3ae2427b7b4464f8254e3bc92b412341662303300",
+  "active_ledger_event_count_at_capture": 9397,
+  "archive_sha256": "974be82e3656bb2a4e37672a3ffe8eb584fbe06d0cf46bdcfbb407ba1fc83322",
+  "event_count": 6031,
+  "first_recorded_at_utc": "2026-08-17T19:21:40Z",
+  "last_recorded_at_utc": "2026-10-18T07:01:11Z",
+  "schema": "legacy-up-events/v1",
+  "selection": "old-only IDs for UP repository runs, UP task IDs, or explicit UP references",
+  "source_event_count": 15924,
+  "source_ledger_sha256": "bf5d68d4418798258889f2ff21dbdee0032b4753b761bf3ddfbedc12664e2878",
+  "status": "read-only-historical"
+}
